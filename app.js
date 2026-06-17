@@ -7,9 +7,10 @@
   const st = L.state;
   const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast,
           noteHtml, notesOf, getProject, getNote } = L.h;
-  const { CHIP, TYPE_LABEL, openDB, getAll, put, del } = L;
+  const { CHIP, TYPE_LABEL, openDB, store, getAll, put, del } = L;
   const ICONS = window.__luminkIcons || [];
   const DEFAULT_ICON = ICONS[0] ? ICONS[0].data : null;
+  function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
   /* ---------- routing ---------- */
   const SCREENS = ["home", "project", "read", "editor"];
@@ -139,6 +140,8 @@
     if (!n) { back(); return; }
     $("readTitle").textContent = n.title || "메모";
     $("readBody").innerHTML = noteHtml(n);
+    normalizeLinks($("readBody"));
+    renderAttachments("readAttach", n, false);
   }
 
   function renderEditorMeta() {
@@ -150,6 +153,7 @@
     if ($("codeArea").value !== html) $("codeArea").value = html;
     if (st.codeMode) { st.codeMode = false; document.body.classList.remove("code-mode"); $("codeToggle").classList.remove("active"); }
     setSaver("");
+    renderAttachments("edAttach", n, true);
   }
 
   /* ---------- navigation actions ---------- */
@@ -173,7 +177,7 @@
   async function deleteProject(id) {
     const p = getProject(id); if (!p) return;
     const ns = notesOf(id);
-    for (const n of ns) { await del("notes", n.id); }
+    for (const n of ns) { await purgeNoteFiles(n); await del("notes", n.id); }
     st.notes = st.notes.filter((n) => n.projectId !== id);
     st.projects = st.projects.filter((x) => x.id !== id);
     await del("projects", id);
@@ -202,6 +206,8 @@
     return n;
   }
   async function deleteNote(id) {
+    const n = getNote(id);
+    await purgeNoteFiles(n);
     st.notes = st.notes.filter((n) => n.id !== id);
     await del("notes", id);
     toast("메모를 삭제했어요");
@@ -224,7 +230,7 @@
     $("saverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
     if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("saverText").textContent = ""; } }, 1500);
   }
-  function scheduleSave() { setSaver("dirty"); clearTimeout(st.saveTimer); st.saveTimer = setTimeout(() => flushSave(false), 550); }
+  function scheduleSave() { if (!st.codeMode) normalizeLinks($("editor")); setSaver("dirty"); clearTimeout(st.saveTimer); st.saveTimer = setTimeout(() => flushSave(false), 550); }
   async function flushSave(silent) {
     clearTimeout(st.saveTimer); st.saveTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "free") return;
@@ -245,6 +251,123 @@
     document.body.classList.toggle("code-mode", on);
     $("codeToggle").classList.toggle("active", on);
     if (on) $("codeArea").focus(); else $("editor").focus();
+  }
+
+  /* ---------- attachments ---------- */
+  const MAX_ATTACH = 15 * 1024 * 1024;
+  const DL_SVG = '<svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>';
+  const RM_SVG = '<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+  function fmtSize(b) { if (b < 1024) return b + " B"; if (b < 1048576) return (b / 1024).toFixed(1) + " KB"; return (b / 1048576).toFixed(1) + " MB"; }
+  function fileIconSvg(type) {
+    if (/^image\//.test(type)) return '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 16l-5-5L5 21"/></svg>';
+    if (/pdf|word|document|text|sheet|presentation/.test(type)) return '<svg viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v5h5"/><path d="M9 13h6M9 17h4"/></svg>';
+    if (/zip|compress|rar|7z/.test(type)) return '<svg viewBox="0 0 24 24"><path d="M6 2h12v20H6z"/><path d="M11 4h2M11 7h2M11 10h2M10 13h4v4h-4z"/></svg>';
+    if (/audio/.test(type)) return '<svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>';
+    if (/video/.test(type)) return '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9l5 3-5 3z"/></svg>';
+    return '<svg viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v5h5"/></svg>';
+  }
+  async function addAttachment(file) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "free") return;
+    if (file.size > MAX_ATTACH) { toast("15MB 이하 파일만 첨부할 수 있어요"); return; }
+    const id = uid();
+    try {
+      await put("files", { id, noteId: n.id, name: file.name, type: file.type || "application/octet-stream", size: file.size, blob: file, createdAt: now() });
+    } catch (e) { toast("첨부 저장에 실패했어요"); return; }
+    n.data = n.data || {}; n.data.attachments = n.data.attachments || [];
+    n.data.attachments.push({ id, name: file.name, type: file.type || "", size: file.size });
+    await saveNote(n);
+    renderAttachments("edAttach", n, true);
+    toast("첨부했어요");
+  }
+  async function downloadAttachment(id) {
+    try {
+      const rec = await getOne("files", id); if (!rec || !rec.blob) { toast("파일을 찾을 수 없어요"); return; }
+      const url = URL.createObjectURL(rec.blob), a = document.createElement("a");
+      a.href = url; a.download = rec.name || "file"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) { toast("다운로드에 실패했어요"); }
+  }
+  async function removeAttachment(id) {
+    const n = getNote(st.curNoteId); if (!n) return;
+    try { await del("files", id); } catch (e) {}
+    n.data.attachments = (n.data.attachments || []).filter((a) => a.id !== id);
+    await saveNote(n);
+    renderAttachments("edAttach", n, true);
+  }
+  async function purgeNoteFiles(n) {
+    if (!n || !n.data || !n.data.attachments) return;
+    for (const a of n.data.attachments) { try { await del("files", a.id); } catch (e) {} }
+  }
+  function renderAttachments(cid, n, editable) {
+    const wrap = $(cid); if (!wrap) return;
+    const list = (n.data && n.data.attachments) || [];
+    wrap.innerHTML = "";
+    list.forEach((a) => {
+      const card = document.createElement("div"); card.className = "attach-card";
+      card.innerHTML = `<div class="ac-ico">${fileIconSvg(a.type || "")}</div><div class="ac-body"><div class="ac-name">${esc(a.name)}</div><div class="ac-size">${fmtSize(a.size)}</div></div>`;
+      const dl = document.createElement("button"); dl.className = "ac-act"; dl.title = "다운로드"; dl.innerHTML = DL_SVG;
+      dl.addEventListener("click", () => downloadAttachment(a.id)); card.appendChild(dl);
+      if (editable) {
+        const rm = document.createElement("button"); rm.className = "ac-act danger"; rm.title = "삭제"; rm.innerHTML = RM_SVG;
+        rm.addEventListener("click", () => confirmModal("첨부 삭제", `'${a.name}'를 삭제할까요?`, "삭제", true, () => removeAttachment(a.id))); card.appendChild(rm);
+      }
+      wrap.appendChild(card);
+    });
+  }
+
+  /* ---------- smart hyperlinks ---------- */
+  const URL_RE = /^https?:\/\/[^\s]+$/i;
+  function normalizeLinks(root) {
+    root.querySelectorAll("a").forEach((a) => { a.classList.add("lumi-link"); a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener noreferrer"); });
+  }
+  function insertLinkPrompt() {
+    $("editor").focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) { toast("링크를 걸 텍스트를 먼저 선택해 주세요"); return; }
+    const saved = sel.getRangeAt(0).cloneRange();
+    openModal(`<h3>링크 삽입</h3><div class="m-field-label">연결할 주소</div><input class="m-input" id="lkUrl" placeholder="https://…" inputmode="url" autocapitalize="off" autocorrect="off"><div class="m-row"><button class="m-btn" id="lkNo">취소</button><button class="m-btn primary" id="lkOk">삽입</button></div>`);
+    setTimeout(() => $("lkUrl").focus(), 120);
+    $("lkNo").addEventListener("click", closeModal);
+    $("lkOk").addEventListener("click", () => {
+      let u = $("lkUrl").value.trim(); if (!u) return;
+      if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+      closeModal(); $("editor").focus();
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(saved);
+      document.execCommand("createLink", false, u);
+      normalizeLinks($("editor")); scheduleSave();
+    });
+  }
+  function linkifyBeforeCaret() {
+    try {
+      const sel = window.getSelection(); if (!sel.rangeCount || !sel.isCollapsed) return;
+      const r = sel.getRangeAt(0), node = r.startContainer;
+      if (node.nodeType !== 3) return;
+      if (node.parentElement && node.parentElement.closest("a")) return;
+      const caret = r.startOffset, before = node.textContent.slice(0, caret);
+      const m = before.match(/(https?:\/\/[^\s]+)(\s)$/);
+      if (!m) return;
+      const url = m[1], start = caret - m[0].length, end = start + url.length;
+      const rng = document.createRange(); rng.setStart(node, start); rng.setEnd(node, end);
+      const a = document.createElement("a"); a.href = url; a.className = "lumi-link"; a.target = "_blank"; a.rel = "noopener noreferrer";
+      rng.surroundContents(a);
+      const after = a.nextSibling;
+      const sel2 = window.getSelection(); const c = document.createRange();
+      if (after && after.nodeType === 3) c.setStart(after, Math.min(1, after.textContent.length)); else c.setStartAfter(a);
+      c.collapse(true); sel2.removeAllRanges(); sel2.addRange(c);
+      scheduleSave();
+    } catch (e) {}
+  }
+
+  function onEditorPaste(e) {
+    const t = ((e.clipboardData || window.clipboardData) || {}).getData ? (e.clipboardData || window.clipboardData).getData("text") : "";
+    const u = (t || "").trim();
+    if (u && URL_RE.test(u)) {
+      e.preventDefault();
+      const sel = window.getSelection();
+      if (sel.rangeCount && !sel.isCollapsed) document.execCommand("createLink", false, u);
+      else document.execCommand("insertHTML", false, `<a href="${u.replace(/"/g, "%22")}">${esc(u)}</a>&nbsp;`);
+      normalizeLinks($("editor")); scheduleSave();
+    }
   }
 
   /* ---------- modal ---------- */
@@ -463,7 +586,7 @@
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Lumink"><meta name="lumink-created" content="${new Date(n.createdAt).toISOString()}">
 <title>${esc(title)}</title>
-<style>body{margin:0 auto;max-width:760px;padding:32px 20px;line-height:1.7;font-family:-apple-system,"Noto Sans KR",sans-serif;color:#1c1b19;word-break:break-word}img{max-width:100%;height:auto}a{color:#2f6fd0}blockquote{border-left:3px solid #2f6fd0;margin:8px 0;padding:2px 0 2px 14px;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:4px 8px}pre{background:#f0ede6;padding:12px;border-radius:8px;overflow-x:auto}</style>
+<style>body{margin:0 auto;max-width:760px;padding:32px 20px;line-height:1.7;font-family:-apple-system,"Noto Sans KR",sans-serif;color:#1c1b19;word-break:break-word}img{max-width:100%;height:auto}a{color:#2f6fd0}a.lumi-link{color:#2f6fd0;text-decoration:none;font-weight:600;background:rgba(47,111,208,.09);border:1px solid rgba(47,111,208,.3);padding:1px 7px;border-radius:7px}blockquote{border-left:3px solid #2f6fd0;margin:8px 0;padding:2px 0 2px 14px;color:#555}table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:4px 8px}pre{background:#f0ede6;padding:12px;border-radius:8px;overflow-x:auto}</style>
 </head><body>
 ${html}
 </body></html>`;
@@ -570,6 +693,11 @@ ${html}
     $("codeArea").addEventListener("input", scheduleSave);
     $("codeArea").addEventListener("blur", () => flushSave(false));
     $("codeToggle").addEventListener("click", () => setCodeMode(!st.codeMode));
+    $("attachBtn").addEventListener("click", () => $("attachInput").click());
+    $("attachInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
+    $("linkBtn").addEventListener("click", insertLinkPrompt);
+    $("editor").addEventListener("paste", onEditorPaste);
+    $("editor").addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(linkifyBeforeCaret, 0); });
     const fb = $("formatbar");
     const fbHandler = (e) => { const b = e.target.closest(".fbtn"); if (b && b.dataset.cmd) { e.preventDefault(); exec(b.dataset.cmd, b.dataset.val); } };
     fb.addEventListener("mousedown", fbHandler);
