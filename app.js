@@ -1121,6 +1121,7 @@
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
   }
   const FONT_PRESETS = [
+    { name: "Pretendard", label: "프리텐다드", url: "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" },
     { name: "Nanum Myeongjo", label: "나눔명조", url: "https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" },
     { name: "Gowun Dodum", label: "고운돋움", url: "https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" },
     { name: "IBM Plex Sans KR", label: "IBM Plex Sans KR", url: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" },
@@ -1343,6 +1344,7 @@ ${html}
     document.querySelectorAll(".nav-back").forEach((b) => b.addEventListener("click", back));
     document.querySelectorAll(".nav-menu").forEach((b) => b.addEventListener("click", openSidebar));
     $("pdMore").addEventListener("click", () => openProjectSheet(st.curProjectId));
+    $("pdSelect").addEventListener("click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
     $("pdFab").addEventListener("click", () => showTypePicker(st.curProjectId));
     $("readEdit").addEventListener("click", editCurrentNote);
     $("readMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
