@@ -252,6 +252,47 @@
     $("codeToggle").classList.toggle("active", on);
     if (on) $("codeArea").focus(); else $("editor").focus();
   }
+  function toggleHilite() {
+    $("editor").focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) { toast("형광펜을 칠할 텍스트를 선택해 주세요"); return; }
+    const range = sel.getRangeAt(0);
+    let anc = range.commonAncestorContainer;
+    if (anc.nodeType === 3) anc = anc.parentElement;
+    const existing = anc && anc.closest && anc.closest("span.lumi-hl");
+    if (existing) {
+      const parent = existing.parentNode;
+      while (existing.firstChild) parent.insertBefore(existing.firstChild, existing);
+      parent.removeChild(existing); parent.normalize();
+      scheduleSave(); return;
+    }
+    try {
+      const mark = document.createElement("span");
+      mark.className = "lumi-hl"; mark.style.background = "#ffe27a"; mark.style.color = "#222";
+      mark.style.borderRadius = "3px"; mark.style.padding = "0 1px";
+      range.surroundContents(mark);
+      sel.removeAllRanges();
+    } catch (e) {
+      try { document.execCommand("styleWithCSS", false, true); document.execCommand("hiliteColor", false, "#ffe27a"); } catch (e2) {}
+    }
+    scheduleSave();
+  }
+  function fontStep(d) {
+    $("editor").focus();
+    let s = parseInt(document.queryCommandValue("fontSize"), 10); if (!s || isNaN(s)) s = 3;
+    s = Math.min(7, Math.max(1, s + d));
+    document.execCommand("fontSize", false, String(s));
+    scheduleSave();
+  }
+  async function insertImage(file) {
+    if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    try {
+      const data = await fileToResized(file, 1280);
+      $("editor").focus();
+      document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`);
+      scheduleSave();
+    } catch (e) { toast("이미지를 넣지 못했어요"); }
+  }
 
   /* ---------- attachments ---------- */
   const MAX_ATTACH = 15 * 1024 * 1024;
@@ -659,6 +700,7 @@ ${html}
     $("homeFab").addEventListener("click", () => showTypePicker(null));
     $("homeNewProject").addEventListener("click", () => showProjectForm(null, () => { render(); renderSidebar(); }));
     document.querySelectorAll(".nav-back").forEach((b) => b.addEventListener("click", back));
+    document.querySelectorAll(".nav-menu").forEach((b) => b.addEventListener("click", openSidebar));
     $("pdMore").addEventListener("click", () => openProjectSheet(st.curProjectId));
     $("pdFab").addEventListener("click", () => showTypePicker(st.curProjectId));
     $("readEdit").addEventListener("click", editCurrentNote);
@@ -692,14 +734,24 @@ ${html}
     $("editor").addEventListener("blur", () => flushSave(false));
     $("codeArea").addEventListener("input", scheduleSave);
     $("codeArea").addEventListener("blur", () => flushSave(false));
-    $("codeToggle").addEventListener("click", () => setCodeMode(!st.codeMode));
-    $("attachBtn").addEventListener("click", () => $("attachInput").click());
     $("attachInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
-    $("linkBtn").addEventListener("click", insertLinkPrompt);
+    $("imgInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) insertImage(f); e.target.value = ""; });
     $("editor").addEventListener("paste", onEditorPaste);
     $("editor").addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(linkifyBeforeCaret, 0); });
     const fb = $("formatbar");
-    const fbHandler = (e) => { const b = e.target.closest(".fbtn"); if (b && b.dataset.cmd) { e.preventDefault(); exec(b.dataset.cmd, b.dataset.val); } };
+    const fbHandler = (e) => {
+      const b = e.target.closest(".fbtn"); if (!b) return;
+      e.preventDefault();
+      const id = b.id;
+      if (b.dataset.cmd) exec(b.dataset.cmd, b.dataset.val);
+      else if (id === "hiliteBtn") toggleHilite();
+      else if (id === "fsDown") fontStep(-1);
+      else if (id === "fsUp") fontStep(1);
+      else if (id === "imgBtn") $("imgInput").click();
+      else if (id === "linkBtn") insertLinkPrompt();
+      else if (id === "codeToggle") setCodeMode(!st.codeMode);
+      else if (id === "attachBtn") $("attachInput").click();
+    };
     fb.addEventListener("mousedown", fbHandler);
     fb.addEventListener("touchstart", fbHandler, { passive: false });
     $("colorPick").addEventListener("input", () => { $("colorSwatch").style.background = $("colorPick").value; exec("foreColor", $("colorPick").value); });
