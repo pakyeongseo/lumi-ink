@@ -13,7 +13,7 @@
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor"];
+  const SCREENS = ["home", "project", "read", "editor", "lore"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -23,9 +23,15 @@
     else if (v.s === "project") renderProjectDetail();
     else if (v.s === "read") renderRead();
     else if (v.s === "editor") renderEditorMeta();
+    else if (v.s === "lore") renderLore();
   }
   function go(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
-  function back() { if (st.viewStack.length > 1) { st.viewStack.pop(); render(); } }
+  function back() {
+    const cur = curView().s;
+    if (cur === "editor") flushSave(true);
+    if (cur === "lore") flushLore();
+    if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
+  }
   function closeTopOverlay() {
     if ($("modalScrim").classList.contains("open")) { closeModal(); return true; }
     if (document.body.classList.contains("sheet-open")) { closeSheet(); return true; }
@@ -35,6 +41,7 @@
   window.addEventListener("popstate", () => {
     if (closeTopOverlay()) { history.pushState({}, ""); return; }
     if (curView().s === "editor") flushSave(true);
+    if (curView().s === "lore") flushLore();
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
     else history.pushState({}, "");
   });
@@ -162,6 +169,7 @@
     const n = getNote(id); if (!n) return;
     st.curNoteId = id;
     if (n.type === "free") go({ s: "read" });
+    else if (n.type === "lorebook") go({ s: "lore" });
     else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
@@ -199,7 +207,13 @@
   /* ---------- note CRUD ---------- */
   async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); }
   async function createNote(type, projectId) {
-    const n = { id: uid(), projectId, type, title: "제목 없는 메모", titleLocked: false, chipColor: null, createdAt: now(), updatedAt: now(), data: type === "free" ? { html: "" } : {} };
+    const n = {
+      id: uid(), projectId, type,
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "persona" ? "이름 없는 페르소나" : "제목 없는 메모",
+      titleLocked: type !== "free",
+      chipColor: null, createdAt: now(), updatedAt: now(),
+      data: type === "free" ? { html: "" } : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false } : {}
+    };
     st.notes.push(n); await put("notes", n);
     const p = getProject(projectId); if (p) saveProject(p);
     st.curNoteId = n.id;
@@ -284,6 +298,21 @@
     document.execCommand("fontSize", false, String(s));
     scheduleSave();
   }
+  function showFontSizes() {
+    $("editor").focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) { toast("크기를 바꿀 텍스트를 선택해 주세요"); return; }
+    const saved = sel.getRangeAt(0).cloneRange();
+    const sizes = [["아주 작게", 1, 12], ["작게", 2, 14], ["보통", 3, 16], ["크게", 4, 19], ["더 크게", 5, 23], ["제목", 6, 28], ["대제목", 7, 34]];
+    openModal(`<h3>글자 크기</h3><div class="size-list">${sizes.map(([n, v, px]) => `<div class="size-item" data-v="${v}" style="font-size:${px}px">${n}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="szClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".size-item").forEach((it) => it.addEventListener("click", () => {
+      closeModal(); $("editor").focus();
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(saved);
+      document.execCommand("fontSize", false, it.dataset.v);
+      scheduleSave();
+    }));
+    $("szClose").addEventListener("click", closeModal);
+  }
   async function insertImage(file) {
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     try {
@@ -292,6 +321,197 @@
       document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`);
       scheduleSave();
     } catch (e) { toast("이미지를 넣지 못했어요"); }
+  }
+
+  /* ---------- lorebook ---------- */
+  // lightweight markdown -> html
+  function mdToHtml(md) {
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const inline = (s) => {
+      s = esc(s);
+      s = s.replace(/`([^`]+)`/g, (m, c) => `<code>${c}</code>`);
+      s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+      s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      return s;
+    };
+    const lines = (md || "").replace(/\r\n/g, "\n").split("\n");
+    const out = []; let inUl = false, inOl = false, inCode = false, code = [];
+    const closeLists = () => { if (inUl) { out.push("</ul>"); inUl = false; } if (inOl) { out.push("</ol>"); inOl = false; } };
+    for (const raw of lines) {
+      if (/^```/.test(raw)) { if (inCode) { out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>"); code = []; inCode = false; } else { closeLists(); inCode = true; } continue; }
+      if (inCode) { code.push(raw); continue; }
+      if (/^\s*$/.test(raw)) { closeLists(); continue; }
+      let m;
+      if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
+      if (/^\s*>\s?/.test(raw)) { closeLists(); out.push(`<blockquote>${inline(raw.replace(/^\s*>\s?/, ""))}</blockquote>`); continue; }
+      if (/^\s*([-*+])\s+/.test(raw)) { if (!inUl) { closeLists(); out.push("<ul>"); inUl = true; } out.push(`<li>${inline(raw.replace(/^\s*[-*+]\s+/, ""))}</li>`); continue; }
+      if (/^\s*\d+\.\s+/.test(raw)) { if (!inOl) { closeLists(); out.push("<ol>"); inOl = true; } out.push(`<li>${inline(raw.replace(/^\s*\d+\.\s+/, ""))}</li>`); continue; }
+      if (/^\s*(---|\*\*\*|___)\s*$/.test(raw)) { closeLists(); out.push("<hr>"); continue; }
+      closeLists(); out.push(`<p>${inline(raw)}</p>`);
+    }
+    if (inCode) out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>");
+    closeLists();
+    return out.join("\n");
+  }
+
+  // tokenizer (lazy)
+  let tokReady = null;
+  function ensureTokenizer() {
+    if (window.__luminkCountTokens) return Promise.resolve(true);
+    if (tokReady) return tokReady;
+    tokReady = new Promise((res) => { const s = document.createElement("script"); s.src = "./tokenizer.js"; s.async = true; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s); });
+    return tokReady;
+  }
+
+  let loreTimer = null;
+  function setLoreSaver(mode) {
+    const s = $("loreSaver"); s.className = "saver " + mode;
+    $("loreSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("loreSaverText").textContent = ""; } }, 1500);
+  }
+  function renderLore() {
+    const n = getNote(st.curNoteId);
+    if (!n || n.type !== "lorebook") { back(); return; }
+    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false };
+    $("loreTitle").textContent = n.title || "로어북";
+    if ($("loreEdit").value !== (d.content || "")) $("loreEdit").value = d.content || "";
+    renderKeywords(n);
+    $("loreActive").classList.toggle("on", !!d.alwaysActive);
+    document.body.classList.remove("lore-preview-on");
+    $("lorePreview").innerHTML = mdToHtml(d.content || "");
+    setLoreSaver("");
+    updateLoreTokens(n);
+  }
+  function renderKeywords(n) {
+    const wrap = $("loreKeywords"), input = $("loreKwInput");
+    wrap.querySelectorAll(".kw-chip").forEach((c) => c.remove());
+    const kws = (n.data && n.data.keywords) || [];
+    kws.forEach((kw, idx) => {
+      const chip = document.createElement("span"); chip.className = "kw-chip";
+      chip.innerHTML = `<span>${esc(kw)}</span><button aria-label="삭제">×</button>`;
+      chip.querySelector("button").addEventListener("click", () => { n.data.keywords.splice(idx, 1); saveLore(n, true); renderKeywords(n); });
+      wrap.insertBefore(chip, input);
+    });
+  }
+  async function saveLore(n, silent) {
+    n.updatedAt = now(); await put("notes", n);
+    const p = getProject(n.projectId); if (p) saveProject(p);
+    if (!silent) setLoreSaver("saved");
+  }
+  function scheduleLoreSave() { setLoreSaver("dirty"); clearTimeout(loreTimer); loreTimer = setTimeout(flushLore, 550); }
+  async function flushLore() {
+    clearTimeout(loreTimer); loreTimer = null;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return;
+    const c = $("loreEdit").value;
+    if (c === (n.data.content || "")) return;
+    n.data.content = c; await saveLore(n);
+    $("lorePreview").innerHTML = mdToHtml(c);
+    updateLoreTokens(n);
+  }
+  function updateLoreTokens(n) {
+    const content = (n.data && n.data.content) || "";
+    $("loreTokens").textContent = "토큰 계산 중…";
+    ensureTokenizer().then((ok) => {
+      if (getNote(st.curNoteId) !== n) return;
+      if (ok && window.__luminkCountTokens) {
+        const t = window.__luminkCountTokens(content);
+        $("loreTokens").innerHTML = (t == null) ? "— 토큰" : `<b>${t}</b> 토큰`;
+      } else $("loreTokens").textContent = "토큰 계산 불가";
+    });
+  }
+  function addKeywordFromInput() {
+    const input = $("loreKwInput"), raw = input.value.trim();
+    if (!raw) return;
+    const n = getNote(st.curNoteId); if (!n) return;
+    n.data.keywords = n.data.keywords || [];
+    raw.split(",").map((s) => s.trim()).filter(Boolean).forEach((k) => { if (!n.data.keywords.includes(k)) n.data.keywords.push(k); });
+    input.value = ""; saveLore(n, true); renderKeywords(n);
+  }
+  function toggleLoreActive() {
+    const n = getNote(st.curNoteId); if (!n) return;
+    n.data.alwaysActive = !n.data.alwaysActive;
+    $("loreActive").classList.toggle("on", n.data.alwaysActive);
+    saveLore(n, true);
+  }
+  function toggleLorePreview() {
+    flushLore();
+    const on = !document.body.classList.contains("lore-preview-on");
+    if (on) $("lorePreview").innerHTML = mdToHtml($("loreEdit").value);
+    document.body.classList.toggle("lore-preview-on", on);
+  }
+
+  // ST World Info export
+  function buildWorldInfo(notes) {
+    const entries = {};
+    notes.forEach((n, i) => {
+      const d = n.data || {};
+      entries[String(i)] = {
+        uid: i, key: (d.keywords || []).slice(), keysecondary: [], comment: n.title || "", content: d.content || "",
+        constant: !!d.alwaysActive, vectorized: false, selective: true, selectiveLogic: 0, addMemo: true,
+        order: 100, position: 0, disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
+        matchPersonaDescription: false, matchCharacterDescription: false, matchCharacterPersonality: false,
+        matchCharacterDepthPrompt: false, matchScenario: false, matchCreatorNotes: false, delayUntilRecursion: false,
+        probability: 100, useProbability: true, depth: 4, outletName: "", group: "", groupOverride: false, groupWeight: 100,
+        scanDepth: null, caseSensitive: null, matchWholeWords: null, useGroupScoring: null, automationId: "",
+        role: null, sticky: 0, cooldown: 0, delay: 0, triggers: [], displayIndex: i,
+        characterFilter: { isExclude: false, names: [], tags: [] }
+      };
+    });
+    return { entries };
+  }
+  function defaultWiName(notes) {
+    if (notes.length === 1) return notes[0].title || "lorebook";
+    const p = getProject(notes[0].projectId); return p ? p.name : "lorebook";
+  }
+  function exportWorldInfoFlow(notes) {
+    if (!notes.length) { toast("내보낼 로어북이 없어요"); return; }
+    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">${notes.length}개 항목을 하나의 .json으로 묶어 내보냅니다.</p><div class="m-field-label">파일 이름 (.json)</div><input class="m-input" id="wiName" placeholder="예: 세계관_로어북" value="${esc(defaultWiName(notes))}" autocapitalize="off"><div class="m-row"><button class="m-btn" id="wiNo">취소</button><button class="m-btn primary" id="wiOk">내보내기</button></div>`);
+    setTimeout(() => { const i = $("wiName"); i.focus(); i.select(); }, 120);
+    $("wiNo").addEventListener("click", closeModal);
+    $("wiOk").addEventListener("click", () => {
+      let name = ($("wiName").value.trim() || "lorebook").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 60);
+      const wi = buildWorldInfo(notes);
+      const blob = new Blob([JSON.stringify(wi, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = name + ".json"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      closeModal(); toast("World Info를 내보냈어요");
+    });
+  }
+  function showLoreExportPicker(pid) {
+    const lores = notesOf(pid).filter((n) => n.type === "lorebook");
+    if (!lores.length) { toast("이 프로젝트에 로어북이 없어요"); return; }
+    const sel = new Set(lores.map((n) => n.id));
+    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">하나의 .json으로 묶을 로어북을 선택하세요.</p><div class="lore-pick-list" id="lpList"></div><div class="m-row"><button class="m-btn" id="lpNo">취소</button><button class="m-btn primary" id="lpNext">다음</button></div>`);
+    const list = $("lpList");
+    const draw = () => {
+      list.innerHTML = "";
+      lores.forEach((n) => {
+        const row = document.createElement("div"); row.className = "lore-pick" + (sel.has(n.id) ? " sel" : "");
+        const tk = ((n.data && n.data.keywords) || []).length;
+        row.innerHTML = `<div class="lp-check"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg></div><div class="lp-body"><div class="lp-name">${esc(n.title)}</div><div class="lp-meta">키워드 ${tk}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}</div></div>`;
+        row.addEventListener("click", () => { if (sel.has(n.id)) sel.delete(n.id); else sel.add(n.id); draw(); });
+        list.appendChild(row);
+      });
+    };
+    draw();
+    $("lpNo").addEventListener("click", closeModal);
+    $("lpNext").addEventListener("click", () => {
+      const chosen = lores.filter((n) => sel.has(n.id));
+      if (!chosen.length) { toast("최소 1개를 선택하세요"); return; }
+      exportWorldInfoFlow(chosen);
+    });
+  }
+  function openLoreSheet(n) {
+    openSheet(n.title, [
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("로어북 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveLore(n, true); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.export, label: "World Info(.json)로 내보내기", fn: () => exportWorldInfoFlow([n]) },
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("로어북 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    ]);
   }
 
   /* ---------- attachments ---------- */
@@ -423,10 +643,9 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
         <div><div class="tc-name">자유 메모</div><div class="tc-desc">서식 보존 · 코드 보기 지원</div></div>
       </div>
-      <div class="type-card disabled" data-t="lorebook">
+      <div class="type-card" data-t="lorebook">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></div>
-        <div><div class="tc-name">로어북</div><div class="tc-desc">World Info · 토큰 카운터</div></div>
-        <span class="tc-soon">준비 중</span>
+        <div><div class="tc-name">로어북</div><div class="tc-desc">마크다운 · 키워드 · 토큰 · World Info 내보내기</div></div>
       </div>
       <div class="type-card disabled" data-t="persona">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
@@ -439,7 +658,7 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); go({ s: "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); go({ s: t === "lorebook" ? "lore" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -461,7 +680,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $("pickNew").addEventListener("click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $("pickCancel").addEventListener("click", closeModal);
-    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "free") go({ s: "editor" }); }); });
+    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); go({ s: type === "lorebook" ? "lore" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -541,11 +760,13 @@
     move: '<svg viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M2 12h10M14 5h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-6"/></svg>',
     copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
     del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
-    icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg>'
+    icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg>',
+    export: '<svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>'
   };
 
   function openNoteSheet(id) {
     const n = getNote(id); if (!n) return;
+    if (n.type === "lorebook") { openLoreSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(id) },
@@ -562,6 +783,7 @@
       { icon: IC.copy, label: "복제", fn: () => duplicateProject(id).then(() => { render(); renderSidebar(); }) },
       { icon: IC.icon, label: "아이콘 변경", fn: () => showIconPicker(id) }
     ];
+    if (notesOf(id).some((n) => n.type === "lorebook")) items.push({ icon: IC.export, label: "로어북 → World Info 내보내기", fn: () => showLoreExportPicker(id) });
     if (!p.isDefault) items.push({ icon: IC.del, label: "삭제", danger: true, fn: () => {
       const cnt = notesOf(id).length;
       confirmModal("프로젝트 삭제", cnt ? `프로젝트와 소속 메모 ${cnt}개가 모두 삭제됩니다.` : "이 프로젝트를 삭제할까요?", "삭제", true, async () => { await deleteProject(id); if (curView().s === "project") back(); else { render(); renderSidebar(); } });
@@ -747,6 +969,7 @@ ${html}
       else if (id === "hiliteBtn") toggleHilite();
       else if (id === "fsDown") fontStep(-1);
       else if (id === "fsUp") fontStep(1);
+      else if (id === "fsList") showFontSizes();
       else if (id === "imgBtn") $("imgInput").click();
       else if (id === "linkBtn") insertLinkPrompt();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
@@ -756,8 +979,17 @@ ${html}
     fb.addEventListener("touchstart", fbHandler, { passive: false });
     $("colorPick").addEventListener("input", () => { $("colorSwatch").style.background = $("colorPick").value; exec("foreColor", $("colorPick").value); });
 
-    window.addEventListener("beforeunload", () => flushSave(true));
-    document.addEventListener("visibilitychange", () => { if (document.hidden) flushSave(true); });
+    // lorebook
+    $("loreEdit").addEventListener("input", scheduleLoreSave);
+    $("loreEdit").addEventListener("blur", () => flushLore());
+    $("loreKwInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
+    $("loreKwInput").addEventListener("blur", addKeywordFromInput);
+    $("loreActiveWrap").addEventListener("click", toggleLoreActive);
+    $("lorePreviewBtn").addEventListener("click", toggleLorePreview);
+    $("loreMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
+
+    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); } });
   }
 
   /* ---------- init ---------- */
