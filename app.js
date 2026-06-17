@@ -35,6 +35,8 @@
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
   }
   function closeTopOverlay() {
+    if (!$("cropper").hidden) { closeCropper(); return true; }
+    if (!$("lightbox").hidden) { $("lightbox").hidden = true; return true; }
     if ($("modalScrim").classList.contains("open")) { closeModal(); return true; }
     if (document.body.classList.contains("sheet-open")) { closeSheet(); return true; }
     if (document.body.classList.contains("sidebar-open")) { closeSidebar(); return true; }
@@ -124,7 +126,7 @@
       const d = n.data || {};
       const img = d.square || d.portrait || DEFAULT_ICON;
       lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
-      meta = (d.ko && d.ko.brief) || (d.en && d.en.brief) || "페르소나";
+      meta = perTagsPreview(d);
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
@@ -194,7 +196,7 @@
     st.curNoteId = id;
     if (n.type === "free") go({ s: "read" });
     else if (n.type === "lorebook") go({ s: "lore" });
-    else if (n.type === "persona") go({ s: "persona" });
+    else if (n.type === "persona") { st.perEdit = false; go({ s: "persona" }); }
     else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
@@ -354,6 +356,42 @@
     $("editor").focus();
     try { document.execCommand("formatBlock", false, "pre"); } catch (e) {}
     scheduleSave();
+  }
+  function showAlignMenu() {
+    $("editor").focus();
+    const sel = window.getSelection();
+    const saved = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const items = [
+      ["justifyLeft", "왼쪽 정렬", "M4 6h16M4 12h10M4 18h13"],
+      ["justifyCenter", "가운데 정렬", "M4 6h16M7 12h10M5 18h14"],
+      ["justifyRight", "오른쪽 정렬", "M4 6h16M10 12h10M7 18h13"]
+    ];
+    openModal(`<h3>정렬</h3><div class="size-list">${items.map(([c, n, d]) => `<div class="size-item al-item" data-c="${c}"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-4px;margin-right:10px"><path d="${d}"/></svg>${n}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="alClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".al-item").forEach((it) => it.addEventListener("click", () => {
+      closeModal(); $("editor").focus();
+      if (saved) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(saved); }
+      document.execCommand(it.dataset.c, false, null); scheduleSave();
+    }));
+    $("alClose").addEventListener("click", closeModal);
+  }
+  function setExtraSlot(x) {
+    const b = $("extraBtn"); if (!b) return;
+    const caret = '<svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+    b.classList.remove("extra-slot");
+    if (x === "code") { b.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"/></svg>' + caret; b.title = "코드 블록 (탭하여 변경)"; }
+    else { b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>' + caret; b.title = "하이퍼링크 (탭하여 변경)"; }
+  }
+  function showExtraMenu() {
+    const items = [
+      ["code", "코드 블록 만들기", "M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"],
+      ["link", "하이퍼링크 삽입", "M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1|M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"]
+    ];
+    openModal(`<h3>삽입</h3><div class="size-list">${items.map(([x, n, d]) => `<div class="size-item ex-item" data-x="${x}"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-4px;margin-right:10px">${d.split("|").map((p) => `<path d="${p}"/>`).join("")}</svg>${n}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="exClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".ex-item").forEach((it) => it.addEventListener("click", () => {
+      const x = it.dataset.x; closeModal(); setExtraSlot(x);
+      if (x === "code") wrapCodeBlock(); else insertLinkPrompt();
+    }));
+    $("exClose").addEventListener("click", closeModal);
   }
 
   /* ---------- lorebook ---------- */
@@ -548,10 +586,18 @@
   }
 
   /* ---------- persona ---------- */
-  const PER_PH_SQ = '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg><span>정사각</span></div>';
-  const PER_PH_PT = '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>포트레이트</span></div>';
   const PER_X = '<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>';
-  let perTimer = null, perImgTarget = null;
+  const PER_PH_PT = '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>포트레이트 — 탭하여 추가</span></div>';
+  const PER_PH_SQ = '<div class="per-ph sm"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg></div>';
+  let perTimer = null, perImgTarget = null, perLang = "ko";
+
+  function perEnsureTags(o) { if (!o.tags) o.tags = o.brief ? [o.brief] : []; delete o.brief; return o.tags; }
+  function perTagsPreview(d) {
+    const k = (d.ko && (d.ko.tags || (d.ko.brief ? [d.ko.brief] : []))) || [];
+    const e = (d.en && (d.en.tags || (d.en.brief ? [d.en.brief] : []))) || [];
+    const t = k.length ? k : e;
+    return t.length ? t.join(", ") : "페르소나";
+  }
   function setPerSaver(mode) {
     const s = $("perSaver"); s.className = "saver " + mode;
     $("perSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
@@ -560,19 +606,59 @@
   function renderPersona() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "persona") { back(); return; }
     const d = n.data = n.data || {};
-    d.ko = d.ko || { name: "", brief: "", detail: "" }; d.en = d.en || { name: "", brief: "", detail: "" }; d.gallery = d.gallery || [];
+    d.ko = d.ko || { name: "", detail: "" }; d.en = d.en || { name: "", detail: "" }; d.gallery = d.gallery || [];
+    perEnsureTags(d.ko); perEnsureTags(d.en);
     $("perTitle").textContent = n.title || "페르소나";
-    $("perKoName").value = d.ko.name || ""; $("perKoBrief").value = d.ko.brief || ""; $("perKoDetail").value = d.ko.detail || "";
-    $("perEnName").value = d.en.name || ""; $("perEnBrief").value = d.en.brief || ""; $("perEnDetail").value = d.en.detail || "";
-    renderPerImages(n); renderPerGallery(n);
-    setPerLang("ko"); setPerSaver(""); updatePerTokens(n);
+    document.body.classList.toggle("per-view-on", !st.perEdit);
+    $("perReadView").hidden = st.perEdit;
+    $("perViewIcon").innerHTML = st.perEdit
+      ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>'
+      : '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
+    $("perViewToggle").title = st.perEdit ? "보기 모드로" : "편집 모드로";
+    setPerLang(perLang || "ko");
+    if (st.perEdit) renderPerEdit(n); else renderPerRead(n);
+    setPerSaver(""); updatePerTokens(n);
   }
-  function renderPerImages(n) {
+  function setPerLang(lang) {
+    perLang = lang;
+    document.querySelectorAll("#screen-persona .per-tab").forEach((t) => t.classList.toggle("active", t.dataset.lang === lang));
+    $("perFormKo").hidden = lang !== "ko"; $("perFormEn").hidden = lang !== "en";
+    if (!st.perEdit) { const n = getNote(st.curNoteId); if (n && n.type === "persona") renderPerRead(n); }
+  }
+  function renderPerEdit(n) {
     const d = n.data;
-    $("perSquare").innerHTML = d.square ? `<img src="${d.square}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_SQ;
+    $("perKoName").value = d.ko.name || ""; $("perKoDetail").value = d.ko.detail || "";
+    $("perEnName").value = d.en.name || ""; $("perEnDetail").value = d.en.detail || "";
+    renderPerImagesEdit(n);
+    renderPerTags(n, "ko"); renderPerTags(n, "en");
+    renderPerGallery(n);
+  }
+  function renderPerImagesEdit(n) {
+    const d = n.data;
     $("perPortrait").innerHTML = d.portrait ? `<img src="${d.portrait}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_PT;
-    const sq = $("perSquare").querySelector(".per-del"); if (sq) sq.addEventListener("click", (e) => { e.stopPropagation(); removePerImage("square"); });
+    $("perSquare").innerHTML = d.square ? `<img src="${d.square}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_SQ;
     const pt = $("perPortrait").querySelector(".per-del"); if (pt) pt.addEventListener("click", (e) => { e.stopPropagation(); removePerImage("portrait"); });
+    const sq = $("perSquare").querySelector(".per-del"); if (sq) sq.addEventListener("click", (e) => { e.stopPropagation(); removePerImage("square"); });
+  }
+  function renderPerTags(n, lang) {
+    const wrap = lang === "ko" ? $("perKoTags") : $("perEnTags");
+    const input = lang === "ko" ? $("perKoTagInput") : $("perEnTagInput");
+    wrap.querySelectorAll(".kw-chip").forEach((c) => c.remove());
+    const tags = (n.data[lang] && n.data[lang].tags) || [];
+    tags.forEach((t, idx) => {
+      const chip = document.createElement("span"); chip.className = "kw-chip";
+      chip.innerHTML = `<span>${esc(t)}</span><button aria-label="삭제">×</button>`;
+      chip.querySelector("button").addEventListener("click", () => { n.data[lang].tags.splice(idx, 1); savePersona(n, true); renderPerTags(n, lang); });
+      wrap.insertBefore(chip, input);
+    });
+  }
+  function addPerTag(lang) {
+    const input = lang === "ko" ? $("perKoTagInput") : $("perEnTagInput");
+    const raw = input.value.trim(); if (!raw) return;
+    const n = getNote(st.curNoteId); if (!n) return;
+    n.data[lang].tags = n.data[lang].tags || [];
+    raw.split(",").map((s) => s.trim()).filter(Boolean).forEach((t) => { if (!n.data[lang].tags.includes(t)) n.data[lang].tags.push(t); });
+    input.value = ""; savePersona(n, true); renderPerTags(n, lang);
   }
   function renderPerGallery(n) {
     const wrap = $("perGallery"), g = (n.data && n.data.gallery) || [];
@@ -587,21 +673,33 @@
     add.addEventListener("click", () => { perImgTarget = "gallery"; $("perImgInput").click(); });
     wrap.appendChild(add);
   }
+  function renderPerRead(n) {
+    const d = n.data, o = d[perLang] || {};
+    $("perRPortrait").innerHTML = d.portrait ? `<img src="${d.portrait}" alt="">` : '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>이미지 없음</span></div>';
+    $("perRPortrait").onclick = d.portrait ? () => openLightbox(d.portrait) : null;
+    const sqSrc = d.square || d.portrait;
+    $("perRSquare").innerHTML = `<img src="${sqSrc || DEFAULT_ICON}" alt="">`;
+    $("perRSquare").onclick = sqSrc ? () => openLightbox(sqSrc) : null;
+    $("perRName").textContent = o.name || "";
+    const rt = $("perRTags"); rt.innerHTML = "";
+    (o.tags || []).forEach((t) => { const c = document.createElement("span"); c.className = "kw-chip"; c.textContent = t; rt.appendChild(c); });
+    $("perRDetail").textContent = o.detail || "";
+    const rg = $("perRGallery"); rg.innerHTML = "";
+    const gal = d.gallery || [];
+    if (!gal.length) { rg.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; }
+    else gal.forEach((src) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src); rg.appendChild(it); });
+  }
   async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); }
   function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); perTimer = setTimeout(flushPersona, 550); }
   async function flushPersona() {
     clearTimeout(perTimer); perTimer = null;
-    const n = getNote(st.curNoteId); if (!n || n.type !== "persona") return;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "persona" || !st.perEdit) return;
     const d = n.data;
-    d.ko.name = $("perKoName").value; d.ko.brief = $("perKoBrief").value; d.ko.detail = $("perKoDetail").value;
-    d.en.name = $("perEnName").value; d.en.brief = $("perEnBrief").value; d.en.detail = $("perEnDetail").value;
+    d.ko.name = $("perKoName").value; d.ko.detail = $("perKoDetail").value;
+    d.en.name = $("perEnName").value; d.en.detail = $("perEnDetail").value;
     if (!n.titleLocked) { n.title = (d.ko.name.trim() || d.en.name.trim() || "이름 없는 페르소나"); $("perTitle").textContent = n.title; }
     await savePersona(n);
     updatePerTokens(n);
-  }
-  function setPerLang(lang) {
-    document.querySelectorAll(".per-tab").forEach((t) => t.classList.toggle("active", t.dataset.lang === lang));
-    $("perFormKo").hidden = lang !== "ko"; $("perFormEn").hidden = lang !== "en";
   }
   function updatePerTokens(n) {
     const ko = (n.data && n.data.ko && n.data.ko.detail) || "", en = (n.data && n.data.en && n.data.en.detail) || "";
@@ -614,19 +712,70 @@
       } else { $("perKoTok").textContent = "계산 불가"; $("perEnTok").textContent = "계산 불가"; }
     });
   }
-  async function applyPerImage(file) {
+  function applyPerImage(file) {
     const n = getNote(st.curNoteId); if (!n || !perImgTarget) return;
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
-    try {
-      const data = await fileToResized(file, perImgTarget === "gallery" ? 640 : 768);
-      if (perImgTarget === "gallery") { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); renderPerGallery(n); }
-      else { n.data[perImgTarget] = data; renderPerImages(n); }
-      await savePersona(n, true); toast("이미지를 추가했어요");
-    } catch (e) { toast("이미지를 넣지 못했어요"); }
+    if (perImgTarget === "gallery") {
+      fileToResized(file, 640).then((data) => { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); savePersona(n, true); renderPerGallery(n); toast("이미지를 추가했어요"); }).catch(() => toast("이미지를 넣지 못했어요"));
+      return;
+    }
+    const isPt = perImgTarget === "portrait", target = perImgTarget;
+    startCrop(file, isPt ? 3 / 4 : 1, isPt ? 600 : 768, isPt ? 800 : 768, (data) => {
+      const nn = getNote(st.curNoteId); if (!nn) return;
+      nn.data[target] = data; savePersona(nn, true); renderPerImagesEdit(nn); toast("이미지를 적용했어요");
+    });
   }
   async function removePerImage(k) {
     const n = getNote(st.curNoteId); if (!n) return;
-    n.data[k] = null; await savePersona(n, true); renderPerImages(n);
+    n.data[k] = null; await savePersona(n, true); renderPerImagesEdit(n);
+  }
+  function togglePerView() {
+    if (st.perEdit) { flushPersona(); st.perEdit = false; } else { st.perEdit = true; }
+    renderPersona();
+  }
+  function openLightbox(src) { if (!src) return; $("lightboxImg").src = src; $("lightbox").hidden = false; }
+
+  // image cropper
+  let cropState = null;
+  function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+  async function startCrop(file, ratio, outW, outH, cb) {
+    let url;
+    try {
+      url = URL.createObjectURL(file); const img = await loadImg(url);
+      const stage = $("cropStage"), cimg = $("cropImg"), zoom = $("cropZoom");
+      $("cropper").hidden = false;
+      const wrap = stage.parentElement;
+      const availW = wrap.clientWidth, availH = wrap.clientHeight;
+      let stageW = availW, stageH = stageW / ratio;
+      if (stageH > availH) { stageH = availH; stageW = stageH * ratio; }
+      stageW = Math.floor(stageW); stageH = Math.floor(stageH);
+      stage.style.width = stageW + "px"; stage.style.height = stageH + "px";
+      cimg.src = url; cimg.style.width = img.naturalWidth + "px"; cimg.style.height = img.naturalHeight + "px";
+      const baseScale = Math.max(stageW / img.naturalWidth, stageH / img.naturalHeight);
+      cropState = { img, url, stageW, stageH, iw: img.naturalWidth, ih: img.naturalHeight, baseScale, zoom: 1, tx: 0, ty: 0, outW, outH, cb };
+      zoom.value = 1; centerCrop(); applyCropTransform();
+    } catch (e) { toast("이미지를 불러오지 못했어요"); if (url) URL.revokeObjectURL(url); }
+  }
+  function centerCrop() { const s = cropState, sc = s.baseScale * s.zoom; s.tx = (s.stageW - s.iw * sc) / 2; s.ty = (s.stageH - s.ih * sc) / 2; clampCrop(); }
+  function clampCrop() { const s = cropState, sc = s.baseScale * s.zoom; s.tx = Math.min(0, Math.max(s.stageW - s.iw * sc, s.tx)); s.ty = Math.min(0, Math.max(s.stageH - s.ih * sc, s.ty)); }
+  function applyCropTransform() { const s = cropState; $("cropImg").style.transform = `translate(${s.tx}px,${s.ty}px) scale(${s.baseScale * s.zoom})`; }
+  function setCropZoom(v) {
+    const s = cropState; if (!s) return;
+    const old = s.zoom; s.zoom = parseFloat(v);
+    const cx = s.stageW / 2, cy = s.stageH / 2, r = (s.baseScale * s.zoom) / (s.baseScale * old);
+    s.tx = cx - (cx - s.tx) * r; s.ty = cy - (cy - s.ty) * r;
+    clampCrop(); applyCropTransform();
+  }
+  function closeCropper() { $("cropper").hidden = true; if (cropState && cropState.url) URL.revokeObjectURL(cropState.url); cropState = null; }
+  function commitCrop() {
+    const s = cropState; if (!s) return;
+    const sc = s.baseScale * s.zoom;
+    const sx = -s.tx / sc, sy = -s.ty / sc, sw = s.stageW / sc, sh = s.stageH / sc;
+    const cv = document.createElement("canvas"); cv.width = s.outW; cv.height = s.outH;
+    const ctx = cv.getContext("2d");
+    ctx.drawImage(s.img, sx, sy, sw, sh, 0, 0, s.outW, s.outH);
+    const data = cv.toDataURL("image/jpeg", 0.85);
+    const cb = s.cb; closeCropper(); cb(data);
   }
   function openPersonaSheet(n) {
     openSheet(n.title, [
@@ -781,7 +930,7 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -803,7 +952,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $("pickNew").addEventListener("click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $("pickCancel").addEventListener("click", closeModal);
-    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
+    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -1095,8 +1244,8 @@ ${html}
       else if (id === "fsUp") fontStep(1);
       else if (id === "fsList") showFontSizes();
       else if (id === "imgBtn") $("imgInput").click();
-      else if (id === "codeBlockBtn") wrapCodeBlock();
-      else if (id === "linkBtn") insertLinkPrompt();
+      else if (id === "alignBtn") showAlignMenu();
+      else if (id === "extraBtn") showExtraMenu();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
     };
@@ -1114,15 +1263,34 @@ ${html}
     $("loreMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
 
     // persona
-    ["perKoName", "perKoBrief", "perKoDetail", "perEnName", "perEnBrief", "perEnDetail"].forEach((id) => {
+    ["perKoName", "perKoDetail", "perEnName", "perEnDetail"].forEach((id) => {
       $(id).addEventListener("input", schedulePerSave);
       $(id).addEventListener("blur", () => flushPersona());
     });
-    document.querySelectorAll(".per-tab").forEach((t) => t.addEventListener("click", () => setPerLang(t.dataset.lang)));
-    $("perSquare").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "square"; $("perImgInput").click(); });
+    $("perKoTagInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("ko"); } });
+    $("perKoTagInput").addEventListener("blur", () => addPerTag("ko"));
+    $("perEnTagInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("en"); } });
+    $("perEnTagInput").addEventListener("blur", () => addPerTag("en"));
+    document.querySelectorAll("#screen-persona .per-tab").forEach((t) => t.addEventListener("click", () => setPerLang(t.dataset.lang)));
     $("perPortrait").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "portrait"; $("perImgInput").click(); });
+    $("perSquare").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "square"; $("perImgInput").click(); });
     $("perImgInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) applyPerImage(f); e.target.value = ""; });
+    $("perViewToggle").addEventListener("click", togglePerView);
     $("perMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
+    // lightbox
+    $("lbClose").addEventListener("click", () => { $("lightbox").hidden = true; });
+    $("lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") $("lightbox").hidden = true; });
+    // cropper
+    $("cropCancel").addEventListener("click", closeCropper);
+    $("cropOk").addEventListener("click", commitCrop);
+    $("cropZoom").addEventListener("input", (e) => setCropZoom(e.target.value));
+    (function () {
+      const stage = $("cropStage"); let dragging = false, lx = 0, ly = 0;
+      stage.addEventListener("pointerdown", (e) => { if (!cropState) return; dragging = true; lx = e.clientX; ly = e.clientY; try { stage.setPointerCapture(e.pointerId); } catch (x) {} });
+      stage.addEventListener("pointermove", (e) => { if (!dragging || !cropState) return; cropState.tx += e.clientX - lx; cropState.ty += e.clientY - ly; lx = e.clientX; ly = e.clientY; clampCrop(); applyCropTransform(); });
+      stage.addEventListener("pointerup", () => { dragging = false; });
+      stage.addEventListener("pointercancel", () => { dragging = false; });
+    })();
 
     window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushPersona(); });
     document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushPersona(); } });
