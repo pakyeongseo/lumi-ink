@@ -1130,12 +1130,13 @@ ${html}
 
   /* ---------- init ---------- */
   async function init() {
-    detectTheme(); bind();
+    detectTheme();
+    try { bind(); } catch (e) { console.warn("bind", e); }
     try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
     catch (e) { console.warn("DB error", e); toast("저장소를 열 수 없어요"); }
-    await migrate();
+    try { await migrate(); } catch (e) { console.warn("migrate", e); }
     history.replaceState({ d: 1 }, "");
-    render();
+    try { render(); } catch (e) { console.warn("render", e); }
 
     if ("launchQueue" in window && window.LaunchParams && "files" in LaunchParams.prototype) {
       launchQueue.setConsumer(async (params) => {
