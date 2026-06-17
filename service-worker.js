@@ -1,7 +1,7 @@
 /* 잉크 메모 — Service Worker
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
-const CACHE = "ink-memo-v8";
+const CACHE = "ink-memo-v10";
 
 const ASSETS = [
   "./",
@@ -41,12 +41,29 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  // 앱 코드(HTML/JS)는 네트워크 우선 — 항상 최신 버전을 받고, 오프라인일 때만 캐시로 폴백
+  const isAppCode = req.mode === "navigate" || /\.(html|js)$/i.test(url.pathname);
+  if (isAppCode) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200 && res.type === "basic") {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // 그 외 정적 리소스(아이콘·토크나이저 등)는 캐시 우선
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req)
         .then((res) => {
-          // 동일 출처 GET 응답을 런타임 캐시에 추가 (오프라인 대비)
           if (res && res.status === 200 && res.type === "basic") {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
