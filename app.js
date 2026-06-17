@@ -8,6 +8,8 @@
   const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast,
           noteHtml, notesOf, getProject, getNote } = L.h;
   const { CHIP, TYPE_LABEL, openDB, getAll, put, del } = L;
+  const ICONS = window.__luminkIcons || [];
+  const DEFAULT_ICON = ICONS[0] ? ICONS[0].data : null;
 
   /* ---------- routing ---------- */
   const SCREENS = ["home", "project", "read", "editor"];
@@ -42,7 +44,7 @@
     if (orphans.length === 0 && st.projects.length > 0) return;
     let def = st.projects.find((p) => p.isDefault) || st.projects[0];
     if (!def) {
-      def = { id: uid(), name: "기본 메모함", description: "여기에 메모가 모입니다.", icon: null, isDefault: true, createdAt: now(), updatedAt: now() };
+      def = { id: uid(), name: "기본 메모함", description: "여기에 메모가 모입니다.", icon: DEFAULT_ICON, isDefault: true, createdAt: now(), updatedAt: now() };
       st.projects.push(def); await put("projects", def);
     }
     for (const n of orphans) {
@@ -106,6 +108,7 @@
     const p = getProject(st.curProjectId);
     if (!p) { back(); return; }
     $("pdTopTitle").textContent = p.name;
+    $("pdThumb").innerHTML = p.icon ? `<img src="${p.icon}" alt=""><div class="frame"></div>` : `<span class="deflogo"></span><div class="frame"></div>`;
     $("pdName").textContent = p.name;
     const desc = $("pdDesc");
     if (p.description && p.description.trim()) { desc.textContent = p.description; desc.classList.remove("empty"); }
@@ -158,11 +161,12 @@
     else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
+  function goHome() { closeSidebar(); st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render(); }
 
   /* ---------- project CRUD ---------- */
   async function saveProject(p) { p.updatedAt = now(); await put("projects", p); }
   async function createProject(name, desc) {
-    const p = { id: uid(), name: name || "새 프로젝트", description: desc || "", icon: null, createdAt: now(), updatedAt: now() };
+    const p = { id: uid(), name: name || "새 프로젝트", description: desc || "", icon: DEFAULT_ICON, createdAt: now(), updatedAt: now() };
     st.projects.push(p); await put("projects", p);
     return p;
   }
@@ -191,7 +195,7 @@
   /* ---------- note CRUD ---------- */
   async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); }
   async function createNote(type, projectId) {
-    const n = { id: uid(), projectId, type, title: "제목 없는 메모", chipColor: null, createdAt: now(), updatedAt: now(), data: type === "free" ? { html: "" } : {} };
+    const n = { id: uid(), projectId, type, title: "제목 없는 메모", titleLocked: false, chipColor: null, createdAt: now(), updatedAt: now(), data: type === "free" ? { html: "" } : {} };
     st.notes.push(n); await put("notes", n);
     const p = getProject(projectId); if (p) saveProject(p);
     st.curNoteId = n.id;
@@ -227,8 +231,7 @@
     const html = st.codeMode ? $("codeArea").value : $("editor").innerHTML;
     if (html === noteHtml(n)) return;
     n.data = n.data || {}; n.data.html = html;
-    n.title = deriveTitle(html);
-    $("edTitle").textContent = n.title;
+    if (!n.titleLocked) { n.title = deriveTitle(html); $("edTitle").textContent = n.title; }
     await saveNote(n);
     if (!silent) setSaver("saved");
   }
@@ -380,7 +383,7 @@
   function openNoteSheet(id) {
     const n = getNote(id); if (!n) return;
     openSheet(n.title, [
-      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; await saveNote(n); render(); } }) },
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(id) },
       { icon: IC.save, label: ".html로 저장", fn: () => exportNote(id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(id, pid).then(render)) },
@@ -393,7 +396,7 @@
     const items = [
       { icon: IC.rename, label: "이름 · 설명 편집", fn: () => showProjectForm(id, () => { render(); renderSidebar(); }) },
       { icon: IC.copy, label: "복제", fn: () => duplicateProject(id).then(() => { render(); renderSidebar(); }) },
-      { icon: IC.icon, label: "아이콘 변경", fn: () => startIconChange(id) }
+      { icon: IC.icon, label: "아이콘 변경", fn: () => showIconPicker(id) }
     ];
     if (!p.isDefault) items.push({ icon: IC.del, label: "삭제", danger: true, fn: () => {
       const cnt = notesOf(id).length;
@@ -413,9 +416,25 @@
     $("ptOk").addEventListener("click", () => { if (sel) { closeModal(); onPick(sel); } });
   }
 
-  /* ---------- icon upload ---------- */
+  /* ---------- icon picker ---------- */
   let iconTargetPid = null;
-  function startIconChange(pid) { iconTargetPid = pid; $("iconInput").click(); }
+  function showIconPicker(pid) {
+    const p = getProject(pid); if (!p) return;
+    const grid = ICONS.map((ic) => `<div class="icon-opt${p.icon === ic.data ? " sel" : ""}" data-icon="${ic.id}"><img src="${ic.data}" alt="${esc(ic.name)}"></div>`).join("");
+    openModal(`
+      <h3>프로젝트 썸네일</h3><p class="m-sub">${esc(p.name)}</p>
+      <div class="icon-grid">${grid}
+        <div class="icon-opt upload" id="iconUpload"><svg viewBox="0 0 24 24"><path d="M12 16V5M7 10l5-5 5 5"/><path d="M5 16v3h14v-3"/></svg><span>업로드</span></div>
+      </div>
+      <div class="m-row"><button class="m-btn" id="iconClose">닫기</button></div>
+    `);
+    $("modalBox").querySelectorAll(".icon-opt[data-icon]").forEach((el) => el.addEventListener("click", async () => {
+      const ic = ICONS.find((x) => x.id === el.dataset.icon); if (!ic) return;
+      p.icon = ic.data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요");
+    }));
+    $("iconUpload").addEventListener("click", () => { iconTargetPid = pid; $("iconInput").click(); });
+    $("iconClose").addEventListener("click", closeModal);
+  }
   function fileToResized(file, max) {
     return new Promise((res, rej) => {
       const fr = new FileReader();
@@ -432,7 +451,7 @@
   $("iconInput").addEventListener("change", async (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
     if (!f || !iconTargetPid) return;
-    try { const data = await fileToResized(f, 256); const p = getProject(iconTargetPid); if (p) { p.icon = data; await saveProject(p); render(); renderSidebar(); toast("아이콘을 변경했어요"); } }
+    try { const data = await fileToResized(f, 256); const p = getProject(iconTargetPid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("아이콘을 변경했어요"); } }
     catch (err) { toast("이미지를 불러오지 못했어요"); }
   });
 
@@ -524,8 +543,26 @@ ${html}
     $("edBack").addEventListener("click", () => { flushSave(true); back(); });
     $("edMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
     $("sbNewProject").addEventListener("click", () => { closeSidebar(); showProjectForm(null, () => { render(); renderSidebar(); }); });
+    $("sbNewMemo").addEventListener("click", () => { closeSidebar(); showTypePicker(null); });
+    $("sbLogo").addEventListener("click", goHome);
+    $("homeLogo").addEventListener("click", () => { const hs = document.querySelector(".home-scroll"); if (hs) hs.scrollTo({ top: 0, behavior: "smooth" }); });
     $("sbImport").addEventListener("click", () => $("fileInput").click());
     $("sbTheme").addEventListener("click", () => applyTheme(st.theme === "light" ? "dark" : "light"));
+
+    // read: double-tap to edit
+    $("readBody").addEventListener("dblclick", editCurrentNote);
+
+    // global left-edge swipe -> open sidebar (any screen)
+    let edgeX = null, edgeY = null;
+    document.addEventListener("touchstart", (e) => {
+      if (document.body.classList.contains("sidebar-open") || document.body.classList.contains("sheet-open") || $("modalScrim").classList.contains("open")) { edgeX = null; return; }
+      const t = e.touches[0]; edgeX = t.clientX <= 24 ? t.clientX : null; edgeY = t.clientY;
+    }, { passive: true });
+    document.addEventListener("touchmove", (e) => {
+      if (edgeX == null) return; const t = e.touches[0];
+      if (t.clientX - edgeX > 55 && Math.abs(t.clientY - edgeY) < 45) { openSidebar(); edgeX = null; }
+    }, { passive: true });
+    document.addEventListener("touchend", () => { edgeX = null; });
 
     // editor
     $("editor").addEventListener("input", scheduleSave);
