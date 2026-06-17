@@ -13,7 +13,7 @@
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore"];
+  const SCREENS = ["home", "project", "read", "editor", "lore", "persona"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -24,12 +24,14 @@
     else if (v.s === "read") renderRead();
     else if (v.s === "editor") renderEditorMeta();
     else if (v.s === "lore") renderLore();
+    else if (v.s === "persona") renderPersona();
   }
   function go(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
   function back() {
     const cur = curView().s;
     if (cur === "editor") flushSave(true);
     if (cur === "lore") flushLore();
+    if (cur === "persona") flushPersona();
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
   }
   function closeTopOverlay() {
@@ -42,6 +44,7 @@
     if (closeTopOverlay()) { history.pushState({}, ""); return; }
     if (curView().s === "editor") flushSave(true);
     if (curView().s === "lore") flushLore();
+    if (curView().s === "persona") flushPersona();
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
     else history.pushState({}, "");
   });
@@ -112,6 +115,30 @@
     });
   }
 
+  function buildChip(n) {
+    const chip = document.createElement("div");
+    chip.className = "memo-chip";
+    const col = n.chipColor && CHIP[n.chipColor] ? CHIP[n.chipColor].c : null;
+    let lead, meta;
+    if (n.type === "persona") {
+      const d = n.data || {};
+      const img = d.square || d.portrait || DEFAULT_ICON;
+      lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
+      meta = (d.ko && d.ko.brief) || (d.en && d.en.brief) || "페르소나";
+    } else {
+      const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
+      lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
+      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : (preview(noteHtml(n)) || "빈 메모");
+    }
+    chip.innerHTML = lead +
+      `<div class="mc-body"><div class="mc-title">${esc(n.title)}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
+      `<span class="mc-type">${TYPE_LABEL[n.type] || ""}</span>`;
+    if (col) chip.style.borderColor = col.replace(")", ", .4)").replace("rgb", "rgba");
+    chip.addEventListener("click", () => openNote(n.id));
+    attachLongPress(chip, () => openNoteSheet(n.id));
+    return chip;
+  }
+
   function renderProjectDetail() {
     const p = getProject(st.curProjectId);
     if (!p) { back(); return; }
@@ -126,19 +153,16 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    ns.forEach((n) => {
-      const chip = document.createElement("div");
-      chip.className = "memo-chip";
-      const col = n.chipColor && CHIP[n.chipColor] ? CHIP[n.chipColor].c : null;
-      const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
-      chip.innerHTML =
-        `<span class="mc-dot" style="${dotStyle}"></span>` +
-        `<div class="mc-body"><div class="mc-title">${esc(n.title)}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(preview(noteHtml(n))) || "빈 메모"}</div></div>` +
-        `<span class="mc-type">${TYPE_LABEL[n.type] || ""}</span>`;
-      if (col) chip.style.borderColor = col.replace(")", ", .4)").replace("rgb", "rgba");
-      chip.addEventListener("click", () => openNote(n.id));
-      attachLongPress(chip, () => openNoteSheet(n.id));
-      wrap.appendChild(chip);
+    const SECTIONS = [["persona", "페르소나"], ["lorebook", "로어북"], ["free", "자유 메모"]];
+    SECTIONS.forEach(([t, label]) => {
+      const group = ns.filter((n) => n.type === t);
+      if (!group.length) return;
+      const sec = document.createElement("div"); sec.className = "chip-section";
+      const lab = document.createElement("div"); lab.className = "chip-section-label";
+      lab.innerHTML = `<span class="csl-dot"></span>${label} <span class="csl-count">· ${group.length}</span>`;
+      sec.appendChild(lab);
+      group.forEach((n) => sec.appendChild(buildChip(n)));
+      wrap.appendChild(sec);
     });
   }
 
@@ -170,6 +194,7 @@
     st.curNoteId = id;
     if (n.type === "free") go({ s: "read" });
     else if (n.type === "lorebook") go({ s: "lore" });
+    else if (n.type === "persona") go({ s: "persona" });
     else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
@@ -210,9 +235,12 @@
     const n = {
       id: uid(), projectId, type,
       title: type === "lorebook" ? "이름 없는 로어북" : type === "persona" ? "이름 없는 페르소나" : "제목 없는 메모",
-      titleLocked: type !== "free",
+      titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
-      data: type === "free" ? { html: "" } : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false } : {}
+      data: type === "free" ? { html: "" }
+          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false }
+          : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
+          : {}
     };
     st.notes.push(n); await put("notes", n);
     const p = getProject(projectId); if (p) saveProject(p);
@@ -321,6 +349,11 @@
       document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`);
       scheduleSave();
     } catch (e) { toast("이미지를 넣지 못했어요"); }
+  }
+  function wrapCodeBlock() {
+    $("editor").focus();
+    try { document.execCommand("formatBlock", false, "pre"); } catch (e) {}
+    scheduleSave();
   }
 
   /* ---------- lorebook ---------- */
@@ -514,6 +547,97 @@
     ]);
   }
 
+  /* ---------- persona ---------- */
+  const PER_PH_SQ = '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg><span>정사각</span></div>';
+  const PER_PH_PT = '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>포트레이트</span></div>';
+  const PER_X = '<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+  let perTimer = null, perImgTarget = null;
+  function setPerSaver(mode) {
+    const s = $("perSaver"); s.className = "saver " + mode;
+    $("perSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("perSaverText").textContent = ""; } }, 1500);
+  }
+  function renderPersona() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "persona") { back(); return; }
+    const d = n.data = n.data || {};
+    d.ko = d.ko || { name: "", brief: "", detail: "" }; d.en = d.en || { name: "", brief: "", detail: "" }; d.gallery = d.gallery || [];
+    $("perTitle").textContent = n.title || "페르소나";
+    $("perKoName").value = d.ko.name || ""; $("perKoBrief").value = d.ko.brief || ""; $("perKoDetail").value = d.ko.detail || "";
+    $("perEnName").value = d.en.name || ""; $("perEnBrief").value = d.en.brief || ""; $("perEnDetail").value = d.en.detail || "";
+    renderPerImages(n); renderPerGallery(n);
+    setPerLang("ko"); setPerSaver(""); updatePerTokens(n);
+  }
+  function renderPerImages(n) {
+    const d = n.data;
+    $("perSquare").innerHTML = d.square ? `<img src="${d.square}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_SQ;
+    $("perPortrait").innerHTML = d.portrait ? `<img src="${d.portrait}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_PT;
+    const sq = $("perSquare").querySelector(".per-del"); if (sq) sq.addEventListener("click", (e) => { e.stopPropagation(); removePerImage("square"); });
+    const pt = $("perPortrait").querySelector(".per-del"); if (pt) pt.addEventListener("click", (e) => { e.stopPropagation(); removePerImage("portrait"); });
+  }
+  function renderPerGallery(n) {
+    const wrap = $("perGallery"), g = (n.data && n.data.gallery) || [];
+    wrap.innerHTML = "";
+    g.forEach((src, idx) => {
+      const it = document.createElement("div"); it.className = "pg-item";
+      it.innerHTML = `<img src="${src}" alt=""><button class="pg-del" aria-label="삭제">${PER_X}</button>`;
+      it.querySelector(".pg-del").addEventListener("click", (e) => { e.stopPropagation(); n.data.gallery.splice(idx, 1); savePersona(n, true); renderPerGallery(n); });
+      wrap.appendChild(it);
+    });
+    const add = document.createElement("div"); add.className = "pg-add"; add.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+    add.addEventListener("click", () => { perImgTarget = "gallery"; $("perImgInput").click(); });
+    wrap.appendChild(add);
+  }
+  async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); }
+  function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); perTimer = setTimeout(flushPersona, 550); }
+  async function flushPersona() {
+    clearTimeout(perTimer); perTimer = null;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "persona") return;
+    const d = n.data;
+    d.ko.name = $("perKoName").value; d.ko.brief = $("perKoBrief").value; d.ko.detail = $("perKoDetail").value;
+    d.en.name = $("perEnName").value; d.en.brief = $("perEnBrief").value; d.en.detail = $("perEnDetail").value;
+    if (!n.titleLocked) { n.title = (d.ko.name.trim() || d.en.name.trim() || "이름 없는 페르소나"); $("perTitle").textContent = n.title; }
+    await savePersona(n);
+    updatePerTokens(n);
+  }
+  function setPerLang(lang) {
+    document.querySelectorAll(".per-tab").forEach((t) => t.classList.toggle("active", t.dataset.lang === lang));
+    $("perFormKo").hidden = lang !== "ko"; $("perFormEn").hidden = lang !== "en";
+  }
+  function updatePerTokens(n) {
+    const ko = (n.data && n.data.ko && n.data.ko.detail) || "", en = (n.data && n.data.en && n.data.en.detail) || "";
+    $("perKoTok").textContent = "계산 중…"; $("perEnTok").textContent = "계산 중…";
+    ensureTokenizer().then((ok) => {
+      if (getNote(st.curNoteId) !== n) return;
+      if (ok && window.__luminkCountTokens) {
+        $("perKoTok").innerHTML = `<b>${window.__luminkCountTokens(ko)}</b> 토큰`;
+        $("perEnTok").innerHTML = `<b>${window.__luminkCountTokens(en)}</b> tokens`;
+      } else { $("perKoTok").textContent = "계산 불가"; $("perEnTok").textContent = "계산 불가"; }
+    });
+  }
+  async function applyPerImage(file) {
+    const n = getNote(st.curNoteId); if (!n || !perImgTarget) return;
+    if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    try {
+      const data = await fileToResized(file, perImgTarget === "gallery" ? 640 : 768);
+      if (perImgTarget === "gallery") { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); renderPerGallery(n); }
+      else { n.data[perImgTarget] = data; renderPerImages(n); }
+      await savePersona(n, true); toast("이미지를 추가했어요");
+    } catch (e) { toast("이미지를 넣지 못했어요"); }
+  }
+  async function removePerImage(k) {
+    const n = getNote(st.curNoteId); if (!n) return;
+    n.data[k] = null; await savePersona(n, true); renderPerImages(n);
+  }
+  function openPersonaSheet(n) {
+    openSheet(n.title, [
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("페르소나 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await savePersona(n, true); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("페르소나 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    ]);
+  }
+
   /* ---------- attachments ---------- */
   const MAX_ATTACH = 15 * 1024 * 1024;
   const DL_SVG = '<svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>';
@@ -647,10 +771,9 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></div>
         <div><div class="tc-name">로어북</div><div class="tc-desc">마크다운 · 키워드 · 토큰 · World Info 내보내기</div></div>
       </div>
-      <div class="type-card disabled" data-t="persona">
+      <div class="type-card" data-t="persona">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-        <div><div class="tc-name">페르소나</div><div class="tc-desc">국문/영문 캐릭터 카드</div></div>
-        <span class="tc-soon">준비 중</span>
+        <div><div class="tc-name">페르소나</div><div class="tc-desc">국문/영문 카드 · 이미지 · 토큰</div></div>
       </div>
       <div class="m-row"><button class="m-btn" data-x="cancel">취소</button></div>
     `);
@@ -658,7 +781,7 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); go({ s: t === "lorebook" ? "lore" : "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -680,7 +803,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $("pickNew").addEventListener("click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $("pickCancel").addEventListener("click", closeModal);
-    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); go({ s: type === "lorebook" ? "lore" : "editor" }); }); });
+    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -767,6 +890,7 @@
   function openNoteSheet(id) {
     const n = getNote(id); if (!n) return;
     if (n.type === "lorebook") { openLoreSheet(n); return; }
+    if (n.type === "persona") { openPersonaSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(id) },
@@ -971,6 +1095,7 @@ ${html}
       else if (id === "fsUp") fontStep(1);
       else if (id === "fsList") showFontSizes();
       else if (id === "imgBtn") $("imgInput").click();
+      else if (id === "codeBlockBtn") wrapCodeBlock();
       else if (id === "linkBtn") insertLinkPrompt();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
@@ -988,8 +1113,19 @@ ${html}
     $("lorePreviewBtn").addEventListener("click", toggleLorePreview);
     $("loreMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
 
-    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); } });
+    // persona
+    ["perKoName", "perKoBrief", "perKoDetail", "perEnName", "perEnBrief", "perEnDetail"].forEach((id) => {
+      $(id).addEventListener("input", schedulePerSave);
+      $(id).addEventListener("blur", () => flushPersona());
+    });
+    document.querySelectorAll(".per-tab").forEach((t) => t.addEventListener("click", () => setPerLang(t.dataset.lang)));
+    $("perSquare").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "square"; $("perImgInput").click(); });
+    $("perPortrait").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "portrait"; $("perImgInput").click(); });
+    $("perImgInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) applyPerImage(f); e.target.value = ""; });
+    $("perMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
+
+    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushPersona(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushPersona(); } });
   }
 
   /* ---------- init ---------- */
