@@ -13,7 +13,7 @@
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore", "persona"];
+  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "settings"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -25,9 +25,11 @@
     else if (v.s === "editor") renderEditorMeta();
     else if (v.s === "lore") renderLore();
     else if (v.s === "persona") renderPersona();
+    else if (v.s === "settings") renderSettings();
   }
   function go(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
   function back() {
+    if (st.selMode) { exitSelMode(); return; }
     const cur = curView().s;
     if (cur === "editor") flushSave(true);
     if (cur === "lore") flushLore();
@@ -35,6 +37,7 @@
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
   }
   function closeTopOverlay() {
+    if (st.selMode) { exitSelMode(); return true; }
     if (!$("cropper").hidden) { closeCropper(); return true; }
     if (!$("lightbox").hidden) { $("lightbox").hidden = true; return true; }
     if ($("modalScrim").classList.contains("open")) { closeModal(); return true; }
@@ -90,15 +93,19 @@
       const card = document.createElement("div");
       card.className = "proj-card";
       card.innerHTML =
+        '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' +
         projIconHTML(p, "proj-icon") +
         `<div class="pc-name">${esc(p.name)}</div>` +
         `<div class="pc-meta">메모 ${cnt}개 · ${fmtDate(p.updatedAt || p.createdAt)}</div>` +
         `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
+      card.dataset.selid = p.id;
+      if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
       card.addEventListener("click", (e) => {
+        if (st.selMode) { toggleSel(p.id); return; }
         if (e.target.closest(".pc-more")) { e.stopPropagation(); openProjectSheet(p.id); return; }
         openProject(p.id);
       });
-      attachLongPress(card, () => openProjectSheet(p.id));
+      attachLongPress(card, () => { if (!st.selMode) openProjectSheet(p.id); });
       grid.appendChild(card);
     });
   }
@@ -132,12 +139,14 @@
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
       meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : (preview(noteHtml(n)) || "빈 메모");
     }
-    chip.innerHTML = lead +
+    chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
       `<span class="mc-type">${TYPE_LABEL[n.type] || ""}</span>`;
     if (col) chip.style.borderColor = col.replace(")", ", .4)").replace("rgb", "rgba");
-    chip.addEventListener("click", () => openNote(n.id));
-    attachLongPress(chip, () => openNoteSheet(n.id));
+    chip.dataset.selid = n.id;
+    if (st.selMode && st.selIds && st.selIds.has(n.id)) chip.classList.add("selected");
+    chip.addEventListener("click", () => { if (st.selMode) toggleSel(n.id); else openNote(n.id); });
+    attachLongPress(chip, () => { if (!st.selMode) openNoteSheet(n.id); });
     return chip;
   }
 
@@ -374,25 +383,6 @@
     }));
     $("alClose").addEventListener("click", closeModal);
   }
-  function setExtraSlot(x) {
-    const b = $("extraBtn"); if (!b) return;
-    const caret = '<svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
-    b.classList.remove("extra-slot");
-    if (x === "code") { b.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"/></svg>' + caret; b.title = "코드 블록 (탭하여 변경)"; }
-    else { b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>' + caret; b.title = "하이퍼링크 (탭하여 변경)"; }
-  }
-  function showExtraMenu() {
-    const items = [
-      ["code", "코드 블록 만들기", "M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"],
-      ["link", "하이퍼링크 삽입", "M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1|M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"]
-    ];
-    openModal(`<h3>삽입</h3><div class="size-list">${items.map(([x, n, d]) => `<div class="size-item ex-item" data-x="${x}"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-4px;margin-right:10px">${d.split("|").map((p) => `<path d="${p}"/>`).join("")}</svg>${n}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="exClose">닫기</button></div>`);
-    $("modalBox").querySelectorAll(".ex-item").forEach((it) => it.addEventListener("click", () => {
-      const x = it.dataset.x; closeModal(); setExtraSlot(x);
-      if (x === "code") wrapCodeBlock(); else insertLinkPrompt();
-    }));
-    $("exClose").addEventListener("click", closeModal);
-  }
 
   /* ---------- lorebook ---------- */
   // lightweight markdown -> html
@@ -576,6 +566,7 @@
   }
   function openLoreSheet(n) {
     openSheet(n.title, [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("로어북 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveLore(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.export, label: "World Info(.json)로 내보내기", fn: () => exportWorldInfoFlow([n]) },
@@ -684,6 +675,12 @@
     const rt = $("perRTags"); rt.innerHTML = "";
     (o.tags || []).forEach((t) => { const c = document.createElement("span"); c.className = "kw-chip"; c.textContent = t; rt.appendChild(c); });
     $("perRDetail").textContent = o.detail || "";
+    const tokEl = $("perRTok"); tokEl.textContent = "계산 중…";
+    ensureTokenizer().then((ok) => {
+      if (getNote(st.curNoteId) !== n || st.perEdit) return;
+      if (ok && window.__luminkCountTokens) tokEl.innerHTML = `<b>${window.__luminkCountTokens(o.detail || "")}</b> ${perLang === "en" ? "tokens" : "토큰"}`;
+      else tokEl.textContent = "계산 불가";
+    });
     const rg = $("perRGallery"); rg.innerHTML = "";
     const gal = d.gallery || [];
     if (!gal.length) { rg.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; }
@@ -779,6 +776,7 @@
   }
   function openPersonaSheet(n) {
     openSheet(n.title, [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("페르소나 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await savePersona(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
@@ -1033,7 +1031,8 @@
     copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
     del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
     icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 16l-5-5L5 21"/></svg>',
-    export: '<svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>'
+    export: '<svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>',
+    select: '<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
   };
 
   function openNoteSheet(id) {
@@ -1041,6 +1040,7 @@
     if (n.type === "lorebook") { openLoreSheet(n); return; }
     if (n.type === "persona") { openPersonaSheet(n); return; }
     openSheet(n.title, [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(id) },
       { icon: IC.save, label: ".html로 저장", fn: () => exportNote(id) },
@@ -1056,6 +1056,7 @@
       { icon: IC.copy, label: "복제", fn: () => duplicateProject(id).then(() => { render(); renderSidebar(); }) },
       { icon: IC.icon, label: "아이콘 변경", fn: () => showIconPicker(id) }
     ];
+    if (curView().s === "home") items.unshift({ icon: IC.select, label: "선택", fn: () => enterSelMode("project", id) });
     if (notesOf(id).some((n) => n.type === "lorebook")) items.push({ icon: IC.export, label: "로어북 → World Info 내보내기", fn: () => showLoreExportPicker(id) });
     if (!p.isDefault) items.push({ icon: IC.del, label: "삭제", danger: true, fn: () => {
       const cnt = notesOf(id).length;
@@ -1113,6 +1114,139 @@
     try { const data = await fileToResized(f, 256); const p = getProject(iconTargetPid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("아이콘을 변경했어요"); } }
     catch (err) { toast("이미지를 불러오지 못했어요"); }
   });
+
+  /* ---------- settings ---------- */
+  function renderSettings() {
+    $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
+    $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
+  }
+  const FONT_PRESETS = [
+    { name: "Nanum Myeongjo", label: "나눔명조", url: "https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" },
+    { name: "Gowun Dodum", label: "고운돋움", url: "https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" },
+    { name: "IBM Plex Sans KR", label: "IBM Plex Sans KR", url: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" },
+    { name: "Noto Serif KR", label: "본명조 · Noto Serif KR", url: "https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap" }
+  ];
+  function applyUserFont(cfg) {
+    const old = $("userFontLink"); if (old) old.remove();
+    if (cfg && cfg.url) { const l = document.createElement("link"); l.id = "userFontLink"; l.rel = "stylesheet"; l.href = cfg.url; document.head.appendChild(l); }
+    if (cfg && cfg.name) { document.documentElement.style.setProperty("--user-font", `'${cfg.name}'`); document.body.classList.add("has-userfont"); }
+    else { document.documentElement.style.removeProperty("--user-font"); document.body.classList.remove("has-userfont"); }
+    st.userFont = cfg || null;
+    try { localStorage.setItem("luminkFont", cfg ? JSON.stringify(cfg) : ""); } catch (e) {}
+  }
+  function detectUserFont() { let c = null; try { const s = localStorage.getItem("luminkFont"); if (s) c = JSON.parse(s); } catch (e) {} if (c && c.name) applyUserFont(c); }
+  function showFontDialog() {
+    const cur = st.userFont || {};
+    const presets = FONT_PRESETS.map((f, i) => `<button class="font-preset" data-i="${i}" style="font-family:'${f.name}',serif">${f.label}<span class="fp-sub">${f.name}</span></button>`).join("");
+    openModal(`<h3>웹폰트</h3><p class="m-sub">프리셋을 고르거나 구글 폰트 등의 CSS 링크를 직접 넣어요.</p>
+      <div class="font-presets">${presets}</div>
+      <input class="m-input" id="fontUrl" placeholder="폰트 CSS 링크 (https://…)" value="${esc(cur.url || "")}" autocapitalize="off" autocorrect="off">
+      <input class="m-input" id="fontName" placeholder="font-family 이름 (예: Nanum Myeongjo)" value="${esc(cur.name || "")}" autocapitalize="off" autocorrect="off" style="margin-top:8px">
+      <div class="m-row"><button class="m-btn" id="fontReset">기본으로</button><button class="m-btn primary" id="fontApply">적용</button></div>`);
+    FONT_PRESETS.forEach((f) => { if (!document.querySelector(`link[data-prev='${f.name}']`)) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = f.url; l.setAttribute("data-prev", f.name); document.head.appendChild(l); } });
+    $("modalBox").querySelectorAll(".font-preset").forEach((b) => b.addEventListener("click", () => { const f = FONT_PRESETS[+b.dataset.i]; $("fontUrl").value = f.url; $("fontName").value = f.name; }));
+    $("fontReset").addEventListener("click", () => { applyUserFont(null); closeModal(); renderSettings(); toast("기본 폰트로 되돌렸어요"); });
+    $("fontApply").addEventListener("click", () => {
+      const url = $("fontUrl").value.trim(), name = $("fontName").value.trim();
+      if (!name) { toast("font-family 이름을 입력해 주세요"); return; }
+      applyUserFont({ url, name }); closeModal(); renderSettings(); toast("폰트를 적용했어요");
+    });
+  }
+  /* backup / restore */
+  function blobToBase64(blob) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1] || ""); fr.onerror = rej; fr.readAsDataURL(blob); }); }
+  function base64ToBlob(b64, type) { const bin = atob(b64 || ""); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], { type: type || "application/octet-stream" }); }
+  function dateStamp() { const d = new Date(), p = (x) => String(x).padStart(2, "0"); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; }
+  function downloadDoc(text, name, type) {
+    const blob = new Blob([text], { type: (type || "text/html") + ";charset=utf-8" });
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+  function clearStore(name) { return new Promise((res, rej) => { const r = store(name, "readwrite").clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+  async function reloadState() { st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
+  async function exportBackup() {
+    try {
+      const files = await getAll("files"); const fileRecs = [];
+      for (const f of files) { try { fileRecs.push({ id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, data: await blobToBase64(f.blob) }); } catch (e) {} }
+      const payload = { app: "lumink", version: 1, exportedAt: now(), projects: st.projects, notes: st.notes, files: fileRecs };
+      const json = JSON.stringify(payload).replace(/</g, "\\u003c");
+      const summary = st.projects.map((p) => {
+        const ns = st.notes.filter((n) => n.projectId === p.id);
+        return `<section><h2>${esc(p.name)}</h2>${p.description ? `<p class="d">${esc(p.description)}</p>` : ""}<p class="c">메모 ${ns.length}개</p><ul>${ns.map((n) => `<li>${esc(n.title || "(제목 없음)")} <em>${TYPE_LABEL[n.type] || n.type}</em></li>`).join("")}</ul></section>`;
+      }).join("");
+      const doc = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>루미잉크 백업 ${new Date().toLocaleDateString("ko")}</title>
+<style>body{font-family:-apple-system,"Noto Sans KR",sans-serif;max-width:720px;margin:0 auto;padding:34px 20px;line-height:1.6;color:#1c1b19;background:#faf9f7}h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 6px;border-bottom:1px solid #e7e3da;padding-bottom:5px}em{color:#9a948a;font-style:normal;font-size:.82em;margin-left:4px}ul{margin:6px 0 0;padding-left:20px}li{margin:2px 0}.note{color:#a09a8f;font-size:13px}.d{color:#666;margin:2px 0}.c{color:#9a948a;font-size:13px;margin:2px 0}</style></head>
+<body><h1>루미 ✦ 잉크 백업</h1><p class="note">${new Date().toLocaleString("ko")} · 프로젝트 ${st.projects.length}개 · 메모 ${st.notes.length}개</p>${summary}
+<p class="note" style="margin-top:26px">이 파일을 루미잉크 → 설정 → 백업 복원에서 가져오면 데이터가 복원됩니다.</p>
+<script type="application/json" id="lumink-backup">${json}<\/script></body></html>`;
+      downloadDoc(doc, `lumink-backup-${dateStamp()}.html`, "text/html");
+      toast("백업을 저장했어요");
+    } catch (e) { toast("백업에 실패했어요"); }
+  }
+  function restoreBackup(file) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const doc = new DOMParser().parseFromString(String(fr.result || ""), "text/html");
+        const tag = doc.getElementById("lumink-backup");
+        if (!tag) { toast("백업 데이터를 찾지 못했어요"); return; }
+        const payload = JSON.parse(tag.textContent);
+        if (!payload || payload.app !== "lumink" || !Array.isArray(payload.projects)) { toast("올바른 백업 파일이 아니에요"); return; }
+        confirmModal("백업 복원", `프로젝트 ${payload.projects.length}개, 메모 ${(payload.notes || []).length}개를 현재 데이터에 병합할까요? 같은 항목은 백업 내용으로 덮어써요.`, "복원", false, async () => {
+          try {
+            for (const p of payload.projects) await put("projects", p);
+            for (const n of (payload.notes || [])) await put("notes", n);
+            for (const f of (payload.files || [])) await put("files", { id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, blob: base64ToBlob(f.data, f.type) });
+            await reloadState(); render(); renderSidebar(); toast("복원했어요");
+          } catch (e) { toast("복원 중 오류가 났어요"); }
+        });
+      } catch (e) { toast("복원에 실패했어요"); }
+    };
+    fr.onerror = () => toast("파일을 읽지 못했어요");
+    fr.readAsText(file, "UTF-8");
+  }
+  function resetData() {
+    confirmModal("데이터 초기화", "모든 프로젝트와 메모가 영구 삭제됩니다. 먼저 백업을 권장해요.", "계속", true, () => {
+      confirmModal("정말 초기화할까요?", "이 작업은 되돌릴 수 없어요.", "전부 삭제", true, async () => {
+        try { await clearStore("notes"); await clearStore("projects"); await clearStore("files"); } catch (e) {}
+        location.reload();
+      });
+    });
+  }
+
+  /* ---------- multi-select ---------- */
+  function enterSelMode(type, id) {
+    st.selMode = true; st.selType = type; st.selIds = new Set(id ? [id] : []);
+    document.body.classList.add("sel-mode");
+    $("selMove").hidden = type !== "note";
+    updateSelBar(); render();
+  }
+  function exitSelMode() { st.selMode = false; st.selType = null; st.selIds = new Set(); document.body.classList.remove("sel-mode"); updateSelBar(); render(); }
+  function toggleSel(id) {
+    if (!st.selIds) st.selIds = new Set();
+    if (st.selIds.has(id)) st.selIds.delete(id); else st.selIds.add(id);
+    updateSelBar();
+    document.querySelectorAll(`[data-selid="${id}"]`).forEach((el) => el.classList.toggle("selected", st.selIds.has(id)));
+  }
+  function updateSelBar() { $("selCount").textContent = `${st.selIds ? st.selIds.size : 0}개 선택`; }
+  function selectAllCurrent() {
+    if (!st.selIds) st.selIds = new Set();
+    if (st.selType === "note") notesOf(st.curProjectId).forEach((n) => st.selIds.add(n.id));
+    else st.projects.forEach((p) => st.selIds.add(p.id));
+    updateSelBar(); render();
+  }
+  function bulkDelete() {
+    const ids = [...(st.selIds || [])]; if (!ids.length) { toast("선택된 항목이 없어요"); return; }
+    const isNote = st.selType === "note";
+    confirmModal(isNote ? "메모 삭제" : "프로젝트 삭제", `선택한 ${ids.length}개를 삭제할까요?${isNote ? "" : " 소속 메모도 함께 삭제돼요."}`, "삭제", true, async () => {
+      for (const id of ids) { if (isNote) await deleteNote(id); else { const p = getProject(id); if (p && !p.isDefault) await deleteProject(id); } }
+      exitSelMode(); renderSidebar(); toast("삭제했어요");
+    });
+  }
+  function bulkMove() {
+    const ids = [...(st.selIds || [])]; if (!ids.length) { toast("선택된 항목이 없어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => { for (const id of ids) await moveNote(id, pid); exitSelMode(); renderSidebar(); toast("이동했어요"); });
+  }
 
   /* ---------- HTML export / import ---------- */
   function exportNote(id) {
@@ -1190,7 +1324,19 @@ ${html}
   /* ---------- bind static ---------- */
   function bind() {
     $("homeMenu").addEventListener("click", openSidebar);
-    $("homeSettings").addEventListener("click", () => toast("설정은 5단계에서 열려요"));
+    $("homeSettings").addEventListener("click", () => go({ s: "settings" }));
+    // settings rows
+    $("setTheme").addEventListener("click", () => { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); });
+    $("setFont").addEventListener("click", showFontDialog);
+    $("setBackup").addEventListener("click", exportBackup);
+    $("setRestore").addEventListener("click", () => $("restoreInput").click());
+    $("setReset").addEventListener("click", resetData);
+    $("restoreInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
+    // selection bar
+    $("selCancel").addEventListener("click", exitSelMode);
+    $("selAll").addEventListener("click", selectAllCurrent);
+    $("selMove").addEventListener("click", bulkMove);
+    $("selDelete").addEventListener("click", bulkDelete);
     $("homeNewMemo").addEventListener("click", () => showTypePicker(null));
     $("homeFab").addEventListener("click", () => showTypePicker(null));
     $("homeNewProject").addEventListener("click", () => showProjectForm(null, () => { render(); renderSidebar(); }));
@@ -1245,7 +1391,8 @@ ${html}
       else if (id === "fsList") showFontSizes();
       else if (id === "imgBtn") $("imgInput").click();
       else if (id === "alignBtn") showAlignMenu();
-      else if (id === "extraBtn") showExtraMenu();
+      else if (id === "codeBlockBtn") wrapCodeBlock();
+      else if (id === "linkBtn") insertLinkPrompt();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
     };
@@ -1299,6 +1446,7 @@ ${html}
   /* ---------- init ---------- */
   async function init() {
     detectTheme();
+    detectUserFont();
     try { bind(); } catch (e) { console.warn("bind", e); }
     try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
     catch (e) { console.warn("DB error", e); toast("저장소를 열 수 없어요"); }

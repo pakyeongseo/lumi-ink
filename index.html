@@ -577,6 +577,8 @@
   .per-tok b { color: var(--accent); font-weight: 700; }
   .per-detail { min-height: 156px; }
   .per-gallery-sec { margin-top: 20px; }
+  .per-divider { height: 1px; background: var(--line); margin: 22px 0 0; }
+  .per-read-tok { margin: 8px 2px 0; text-align: right; }
   .per-section { margin-bottom: 18px; }
   .per-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-bottom: 9px; }
   .per-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -627,6 +629,52 @@
   #cropZoom { width: 100%; margin: 16px 0; accent-color: var(--accent); }
   .crop-bar { display: flex; gap: 10px; }
   .crop-bar .m-btn { flex: 1; }
+
+  /* settings */
+  .set-scroll { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(40px + var(--safe-bottom)); }
+  .set-group { margin-bottom: 24px; }
+  .set-gtitle { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 0 4px 9px; }
+  .set-row { display: flex; align-items: center; gap: 12px; padding: 14px 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 9px; cursor: pointer; box-shadow: var(--shadow); }
+  .set-row:active { background: var(--surface-2); }
+  .set-rtext { flex: 1; min-width: 0; }
+  .set-rlabel { font-size: 15px; font-weight: 650; }
+  .set-rsub { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .set-rval { font-size: 13px; color: var(--accent); font-weight: 650; white-space: nowrap; flex: 0 0 auto; }
+  .set-row.danger .set-rlabel { color: var(--danger); }
+  .set-row.danger .set-rval { color: var(--danger); }
+  .set-about { text-align: center; color: var(--faint); font-size: 12.5px; margin-top: 6px; letter-spacing: .02em; }
+  .font-presets { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 12px; }
+  .font-preset { text-align: left; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 14.5px; cursor: pointer; }
+  .font-preset:active { background: var(--surface-3); }
+  .font-preset .fp-sub { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; font-family: -apple-system, sans-serif; }
+
+  /* user webfont */
+  body.has-userfont,
+  body.has-userfont .m-input,
+  body.has-userfont .m-textarea,
+  body.has-userfont .editor,
+  body.has-userfont .mc-title,
+  body.has-userfont .pd-name,
+  body.has-userfont .per-read-detail,
+  body.has-userfont .read-body { font-family: var(--user-font), -apple-system, "Noto Sans KR", sans-serif; }
+
+  /* selection bar + checkboxes */
+  .selbar { position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: none; align-items: center; gap: 8px;
+    padding: calc(var(--safe-top) + 10px) 12px 10px; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #1a4) ); }
+  body.sel-mode .selbar { display: flex; }
+  .selbar .iconbtn { color: #06121f; }
+  .selbar-count { flex: 1; font-size: 15px; font-weight: 750; color: #06121f; }
+  .selbar-act { border: none; background: rgba(255,255,255,.25); color: #06121f; font-size: 13.5px; font-weight: 700; padding: 8px 13px; border-radius: 10px; cursor: pointer; }
+  .selbar-act.danger { background: rgba(140,20,40,.22); color: #3a0a14; }
+  .selbar-act[hidden] { display: none; }
+  .sel-check { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); display: none; place-items: center; z-index: 4; }
+  body.sel-mode .memo-chip .sel-check, body.sel-mode .proj-card .sel-check { display: grid; }
+  .sel-check svg { width: 14px; height: 14px; stroke: #06121f; fill: none; stroke-width: 3; opacity: 0; }
+  .selected .sel-check { background: var(--accent); }
+  .selected .sel-check svg { opacity: 1; }
+  body.sel-mode .memo-chip { position: relative; padding-left: 42px; }
+  body.sel-mode .proj-card { position: relative; }
+  .memo-chip.selected, .proj-card.selected { outline: 2px solid var(--accent); outline-offset: -1px; }
 
   /* type sections in project detail */
   .chip-section { margin-bottom: 4px; }
@@ -735,7 +783,8 @@
       <button class="fbtn" id="imgBtn" title="이미지 삽입"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
       <button class="fbtn" id="attachBtn" title="파일 첨부"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L10 16.5a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg></button>
       <span class="fsep"></span>
-      <button class="fbtn extra-slot" id="extraBtn" title="코드 블록 / 하이퍼링크"><svg class="star-ico" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      <button class="fbtn" id="codeBlockBtn" title="코드 블록"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"/></svg></button>
+      <button class="fbtn" id="linkBtn" title="하이퍼링크 삽입"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></button>
     </div>
     <div class="editor-wrap" id="editorWrap">
       <div class="editor" id="editor" contenteditable="true" data-placeholder="여기에 메모를 작성하거나 붙여넣으세요…"></div>
@@ -813,6 +862,7 @@
           <div class="per-field-label">Description <span class="per-tok" id="perEnTok">— tokens</span></div>
           <textarea class="m-textarea per-detail" id="perEnDetail" placeholder="Personality · background · speech style"></textarea>
         </div>
+        <div class="per-divider"></div>
         <div class="per-section per-gallery-sec">
           <div class="per-label">갤러리</div>
           <div class="per-gallery" id="perGallery"></div>
@@ -833,6 +883,8 @@
           </div>
         </div>
         <div class="per-read-detail" id="perRDetail"></div>
+        <div class="per-tok per-read-tok" id="perRTok">— 토큰</div>
+        <div class="per-divider"></div>
         <div class="per-section">
           <div class="per-label">갤러리</div>
           <div class="per-gallery pv" id="perRGallery"></div>
@@ -869,6 +921,55 @@
   <input type="file" id="attachInput" class="hidden-input">
   <input type="file" id="imgInput" class="hidden-input" accept="image/*">
   <input type="file" id="perImgInput" class="hidden-input" accept="image/*">
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="screen" id="screen-settings">
+    <div class="topbar">
+      <button class="iconbtn nav-menu" aria-label="메뉴"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tb-title">설정</div>
+    </div>
+    <div class="set-scroll">
+      <div class="set-group">
+        <div class="set-gtitle">화면</div>
+        <div class="set-row" id="setTheme">
+          <div class="set-rtext"><div class="set-rlabel">테마</div><div class="set-rsub">밝게 / 어둡게 전환</div></div>
+          <div class="set-rval" id="setThemeVal">어둡게</div>
+        </div>
+        <div class="set-row" id="setFont">
+          <div class="set-rtext"><div class="set-rlabel">웹폰트</div><div class="set-rsub" id="setFontSub">기본 폰트</div></div>
+          <div class="set-rval">변경 ›</div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-gtitle">데이터</div>
+        <div class="set-row" id="setBackup">
+          <div class="set-rtext"><div class="set-rlabel">전체 백업</div><div class="set-rsub">모든 프로젝트·메모를 .html 한 파일로 저장</div></div>
+          <div class="set-rval">내보내기 ›</div>
+        </div>
+        <div class="set-row" id="setRestore">
+          <div class="set-rtext"><div class="set-rlabel">백업 복원</div><div class="set-rsub">백업 .html을 불러와 데이터 병합</div></div>
+          <div class="set-rval">가져오기 ›</div>
+        </div>
+        <div class="set-row danger" id="setReset">
+          <div class="set-rtext"><div class="set-rlabel">데이터 초기화</div><div class="set-rsub">모든 데이터를 영구 삭제</div></div>
+          <div class="set-rval">초기화 ›</div>
+        </div>
+      </div>
+      <div class="set-about" id="setAbout">루미 ✦ 잉크 · 로컬 저장</div>
+    </div>
+  </section>
+
+  <!-- selection bar (multi-select) -->
+  <div class="selbar" id="selbar">
+    <button class="iconbtn" id="selCancel" aria-label="선택 취소"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="selbar-count" id="selCount">0개 선택</div>
+    <button class="selbar-act" id="selAll">전체</button>
+    <button class="selbar-act" id="selMove" hidden>이동</button>
+    <button class="selbar-act danger" id="selDelete">삭제</button>
+  </div>
+
+  <input type="file" id="restoreInput" class="hidden-input" accept=".html,text/html">
 
   <div class="lightbox" id="lightbox" hidden><img id="lightboxImg" alt=""><button class="lb-close" id="lbClose" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
