@@ -13,7 +13,7 @@
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "settings"];
+  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "settings", "search"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -26,6 +26,7 @@
     else if (v.s === "lore") renderLore();
     else if (v.s === "persona") renderPersona();
     else if (v.s === "settings") renderSettings();
+    else if (v.s === "search") renderSearch();
   }
   function go(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
   function back() {
@@ -1276,6 +1277,52 @@
     catch (err) { toast("이미지를 불러오지 못했어요"); }
   });
 
+  /* ---------- search ---------- */
+  function getNoteSearchText(n) {
+    if (!n) return "";
+    if (n.type === "lorebook") { const d = n.data || {}; return ((d.content || "") + " " + ((d.keywords || []).join(" "))).toLowerCase(); }
+    if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
+    return plainText(noteHtml(n)).toLowerCase();
+  }
+  function doSearch(q) {
+    st.searchQuery = (q || "").trim();
+    if (curView().s === "search") renderSearch();
+    else go({ s: "search" });
+  }
+  function renderSearch() {
+    if (!st.searchScope) st.searchScope = "both";
+    const q = (st.searchQuery || "").trim().toLowerCase();
+    const si = $("searchInput"); if (si && si.value !== (st.searchQuery || "")) si.value = st.searchQuery || "";
+    document.querySelectorAll("#screen-search .scope-btn").forEach((b) => b.classList.toggle("active", b.dataset.s === st.searchScope));
+    const scope = st.searchScope;
+    const projGrid = $("srProjGrid"), noteList = $("srNoteList");
+    projGrid.innerHTML = ""; noteList.innerHTML = "";
+    if (!q) {
+      $("srProjCount").textContent = "0"; $("srNoteCount").textContent = "0";
+      projGrid.innerHTML = '<div class="search-empty">검색어를 입력하세요.</div>';
+      noteList.innerHTML = '<div class="search-empty">제목·내용에서 찾아드려요.</div>';
+      return;
+    }
+    const projHit = st.projects.filter((p) => {
+      const t = (p.name || "").toLowerCase(), c = (p.description || "").toLowerCase();
+      if (scope === "title") return t.includes(q);
+      if (scope === "content") return c.includes(q);
+      return t.includes(q) || c.includes(q);
+    });
+    const noteHit = st.notes.filter((n) => {
+      const t = (n.title || "").toLowerCase();
+      if (scope === "title") return t.includes(q);
+      if (scope === "content") return getNoteSearchText(n).includes(q);
+      return t.includes(q) || getNoteSearchText(n).includes(q);
+    });
+    $("srProjCount").textContent = projHit.length;
+    $("srNoteCount").textContent = noteHit.length;
+    if (!projHit.length) projGrid.innerHTML = '<div class="search-empty">일치하는 프로젝트가 없어요.</div>';
+    else projHit.forEach((p) => projGrid.appendChild(makeProjCard(p)));
+    if (!noteHit.length) noteList.innerHTML = '<div class="search-empty">일치하는 메모가 없어요.</div>';
+    else { const sorted = sortList(noteHit, "recent", (n) => n.title || "", (n) => n.updatedAt || 0); sorted.forEach((n) => noteList.appendChild(buildChip(n))); }
+  }
+
   /* ---------- settings ---------- */
   function renderSettings() {
     $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
@@ -1526,6 +1573,12 @@ ${html}
     $("perSave").addEventListener("click", async () => { await flushPersona(); toast("저장했어요"); });
     $("homeSort").addEventListener("click", () => showSortMenu("home"));
     $("pdSort").addEventListener("click", () => showSortMenu("note"));
+    $("homeSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { doSearch(v); e.target.value = ""; } } });
+    $("sbSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { closeSidebar(); doSearch(v); e.target.value = ""; } } });
+    $("searchInput").addEventListener("input", (e) => { st.searchQuery = e.target.value; renderSearch(); });
+    $("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
+    $("searchClear").addEventListener("click", () => { st.searchQuery = ""; $("searchInput").value = ""; $("searchInput").focus(); renderSearch(); });
+    document.querySelectorAll("#screen-search .scope-btn").forEach((b) => b.addEventListener("click", () => { st.searchScope = b.dataset.s; renderSearch(); }));
     attachLongPress($("readBody"), () => {
       const t = ($("readBody").innerText || "").trim();
       if (t) clipboardCopy(t).then((ok) => toast(ok ? "본문을 복사했어요" : "복사하지 못했어요"));

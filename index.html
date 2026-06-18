@@ -720,6 +720,24 @@
   .selbar-act { border: none; background: rgba(255,255,255,.24); color: #fff; font-size: 13.5px; font-weight: 700; padding: 8px 13px; border-radius: 10px; cursor: pointer; }
   .selbar-act.danger { background: rgba(255,255,255,.15); color: #fff; }
   .selbar-act[hidden] { display: none; }
+
+  /* search */
+  .searchbar { display: flex; align-items: center; gap: 9px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 13px; padding: 11px 13px; }
+  .searchbar svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; flex: 0 0 auto; }
+  .searchbar input { flex: 1; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 14.5px; outline: none; font-family: inherit; }
+  .searchbar input::placeholder { color: var(--faint); }
+  .home-scroll .searchbar { margin: 0 16px 14px; }
+  .sb-searchbar { margin: 12px 16px 2px; }
+  .search-top { flex: 0 0 auto; padding: 16px 16px 13px; border-bottom: 1px solid var(--line-soft); }
+  .search-scope { display: flex; gap: 7px; margin-top: 11px; }
+  .scope-btn { flex: 1; padding: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 12.5px; font-weight: 650; border-radius: 10px; cursor: pointer; }
+  .scope-btn.active { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .search-scroll { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 calc(40px + var(--safe-bottom)); }
+  .search-scroll .chip-list { padding: 0 16px; }
+  .sr-count { color: var(--accent); font-weight: 800; margin-left: 3px; }
+  .sb-clear { flex: 0 0 auto; width: 24px; height: 24px; border: none; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+  .sb-clear svg { width: 15px; height: 15px; stroke: var(--faint); fill: none; stroke-width: 2.2; }
+  .search-empty { color: var(--faint); font-size: 13.5px; padding: 4px 18px 16px; }
   .sel-check { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); display: none; place-items: center; z-index: 4; }
   body.sel-mode .memo-chip .sel-check, body.sel-mode .proj-card .sel-check { display: grid; }
   .sel-check svg { width: 14px; height: 14px; stroke: #06121f; fill: none; stroke-width: 3; opacity: 0; }
@@ -758,6 +776,10 @@
       </button>
     </div>
     <div class="home-scroll">
+      <div class="searchbar" id="homeSearchbar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="homeSearch" placeholder="프로젝트 · 메모 검색" autocapitalize="off" autocorrect="off" enterkeyhint="search">
+      </div>
       <div class="home-actions">
         <button class="action-card primary" id="homeNewMemo">
           <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모
@@ -960,7 +982,33 @@
     </div>
   </section>
 
-  <!-- ============ SIDEBAR ============ -->
+  <!-- ============ SEARCH ============ -->
+  <section class="screen" id="screen-search">
+    <div class="topbar">
+      <button class="iconbtn nav-menu" aria-label="메뉴"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tb-title">검색</div>
+    </div>
+    <div class="search-top">
+      <div class="searchbar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="searchInput" placeholder="프로젝트 · 메모 검색" autocapitalize="off" autocorrect="off" enterkeyhint="search">
+        <button class="sb-clear" id="searchClear" aria-label="지우기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="search-scope">
+        <button class="scope-btn" data-s="title">제목만</button>
+        <button class="scope-btn" data-s="content">내용만</button>
+        <button class="scope-btn active" data-s="both">제목+내용</button>
+      </div>
+    </div>
+    <div class="search-scroll" id="searchScroll">
+      <div class="sec-row"><span class="sec-chip"><span class="sc-dot"></span>프로젝트 <span class="sr-count" id="srProjCount">0</span></span></div>
+      <div class="proj-grid" id="srProjGrid"></div>
+      <div class="sec-row"><span class="sec-chip"><span class="sc-dot"></span>메모 <span class="sr-count" id="srNoteCount">0</span></span></div>
+      <div class="chip-list" id="srNoteList"></div>
+    </div>
+  </section>
+
   <div class="scrim for-sidebar" id="sidebarScrim"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
@@ -969,6 +1017,10 @@
         <button class="sb-sc primary" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모</button>
         <button class="sb-sc" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 새 프로젝트</button>
       </div>
+    </div>
+    <div class="searchbar sb-searchbar" id="sbSearchbar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="sbSearch" placeholder="검색" autocapitalize="off" autocorrect="off" enterkeyhint="search">
     </div>
     <div class="sb-section-row">
       <span class="sb-section-box"><span class="ssb-bar"></span>프로젝트</span>
