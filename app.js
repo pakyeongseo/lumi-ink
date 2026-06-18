@@ -8,6 +8,7 @@
   const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast,
           noteHtml, notesOf, getProject, getNote } = L.h;
   const { CHIP, TYPE_LABEL, openDB, store, getAll, put, del } = L;
+  function $on(id, type, fn, opts) { const el = $(id); if (el) el.addEventListener(type, fn, opts); else console.warn("[bind] #" + id + " not found — skipped"); }
   const ICONS = window.__luminkIcons || [];
   const DEFAULT_ICON = ICONS[0] ? ICONS[0].data : null;
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
@@ -117,7 +118,7 @@
       else { st.noteSort = v; try { localStorage.setItem("luminkNoteSort", v); } catch (e) {} }
       closeModal(); render(); if (which === "home") renderSidebar();
     }));
-    $("sortClose").addEventListener("click", closeModal);
+    $on("sortClose", "click", closeModal);
   }
   async function togglePinProject(id) {
     const p = getProject(id); if (!p) return;
@@ -239,7 +240,7 @@
       wrap.appendChild(sec);
       firstSec = false;
     });
-    if ($("pdSort")) $("pdSort").addEventListener("click", () => showSortMenu("note"));
+    if ($("pdSort")) $on("pdSort", "click", () => showSortMenu("note"));
   }
 
   function renderRead() {
@@ -433,7 +434,7 @@
       document.execCommand("fontSize", false, it.dataset.v);
       scheduleSave();
     }));
-    $("szClose").addEventListener("click", closeModal);
+    $on("szClose", "click", closeModal);
   }
   async function insertImage(file) {
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
@@ -476,7 +477,7 @@
       if (saved) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(saved); }
       document.execCommand(it.dataset.c, false, null); scheduleSave();
     }));
-    $("alClose").addEventListener("click", closeModal);
+    $on("alClose", "click", closeModal);
   }
 
   /* ---------- lorebook ---------- */
@@ -624,8 +625,8 @@
     if (!notes.length) { toast("내보낼 로어북이 없어요"); return; }
     openModal(`<h3>World Info 내보내기</h3><p class="m-sub">${notes.length}개 항목을 하나의 .json으로 묶어 내보냅니다.</p><div class="m-field-label">파일 이름 (.json)</div><input class="m-input" id="wiName" placeholder="예: 세계관_로어북" value="${esc(defaultWiName(notes))}" autocapitalize="off"><div class="m-row"><button class="m-btn" id="wiNo">취소</button><button class="m-btn primary" id="wiOk">내보내기</button></div>`);
     setTimeout(() => { const i = $("wiName"); i.focus(); i.select(); }, 120);
-    $("wiNo").addEventListener("click", closeModal);
-    $("wiOk").addEventListener("click", () => {
+    $on("wiNo", "click", closeModal);
+    $on("wiOk", "click", () => {
       let name = ($("wiName").value.trim() || "lorebook").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 60);
       const wi = buildWorldInfo(notes);
       const blob = new Blob([JSON.stringify(wi, null, 2)], { type: "application/json;charset=utf-8" });
@@ -652,8 +653,8 @@
       });
     };
     draw();
-    $("lpNo").addEventListener("click", closeModal);
-    $("lpNext").addEventListener("click", () => {
+    $on("lpNo", "click", closeModal);
+    $on("lpNext", "click", () => {
       const chosen = lores.filter((n) => sel.has(n.id));
       if (!chosen.length) { toast("최소 1개를 선택하세요"); return; }
       exportWorldInfoFlow(chosen);
@@ -1016,8 +1017,8 @@
     const saved = sel.getRangeAt(0).cloneRange();
     openModal(`<h3>링크 삽입</h3><div class="m-field-label">연결할 주소</div><input class="m-input" id="lkUrl" placeholder="https://…" inputmode="url" autocapitalize="off" autocorrect="off"><div class="m-row"><button class="m-btn" id="lkNo">취소</button><button class="m-btn primary" id="lkOk">삽입</button></div>`);
     setTimeout(() => $("lkUrl").focus(), 120);
-    $("lkNo").addEventListener("click", closeModal);
-    $("lkOk").addEventListener("click", () => {
+    $on("lkNo", "click", closeModal);
+    $on("lkOk", "click", () => {
       let u = $("lkUrl").value.trim(); if (!u) return;
       if (!/^https?:\/\//i.test(u)) u = "https://" + u;
       closeModal(); $("editor").focus();
@@ -1062,7 +1063,7 @@
   /* ---------- modal ---------- */
   function openModal(html) { $("modalBox").innerHTML = html; $("modalScrim").classList.add("open"); }
   function closeModal() { $("modalScrim").classList.remove("open"); }
-  $("modalScrim").addEventListener("click", (e) => { if (e.target === $("modalScrim")) closeModal(); });
+  $on("modalScrim", "click", (e) => { if (e.target === $("modalScrim")) closeModal(); });
 
   function showTypePicker(presetPid) {
     openModal(`
@@ -1105,9 +1106,9 @@
     `);
     const sync = () => $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.classList.toggle("sel", it.dataset.pid === selPid));
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
-    $("pickNew").addEventListener("click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
-    $("pickCancel").addEventListener("click", closeModal);
-    $("pickOk").addEventListener("click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
+    $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
+    $on("pickCancel", "click", closeModal);
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -1122,8 +1123,8 @@
       <div class="m-row"><button class="m-btn" id="pfCancel">취소</button><button class="m-btn primary" id="pfOk">${p ? "저장" : "만들기"}</button></div>
     `);
     setTimeout(() => $("pfName").focus(), 120);
-    $("pfCancel").addEventListener("click", closeModal);
-    $("pfOk").addEventListener("click", async () => {
+    $on("pfCancel", "click", closeModal);
+    $on("pfOk", "click", async () => {
       const name = $("pfName").value.trim(), desc = $("pfDesc").value.trim();
       if (!name) { $("pfName").focus(); return; }
       let result;
@@ -1150,7 +1151,7 @@
       n.chipColor = sw.dataset.k || null; await saveNote(n);
       closeModal(); render();
     }));
-    $("chipClose").addEventListener("click", closeModal);
+    $on("chipClose", "click", closeModal);
   }
   function showProjectColorPicker(id) {
     const p = getProject(id); if (!p) return;
@@ -1168,19 +1169,19 @@
       p.chipColor = sw.dataset.k || null; await saveProject(p);
       closeModal(); render(); renderSidebar();
     }));
-    $("chipClose").addEventListener("click", closeModal);
+    $on("chipClose", "click", closeModal);
   }
 
   function confirmModal(title, msg, okLabel, danger, onOk) {
     openModal(`<h3>${esc(title)}</h3><p class="m-sub">${esc(msg)}</p><div class="m-row"><button class="m-btn" id="cfNo">취소</button><button class="m-btn ${danger ? "danger" : "primary"}" id="cfYes">${esc(okLabel)}</button></div>`);
-    $("cfNo").addEventListener("click", closeModal);
-    $("cfYes").addEventListener("click", () => { closeModal(); onOk(); });
+    $on("cfNo", "click", closeModal);
+    $on("cfYes", "click", () => { closeModal(); onOk(); });
   }
   function renameModal(title, current, onOk) {
     openModal(`<h3>${esc(title)}</h3><input class="m-input" id="rnInput" maxlength="80" value="${esc(current)}"><div class="m-row"><button class="m-btn" id="rnNo">취소</button><button class="m-btn primary" id="rnOk">저장</button></div>`);
     setTimeout(() => { const i = $("rnInput"); i.focus(); i.select(); }, 120);
-    $("rnNo").addEventListener("click", closeModal);
-    $("rnOk").addEventListener("click", () => { const v = $("rnInput").value.trim(); closeModal(); onOk(v); });
+    $on("rnNo", "click", closeModal);
+    $on("rnOk", "click", () => { const v = $("rnInput").value.trim(); closeModal(); onOk(v); });
   }
 
   /* ---------- action sheet ---------- */
@@ -1197,7 +1198,7 @@
     document.body.classList.add("sheet-open");
   }
   function closeSheet() { document.body.classList.remove("sheet-open"); }
-  $("sheetScrim").addEventListener("click", closeSheet);
+  $on("sheetScrim", "click", closeSheet);
   const IC = {
     rename: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
     color: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>',
@@ -1250,9 +1251,9 @@
     openModal(`<h3>프로젝트 선택</h3><div class="proj-pick">${items}</div><div class="m-link" id="ptNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 프로젝트 만들기</div><div class="m-row"><button class="m-btn" id="ptNo">취소</button><button class="m-btn primary" id="ptOk">선택</button></div>`);
     const sync = () => $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.classList.toggle("sel", it.dataset.pid === sel));
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { sel = it.dataset.pid; sync(); }));
-    $("ptNew").addEventListener("click", () => showProjectForm(null, () => pickTargetProject(excludeOrCurrent, onPick)));
-    $("ptNo").addEventListener("click", closeModal);
-    $("ptOk").addEventListener("click", () => { if (sel) { closeModal(); onPick(sel); } });
+    $on("ptNew", "click", () => showProjectForm(null, () => pickTargetProject(excludeOrCurrent, onPick)));
+    $on("ptNo", "click", closeModal);
+    $on("ptOk", "click", () => { if (sel) { closeModal(); onPick(sel); } });
   }
 
   /* ---------- icon picker ---------- */
@@ -1271,8 +1272,8 @@
       const ic = ICONS.find((x) => x.id === el.dataset.icon); if (!ic) return;
       p.icon = ic.data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요");
     }));
-    $("iconUpload").addEventListener("click", () => { iconTargetPid = pid; $("iconInput").click(); });
-    $("iconClose").addEventListener("click", closeModal);
+    $on("iconUpload", "click", () => { iconTargetPid = pid; $("iconInput").click(); });
+    $on("iconClose", "click", closeModal);
   }
   function fileToResized(file, max) {
     return new Promise((res, rej) => {
@@ -1287,7 +1288,7 @@
       fr.onerror = rej; fr.readAsDataURL(file);
     });
   }
-  $("iconInput").addEventListener("change", async (e) => {
+  $on("iconInput", "change", async (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
     if (!f || !iconTargetPid) return;
     try { const data = await fileToResized(f, 256); const p = getProject(iconTargetPid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("아이콘을 변경했어요"); } }
@@ -1309,7 +1310,7 @@
   function renderSearch() {
     if (!st.searchScope) st.searchScope = "both";
     const q = (st.searchQuery || "").trim().toLowerCase();
-    const si = $("searchInput"); if (si && si.value !== (st.searchQuery || "")) si.value = st.searchQuery || "";
+    const si = $("searchInput"); if (si) { if (si.value !== (st.searchQuery || "")) si.value = st.searchQuery || ""; const bar = si.closest(".searchbar"); if (bar) bar.classList.toggle("has-text", !!si.value.length); }
     document.querySelectorAll("#screen-search .scope-btn").forEach((b) => b.classList.toggle("active", b.dataset.s === st.searchScope));
     const scope = st.searchScope;
     const projGrid = $("srProjGrid"), noteList = $("srNoteList");
@@ -1371,8 +1372,8 @@
       <div class="m-row"><button class="m-btn" id="fontReset">기본으로</button><button class="m-btn primary" id="fontApply">적용</button></div>`);
     FONT_PRESETS.forEach((f) => { if (!document.querySelector(`link[data-prev='${f.name}']`)) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = f.url; l.setAttribute("data-prev", f.name); document.head.appendChild(l); } });
     $("modalBox").querySelectorAll(".font-preset").forEach((b) => b.addEventListener("click", () => { const f = FONT_PRESETS[+b.dataset.i]; $("fontUrl").value = f.url; $("fontName").value = f.name; }));
-    $("fontReset").addEventListener("click", () => { applyUserFont(null); closeModal(); renderSettings(); toast("기본 폰트로 되돌렸어요"); });
-    $("fontApply").addEventListener("click", () => {
+    $on("fontReset", "click", () => { applyUserFont(null); closeModal(); renderSettings(); toast("기본 폰트로 되돌렸어요"); });
+    $on("fontApply", "click", () => {
       const url = $("fontUrl").value.trim(), name = $("fontName").value.trim();
       if (!name) { toast("font-family 이름을 입력해 주세요"); return; }
       applyUserFont({ url, name }); closeModal(); renderSettings(); toast("폰트를 적용했어요");
@@ -1520,12 +1521,12 @@ ${html}
     fr.onerror = () => toast("파일을 읽지 못했어요");
     fr.readAsText(file, "UTF-8");
   }
-  $("fileInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) importHtmlFile(f); e.target.value = ""; closeSidebar(); });
+  $on("fileInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) importHtmlFile(f); e.target.value = ""; closeSidebar(); });
 
   /* ---------- sidebar / theme ---------- */
   function openSidebar() { renderSidebar(); document.body.classList.add("sidebar-open"); }
   function closeSidebar() { document.body.classList.remove("sidebar-open"); }
-  $("sidebarScrim").addEventListener("click", closeSidebar);
+  $on("sidebarScrim", "click", closeSidebar);
   function applyTheme(t) {
     st.theme = t; document.documentElement.setAttribute("data-theme", t);
     document.querySelector('meta[name=theme-color]').setAttribute("content", t === "light" ? "#f3f4f8" : "#0d0f17");
@@ -1556,44 +1557,52 @@ ${html}
 
   /* ---------- bind static ---------- */
   function bind() {
-    $("homeMenu").addEventListener("click", openSidebar);
-    $("homeSettings").addEventListener("click", () => go({ s: "settings" }));
+    $on("homeMenu", "click", openSidebar);
+    $on("homeSettings", "click", () => go({ s: "settings" }));
     // settings rows
-    $("setTheme").addEventListener("click", () => { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); });
-    $("setFont").addEventListener("click", showFontDialog);
-    $("setBackup").addEventListener("click", exportBackup);
-    $("setRestore").addEventListener("click", () => $("restoreInput").click());
-    $("setReset").addEventListener("click", resetData);
-    $("restoreInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
+    $on("setTheme", "click", () => { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); });
+    $on("setFont", "click", showFontDialog);
+    $on("setBackup", "click", exportBackup);
+    $on("setRestore", "click", () => $("restoreInput").click());
+    $on("setReset", "click", resetData);
+    $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
-    $("selCancel").addEventListener("click", exitSelMode);
-    $("selAll").addEventListener("click", selectAllCurrent);
-    $("selMove").addEventListener("click", bulkMove);
-    $("selDelete").addEventListener("click", bulkDelete);
-    $("homeNewMemo").addEventListener("click", () => showTypePicker(null));
-    $("homeFab").addEventListener("click", () => showTypePicker(null));
-    $("homeNewProject").addEventListener("click", () => showProjectForm(null, () => { render(); renderSidebar(); }));
+    $on("selCancel", "click", exitSelMode);
+    $on("selAll", "click", selectAllCurrent);
+    $on("selMove", "click", bulkMove);
+    $on("selDelete", "click", bulkDelete);
+    $on("homeNewMemo", "click", () => showTypePicker(null));
+    $on("homeFab", "click", () => showTypePicker(null));
+    $on("homeNewProject", "click", () => showProjectForm(null, () => { render(); renderSidebar(); }));
     document.querySelectorAll(".nav-back").forEach((b) => b.addEventListener("click", back));
     document.querySelectorAll(".nav-menu").forEach((b) => b.addEventListener("click", openSidebar));
-    $("pdMore").addEventListener("click", () => openProjectSheet(st.curProjectId));
-    $("pdSelect").addEventListener("click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
-    $("pdFab").addEventListener("click", () => showTypePicker(st.curProjectId));
-    $("readEdit").addEventListener("click", editCurrentNote);
-    $("readMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
-    $("edBack").addEventListener("click", () => { flushSave(true); back(); });
-    $("edMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
-    $("sbNewProject").addEventListener("click", () => { closeSidebar(); showProjectForm(null, () => { render(); renderSidebar(); }); });
-    $("sbNewMemo").addEventListener("click", () => { closeSidebar(); showTypePicker(null); });
-    $("sbSettings").addEventListener("click", () => { closeSidebar(); go({ s: "settings" }); });
-    $("edSave").addEventListener("click", async () => { await flushSave(true); toast("저장했어요"); });
-    $("loreSave").addEventListener("click", async () => { await flushLore(); toast("저장했어요"); });
-    $("perSave").addEventListener("click", async () => { await flushPersona(); toast("저장했어요"); });
-    $("homeSort").addEventListener("click", () => showSortMenu("home"));
-    $("homeSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { doSearch(v); e.target.value = ""; } } });
-    $("sbSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { closeSidebar(); doSearch(v); e.target.value = ""; } } });
-    $("searchInput").addEventListener("input", (e) => { st.searchQuery = e.target.value; renderSearch(); });
-    $("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
-    $("searchClear").addEventListener("click", () => { st.searchQuery = ""; $("searchInput").value = ""; $("searchInput").focus(); renderSearch(); });
+    $on("pdMore", "click", () => openProjectSheet(st.curProjectId));
+    $on("pdSelect", "click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
+    $on("pdFab", "click", () => showTypePicker(st.curProjectId));
+    $on("readEdit", "click", editCurrentNote);
+    $on("readMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("edBack", "click", () => { flushSave(true); back(); });
+    $on("edMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("sbNewProject", "click", () => { closeSidebar(); showProjectForm(null, () => { render(); renderSidebar(); }); });
+    $on("sbNewMemo", "click", () => { closeSidebar(); showTypePicker(null); });
+    $on("sbSettings", "click", () => { closeSidebar(); go({ s: "settings" }); });
+    $on("edSave", "click", async () => { await flushSave(true); toast("저장했어요"); });
+    $on("loreSave", "click", async () => { await flushLore(); toast("저장했어요"); });
+    $on("perSave", "click", async () => { await flushPersona(); toast("저장했어요"); });
+    $on("homeSort", "click", () => showSortMenu("home"));
+    const toggleHasText = (inp) => { const bar = inp.closest(".searchbar"); if (bar) bar.classList.toggle("has-text", !!inp.value.length); };
+    $on("homeSearch", "input", (e) => toggleHasText(e.target));
+    $on("homeSearch", "keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { doSearch(v); e.target.value = ""; toggleHasText(e.target); } } });
+    $on("homeGo", "click", () => { const i = $("homeSearch"), v = i.value.trim(); if (v) { doSearch(v); i.value = ""; toggleHasText(i); } });
+    $on("homeClear", "click", () => { const i = $("homeSearch"); i.value = ""; toggleHasText(i); i.focus(); });
+    $on("sbSearch", "input", (e) => toggleHasText(e.target));
+    $on("sbSearch", "keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { closeSidebar(); doSearch(v); e.target.value = ""; toggleHasText(e.target); } } });
+    $on("sbGo", "click", () => { const i = $("sbSearch"), v = i.value.trim(); if (v) { closeSidebar(); doSearch(v); i.value = ""; toggleHasText(i); } });
+    $on("sbClear", "click", () => { const i = $("sbSearch"); i.value = ""; toggleHasText(i); i.focus(); });
+    $on("searchInput", "input", (e) => { st.searchQuery = e.target.value; toggleHasText(e.target); renderSearch(); });
+    $on("searchInput", "keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
+    $on("searchGo", "click", () => { $("searchInput").blur(); renderSearch(); });
+    $on("searchClear", "click", () => { st.searchQuery = ""; const i = $("searchInput"); i.value = ""; toggleHasText(i); i.focus(); renderSearch(); });
     document.querySelectorAll("#screen-search .scope-btn").forEach((b) => b.addEventListener("click", () => { st.searchScope = b.dataset.s; renderSearch(); }));
     attachLongPress($("readBody"), () => {
       const t = ($("readBody").innerText || "").trim();
@@ -1605,13 +1614,13 @@ ${html}
       const o = (n.data && n.data[perLang]) || {}; const t = (o.detail || "").trim();
       if (t) clipboardCopy(t).then((ok) => toast(ok ? "설명을 복사했어요" : "복사하지 못했어요"));
     });
-    $("sbLogo").addEventListener("click", goHome);
-    $("homeLogo").addEventListener("click", () => { const hs = document.querySelector(".home-scroll"); if (hs) hs.scrollTo({ top: 0, behavior: "smooth" }); });
-    $("sbImport").addEventListener("click", () => $("fileInput").click());
-    $("sbTheme").addEventListener("click", () => applyTheme(st.theme === "light" ? "dark" : "light"));
+    $on("sbLogo", "click", goHome);
+    $on("homeLogo", "click", () => { const hs = document.querySelector(".home-scroll"); if (hs) hs.scrollTo({ top: 0, behavior: "smooth" }); });
+    $on("sbImport", "click", () => $("fileInput").click());
+    $on("sbTheme", "click", () => applyTheme(st.theme === "light" ? "dark" : "light"));
 
     // read: double-tap to edit
-    $("readBody").addEventListener("dblclick", editCurrentNote);
+    $on("readBody", "dblclick", editCurrentNote);
 
     // global left-edge swipe -> open sidebar (any screen)
     let edgeX = null, edgeY = null;
@@ -1626,14 +1635,14 @@ ${html}
     document.addEventListener("touchend", () => { edgeX = null; });
 
     // editor
-    $("editor").addEventListener("input", scheduleSave);
-    $("editor").addEventListener("blur", () => flushSave(false));
-    $("codeArea").addEventListener("input", scheduleSave);
-    $("codeArea").addEventListener("blur", () => flushSave(false));
-    $("attachInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
-    $("imgInput").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) insertImage(f); e.target.value = ""; });
-    $("editor").addEventListener("paste", onEditorPaste);
-    $("editor").addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(linkifyBeforeCaret, 0); });
+    $on("editor", "input", scheduleSave);
+    $on("editor", "blur", () => flushSave(false));
+    $on("codeArea", "input", scheduleSave);
+    $on("codeArea", "blur", () => flushSave(false));
+    $on("attachInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
+    $on("imgInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) insertImage(f); e.target.value = ""; });
+    $on("editor", "paste", onEditorPaste);
+    $on("editor", "keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(linkifyBeforeCaret, 0); });
     const fb = $("formatbar");
     const fbHandler = (e) => {
       const b = e.target.closest(".fbtn"); if (!b) return;
@@ -1654,39 +1663,39 @@ ${html}
     };
     fb.addEventListener("mousedown", fbHandler);
     fb.addEventListener("touchstart", fbHandler, { passive: false });
-    $("colorPick").addEventListener("input", () => { $("colorSwatch").style.background = $("colorPick").value; exec("foreColor", $("colorPick").value); });
+    $on("colorPick", "input", () => { $("colorSwatch").style.background = $("colorPick").value; exec("foreColor", $("colorPick").value); });
 
     // lorebook
-    $("loreEdit").addEventListener("input", scheduleLoreSave);
-    $("loreEdit").addEventListener("blur", () => flushLore());
-    $("loreKwInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
-    $("loreKwInput").addEventListener("blur", addKeywordFromInput);
-    $("loreActiveWrap").addEventListener("click", toggleLoreActive);
-    $("lorePreviewBtn").addEventListener("click", toggleLorePreview);
-    $("loreMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
+    $on("loreEdit", "input", scheduleLoreSave);
+    $on("loreEdit", "blur", () => flushLore());
+    $on("loreKwInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
+    $on("loreKwInput", "blur", addKeywordFromInput);
+    $on("loreActiveWrap", "click", toggleLoreActive);
+    $on("lorePreviewBtn", "click", toggleLorePreview);
+    $on("loreMore", "click", () => openNoteSheet(st.curNoteId));
 
     // persona
     ["perKoName", "perKoDetail", "perEnName", "perEnDetail"].forEach((id) => {
       $(id).addEventListener("input", schedulePerSave);
       $(id).addEventListener("blur", () => flushPersona());
     });
-    $("perKoTagInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("ko"); } });
-    $("perKoTagInput").addEventListener("blur", () => addPerTag("ko"));
-    $("perEnTagInput").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("en"); } });
-    $("perEnTagInput").addEventListener("blur", () => addPerTag("en"));
+    $on("perKoTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("ko"); } });
+    $on("perKoTagInput", "blur", () => addPerTag("ko"));
+    $on("perEnTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addPerTag("en"); } });
+    $on("perEnTagInput", "blur", () => addPerTag("en"));
     document.querySelectorAll("#screen-persona .per-tab").forEach((t) => t.addEventListener("click", () => setPerLang(t.dataset.lang)));
-    $("perPortrait").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "portrait"; $("perImgInput").click(); });
-    $("perSquare").addEventListener("click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "square"; $("perImgInput").click(); });
-    $("perImgInput").addEventListener("change", (e) => { const files = e.target.files ? [...e.target.files] : []; if (files.length) { if (perImgTarget === "gallery") addGalleryFiles(files); else applyPerImage(files[0]); } e.target.value = ""; });
-    $("perViewToggle").addEventListener("click", togglePerView);
-    $("perMore").addEventListener("click", () => openNoteSheet(st.curNoteId));
+    $on("perPortrait", "click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "portrait"; $("perImgInput").click(); });
+    $on("perSquare", "click", (e) => { if (e.target.closest(".per-del")) return; perImgTarget = "square"; $("perImgInput").click(); });
+    $on("perImgInput", "change", (e) => { const files = e.target.files ? [...e.target.files] : []; if (files.length) { if (perImgTarget === "gallery") addGalleryFiles(files); else applyPerImage(files[0]); } e.target.value = ""; });
+    $on("perViewToggle", "click", togglePerView);
+    $on("perMore", "click", () => openNoteSheet(st.curNoteId));
     // lightbox
-    $("lbClose").addEventListener("click", () => { $("lightbox").hidden = true; });
-    $("lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") $("lightbox").hidden = true; });
+    $on("lbClose", "click", () => { $("lightbox").hidden = true; });
+    $on("lightbox", "click", (e) => { if (e.target.id === "lightbox") $("lightbox").hidden = true; });
     // cropper
-    $("cropCancel").addEventListener("click", closeCropper);
-    $("cropOk").addEventListener("click", commitCrop);
-    $("cropZoom").addEventListener("input", (e) => setCropZoom(e.target.value));
+    $on("cropCancel", "click", closeCropper);
+    $on("cropOk", "click", commitCrop);
+    $on("cropZoom", "input", (e) => setCropZoom(e.target.value));
     (function () {
       const stage = $("cropStage"); let dragging = false, lx = 0, ly = 0;
       stage.addEventListener("pointerdown", (e) => { if (!cropState) return; dragging = true; lx = e.clientX; ly = e.clientY; try { stage.setPointerCapture(e.pointerId); } catch (x) {} });
