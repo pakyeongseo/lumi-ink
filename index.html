@@ -11,6 +11,8 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d0f17;
@@ -95,7 +97,7 @@
     background: linear-gradient(var(--bar-bg-2), var(--bar-bg));
     border-bottom: 1px solid var(--bar-line);
     position: relative; z-index: 5;
-    box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    box-shadow: 0 2px 7px rgba(46,86,170,.17);
   }
   .topbar .tb-title {
     flex: 1; min-width: 0; font-size: 17px; font-weight: 650;
@@ -125,9 +127,17 @@
   html[data-theme="light"] .brand-logo .niblogo .nib-body { fill: #5f7fd0; }
   html[data-theme="light"] .brand-logo .niblogo .nib-ink { fill: #fff; }
   html[data-theme="light"] .brand-logo .niblogo .nib-tip { fill: #2b3a66; }
+  html[data-theme="light"] .tb-title,
+  html[data-theme="light"] .pd-name,
+  html[data-theme="light"] .mc-title,
+  html[data-theme="light"] .per-read-name,
+  html[data-theme="light"] .modal h3,
+  html[data-theme="light"] .sheet-title,
+  html[data-theme="light"] .set-rlabel,
+  html[data-theme="light"] .pd-count { color: #283a63; }
   .brand-logo .wordrow { display: inline-flex; align-items: center; gap: 0; }
-  .brand-logo .word { font-size: 15.5px; font-weight: 760; letter-spacing: -.01em; color: var(--logo-ink); }
-  .brand-logo .bstar { width: 12px; height: 12px; margin: 0 2px 1px; flex: 0 0 auto; filter: drop-shadow(0 0 4px rgba(106,208,255,.8)); animation: starTwinkle 3.4s ease-in-out infinite; }
+  .brand-logo .word { font-family: 'Parisienne', cursive; font-size: 27px; line-height: 1; font-weight: 400; letter-spacing: .01em; color: var(--logo-ink); }
+  .brand-logo .bstar { width: 13px; height: 13px; margin: 0 5px 2px; flex: 0 0 auto; filter: drop-shadow(0 0 4px rgba(106,208,255,.8)); animation: starTwinkle 3.4s ease-in-out infinite; }
   .brand-logo .bstar path { fill: var(--accent); }
   @keyframes starTwinkle { 0%,100% { opacity: 1; transform: rotate(0deg) scale(1); } 50% { opacity: .82; transform: rotate(-8deg) scale(.92); } }
 
@@ -150,6 +160,12 @@
     color: #fff; box-shadow: 0 0 24px rgba(123,155,255,.24);
   }
 
+  .sec-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 11px; }
+  .sec-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; letter-spacing: .03em; color: var(--muted); background: var(--accent-soft); padding: 6px 13px; border-radius: 999px; }
+  .sec-chip .sc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .sort-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; color: var(--accent); background: var(--accent-soft); border: none; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .sort-btn svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .grid-div { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 3px 2px 8px; }
   .section-label {
     font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
     color: var(--faint); padding: 18px 20px 10px;
@@ -164,6 +180,11 @@
     display: flex; flex-direction: column; gap: 10px; min-height: 132px;
   }
   .proj-card:active { transform: scale(.975); }
+  .pin-badge { position: absolute; top: 9px; left: 9px; width: 22px; height: 22px; border-radius: 7px; background: var(--grad-blue); display: grid; place-items: center; z-index: 3; box-shadow: 0 2px 7px rgba(96,90,210,.45); }
+  .pin-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
+  body.sel-mode .pin-badge { display: none; }
+  .mc-pin { flex: 0 0 auto; color: var(--accent); display: inline-flex; }
+  .mc-pin svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
   .proj-card::before {
     content: ""; position: absolute; inset: 0; opacity: .5; pointer-events: none;
     background: radial-gradient(60% 60% at 80% 0%, rgba(106,208,255,.07), transparent 70%);
@@ -200,17 +221,17 @@
 
   /* ===== Project detail ===== */
   .pd-head {
-    flex: 0 0 auto; padding: 16px 20px 20px; position: relative;
+    flex: 0 0 auto; padding: 26px 20px 20px; position: relative;
     background: linear-gradient(var(--bg-2), transparent);
     border-bottom: 1px solid var(--line-soft);
   }
-  .pd-head .pd-name { font-size: 24px; font-weight: 750; letter-spacing: -.01em; margin: 4px 0 8px; }
+  .pd-head .pd-name { font-size: 23px; font-weight: 750; letter-spacing: -.01em; margin: 0 0 5px; }
   .pd-head .pd-desc {
-    font-size: 14px; color: var(--muted); line-height: 1.6; white-space: pre-wrap;
-    max-height: 22vh; overflow-y: auto;
+    font-size: 13.5px; color: var(--muted); line-height: 1.55; white-space: pre-wrap;
+    max-height: 18vh; overflow-y: auto;
   }
   .pd-head .pd-desc.empty { color: var(--faint); font-style: italic; }
-  .pd-head .pd-count { font-size: 12px; color: var(--faint); margin-top: 10px; letter-spacing: .04em; }
+  .pd-count { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 11px; border-radius: 999px; letter-spacing: .02em; }
   .pd-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 16px calc(110px + var(--safe-bottom)); }
 
   .chip-list { display: flex; flex-direction: column; gap: 9px; }
@@ -304,7 +325,7 @@
     position: absolute; right: 18px; bottom: calc(22px + var(--safe-bottom)); z-index: 8;
     width: 58px; height: 58px; border-radius: 18px; border: none; cursor: pointer;
     background: linear-gradient(135deg, #7b9bff, #b58bff); color: #fff;
-    display: grid; place-items: center; box-shadow: 0 0 24px rgba(123,155,255,.28), 0 8px 22px rgba(0,0,0,.4);
+    display: grid; place-items: center; box-shadow: 0 2px 8px rgba(123,110,230,.45), 0 5px 16px rgba(40,52,110,.34);
     transition: transform .12s;
   }
   .fab:active { transform: scale(.92); }
@@ -320,21 +341,31 @@
     z-index: 50; display: flex; flex-direction: column; box-shadow: var(--shadow);
   }
   body.sidebar-open .sidebar { transform: translateX(0); }
-  .sb-head { padding: calc(var(--safe-top) + 18px) 18px 14px; border-bottom: 1px solid var(--line-soft); }
-  .sb-section { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); padding: 16px 18px 8px; }
+  .sb-head { padding: calc(var(--safe-top) + 18px) 16px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  #sbLogo .niblogo { width: 56px; height: 56px; }
+  .sb-shortcuts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .sb-sc { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 10px; border-radius: 11px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
+  .sb-sc svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+  .sb-sc.primary { background: var(--grad-blue); color: #fff; box-shadow: 0 2px 8px rgba(123,110,230,.32); }
+  .sb-sc:active { transform: scale(.97); }
+  .sb-section-row { padding: 16px 16px 9px; }
+  .sb-section-box { display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px 8px 11px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-soft), transparent); border: 1px solid var(--line); font-size: 13px; font-weight: 750; letter-spacing: .02em; color: var(--ink); }
+  .sb-section-box .ssb-bar { width: 4px; height: 15px; border-radius: 3px; background: var(--grad-blue); }
   .sb-list { flex: 1 1 auto; overflow-y: auto; padding: 0 10px 10px; }
+  .sb-divider { height: 1px; background: var(--line); margin: 4px 12px 6px; }
   .sb-item {
     display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 12px;
     cursor: pointer; transition: background .12s;
   }
   .sb-item:active { background: var(--surface-2); }
   .sb-item.active { background: var(--accent-soft); }
-  .sb-item .sb-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; overflow: hidden; background: var(--surface-2); flex: 0 0 auto; }
+  .sb-item .sb-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; overflow: hidden; background: var(--surface-2); flex: 0 0 auto; position: relative; }
   .sb-item .sb-ico img { width: 100%; height: 100%; object-fit: cover; }
   .sb-item .sb-ico .deflogo { width: 15px; height: 15px; border-radius: 5px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 7px rgba(106,208,255,.4); }
+  .sb-item .sb-pin { position: absolute; top: -3px; left: -3px; width: 14px; height: 14px; color: var(--accent); }
   .sb-item .sb-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sb-item.active .sb-name { color: var(--accent); }
-  .sb-item .sb-num { font-size: 12px; color: var(--faint); flex: 0 0 auto; }
+  .sb-item .sb-num { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--grad-blue); padding: 2px 9px; border-radius: 999px; min-width: 22px; text-align: center; flex: 0 0 auto; }
   .sb-foot { flex: 0 0 auto; padding: 10px 12px calc(12px + var(--safe-bottom)); border-top: 1px solid var(--line-soft); display: flex; gap: 8px; }
   .sb-fbtn {
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -454,15 +485,15 @@
   html[data-theme="light"] .action-card.accent { color: #fff; }
 
   /* ===== project-detail thumbnail ===== */
-  .pd-head { display: flex; gap: 15px; align-items: flex-start; }
+  .pd-head { display: flex; gap: 15px; align-items: center; }
   .pd-thumb {
-    width: 66px; height: 66px; border-radius: 17px; overflow: hidden; flex: 0 0 auto; position: relative;
-    background: linear-gradient(150deg, var(--surface-2), var(--surface-3)); display: grid; place-items: center; margin-top: 2px;
+    width: 84px; height: 84px; border-radius: 20px; overflow: hidden; flex: 0 0 auto; position: relative;
+    background: linear-gradient(150deg, var(--surface-2), var(--surface-3)); display: grid; place-items: center;
   }
   .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .pd-thumb .frame { position: absolute; inset: 0; border-radius: 17px; pointer-events: none; box-shadow: inset 0 0 0 1.5px rgba(106,208,255,.42), inset 0 0 16px rgba(106,208,255,.18); }
-  .pd-thumb .deflogo { width: 28px; height: 28px; border-radius: 8px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 12px rgba(106,208,255,.5); }
-  .pd-textcol { flex: 1; min-width: 0; }
+  .pd-thumb .frame { position: absolute; inset: 0; border-radius: 20px; pointer-events: none; box-shadow: inset 0 0 0 1.5px rgba(106,208,255,.42), inset 0 0 16px rgba(106,208,255,.18); }
+  .pd-thumb .deflogo { width: 38px; height: 38px; border-radius: 11px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 14px rgba(106,208,255,.5); }
+  .pd-textcol { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
   .pd-head .pd-name { margin-top: 0; }
 
   /* ===== icon picker grid ===== */
@@ -586,7 +617,7 @@
   .per-divider { height: 1px; background: var(--line); margin: 22px 0 0; }
   .per-read-tok { margin: 8px 2px 0; text-align: right; }
   .per-section { margin-bottom: 18px; }
-  .per-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-bottom: 9px; }
+  .per-label { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin-bottom: 11px; }
   .per-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .pg-item { position: relative; aspect-ratio: 1; border-radius: 11px; overflow: hidden; background: var(--surface-2); }
   .pg-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -606,11 +637,25 @@
   .per-read-name { font-size: 19px; font-weight: 750; margin-bottom: 7px; word-break: break-word; }
   .per-read-name:empty::before { content: "(이름 없음)"; color: var(--faint); font-weight: 500; }
   .per-tags-read { display: flex; flex-wrap: wrap; gap: 5px; }
-  .per-read-detail { font-size: 16px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; color: var(--ink); margin-bottom: 4px; min-height: 30px; }
-  .per-read-detail:empty::before { content: "(상세 설명 없음)"; color: var(--faint); }
+  .per-read-detail { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; font-size: 15.5px; line-height: 1.72; word-break: break-word; color: var(--ink); margin-bottom: 6px; box-shadow: var(--shadow); }
+  .per-read-detail .pr-line { white-space: pre-wrap; }
+  .per-read-detail .pr-gap { height: .7em; }
+  .per-read-detail .pr-empty { color: var(--faint); }
+  .per-read-detail .pr-head { margin: 14px 0 10px; padding: 9px 14px; border-radius: 11px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: linear-gradient(135deg, var(--accent-soft), transparent); font-weight: 750; color: var(--ink); box-shadow: 0 1px 0 var(--line); }
+  .per-read-detail .pr-head:first-child { margin-top: 0; }
+  .per-read-detail .pr-h1 { font-size: 16.5px; }
+  .per-read-detail .pr-h2 { font-size: 15px; }
+  .per-read-detail .pr-h3 { font-size: 14px; opacity: .94; }
+  .pg-item.dragging { opacity: .55; transform: scale(1.08); z-index: 6; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .pg-item.drop-target { outline: 2px dashed var(--accent); outline-offset: -2px; }
   .per-portrait-main.pv, .per-square-thumb.pv { cursor: zoom-in; }
   .per-gallery.pv .pg-item { cursor: zoom-in; }
   body.per-view-on #perEditView { display: none; }
+  body.per-view-on #perSave { display: none; }
+  .read-body pre { position: relative; }
+  .code-copy { position: absolute; top: 7px; right: 7px; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 650; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--line); padding: 4px 9px; border-radius: 8px; cursor: pointer; z-index: 2; }
+  .code-copy svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .code-copy.done { color: #59d98b; }
 
   /* persona round thumbnail in chip */
   .memo-chip .mc-thumb { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; position: relative; background: var(--surface-2); }
@@ -641,7 +686,7 @@
   /* settings */
   .set-scroll { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 16px calc(40px + var(--safe-bottom)); }
   .set-group { margin-bottom: 24px; }
-  .set-gtitle { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 0 4px 9px; }
+  .set-gtitle { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin: 0 4px 11px; }
   .set-row { display: flex; align-items: center; gap: 12px; padding: 14px 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 9px; cursor: pointer; box-shadow: var(--shadow); }
   .set-row:active { background: var(--surface-2); }
   .set-rtext { flex: 1; min-width: 0; }
@@ -686,9 +731,11 @@
 
   /* type sections in project detail */
   .chip-section { margin-bottom: 4px; }
-  .chip-section-label { font-size: 11.5px; font-weight: 700; letter-spacing: .07em; color: var(--faint); margin: 16px 4px 9px; display: flex; align-items: center; gap: 7px; }
+  .chip-section-label { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin: 16px 4px 11px; }
   .chip-section:first-child .chip-section-label { margin-top: 2px; }
-  .chip-section-label .csl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .7; }
+  .chip-section-label .csl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .85; }
+  .chip-section-label .csl-count { color: var(--faint); font-weight: 600; }
+  .pd-countrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 7px; }
 
   .hidden-input { display: none; }
 </style>
@@ -704,7 +751,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
       <div class="tb-center">
-        <span class="brand-logo" id="homeLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">루미</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">잉크</span></span></span>
+        <span class="brand-logo" id="homeLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">Ink</span></span></span>
       </div>
       <button class="iconbtn" id="homeSettings" aria-label="설정">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg>
@@ -719,7 +766,10 @@
           <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5h5"/></svg> 새 프로젝트
         </button>
       </div>
-      <div class="section-label">프로젝트</div>
+      <div class="sec-row">
+        <span class="sec-chip"><span class="sc-dot"></span>프로젝트</span>
+        <button class="sort-btn" id="homeSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="homeSortLabel">최신순</span></button>
+      </div>
       <div class="proj-grid" id="projGrid"></div>
     </div>
     <button class="fab" id="homeFab" aria-label="새 메모"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -739,7 +789,10 @@
       <div class="pd-textcol">
         <div class="pd-name" id="pdName">프로젝트</div>
         <div class="pd-desc" id="pdDesc"></div>
-        <div class="pd-count" id="pdCount"></div>
+        <div class="pd-countrow">
+          <div class="pd-count" id="pdCount"></div>
+          <button class="sort-btn" id="pdSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="pdSortLabel">최신순</span></button>
+        </div>
       </div>
     </div>
     <div class="pd-body"><div class="chip-list" id="pdChips"></div></div>
@@ -765,6 +818,7 @@
       <button class="iconbtn" id="edBack" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
       <div class="tb-title" id="edTitle">메모</div>
       <div class="saver" id="saver"><span class="dot"></span><span id="saverText"></span></div>
+      <button class="iconbtn" id="edSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
       <button class="iconbtn" id="edMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
     <div class="formatbar" id="formatbar">
@@ -811,6 +865,7 @@
       <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
       <div class="tb-title" id="loreTitle">로어북</div>
       <div class="saver" id="loreSaver"><span class="dot"></span><span id="loreSaverText"></span></div>
+      <button class="iconbtn" id="loreSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
       <button class="iconbtn" id="lorePreviewBtn" aria-label="미리보기"><svg id="lorePvIcon" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="iconbtn" id="loreMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
@@ -840,6 +895,7 @@
       <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
       <div class="tb-title" id="perTitle">페르소나</div>
       <div class="saver" id="perSaver"><span class="dot"></span><span id="perSaverText"></span></div>
+      <button class="iconbtn" id="perSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
       <button class="iconbtn" id="perViewToggle" aria-label="편집/보기"><svg id="perViewIcon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
       <button class="iconbtn" id="perMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
@@ -908,14 +964,19 @@
   <div class="scrim for-sidebar" id="sidebarScrim"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
-      <span class="brand-logo" id="sbLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">루미</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">잉크</span></span></span>
+      <span class="brand-logo" id="sbLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">Ink</span></span></span>
+      <div class="sb-shortcuts">
+        <button class="sb-sc primary" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모</button>
+        <button class="sb-sc" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 새 프로젝트</button>
+      </div>
     </div>
-    <button class="sb-newmemo" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모 작성</button>
-    <div class="sb-section">프로젝트</div>
+    <div class="sb-section-row">
+      <span class="sb-section-box"><span class="ssb-bar"></span>프로젝트</span>
+    </div>
     <div class="sb-list" id="sbList"></div>
     <div class="sb-foot">
-      <button class="sb-fbtn" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 프로젝트</button>
       <button class="sb-fbtn" id="sbImport"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg> 열기</button>
+      <button class="sb-fbtn" id="sbSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg> 설정</button>
       <button class="sb-fbtn" id="sbTheme" aria-label="테마"><svg id="themeIcon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     </div>
   </aside>
@@ -931,7 +992,7 @@
   <input type="file" id="iconInput" class="hidden-input" accept="image/*">
   <input type="file" id="attachInput" class="hidden-input">
   <input type="file" id="imgInput" class="hidden-input" accept="image/*">
-  <input type="file" id="perImgInput" class="hidden-input" accept="image/*">
+  <input type="file" id="perImgInput" class="hidden-input" accept="image/*" multiple>
 
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="screen-settings">
