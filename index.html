@@ -285,8 +285,8 @@
   .fbtn .fb-caret { width: 8px; height: 8px; margin-left: 1px; opacity: .6; stroke-width: 2.6; }
   .fsep { flex: 0 0 auto; width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
   .fcolor { position: relative; width: 34px; height: 36px; flex: 0 0 auto; }
-  .fcolor input[type=color] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; border: none; padding: 0; cursor: pointer; }
-  .fcolor .swatch { pointer-events: none; position: absolute; inset: 7px; border-radius: 7px; border: 1px solid var(--line); background: var(--accent); }
+  .fcolor-btn { position: relative; }
+  .fcolor-btn .swatch { display: block; width: 18px; height: 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--accent); }
   .code-toggle.has-bg { background: rgba(106,208,255,.1); }
   .fbtn.extra-slot { color: var(--accent); }
   .fbtn.extra-slot svg.star-ico { fill: var(--accent); stroke: none; }
@@ -345,8 +345,9 @@
     z-index: 50; display: flex; flex-direction: column; box-shadow: var(--shadow);
   }
   body.sidebar-open .sidebar { transform: translateX(0); }
-  .sb-head { padding: calc(var(--safe-top) + 16px) 16px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: center; }
-  #sbLogo { padding: 12px 26px 13px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(150deg, var(--surface-2), var(--surface)); box-shadow: var(--shadow); }
+  .sb-head { padding: calc(var(--safe-top) + 16px) 16px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: center; background: var(--surface-2); }
+  html[data-theme="light"] .sb-head { background: #f7f9fd; }
+  #sbLogo { padding: 0; border: none; border-radius: 0; background: none; box-shadow: none; }
   #sbLogo .niblogo { width: 64px; height: 64px; }
   .sb-shortcuts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .sb-actions { flex: 0 0 auto; display: flex; gap: 8px; padding: 8px 12px 2px; }
@@ -394,6 +395,8 @@
   .modal-scrim.open .modal { transform: scale(1); }
   .modal h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
   .modal .m-sub { margin: 0 0 18px; font-size: 13px; color: var(--muted); }
+  .modal .wi-toksum { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); background: var(--accent-soft); border-radius: 9px; padding: 7px 12px; }
+  .modal .wi-toksum b { color: var(--accent); }
 
   .type-card {
     display: flex; align-items: center; gap: 14px; padding: 16px 14px; margin-bottom: 10px;
@@ -589,14 +592,17 @@
   .lore-preview strong { font-weight: 700; } .lore-preview em { font-style: italic; }
   .lore-preview:empty::before { content: "(내용 없음)"; color: var(--faint); }
   .lore-depth-wrap { display: inline-flex; align-items: center; gap: 6px; }
+  .lore-depth-wrap:not(.on) .lore-depth { opacity: .35; pointer-events: none; }
   .lore-depth { width: 52px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 13px; font-family: inherit; text-align: center; outline: none; }
   .lore-depth:focus { border-color: var(--accent); }
   /* markdown decorations (lore + persona) */
-  .lore-preview .md-box, .per-read-detail .md-box { border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 11px; margin: 13px 0; overflow: hidden; background: linear-gradient(135deg, var(--accent-soft), transparent); }
-  .lore-preview .md-box-label, .per-read-detail .md-box-label { font-weight: 750; font-size: .9em; color: #6fd6ff; padding: 7px 13px; border-bottom: 1px solid var(--line); }
-  html[data-theme="light"] .lore-preview .md-box-label, html[data-theme="light"] .per-read-detail .md-box-label { color: #283a63; }
-  .lore-preview .md-box-body, .per-read-detail .md-box-body { padding: 9px 13px; }
-  .lore-preview .md-box-body > :first-child { margin-top: 0; } .lore-preview .md-box-body > :last-child { margin-bottom: 0; }
+  .lore-preview .md-tag, .per-read-detail .md-tag { margin: 13px 0; }
+  .lore-preview .md-tag-open, .lore-preview .md-tag-close, .per-read-detail .md-tag-open, .per-read-detail .md-tag-close { font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em; font-weight: 700; color: var(--accent); letter-spacing: .02em; opacity: .82; }
+  .lore-preview .md-tag-open, .per-read-detail .md-tag-open { margin-bottom: 5px; }
+  .lore-preview .md-tag-close, .per-read-detail .md-tag-close { margin-top: 5px; }
+  .lore-preview .md-tag-body, .per-read-detail .md-tag-body { padding: 9px 13px; border-left: 2px solid var(--accent); border-radius: 0 10px 10px 0; background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .lore-preview .md-tag-body > :first-child, .per-read-detail .md-tag-body > :first-child { margin-top: 0; }
+  .lore-preview .md-tag-body > :last-child, .per-read-detail .md-tag-body > :last-child { margin-bottom: 0; }
   .lore-preview .md-mini, .per-read-detail .pr-mini { margin: 6px 0; line-height: 1.6; }
   .lore-preview .md-mini-key, .per-read-detail .pr-mini-key { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .9em; padding: 2px 10px; border-radius: 7px; margin-right: 8px; }
 
@@ -718,6 +724,23 @@
   .set-gtitle { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin: 0 4px 11px; }
   .set-row { display: flex; align-items: center; gap: 12px; padding: 14px 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 9px; cursor: pointer; box-shadow: var(--shadow); }
   .set-row:active { background: var(--surface-2); }
+  .set-row-stack { flex-direction: column; align-items: stretch; gap: 12px; cursor: default; }
+  .seg { display: flex; gap: 6px; }
+  .seg button { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .ce-section-label { font-size: 12px; font-weight: 700; color: var(--muted); margin: 4px 0 9px; letter-spacing: .02em; }
+  .ce-swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; margin-bottom: 16px; }
+  .ce-sw { width: 100%; aspect-ratio: 1; border-radius: 8px; border: 1px solid rgba(128,128,128,.25); cursor: pointer; position: relative; padding: 0; }
+  .ce-sw.sel::after { content: ""; position: absolute; inset: -3px; border: 2px solid var(--accent); border-radius: 10px; }
+  .ce-custom-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .ce-native { width: 44px; height: 40px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); cursor: pointer; flex: 0 0 auto; }
+  .ce-hex { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 14px; font-family: ui-monospace, monospace; outline: none; }
+  .ce-hex:focus { border-color: var(--accent); }
+  .ce-addbtn { flex: 0 0 auto; padding: 0 14px; height: 40px; border: none; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .ce-saved-empty { font-size: 12.5px; color: var(--faint); margin-bottom: 14px; }
+  .ce-preview { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 13px; border-radius: 10px; background: var(--surface-2); }
+  .ce-preview-chip { width: 26px; height: 26px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(128,128,128,.25); }
+  .ce-preview-text { font-size: 14px; font-weight: 600; }
   .set-rtext { flex: 1; min-width: 0; }
   .set-rlabel { font-size: 15px; font-weight: 650; }
   .set-rsub { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
@@ -879,6 +902,7 @@
       <div class="tb-title" id="edTitle">메모</div>
       <div class="saver" id="saver"><span class="dot"></span><span id="saverText"></span></div>
       <button class="iconbtn" id="edSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
+      <button class="iconbtn" id="edView" aria-label="보기"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="iconbtn" id="edMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
     <div class="formatbar" id="formatbar">
@@ -894,7 +918,7 @@
       <button class="fbtn" id="fsUp" title="글자 크게" style="font-size:17px;font-weight:800">A+</button>
       <button class="fbtn" id="fsList" title="글자 크기 선택" style="font-weight:800;font-size:14px">A▾</button>
       <span class="fsep"></span>
-      <span class="fcolor"><input type="color" id="colorPick" value="#6ad0ff"><span class="swatch" id="colorSwatch"></span></span>
+      <button class="fbtn fcolor-btn" id="colorBtn" title="글자 색"><span class="swatch" id="colorSwatch"></span></button>
       <button class="fbtn" id="hiliteBtn" title="형광펜" style="font-weight:700;background:linear-gradient(transparent 58%, #ffe27a 58%);color:#222">H</button>
       <span class="fsep"></span>
       <button class="fbtn" id="alignBtn" title="정렬"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg><svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -939,8 +963,9 @@
           <div class="lore-switch" id="loreActive"></div>
           <span>항상 활성 <span class="lore-hint">(constant)</span></span>
         </div>
-        <div class="lore-depth-wrap">
-          <span class="lore-hint">깊이(D)</span>
+        <div class="lore-depth-wrap" id="loreDepthWrap">
+          <div class="lore-switch" id="loreDepthSwitch"></div>
+          <span>깊이 <span class="lore-hint">(@D)</span></span>
           <input class="lore-depth" id="loreDepth" type="number" min="0" max="999" inputmode="numeric" value="4">
         </div>
         <span class="lore-tokens" id="loreTokens">— 토큰</span>
@@ -1083,7 +1108,7 @@
   <div class="scrim for-sheet" id="sheetScrim"></div>
   <div class="sheet" id="sheet"><div class="grip"></div><div class="sheet-title" id="sheetTitle"></div><div id="sheetItems"></div></div>
 
-  <input type="file" id="fileInput" class="hidden-input" accept=".html,.htm,text/html">
+  <input type="file" id="fileInput" class="hidden-input" accept=".html,.htm,.json,text/html,application/json">
   <input type="file" id="iconInput" class="hidden-input" accept="image/*">
   <input type="file" id="attachInput" class="hidden-input">
   <input type="file" id="imgInput" class="hidden-input" accept="image/*">
@@ -1107,6 +1132,12 @@
           <div class="set-rtext"><div class="set-rlabel">웹폰트</div><div class="set-rsub" id="setFontSub">기본 폰트</div></div>
           <div class="set-rval">변경 ›</div>
         </div>
+        <div class="set-row set-row-stack">
+          <div class="set-rtext"><div class="set-rlabel">글자 크기</div><div class="set-rsub">앱 전체 크기 조절</div></div>
+          <div class="seg" id="fontSizeSeg">
+            <button data-fs="small">작게</button><button data-fs="normal">보통</button><button data-fs="large">크게</button>
+          </div>
+        </div>
       </div>
       <div class="set-group">
         <div class="set-gtitle">데이터</div>
@@ -1118,12 +1149,16 @@
           <div class="set-rtext"><div class="set-rlabel">백업 복원</div><div class="set-rsub">백업 .html을 불러와 데이터 병합</div></div>
           <div class="set-rval">가져오기 ›</div>
         </div>
+        <div class="set-row" id="setAutoBackup">
+          <div class="set-rtext"><div class="set-rlabel">자동 백업</div><div class="set-rsub">저장할 때마다 최근 10개 스냅샷 보관</div></div>
+          <div class="set-rval">불러오기 ›</div>
+        </div>
         <div class="set-row danger" id="setReset">
           <div class="set-rtext"><div class="set-rlabel">데이터 초기화</div><div class="set-rsub">모든 데이터를 영구 삭제</div></div>
           <div class="set-rval">초기화 ›</div>
         </div>
       </div>
-      <div class="set-about" id="setAbout">루미 ✦ 잉크 · 로컬 저장</div>
+      <div class="set-about" id="setAbout">루미잉크 · 로컬 저장</div>
     </div>
   </section>
 
@@ -1177,7 +1212,7 @@
   const TYPE_LABEL = { free: "자유", lorebook: "로어북", persona: "페르소나" };
 
   /* ---------- IndexedDB ---------- */
-  const DB_NAME = "inkMemoDB", DB_VER = 3;
+  const DB_NAME = "inkMemoDB", DB_VER = 4;
   let db = null;
 
   function openDB() {
@@ -1195,6 +1230,9 @@
         if (!d.objectStoreNames.contains("files")) {
           const fs = d.createObjectStore("files", { keyPath: "id" });
           fs.createIndex("noteId", "noteId");
+        }
+        if (!d.objectStoreNames.contains("backups")) {
+          d.createObjectStore("backups", { keyPath: "id" });
         }
       };
       r.onsuccess = (e) => { db = e.target.result; res(db); };

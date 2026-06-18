@@ -305,6 +305,7 @@
   }
   async function deleteProject(id) {
     const p = getProject(id); if (!p) return;
+    await doAutoBackup();
     const ns = notesOf(id);
     for (const n of ns) { await purgeNoteFiles(n); await del("notes", n.id); }
     st.notes = st.notes.filter((n) => n.projectId !== id);
@@ -326,7 +327,7 @@
   }
 
   /* ---------- note CRUD ---------- */
-  async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); }
+  async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); triggerAutoBackup(); }
   async function createNote(type, projectId) {
     const n = {
       id: uid(), projectId, type,
@@ -334,7 +335,7 @@
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
-          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depth: 4 }
+          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
           : {}
     };
@@ -345,6 +346,7 @@
   }
   async function deleteNote(id) {
     const n = getNote(id);
+    await doAutoBackup();
     await purgeNoteFiles(n);
     st.notes = st.notes.filter((n) => n.id !== id);
     await del("notes", id);
@@ -389,6 +391,46 @@
     document.body.classList.toggle("code-mode", on);
     $("codeToggle").classList.toggle("active", on);
     if (on) $("codeArea").focus(); else $("editor").focus();
+  }
+  const COLOR_PALETTE = ["#000000","#434343","#666666","#999999","#b7b7b7","#dddddd","#f3f3f3","#ffffff","#e11d48","#f43f5e","#f97316","#f59e0b","#eab308","#84cc16","#22c55e","#10b981","#14b8a6","#06b6d4","#0ea5e9","#3b82f6","#6366f1","#8b5cf6","#a855f7","#d946ef","#ec4899","#7f1d1d","#7c2d12","#14532d","#0c4a6e","#1e3a8a","#3b0764","#831843"];
+  let colorRange = null, colorCur = "#6ad0ff";
+  function getSavedColors() { try { return JSON.parse(localStorage.getItem("luminkColors") || "[]"); } catch (e) { return []; } }
+  function setSavedColors(a) { try { localStorage.setItem("luminkColors", JSON.stringify(a.slice(0, 24))); } catch (e) {} }
+  function normHex(v) { v = (v || "").trim(); if (!v) return null; if (v[0] !== "#") v = "#" + v; if (/^#[0-9a-fA-F]{3}$/.test(v)) v = "#" + v.slice(1).split("").map((c) => c + c).join(""); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; }
+  function openColorEditor() {
+    const sel = window.getSelection();
+    colorRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+    try { const last = localStorage.getItem("luminkLastColor"); if (last) colorCur = last; } catch (e) {}
+    const pal = COLOR_PALETTE.map((c) => `<button class="ce-sw" data-c="${c}" style="background:${c}"></button>`).join("");
+    openModal(`<h3>글자 색</h3>
+      <div class="ce-preview"><span class="ce-preview-chip" id="cePrevChip"></span><span class="ce-preview-text" id="cePrevText">가나다 Sample</span></div>
+      <div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="cePalette">${pal}</div>
+      <div class="ce-section-label">직접 입력</div>
+      <div class="ce-custom-row"><input type="color" class="ce-native" id="ceNative"><input class="ce-hex" id="ceHex" maxlength="7" spellcheck="false" placeholder="#000000"><button class="ce-addbtn" id="ceSave">저장</button></div>
+      <div class="ce-section-label">내 색상</div><div id="ceSavedWrap"></div>
+      <div class="m-row"><button class="m-btn" id="ceCancel">취소</button><button class="m-btn primary" id="ceApply">적용</button></div>`);
+    const setCur = (hex) => { const h = normHex(hex); if (!h) return; colorCur = h; $("cePrevChip").style.background = h; $("cePrevText").style.color = h; $("ceNative").value = h; if (document.activeElement !== $("ceHex")) $("ceHex").value = h; $("modalBox").querySelectorAll("#cePalette .ce-sw").forEach((s) => s.classList.toggle("sel", s.dataset.c === h)); };
+    const drawSaved = () => {
+      const arr = getSavedColors(), wrap = $("ceSavedWrap");
+      if (!arr.length) { wrap.innerHTML = '<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>'; return; }
+      wrap.innerHTML = `<div class="ce-swatches">${arr.map((c) => `<button class="ce-sw" data-c="${c}" style="background:${c}"></button>`).join("")}</div>`;
+      wrap.querySelectorAll(".ce-sw").forEach((s) => s.addEventListener("click", () => setCur(s.dataset.c)));
+    };
+    $("modalBox").querySelectorAll("#cePalette .ce-sw").forEach((s) => s.addEventListener("click", () => setCur(s.dataset.c)));
+    $on("ceNative", "input", (e) => setCur(e.target.value));
+    $on("ceHex", "input", (e) => { const h = normHex(e.target.value); if (h) setCur(h); });
+    $on("ceSave", "click", () => { const arr = getSavedColors().filter((c) => c !== colorCur); arr.unshift(colorCur); setSavedColors(arr); drawSaved(); toast("색을 저장했어요"); });
+    $on("ceCancel", "click", closeModal);
+    $on("ceApply", "click", () => {
+      try { localStorage.setItem("luminkLastColor", colorCur); } catch (e) {}
+      const ed = $("editor"); ed.focus();
+      if (colorRange) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(colorRange); }
+      document.execCommand("styleWithCSS", false, true);
+      document.execCommand("foreColor", false, colorCur);
+      const sw = $("colorSwatch"); if (sw) sw.style.background = colorCur;
+      closeModal(); scheduleSave();
+    });
+    setCur(colorCur); drawSaved();
   }
   function toggleHilite() {
     $("editor").focus();
@@ -494,15 +536,15 @@
       return s;
     };
     const lines = (md || "").replace(/\r\n/g, "\n").split("\n");
-    const out = []; let inUl = false, inOl = false, inCode = false, code = [], boxOpen = false;
+    const out = []; let inUl = false, inOl = false, inCode = false, code = []; const tagStack = [];
     const closeLists = () => { if (inUl) { out.push("</ul>"); inUl = false; } if (inOl) { out.push("</ol>"); inOl = false; } };
     for (const raw of lines) {
       if (/^```/.test(raw)) { if (inCode) { out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>"); code = []; inCode = false; } else { closeLists(); inCode = true; } continue; }
       if (inCode) { code.push(raw); continue; }
       const tline = raw.trim();
       let bm;
-      if ((bm = tline.match(/^<([^/<>][^<>]*)>$/))) { closeLists(); out.push(`<div class="md-box"><div class="md-box-label">${esc(bm[1].trim())}</div><div class="md-box-body">`); boxOpen = true; continue; }
-      if ((bm = tline.match(/^<\/([^<>]+)>$/))) { closeLists(); if (boxOpen) { out.push("</div></div>"); boxOpen = false; } continue; }
+      if ((bm = tline.match(/^<([^/<>][^<>]*)>$/))) { closeLists(); const nm = bm[1].trim(); tagStack.push(nm); out.push(`<div class="md-tag"><div class="md-tag-open">&lt;${esc(nm)}&gt;</div><div class="md-tag-body">`); continue; }
+      if ((bm = tline.match(/^<\/([^<>]*)>$/))) { closeLists(); if (tagStack.length) { const nm = tagStack.pop(); out.push(`</div><div class="md-tag-close">&lt;/${esc(nm)}&gt;</div></div>`); } continue; }
       if (/^\s*$/.test(raw)) { closeLists(); continue; }
       let m;
       if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
@@ -514,7 +556,7 @@
       closeLists(); out.push(`<p>${inline(raw)}</p>`);
     }
     if (inCode) out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>");
-    closeLists(); if (boxOpen) out.push("</div></div>");
+    closeLists(); while (tagStack.length) { const nm = tagStack.pop(); out.push(`</div><div class="md-tag-close">&lt;/${esc(nm)}&gt;</div></div>`); }
     return out.join("\n");
   }
 
@@ -536,11 +578,14 @@
   function renderLore() {
     const n = getNote(st.curNoteId);
     if (!n || n.type !== "lorebook") { back(); return; }
-    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false, depth: 4 };
+    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 };
     if (d.depth == null) d.depth = 4;
+    if (d.depthOn == null) d.depthOn = false;
     $("loreTitle").textContent = n.title || "로어북";
     if ($("loreEdit").value !== (d.content || "")) $("loreEdit").value = d.content || "";
     if ($("loreDepth")) $("loreDepth").value = d.depth;
+    if ($("loreDepthSwitch")) $("loreDepthSwitch").classList.toggle("on", !!d.depthOn);
+    if ($("loreDepthWrap")) $("loreDepthWrap").classList.toggle("on", !!d.depthOn);
     renderKeywords(n);
     $("loreActive").classList.toggle("on", !!d.alwaysActive);
     $("lorePreview").innerHTML = mdToHtml(d.content || "");
@@ -563,6 +608,7 @@
     n.updatedAt = now(); await put("notes", n);
     const p = getProject(n.projectId); if (p) saveProject(p);
     if (!silent) setLoreSaver("saved");
+    triggerAutoBackup();
   }
   function scheduleLoreSave() { setLoreSaver("dirty"); clearTimeout(loreTimer); loreTimer = setTimeout(flushLore, 550); }
   async function flushLore() {
@@ -614,10 +660,10 @@
       entries[String(i)] = {
         uid: i, key: (d.keywords || []).slice(), keysecondary: [], comment: n.title || "", content: d.content || "",
         constant: !!d.alwaysActive, vectorized: false, selective: true, selectiveLogic: 0, addMemo: true,
-        order: 100, position: 4, disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
+        order: 100, position: (d.depthOn ? 4 : 0), disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
         matchPersonaDescription: false, matchCharacterDescription: false, matchCharacterPersonality: false,
         matchCharacterDepthPrompt: false, matchScenario: false, matchCreatorNotes: false, delayUntilRecursion: false,
-        probability: 100, useProbability: true, depth: (d.depth == null ? 4 : d.depth), outletName: "", group: "", groupOverride: false, groupWeight: 100,
+        probability: 100, useProbability: true, depth: (d.depthOn ? (d.depth == null ? 4 : d.depth) : 4), outletName: "", group: "", groupOverride: false, groupWeight: 100,
         scanDepth: null, caseSensitive: null, matchWholeWords: null, useGroupScoring: null, automationId: "",
         role: null, sticky: 0, cooldown: 0, delay: 0, triggers: [], displayIndex: i,
         characterFilter: { isExclude: false, names: [], tags: [] }
@@ -629,9 +675,19 @@
     if (notes.length === 1) return notes[0].title || "lorebook";
     const p = getProject(notes[0].projectId); return p ? p.name : "lorebook";
   }
+  function sumLoreTokens(notes, cb) {
+    ensureTokenizer().then((ok) => {
+      if (ok && window.__luminkCountTokens) {
+        let total = 0;
+        notes.forEach((n) => { total += (window.__luminkCountTokens((n.data && n.data.content) || "") || 0); });
+        cb(total);
+      } else cb(null);
+    });
+  }
   function exportWorldInfoFlow(notes) {
     if (!notes.length) { toast("내보낼 로어북이 없어요"); return; }
-    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">${notes.length}개 항목을 하나의 .json으로 묶어 내보냅니다.</p><div class="m-field-label">파일 이름 (.json)</div><input class="m-input" id="wiName" placeholder="예: 세계관_로어북" value="${esc(defaultWiName(notes))}" autocapitalize="off"><div class="m-row"><button class="m-btn" id="wiNo">취소</button><button class="m-btn primary" id="wiOk">내보내기</button></div>`);
+    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">${notes.length}개 항목을 하나의 .json으로 묶어 내보냅니다.</p><div class="wi-toksum" id="wiTok">토큰 합산 중…</div><div class="m-field-label">파일 이름 (.json)</div><input class="m-input" id="wiName" placeholder="예: 세계관_로어북" value="${esc(defaultWiName(notes))}" autocapitalize="off"><div class="m-row"><button class="m-btn" id="wiNo">취소</button><button class="m-btn primary" id="wiOk">내보내기</button></div>`);
+    sumLoreTokens(notes, (t) => { const el = $("wiTok"); if (el) el.innerHTML = (t == null) ? "토큰 합산 불가" : `합산 토큰 <b>${t.toLocaleString()}</b> · ${notes.length}개`; });
     setTimeout(() => { const i = $("wiName"); i.focus(); i.select(); }, 120);
     $on("wiNo", "click", closeModal);
     $on("wiOk", "click", () => {
@@ -648,19 +704,20 @@
     const lores = notesOf(pid).filter((n) => n.type === "lorebook");
     if (!lores.length) { toast("이 프로젝트에 로어북이 없어요"); return; }
     const sel = new Set(lores.map((n) => n.id));
-    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">하나의 .json으로 묶을 로어북을 선택하세요.</p><div class="lore-pick-list" id="lpList"></div><div class="m-row"><button class="m-btn" id="lpNo">취소</button><button class="m-btn primary" id="lpNext">다음</button></div>`);
+    openModal(`<h3>World Info 내보내기</h3><p class="m-sub">하나의 .json으로 묶을 로어북을 선택하세요.</p><div class="lore-pick-list" id="lpList"></div><div class="wi-toksum" id="lpTok"></div><div class="m-row"><button class="m-btn" id="lpNo">취소</button><button class="m-btn primary" id="lpNext">다음</button></div>`);
     const list = $("lpList");
+    const updTok = () => { const chosen = lores.filter((n) => sel.has(n.id)); const el = $("lpTok"); if (!el) return; if (!chosen.length) { el.textContent = "선택된 로어북 없음"; return; } el.textContent = "토큰 합산 중…"; sumLoreTokens(chosen, (t) => { if ($("lpTok")) $("lpTok").innerHTML = (t == null) ? "토큰 합산 불가" : `합산 토큰 <b>${t.toLocaleString()}</b> · ${chosen.length}개`; }); };
     const draw = () => {
       list.innerHTML = "";
       lores.forEach((n) => {
         const row = document.createElement("div"); row.className = "lore-pick" + (sel.has(n.id) ? " sel" : "");
         const tk = ((n.data && n.data.keywords) || []).length;
         row.innerHTML = `<div class="lp-check"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg></div><div class="lp-body"><div class="lp-name">${esc(n.title)}</div><div class="lp-meta">키워드 ${tk}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}</div></div>`;
-        row.addEventListener("click", () => { if (sel.has(n.id)) sel.delete(n.id); else sel.add(n.id); draw(); });
+        row.addEventListener("click", () => { if (sel.has(n.id)) sel.delete(n.id); else sel.add(n.id); draw(); updTok(); });
         list.appendChild(row);
       });
     };
-    draw();
+    draw(); updTok();
     $on("lpNo", "click", closeModal);
     $on("lpNext", "click", () => {
       const chosen = lores.filter((n) => sel.has(n.id));
@@ -853,7 +910,7 @@
     if (!gal.length) { rg.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; }
     else gal.forEach((src) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src); rg.appendChild(it); });
   }
-  async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); }
+  async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
   function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); perTimer = setTimeout(flushPersona, 550); }
   async function flushPersona() {
     clearTimeout(perTimer); perTimer = null;
@@ -947,7 +1004,7 @@
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("페르소나 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await savePersona(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
-      { icon: IC.save, label: "HTML로 저장", fn: () => exportPersonaHtml(n.id) },
+      { icon: IC.save, label: "HTML로 저장", fn: () => choosePersonaExportTheme(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("페르소나 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
@@ -1356,6 +1413,7 @@
   function renderSettings() {
     $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
+    document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
   }
   const FONT_PRESETS = [
     { name: "Pretendard", label: "프리텐다드", url: "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" },
@@ -1505,34 +1563,51 @@ ${html}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast(".html로 저장했어요");
   }
-  function personaExportCSS() {
-    return `body{margin:0;background:#f4f6fb;color:#1c2233;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Segoe UI",sans-serif;word-break:break-word}
+  function personaExportCSS(theme) {
+    const D = theme === "dark";
+    const c = D ? {
+      bg: "#0f1320", text: "#e7e9f2", titleC: "#aebcec", panel: "#171c2b", panel2: "#1d2335", line: "#2a3147",
+      chipBg: "#1b2740", chipC: "#7fbfff", chipBd: "#2f5183", headC: "#6fd6ff", accent: "#6ad0ff", muted: "#aeb4c7", shadow: "0 4px 18px rgba(0,0,0,.45)"
+    } : {
+      bg: "#f4f6fb", text: "#1c2233", titleC: "#283a63", panel: "#fff", panel2: "#e7ebf5", line: "#e2e7f1",
+      chipBg: "#e9f0fc", chipC: "#3a6fd0", chipBd: "#cfe0fa", headC: "#283a63", accent: "#3a6fd0", muted: "#9aa0b4", shadow: "0 2px 10px rgba(60,90,160,.06)"
+    };
+    return `body{margin:0;background:${c.bg};color:${c.text};font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Segoe UI",sans-serif;word-break:break-word}
 .wrap{max-width:680px;margin:0 auto;padding:28px 18px 64px}
-.ptitle{font-size:24px;font-weight:800;color:#283a63;margin:0 0 18px}
-.portrait{width:280px;max-width:82%;aspect-ratio:3/4;margin:0 auto 24px;border-radius:16px;overflow:hidden;background:#e7ebf5;box-shadow:0 4px 16px rgba(60,90,160,.14)}
+.ptitle{font-size:24px;font-weight:800;color:${c.titleC};margin:0 0 18px}
+.portrait{width:280px;max-width:82%;aspect-ratio:3/4;margin:0 auto 24px;border-radius:16px;overflow:hidden;background:${c.panel2};box-shadow:${c.shadow}}
 .portrait img{width:100%;height:100%;object-fit:cover;display:block}
 .lang{margin:0 0 28px}
-.lang-head{display:inline-block;font-weight:700;font-size:13px;color:#3a6fd0;background:#e9f0fc;padding:5px 13px;border-radius:999px;margin-bottom:13px}
+.lang-head{display:inline-block;font-weight:700;font-size:13px;color:${c.chipC};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin-bottom:13px}
 .idrow{display:flex;gap:14px;align-items:center;margin-bottom:14px}
-.sq{width:100px;height:100px;border-radius:15px;overflow:hidden;flex:0 0 auto;background:#e7ebf5}
+.sq{width:100px;height:100px;border-radius:15px;overflow:hidden;flex:0 0 auto;background:${c.panel2}}
 .sq img{width:100%;height:100%;object-fit:cover;display:block}
 .pname{font-size:21px;font-weight:750;margin-bottom:8px}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
-.kw-chip{display:inline-block;background:#e9f0fc;color:#3a6fd0;border:1px solid #cfe0fa;padding:4px 11px;border-radius:8px;font-size:13px}
-.detail{background:#fff;border:1px solid #e2e7f1;border-radius:14px;padding:15px 16px;line-height:1.72;font-size:15.5px;box-shadow:0 2px 10px rgba(60,90,160,.06)}
-.detail .pr-line{white-space:pre-wrap}.detail .pr-gap{height:.7em}.detail .pr-empty{color:#9aa0b4}
-.detail .pr-head{margin:14px 0 10px;padding:9px 14px;border-radius:11px;border:1px solid #e2e7f1;border-left:2px solid #3a6fd0;background:linear-gradient(135deg,#eef4fd,transparent);font-weight:750;color:#283a63}
+.kw-chip{display:inline-block;background:${c.chipBg};color:${c.chipC};border:1px solid ${c.chipBd};padding:4px 11px;border-radius:8px;font-size:13px}
+.detail{background:${c.panel};border:1px solid ${c.line};border-radius:14px;padding:15px 16px;line-height:1.72;font-size:15.5px;box-shadow:${c.shadow}}
+.detail .pr-line{white-space:pre-wrap}.detail .pr-gap{height:.7em}.detail .pr-empty{color:${c.muted}}
+.detail .pr-head{margin:14px 0 10px;padding:9px 14px;border-radius:11px;border:1px solid ${c.line};border-left:2px solid ${c.accent};background:linear-gradient(135deg,${c.chipBg},transparent);font-weight:750;color:${c.headC}}
 .detail .pr-head:first-child{margin-top:0}
 .detail .pr-li{display:flex;gap:7px;align-items:baseline;margin:4px 0;padding-left:9px}
-.detail .pr-bullet{color:#3a6fd0;font-size:8px;flex:0 0 auto}
+.detail .pr-bullet{color:${c.accent};font-size:8px;flex:0 0 auto}
 .detail .pr-mini{margin:6px 0;line-height:1.6}
-.detail .pr-mini-key{display:inline-block;background:#e9f0fc;color:#3a6fd0;font-weight:700;font-size:.9em;padding:2px 10px;border-radius:7px;margin-right:8px}
-.gal-label{display:inline-block;font-weight:700;font-size:13px;color:#3a6fd0;background:#e9f0fc;padding:5px 13px;border-radius:999px;margin:24px 0 12px}
+.detail .pr-mini-key{display:inline-block;background:${c.chipBg};color:${c.chipC};font-weight:700;font-size:.9em;padding:2px 10px;border-radius:7px;margin-right:8px}
+.detail .md-tag{margin:13px 0}
+.detail .md-tag-open,.detail .md-tag-close{font-family:ui-monospace,monospace;font-size:.82em;font-weight:700;color:${c.accent};opacity:.82}
+.detail .md-tag-open{margin-bottom:5px}.detail .md-tag-close{margin-top:5px}
+.detail .md-tag-body{padding:9px 13px;border-left:2px solid ${c.accent};border-radius:0 10px 10px 0;background:${D ? "rgba(106,208,255,.09)" : "rgba(58,111,208,.07)"}}
+.gal-label{display:inline-block;font-weight:700;font-size:13px;color:${c.chipC};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin:24px 0 12px}
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:11px;display:block}
-.foot{margin-top:30px;text-align:center;color:#9aa0b4;font-size:12px}`;
+.foot{margin-top:30px;text-align:center;color:${c.muted};font-size:12px}`;
   }
-  function exportPersonaHtml(id) {
+  function choosePersonaExportTheme(id) {
+    openModal(`<h3>HTML로 저장</h3><p class="m-sub">내보낼 카드 테마를 선택하세요.</p><div class="m-row"><button class="m-btn" id="pxLight">밝게</button><button class="m-btn primary" id="pxDark">어둡게</button></div>`);
+    $on("pxLight", "click", () => { closeModal(); exportPersonaHtml(id, "light"); });
+    $on("pxDark", "click", () => { closeModal(); exportPersonaHtml(id, "dark"); });
+  }
+  function exportPersonaHtml(id, theme) {
     const n = getNote(id); if (!n || n.type !== "persona") return;
     const d = n.data || {};
     const langBlock = (o, label) => {
@@ -1552,7 +1627,7 @@ ${html}
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Lumink"><meta name="lumink-kind" content="persona">
 <title>${esc(n.title || "페르소나")}</title>
-<style>${personaExportCSS()}</style>
+<style>${personaExportCSS(theme === "dark" ? "dark" : "light")}</style>
 </head><body>
 <main class="wrap">
 <h1 class="ptitle">${esc(n.title || "페르소나")}</h1>
@@ -1584,35 +1659,60 @@ ${gallery}
   }
   function importHtmlFile(file) {
     const fr = new FileReader();
-    fr.onload = async () => {
+    fr.onload = () => {
       const raw = String(fr.result || "");
-      let pid = st.curProjectId || (st.projects[0] && st.projects[0].id);
-      if (!pid) { const p = await createProject("기본 메모함", ""); pid = p.id; }
-      try {
-        const doc = new DOMParser().parseFromString(raw, "text/html");
-        const pTag = doc.getElementById("lumink-persona");
-        if (pTag) {
+      const looksJson = /\.json$/i.test(file.name) || (raw.trim().startsWith("{") && raw.includes('"entries"'));
+      if (looksJson) importWorldInfo(raw, file);
+      else importHtmlPayload(raw, file);
+    };
+    fr.onerror = () => toast("파일을 읽지 못했어요");
+    fr.readAsText(file, "UTF-8");
+  }
+  function importWorldInfo(raw, file) {
+    let data; try { data = JSON.parse(raw); } catch (e) { toast("JSON을 읽지 못했어요"); return; }
+    const entries = (data && data.entries) ? data.entries : data;
+    const list = Array.isArray(entries) ? entries : Object.values(entries || {});
+    const valid = list.filter((e) => e && typeof e === "object" && (("content" in e) || ("key" in e) || ("keys" in e)));
+    if (!valid.length) { toast("월드인포 항목을 찾지 못했어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => {
+      let cnt = 0;
+      for (const e of valid) {
+        const keys = e.key || e.keys || [];
+        const n = await createNote("lorebook", pid);
+        n.title = ((e.comment || "") + "").trim() || (Array.isArray(keys) && keys[0]) || ("로어북 " + (cnt + 1));
+        n.titleLocked = true;
+        n.data = { content: e.content || "", keywords: Array.isArray(keys) ? keys.slice() : [], alwaysActive: !!e.constant, depthOn: (e.position === 4), depth: (e.depth == null ? 4 : e.depth) };
+        await saveLore(n, true);
+        cnt++;
+      }
+      await reloadState(); st.curProjectId = pid; render(); renderSidebar();
+      toast(`로어북 ${cnt}개를 불러왔어요`); go({ s: "project" });
+    });
+  }
+  function importHtmlPayload(raw, file) {
+    let pTag = null;
+    try { pTag = new DOMParser().parseFromString(raw, "text/html").getElementById("lumink-persona"); } catch (e) {}
+    pickTargetProject(st.curProjectId, async (pid) => {
+      if (pTag) {
+        try {
           const pl = JSON.parse(pTag.textContent);
           if (pl && pl.kind === "persona" && pl.data) {
             const n = await createNote("persona", pid);
             n.title = pl.title || file.name.replace(/\.(html?)$/i, "") || "불러온 페르소나";
             n.titleLocked = true; n.data = pl.data;
             await savePersona(n, true);
-            st.curNoteId = n.id; perLang = "ko"; st.perEdit = false;
+            st.curNoteId = n.id; perLang = "ko"; st.perEdit = false; st.curProjectId = pid;
             toast("페르소나를 불러왔어요"); go({ s: "persona" }); return;
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
       const parsed = sanitize(raw);
-      const fallback = file.name.replace(/\.(html?|HTML?)$/i, "");
       const n = await createNote("free", pid);
-      n.title = parsed.title || fallback || "불러온 메모"; n.data.html = parsed.html;
+      n.title = parsed.title || file.name.replace(/\.(html?|HTML?)$/i, "") || "불러온 메모"; n.data.html = parsed.html;
       await saveNote(n);
-      st.curNoteId = n.id;
+      st.curNoteId = n.id; st.curProjectId = pid;
       toast("불러왔어요"); go({ s: "editor" });
-    };
-    fr.onerror = () => toast("파일을 읽지 못했어요");
-    fr.readAsText(file, "UTF-8");
+    });
   }
   $on("fileInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) importHtmlFile(f); e.target.value = ""; closeSidebar(); });
 
@@ -1629,6 +1729,63 @@ ${gallery}
     try { localStorage.setItem("luminkTheme", t); } catch (e) {}
   }
   function detectTheme() { let t = null; try { t = localStorage.getItem("luminkTheme"); } catch (e) {} applyTheme(t || "dark"); }
+
+  /* ---------- font scale ---------- */
+  const FS_ZOOM = { small: 0.9, normal: 1, large: 1.12 };
+  function applyFontScale(v) {
+    if (!FS_ZOOM[v]) v = "normal";
+    st.fontScale = v;
+    document.documentElement.setAttribute("data-fs", v);
+    document.body.style.zoom = FS_ZOOM[v];
+    try { localStorage.setItem("luminkFontScale", v); } catch (e) {}
+    document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === v));
+  }
+  function detectFontScale() { let v = "normal"; try { v = localStorage.getItem("luminkFontScale") || "normal"; } catch (e) {} applyFontScale(v); }
+
+  /* ---------- auto backup (last 10 snapshots) ---------- */
+  let autoBkTimer = null, autoBkLast = 0;
+  function triggerAutoBackup() {
+    const nowt = Date.now();
+    if (autoBkTimer) return;
+    const wait = Math.max(0, 18000 - (nowt - autoBkLast));
+    autoBkTimer = setTimeout(() => { autoBkTimer = null; doAutoBackup(); }, wait);
+  }
+  async function doAutoBackup() {
+    autoBkLast = Date.now();
+    try {
+      const snap = { id: "bk_" + autoBkLast, ts: autoBkLast,
+        projects: JSON.parse(JSON.stringify(st.projects)), notes: JSON.parse(JSON.stringify(st.notes)) };
+      await put("backups", snap);
+      const all = (await getAll("backups")).sort((a, b) => b.ts - a.ts);
+      for (let i = 10; i < all.length; i++) await del("backups", all[i].id);
+    } catch (e) { console.warn("autobackup", e); }
+  }
+  function openAutoBackupList() {
+    getAll("backups").then((all) => {
+      all.sort((a, b) => b.ts - a.ts);
+      if (!all.length) { openModal(`<h3>자동 백업</h3><p class="m-sub">아직 저장된 자동 백업이 없어요. 메모를 저장하면 자동으로 스냅샷이 쌓여요.</p><div class="m-row"><button class="m-btn primary" id="abClose">확인</button></div>`); $on("abClose", "click", closeModal); return; }
+      const rows = all.map((s) => {
+        const dt = new Date(s.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+        return `<div class="lore-pick" data-bk="${s.id}"><div class="lp-body"><div class="lp-name">${label}</div><div class="lp-meta">프로젝트 ${s.projects.length} · 메모 ${s.notes.length}</div></div><button class="ce-addbtn ab-restore" data-bk="${s.id}">복원</button></div>`;
+      }).join("");
+      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}개 스냅샷. 복원하면 그 시점의 프로젝트·메모가 현재 데이터에 병합돼요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abClose2">닫기</button></div>`);
+      $on("abClose2", "click", closeModal);
+      document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
+        const snap = all.find((x) => x.id === btn.dataset.bk); if (!snap) return;
+        const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+        confirmModal("백업 복원", `${label} 시점의 백업(프로젝트 ${snap.projects.length} · 메모 ${snap.notes.length})을 현재 데이터에 병합할까요?`, "복원", false, () => {
+          confirmModal("정말 복원할까요?", "같은 항목은 백업 내용으로 덮어써져요. 이 작업은 되돌리기 어려워요.", "복원 실행", false, async () => {
+            try {
+              for (const p of snap.projects) await put("projects", p);
+              for (const n of snap.notes) await put("notes", n);
+              await reloadState(); render(); renderSidebar(); toast("백업을 복원했어요");
+            } catch (e) { toast("복원 중 오류가 났어요"); }
+          });
+        });
+      }));
+    });
+  }
+
 
   /* ---------- long-press ---------- */
   function fallbackCopy(text) { try { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.focus(); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; } }
@@ -1658,6 +1815,8 @@ ${gallery}
     $on("setBackup", "click", exportBackup);
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
+    $on("setAutoBackup", "click", openAutoBackupList);
+    document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
     $on("selCancel", "click", exitSelMode);
@@ -1673,6 +1832,7 @@ ${gallery}
     $on("pdSelect", "click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
     $on("pdFab", "click", () => showTypePicker(st.curProjectId));
     $on("readEdit", "click", editCurrentNote);
+    $on("edView", "click", () => { flushSave(true); go({ s: "read" }); });
     $on("readMore", "click", () => openNoteSheet(st.curNoteId));
     $on("edBack", "click", () => { flushSave(true); back(); });
     $on("edMore", "click", () => openNoteSheet(st.curNoteId));
@@ -1716,6 +1876,11 @@ ${gallery}
       const n = getNote(st.curNoteId); if (!n) return;
       const o = (n.data && n.data[perLang]) || {}; const t = (o.detail || "").trim();
       if (t) clipboardCopy(t).then((ok) => toast(ok ? "설명을 복사했어요" : "복사하지 못했어요"));
+    });
+    attachLongPress($("lorePreview"), () => {
+      const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return;
+      const t = ((n.data && n.data.content) || "").trim();
+      if (t) clipboardCopy(t).then((ok) => toast(ok ? "원본을 복사했어요" : "복사하지 못했어요"));
     });
     $on("sbLogo", "click", goHome);
     $on("homeLogo", "click", () => { const hs = document.querySelector(".home-scroll"); if (hs) hs.scrollTo({ top: 0, behavior: "smooth" }); });
@@ -1763,13 +1928,14 @@ ${gallery}
       else if (id === "eraseBtn") eraseFormatting();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
+      else if (id === "colorBtn") openColorEditor();
     };
     fb.addEventListener("mousedown", fbHandler);
     fb.addEventListener("touchstart", fbHandler, { passive: false });
-    $on("colorPick", "input", () => { $("colorSwatch").style.background = $("colorPick").value; exec("foreColor", $("colorPick").value); });
 
     // lorebook
     $on("loreEdit", "input", scheduleLoreSave);
+    $on("loreDepthSwitch", "click", () => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; n.data.depthOn = !n.data.depthOn; $("loreDepthSwitch").classList.toggle("on", n.data.depthOn); $("loreDepthWrap").classList.toggle("on", n.data.depthOn); saveLore(n, true); });
     $on("loreDepth", "change", (e) => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; let v = parseInt(e.target.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > 999) v = 999; e.target.value = v; n.data.depth = v; saveLore(n, true); });
     $on("loreEdit", "blur", () => flushLore());
     $on("loreKwInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
@@ -1816,6 +1982,7 @@ ${gallery}
   async function init() {
     detectTheme();
     detectUserFont();
+    detectFontScale();
     loadSorts();
     try { bind(); } catch (e) { console.warn("bind", e); }
     try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
