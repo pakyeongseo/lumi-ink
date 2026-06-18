@@ -143,7 +143,7 @@
       `<div class="pc-meta">메모 ${cnt}개 · ${fmtDate(p.updatedAt || p.createdAt)}</div>` +
       `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
     card.dataset.selid = p.id;
-    if (p.chipColor && CHIP[p.chipColor]) card.style.borderColor = CHIP[p.chipColor].c + "99";
+    if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; card.style.borderWidth = "2px"; }
     if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
     card.addEventListener("click", (e) => {
       if (st.selMode) { toggleSel(p.id); return; }
@@ -217,8 +217,9 @@
     if (p.chipColor && CHIP[p.chipColor]) { const c = CHIP[p.chipColor].c, fr = $("pdThumb").querySelector(".frame"); if (fr) fr.style.boxShadow = `inset 0 0 0 1.5px ${c}, inset 0 0 16px ${c}40`; }
     $("pdName").textContent = p.name;
     const desc = $("pdDesc");
-    if (p.description && p.description.trim()) { desc.textContent = p.description; desc.classList.remove("empty"); }
-    else { desc.textContent = "설명이 없습니다."; desc.classList.add("empty"); }
+    const dtags = (p.description || "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (dtags.length) { desc.classList.remove("empty"); desc.innerHTML = dtags.map((t) => `<span class="kw-chip">${esc(t)}</span>`).join(""); }
+    else { desc.classList.add("empty"); desc.textContent = "태그가 없습니다."; }
     const ns = notesOf(p.id);
     $("pdCount").textContent = `메모 ${ns.length}개`;
     const wrap = $("pdChips");
@@ -1118,8 +1119,8 @@
       <h3>${p ? "프로젝트 편집" : "새 프로젝트"}</h3>
       <div class="m-field-label">이름</div>
       <input class="m-input" id="pfName" maxlength="60" placeholder="프로젝트 이름" value="${p ? esc(p.name) : ""}">
-      <div class="m-field-label">설명 (선택)</div>
-      <textarea class="m-textarea" id="pfDesc" maxlength="500" placeholder="이 프로젝트에 대한 간략한 설명">${p ? esc(p.description || "") : ""}</textarea>
+      <div class="m-field-label">태그 (쉼표로 구분 · 선택)</div>
+      <textarea class="m-textarea" id="pfDesc" maxlength="500" placeholder="예: 판타지, 로맨스, 진행중">${p ? esc(p.description || "") : ""}</textarea>
       <div class="m-row"><button class="m-btn" id="pfCancel">취소</button><button class="m-btn primary" id="pfOk">${p ? "저장" : "만들기"}</button></div>
     `);
     setTimeout(() => $("pfName").focus(), 120);

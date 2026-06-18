@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>루미잉크 — Lumink</title>
+<title>Lumi Ink</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -231,11 +231,9 @@
   .pd-head .pd-name { font-size: 23px; font-weight: 750; letter-spacing: -.01em; margin: 0; }
   .pd-titlerow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 8px; }
   .pd-head .pd-desc {
-    font-size: 13.5px; color: var(--muted); line-height: 1.55; white-space: pre-wrap;
-    max-height: 18vh; overflow-y: auto;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px;
+    display: flex; flex-wrap: wrap; gap: 5px; max-height: 16vh; overflow-y: auto;
   }
-  .pd-head .pd-desc.empty { color: var(--faint); font-style: italic; }
+  .pd-head .pd-desc.empty { display: block; font-size: 13px; color: var(--faint); font-style: italic; }
   .pd-count { flex: 0 0 auto; display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 11px; border-radius: 999px; letter-spacing: .02em; }
   .pd-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 16px calc(110px + var(--safe-bottom)); }
 
@@ -367,7 +365,7 @@
     cursor: pointer; transition: background .12s;
   }
   .sb-item:active { background: var(--surface-2); }
-  .sb-item.active { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  .sb-item.active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
   .sb-item .sb-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; overflow: hidden; background: var(--surface-2); flex: 0 0 auto; position: relative; }
   .sb-item .sb-ico img { width: 100%; height: 100%; object-fit: cover; }
   .sb-item .sb-ico .deflogo { width: 15px; height: 15px; border-radius: 5px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 7px rgba(106,208,255,.4); }
@@ -742,7 +740,7 @@
   .selbar-act[hidden] { display: none; }
 
   /* search */
-  .searchbar { display: flex; align-items: center; gap: 7px; background: #eef1f9; border: 1px solid #d7deef; border-radius: 13px; padding: 7px 7px 7px 14px; }
+  .searchbar { display: flex; align-items: center; gap: 7px; background: #f6f8fd; border: 1px solid #dde3f0; border-radius: 13px; padding: 7px 7px 7px 14px; }
   .searchbar input { flex: 1; min-width: 0; border: none; background: transparent; color: #2a3550; font-size: 14.5px; outline: none; font-family: inherit; }
   .searchbar input::placeholder { color: #9aa1b6; }
   .searchbar .sb-clear { display: none; }
