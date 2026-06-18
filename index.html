@@ -201,7 +201,6 @@
   .proj-icon img { width: 100%; height: 100%; object-fit: cover; }
   .proj-icon .frame {
     position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
-    box-shadow: inset 0 0 0 1.5px rgba(106,208,255,.45), inset 0 0 14px rgba(106,208,255,.18);
   }
   .proj-icon .deflogo {
     width: 24px; height: 24px; border-radius: 7px;
@@ -234,6 +233,7 @@
     display: flex; flex-wrap: wrap; gap: 5px; max-height: 16vh; overflow-y: auto;
   }
   .pd-head .pd-desc.empty { display: block; font-size: 13px; color: var(--faint); font-style: italic; }
+  .pd-desc .kw-chip { padding: 5px 11px; gap: 0; }
   .pd-count { flex: 0 0 auto; display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 11px; border-radius: 999px; letter-spacing: .02em; }
   .pd-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 16px calc(110px + var(--safe-bottom)); }
 
@@ -498,7 +498,7 @@
     background: linear-gradient(150deg, var(--surface-2), var(--surface-3)); display: grid; place-items: center;
   }
   .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .pd-thumb .frame { position: absolute; inset: 0; border-radius: 20px; pointer-events: none; box-shadow: inset 0 0 0 1.5px rgba(106,208,255,.42), inset 0 0 16px rgba(106,208,255,.18); }
+  .pd-thumb .frame { position: absolute; inset: 0; border-radius: 20px; pointer-events: none; }
   .pd-thumb .deflogo { width: 38px; height: 38px; border-radius: 11px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 14px rgba(106,208,255,.5); }
   .pd-textcol { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
   .pd-head .pd-name { margin-top: 0; }
@@ -588,6 +588,17 @@
   .lore-preview hr { border: none; border-top: 1px solid var(--line); margin: 1em 0; }
   .lore-preview strong { font-weight: 700; } .lore-preview em { font-style: italic; }
   .lore-preview:empty::before { content: "(내용 없음)"; color: var(--faint); }
+  .lore-depth-wrap { display: inline-flex; align-items: center; gap: 6px; }
+  .lore-depth { width: 52px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 13px; font-family: inherit; text-align: center; outline: none; }
+  .lore-depth:focus { border-color: var(--accent); }
+  /* markdown decorations (lore + persona) */
+  .lore-preview .md-box, .per-read-detail .md-box { border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 11px; margin: 13px 0; overflow: hidden; background: linear-gradient(135deg, var(--accent-soft), transparent); }
+  .lore-preview .md-box-label, .per-read-detail .md-box-label { font-weight: 750; font-size: .9em; color: #6fd6ff; padding: 7px 13px; border-bottom: 1px solid var(--line); }
+  html[data-theme="light"] .lore-preview .md-box-label, html[data-theme="light"] .per-read-detail .md-box-label { color: #283a63; }
+  .lore-preview .md-box-body, .per-read-detail .md-box-body { padding: 9px 13px; }
+  .lore-preview .md-box-body > :first-child { margin-top: 0; } .lore-preview .md-box-body > :last-child { margin-bottom: 0; }
+  .lore-preview .md-mini, .per-read-detail .pr-mini { margin: 6px 0; line-height: 1.6; }
+  .lore-preview .md-mini-key, .per-read-detail .pr-mini-key { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .9em; padding: 2px 10px; border-radius: 7px; margin-right: 8px; }
 
   /* lorebook export multi-select */
   .lore-pick-list { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 4px; max-height: 46vh; overflow-y: auto; }
@@ -740,12 +751,16 @@
   .selbar-act[hidden] { display: none; }
 
   /* search */
-  .searchbar { display: flex; align-items: center; gap: 7px; background: #f6f8fd; border: 1px solid #dde3f0; border-radius: 13px; padding: 7px 7px 7px 14px; }
-  .searchbar input { flex: 1; min-width: 0; border: none; background: transparent; color: #2a3550; font-size: 14.5px; outline: none; font-family: inherit; }
-  .searchbar input::placeholder { color: #9aa1b6; }
+  .searchbar { display: flex; align-items: center; gap: 7px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 13px; padding: 7px 7px 7px 14px; }
+  .searchbar input { flex: 1; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 14.5px; outline: none; font-family: inherit; }
+  .searchbar input::placeholder { color: var(--faint); }
   .searchbar .sb-clear { display: none; }
   .searchbar.has-text .sb-clear { display: grid; }
-  .searchbar .sb-clear svg { stroke: #97a0bd; }
+  .searchbar .sb-clear svg { stroke: var(--faint); }
+  html[data-theme="light"] .searchbar { background: #f6f8fd; border-color: #dde3f0; }
+  html[data-theme="light"] .searchbar input { color: #2a3550; }
+  html[data-theme="light"] .searchbar input::placeholder { color: #9aa1b6; }
+  html[data-theme="light"] .searchbar .sb-clear svg { stroke: #97a0bd; }
   .search-go { flex: 0 0 auto; width: 34px; height: 34px; border: none; border-radius: 10px; background: var(--grad-blue); display: grid; place-items: center; cursor: pointer; }
   .search-go:active { transform: scale(.93); }
   .search-go svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
@@ -923,6 +938,10 @@
         <div class="lore-toggle-wrap" id="loreActiveWrap">
           <div class="lore-switch" id="loreActive"></div>
           <span>항상 활성 <span class="lore-hint">(constant)</span></span>
+        </div>
+        <div class="lore-depth-wrap">
+          <span class="lore-hint">깊이(D)</span>
+          <input class="lore-depth" id="loreDepth" type="number" min="0" max="999" inputmode="numeric" value="4">
         </div>
         <span class="lore-tokens" id="loreTokens">— 토큰</span>
       </div>

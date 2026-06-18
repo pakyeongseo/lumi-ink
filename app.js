@@ -122,7 +122,7 @@
   }
   async function togglePinProject(id) {
     const p = getProject(id); if (!p) return;
-    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 5) { toast("프로젝트는 최대 5개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
+    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 6) { toast("프로젝트는 최대 6개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
     else { p.pinned = false; delete p.pinnedAt; }
     await put("projects", p); render(); renderSidebar(); toast(p.pinned ? "상단에 고정했어요" : "고정을 해제했어요");
   }
@@ -334,7 +334,7 @@
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
-          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false }
+          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depth: 4 }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
           : {}
     };
@@ -494,14 +494,19 @@
       return s;
     };
     const lines = (md || "").replace(/\r\n/g, "\n").split("\n");
-    const out = []; let inUl = false, inOl = false, inCode = false, code = [];
+    const out = []; let inUl = false, inOl = false, inCode = false, code = [], boxOpen = false;
     const closeLists = () => { if (inUl) { out.push("</ul>"); inUl = false; } if (inOl) { out.push("</ol>"); inOl = false; } };
     for (const raw of lines) {
       if (/^```/.test(raw)) { if (inCode) { out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>"); code = []; inCode = false; } else { closeLists(); inCode = true; } continue; }
       if (inCode) { code.push(raw); continue; }
+      const tline = raw.trim();
+      let bm;
+      if ((bm = tline.match(/^<([^/<>][^<>]*)>$/))) { closeLists(); out.push(`<div class="md-box"><div class="md-box-label">${esc(bm[1].trim())}</div><div class="md-box-body">`); boxOpen = true; continue; }
+      if ((bm = tline.match(/^<\/([^<>]+)>$/))) { closeLists(); if (boxOpen) { out.push("</div></div>"); boxOpen = false; } continue; }
       if (/^\s*$/.test(raw)) { closeLists(); continue; }
       let m;
       if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
+      if ((m = raw.match(/^\s*-\s+([^:：]+)[:：]\s*(.*)$/))) { closeLists(); out.push(`<div class="md-mini"><span class="md-mini-key">${inline(m[1].trim())}</span>${inline(m[2])}</div>`); continue; }
       if (/^\s*>\s?/.test(raw)) { closeLists(); out.push(`<blockquote>${inline(raw.replace(/^\s*>\s?/, ""))}</blockquote>`); continue; }
       if (/^\s*([-*+])\s+/.test(raw)) { if (!inUl) { closeLists(); out.push("<ul>"); inUl = true; } out.push(`<li>${inline(raw.replace(/^\s*[-*+]\s+/, ""))}</li>`); continue; }
       if (/^\s*\d+\.\s+/.test(raw)) { if (!inOl) { closeLists(); out.push("<ol>"); inOl = true; } out.push(`<li>${inline(raw.replace(/^\s*\d+\.\s+/, ""))}</li>`); continue; }
@@ -509,7 +514,7 @@
       closeLists(); out.push(`<p>${inline(raw)}</p>`);
     }
     if (inCode) out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>");
-    closeLists();
+    closeLists(); if (boxOpen) out.push("</div></div>");
     return out.join("\n");
   }
 
@@ -531,13 +536,15 @@
   function renderLore() {
     const n = getNote(st.curNoteId);
     if (!n || n.type !== "lorebook") { back(); return; }
-    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false };
+    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false, depth: 4 };
+    if (d.depth == null) d.depth = 4;
     $("loreTitle").textContent = n.title || "로어북";
     if ($("loreEdit").value !== (d.content || "")) $("loreEdit").value = d.content || "";
+    if ($("loreDepth")) $("loreDepth").value = d.depth;
     renderKeywords(n);
     $("loreActive").classList.toggle("on", !!d.alwaysActive);
-    document.body.classList.remove("lore-preview-on");
     $("lorePreview").innerHTML = mdToHtml(d.content || "");
+    document.body.classList.toggle("lore-preview-on", !!(d.content && d.content.trim()));
     setLoreSaver("");
     updateLoreTokens(n);
   }
@@ -607,10 +614,10 @@
       entries[String(i)] = {
         uid: i, key: (d.keywords || []).slice(), keysecondary: [], comment: n.title || "", content: d.content || "",
         constant: !!d.alwaysActive, vectorized: false, selective: true, selectiveLogic: 0, addMemo: true,
-        order: 100, position: 0, disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
+        order: 100, position: 4, disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
         matchPersonaDescription: false, matchCharacterDescription: false, matchCharacterPersonality: false,
         matchCharacterDepthPrompt: false, matchScenario: false, matchCreatorNotes: false, delayUntilRecursion: false,
-        probability: 100, useProbability: true, depth: 4, outletName: "", group: "", groupOverride: false, groupWeight: 100,
+        probability: 100, useProbability: true, depth: (d.depth == null ? 4 : d.depth), outletName: "", group: "", groupOverride: false, groupWeight: 100,
         scanDepth: null, caseSensitive: null, matchWholeWords: null, useGroupScoring: null, automationId: "",
         role: null, sticky: 0, cooldown: 0, delay: 0, triggers: [], displayIndex: i,
         characterFilter: { isExclude: false, names: [], tags: [] }
@@ -815,6 +822,8 @@
     lines.forEach((ln) => {
       const m = ln.match(/^\s*(#{1,6})\s+(.+?)\s*$/);
       if (m) { const lvl = Math.min(m[1].length, 3); html += `<div class="pr-head pr-h${lvl}">${esc(m[2])}</div>`; return; }
+      const mini = ln.match(/^\s*-\s+([^:：]+)[:：]\s*(.*)$/);
+      if (mini) { html += `<div class="pr-mini"><span class="pr-mini-key">${esc(mini[1].trim())}</span>${esc(mini[2])}</div>`; return; }
       const li = ln.match(/^\s*-\s+(.+?)\s*$/);
       if (li) { html += `<div class="pr-li"><span class="pr-bullet">▶</span><span>${esc(li[1])}</span></div>`; return; }
       if (ln.trim() === "") html += '<div class="pr-gap"></div>';
@@ -938,6 +947,7 @@
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("페르소나 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await savePersona(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.save, label: "HTML로 저장", fn: () => exportPersonaHtml(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("페르소나 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
@@ -1495,6 +1505,72 @@ ${html}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast(".html로 저장했어요");
   }
+  function personaExportCSS() {
+    return `body{margin:0;background:#f4f6fb;color:#1c2233;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Segoe UI",sans-serif;word-break:break-word}
+.wrap{max-width:680px;margin:0 auto;padding:28px 18px 64px}
+.ptitle{font-size:24px;font-weight:800;color:#283a63;margin:0 0 18px}
+.portrait{width:280px;max-width:82%;aspect-ratio:3/4;margin:0 auto 24px;border-radius:16px;overflow:hidden;background:#e7ebf5;box-shadow:0 4px 16px rgba(60,90,160,.14)}
+.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.lang{margin:0 0 28px}
+.lang-head{display:inline-block;font-weight:700;font-size:13px;color:#3a6fd0;background:#e9f0fc;padding:5px 13px;border-radius:999px;margin-bottom:13px}
+.idrow{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.sq{width:100px;height:100px;border-radius:15px;overflow:hidden;flex:0 0 auto;background:#e7ebf5}
+.sq img{width:100%;height:100%;object-fit:cover;display:block}
+.pname{font-size:21px;font-weight:750;margin-bottom:8px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.kw-chip{display:inline-block;background:#e9f0fc;color:#3a6fd0;border:1px solid #cfe0fa;padding:4px 11px;border-radius:8px;font-size:13px}
+.detail{background:#fff;border:1px solid #e2e7f1;border-radius:14px;padding:15px 16px;line-height:1.72;font-size:15.5px;box-shadow:0 2px 10px rgba(60,90,160,.06)}
+.detail .pr-line{white-space:pre-wrap}.detail .pr-gap{height:.7em}.detail .pr-empty{color:#9aa0b4}
+.detail .pr-head{margin:14px 0 10px;padding:9px 14px;border-radius:11px;border:1px solid #e2e7f1;border-left:2px solid #3a6fd0;background:linear-gradient(135deg,#eef4fd,transparent);font-weight:750;color:#283a63}
+.detail .pr-head:first-child{margin-top:0}
+.detail .pr-li{display:flex;gap:7px;align-items:baseline;margin:4px 0;padding-left:9px}
+.detail .pr-bullet{color:#3a6fd0;font-size:8px;flex:0 0 auto}
+.detail .pr-mini{margin:6px 0;line-height:1.6}
+.detail .pr-mini-key{display:inline-block;background:#e9f0fc;color:#3a6fd0;font-weight:700;font-size:.9em;padding:2px 10px;border-radius:7px;margin-right:8px}
+.gal-label{display:inline-block;font-weight:700;font-size:13px;color:#3a6fd0;background:#e9f0fc;padding:5px 13px;border-radius:999px;margin:24px 0 12px}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:11px;display:block}
+.foot{margin-top:30px;text-align:center;color:#9aa0b4;font-size:12px}`;
+  }
+  function exportPersonaHtml(id) {
+    const n = getNote(id); if (!n || n.type !== "persona") return;
+    const d = n.data || {};
+    const langBlock = (o, label) => {
+      if (!o) return "";
+      const has = (o.name || "").trim() || (o.detail || "").trim() || (o.tags || []).length;
+      if (!has) return "";
+      const tags = (o.tags || []).map((t) => `<span class="kw-chip">${esc(t)}</span>`).join("");
+      const sq = d.square || d.portrait;
+      return `<section class="lang"><div class="lang-head">${label}</div>
+  <div class="idrow">${sq ? `<div class="sq"><img src="${sq}" alt=""></div>` : ""}<div class="idtext"><div class="pname">${esc(o.name || "(이름 없음)")}</div><div class="tags">${tags}</div></div></div>
+  <div class="detail">${personaDetailHTML(o.detail)}</div></section>`;
+    };
+    const portrait = d.portrait ? `<div class="portrait"><img src="${d.portrait}" alt=""></div>` : "";
+    const gallery = (d.gallery && d.gallery.length) ? `<div class="gal-label">갤러리</div><div class="gallery">${d.gallery.map((s) => `<img src="${s}" alt="">`).join("")}</div>` : "";
+    const payload = JSON.stringify({ app: "lumink", kind: "persona", title: n.title, data: d }).replace(/</g, "\\u003c");
+    const doc = `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Lumink"><meta name="lumink-kind" content="persona">
+<title>${esc(n.title || "페르소나")}</title>
+<style>${personaExportCSS()}</style>
+</head><body>
+<main class="wrap">
+<h1 class="ptitle">${esc(n.title || "페르소나")}</h1>
+${portrait}
+${langBlock(d.ko, "한국어")}
+${langBlock(d.en, "English")}
+${gallery}
+<div class="foot">Lumi Ink · 페르소나 카드</div>
+</main>
+<script type="application/json" id="lumink-persona">${payload}<\/script>
+</body></html>`;
+    const name = ((n.title || "persona").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "persona") + ".html";
+    const blob = new Blob([doc], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast("HTML로 저장했어요");
+  }
   function sanitize(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
     doc.querySelectorAll("script, link[rel='stylesheet'], meta, base").forEach((el) => el.remove());
@@ -1509,10 +1585,26 @@ ${html}
   function importHtmlFile(file) {
     const fr = new FileReader();
     fr.onload = async () => {
-      const parsed = sanitize(String(fr.result || ""));
-      const fallback = file.name.replace(/\.(html?|HTML?)$/i, "");
+      const raw = String(fr.result || "");
       let pid = st.curProjectId || (st.projects[0] && st.projects[0].id);
       if (!pid) { const p = await createProject("기본 메모함", ""); pid = p.id; }
+      try {
+        const doc = new DOMParser().parseFromString(raw, "text/html");
+        const pTag = doc.getElementById("lumink-persona");
+        if (pTag) {
+          const pl = JSON.parse(pTag.textContent);
+          if (pl && pl.kind === "persona" && pl.data) {
+            const n = await createNote("persona", pid);
+            n.title = pl.title || file.name.replace(/\.(html?)$/i, "") || "불러온 페르소나";
+            n.titleLocked = true; n.data = pl.data;
+            await savePersona(n, true);
+            st.curNoteId = n.id; perLang = "ko"; st.perEdit = false;
+            toast("페르소나를 불러왔어요"); go({ s: "persona" }); return;
+          }
+        }
+      } catch (e) {}
+      const parsed = sanitize(raw);
+      const fallback = file.name.replace(/\.(html?|HTML?)$/i, "");
       const n = await createNote("free", pid);
       n.title = parsed.title || fallback || "불러온 메모"; n.data.html = parsed.html;
       await saveNote(n);
@@ -1589,6 +1681,16 @@ ${html}
     $on("sbSettings", "click", () => { closeSidebar(); go({ s: "settings" }); });
     $on("edSave", "click", async () => { await flushSave(true); toast("저장했어요"); });
     $on("loreSave", "click", async () => { await flushLore(); toast("저장했어요"); });
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        const s = curView().s;
+        if (s === "editor" || s === "lore" || s === "persona") {
+          e.preventDefault();
+          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else flushPersona();
+          toast("저장했어요");
+        }
+      }
+    });
     $on("perSave", "click", async () => { await flushPersona(); toast("저장했어요"); });
     $on("homeSort", "click", () => showSortMenu("home"));
     const toggleHasText = (inp) => { const bar = inp.closest(".searchbar"); if (bar) bar.classList.toggle("has-text", !!inp.value.length); };
@@ -1668,6 +1770,7 @@ ${html}
 
     // lorebook
     $on("loreEdit", "input", scheduleLoreSave);
+    $on("loreDepth", "change", (e) => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; let v = parseInt(e.target.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > 999) v = 999; e.target.value = v; n.data.depth = v; saveLore(n, true); });
     $on("loreEdit", "blur", () => flushLore());
     $on("loreKwInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
     $on("loreKwInput", "blur", addKeywordFromInput);
