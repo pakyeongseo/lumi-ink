@@ -100,7 +100,7 @@
     box-shadow: 0 2px 7px rgba(46,86,170,.17);
   }
   .topbar .tb-title {
-    flex: 1; min-width: 0; font-size: 17px; font-weight: 650;
+    flex: 1; min-width: 0; font-size: 18.5px; font-weight: 650;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px;
   }
   .topbar .tb-center {
@@ -112,14 +112,13 @@
     border-radius: 12px; cursor: pointer; transition: background .15s;
   }
   .iconbtn:active { background: var(--surface-2); }
-  #homeSettings { background: var(--accent-soft); }
-  #homeSettings:active { background: var(--surface-3); }
+  #homeSettings svg { width: 26px; height: 26px; }
   .iconbtn svg { width: 22px; height: 22px; stroke: url(#iconGrad); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .iconbtn svg circle[fill="currentColor"], .iconbtn svg [stroke="none"] { fill: #9db0f0; }
 
   /* ===== Brand logo (펜촉 닙 + Lumi ✦ Ink) ===== */
   .brand-logo { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; user-select: none; cursor: pointer; }
-  .brand-logo .niblogo { width: 52px; height: 52px; flex: 0 0 auto; filter: drop-shadow(0 0 13px rgba(106,208,255,.55)); }
+  .brand-logo .niblogo { width: 60px; height: 60px; flex: 0 0 auto; filter: drop-shadow(0 0 13px rgba(106,208,255,.55)); }
   .brand-logo .niblogo .nib-body { fill: #eef2fa; }
   .brand-logo .niblogo .nib-ink { fill: #2b3a66; }
   .brand-logo .niblogo .nib-tip { fill: #5f7fd0; }
@@ -136,8 +135,8 @@
   html[data-theme="light"] .set-rlabel,
   html[data-theme="light"] .pd-count { color: #283a63; }
   .brand-logo .wordrow { display: inline-flex; align-items: center; gap: 0; }
-  .brand-logo .word { font-family: 'Parisienne', cursive; font-size: 27px; line-height: 1; font-weight: 400; letter-spacing: .01em; color: var(--logo-ink); }
-  .brand-logo .bstar { width: 13px; height: 13px; margin: 0 5px 2px; flex: 0 0 auto; filter: drop-shadow(0 0 4px rgba(106,208,255,.8)); animation: starTwinkle 3.4s ease-in-out infinite; }
+  .brand-logo .word { font-family: 'Parisienne', cursive; font-size: 18px; line-height: 1; font-weight: 400; letter-spacing: .01em; color: var(--logo-ink); }
+  .brand-logo .bstar { width: 9px; height: 9px; margin: 0 4px 1px; flex: 0 0 auto; filter: drop-shadow(0 0 4px rgba(106,208,255,.8)); animation: starTwinkle 3.4s ease-in-out infinite; }
   .brand-logo .bstar path { fill: var(--accent); }
   @keyframes starTwinkle { 0%,100% { opacity: 1; transform: rotate(0deg) scale(1); } 50% { opacity: .82; transform: rotate(-8deg) scale(.92); } }
 
@@ -148,7 +147,7 @@
   }
   .action-card {
     flex: 1; display: flex; align-items: center; gap: 10px; justify-content: center;
-    padding: 15px 12px; border-radius: 16px; cursor: pointer;
+    padding: 11px 12px; border-radius: 16px; cursor: pointer;
     font-size: 14.5px; font-weight: 650; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink); transition: transform .12s, border-color .15s;
   }
@@ -185,6 +184,10 @@
   body.sel-mode .pin-badge { display: none; }
   .mc-pin { flex: 0 0 auto; color: var(--accent); display: inline-flex; }
   .mc-pin svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .pin-star { width: 13px; height: 13px; fill: var(--accent); flex: 0 0 auto; margin-left: 5px; vertical-align: -1px; filter: drop-shadow(0 0 3px rgba(123,155,255,.5)); }
+  .csec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 16px 4px 11px; }
+  .chip-section:first-child .csec-head { margin-top: 2px; }
+  .csec-head .chip-section-label { margin: 0; }
   .proj-card::before {
     content: ""; position: absolute; inset: 0; opacity: .5; pointer-events: none;
     background: radial-gradient(60% 60% at 80% 0%, rgba(106,208,255,.07), transparent 70%);
@@ -225,13 +228,14 @@
     background: linear-gradient(var(--bg-2), transparent);
     border-bottom: 1px solid var(--line-soft);
   }
-  .pd-head .pd-name { font-size: 23px; font-weight: 750; letter-spacing: -.01em; margin: 0 0 5px; }
+  .pd-head .pd-name { font-size: 23px; font-weight: 750; letter-spacing: -.01em; margin: 3px 0 8px; }
   .pd-head .pd-desc {
     font-size: 13.5px; color: var(--muted); line-height: 1.55; white-space: pre-wrap;
     max-height: 18vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px;
   }
   .pd-head .pd-desc.empty { color: var(--faint); font-style: italic; }
-  .pd-count { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 11px; border-radius: 999px; letter-spacing: .02em; }
+  .pd-count { align-self: flex-start; display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 11px; border-radius: 999px; letter-spacing: .02em; margin-bottom: 2px; }
   .pd-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 16px calc(110px + var(--safe-bottom)); }
 
   .chip-list { display: flex; flex-direction: column; gap: 9px; }
@@ -275,6 +279,7 @@
     border-radius: 9px; cursor: pointer; font-size: 15px; display: inline-grid; place-items: center;
   }
   .fbtn:active { background: var(--surface-2); }
+  html[data-theme="light"] .fbtn { color: #283a63; }
   .fbtn.b { font-weight: 800; } .fbtn.i { font-style: italic; font-family: Georgia, serif; }
   .fbtn.u { text-decoration: underline; } .fbtn.s { text-decoration: line-through; }
   .fbtn svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
@@ -342,9 +347,11 @@
   }
   body.sidebar-open .sidebar { transform: translateX(0); }
   .sb-head { padding: calc(var(--safe-top) + 18px) 16px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-  #sbLogo .niblogo { width: 56px; height: 56px; }
+  #sbLogo .niblogo { width: 60px; height: 60px; }
   .sb-shortcuts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .sb-sc { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 10px; border-radius: 11px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
+  .sb-actions { flex: 0 0 auto; display: flex; gap: 8px; padding: 8px 12px 2px; }
+  .sb-actions .sb-sc { flex: 1; }
+  .sb-sc { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 10px; border-radius: 11px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
   .sb-sc svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
   .sb-sc.primary { background: var(--grad-blue); color: #fff; box-shadow: 0 2px 8px rgba(123,110,230,.32); }
   .sb-sc:active { transform: scale(.97); }
@@ -358,21 +365,21 @@
     cursor: pointer; transition: background .12s;
   }
   .sb-item:active { background: var(--surface-2); }
-  .sb-item.active { background: var(--accent-soft); }
+  .sb-item.active { background: color-mix(in srgb, var(--accent) 20%, transparent); }
   .sb-item .sb-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; overflow: hidden; background: var(--surface-2); flex: 0 0 auto; position: relative; }
   .sb-item .sb-ico img { width: 100%; height: 100%; object-fit: cover; }
   .sb-item .sb-ico .deflogo { width: 15px; height: 15px; border-radius: 5px; background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%); box-shadow: 0 0 7px rgba(106,208,255,.4); }
   .sb-item .sb-pin { position: absolute; top: -3px; left: -3px; width: 14px; height: 14px; color: var(--accent); }
   .sb-item .sb-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sb-item.active .sb-name { color: var(--accent); }
-  .sb-item .sb-num { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--grad-blue); padding: 2px 9px; border-radius: 999px; min-width: 22px; text-align: center; flex: 0 0 auto; }
-  .sb-foot { flex: 0 0 auto; padding: 10px 12px calc(12px + var(--safe-bottom)); border-top: 1px solid var(--line-soft); display: flex; gap: 8px; }
+  .sb-item .sb-num { font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 999px; min-width: 22px; text-align: center; flex: 0 0 auto; }
+  .sb-foot { flex: 0 0 auto; padding: 4px 12px calc(12px + var(--safe-bottom)); display: flex; gap: 8px; }
   .sb-fbtn {
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 11px 8px; border-radius: 11px; border: 1px solid var(--line); background: transparent; color: var(--muted);
-    font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 11px 8px; border-radius: 11px; border: none; background: var(--accent-soft); color: var(--accent);
+    font-size: 13px; font-weight: 700; cursor: pointer;
   }
-  .sb-fbtn:active { background: var(--surface-2); }
+  .sb-fbtn:active { background: var(--surface-3); }
   .sb-fbtn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
   /* ===== Modal ===== */
@@ -603,7 +610,7 @@
   .per-tab { flex: 1; padding: 9px; border: none; background: transparent; color: var(--muted); font-size: 14px; font-weight: 650; border-radius: 9px; cursor: pointer; }
   .per-tab.active { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
   .per-id-row { display: flex; gap: 12px; align-items: stretch; }
-  .per-square-thumb { width: 92px; height: 92px; flex: 0 0 auto; border-radius: 15px; overflow: hidden; position: relative; background: linear-gradient(150deg, var(--surface-2), var(--surface-3)); border: 1px solid var(--line); cursor: pointer; }
+  .per-square-thumb { width: 108px; height: 108px; flex: 0 0 auto; border-radius: 15px; overflow: hidden; position: relative; background: linear-gradient(150deg, var(--surface-2), var(--surface-3)); border: 1px solid var(--line); cursor: pointer; }
   .per-square-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .per-id-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
   .per-id-fields .m-input { margin: 0; }
@@ -614,10 +621,12 @@
   .per-tok b { color: var(--accent); font-weight: 700; }
   .per-detail { min-height: 156px; }
   .per-gallery-sec { margin-top: 20px; }
-  .per-divider { height: 1px; background: var(--line); margin: 22px 0 0; }
-  .per-read-tok { margin: 8px 2px 0; text-align: right; }
+  .per-divider { height: 1px; background: var(--line); margin: 22px 0 18px; }
+  .per-read-tok { margin: 10px 0 0; display: flex; justify-content: flex-end; }
+  .per-read-tok .tok-chip, .per-tok .tok-chip { display: inline-flex; align-items: center; font-size: 12px; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; }
+  .per-read-tok .tok-chip b, .per-tok .tok-chip b { color: var(--accent); margin-right: 3px; }
   .per-section { margin-bottom: 18px; }
-  .per-label { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin-bottom: 11px; }
+  .per-label { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--muted); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin-bottom: 11px; }
   .per-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .pg-item { position: relative; aspect-ratio: 1; border-radius: 11px; overflow: hidden; background: var(--surface-2); }
   .pg-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -627,26 +636,30 @@
   .pg-add svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
   /* kw-chip shared in persona tags */
   .per-tags .kw-chip, .per-tags-read .kw-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 5px 4px 10px; border-radius: 8px; font-size: 12.5px; background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(106,208,255,.3); }
-  .per-tags-read .kw-chip { padding: 4px 10px; }
+  .per-tags-read .kw-chip { padding: 5px 12px; font-size: 13.5px; }
   .per-tags .kw-chip button { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; opacity: .65; }
 
   /* persona read view */
   #perReadView .per-tabs { margin-bottom: 16px; }
-  .per-read-id { display: flex; gap: 13px; align-items: center; margin-bottom: 18px; }
+  .per-read-id { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; }
   .per-read-idtext { flex: 1; min-width: 0; }
-  .per-read-name { font-size: 19px; font-weight: 750; margin-bottom: 7px; word-break: break-word; }
+  .per-read-name { font-size: 22px; font-weight: 750; margin-bottom: 9px; word-break: break-word; }
   .per-read-name:empty::before { content: "(이름 없음)"; color: var(--faint); font-weight: 500; }
   .per-tags-read { display: flex; flex-wrap: wrap; gap: 5px; }
   .per-read-detail { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; font-size: 15.5px; line-height: 1.72; word-break: break-word; color: var(--ink); margin-bottom: 6px; box-shadow: var(--shadow); }
   .per-read-detail .pr-line { white-space: pre-wrap; }
   .per-read-detail .pr-gap { height: .7em; }
   .per-read-detail .pr-empty { color: var(--faint); }
-  .per-read-detail .pr-head { margin: 14px 0 10px; padding: 9px 14px; border-radius: 11px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: linear-gradient(135deg, var(--accent-soft), transparent); font-weight: 750; color: var(--ink); box-shadow: 0 1px 0 var(--line); }
+  .per-read-detail .pr-head { margin: 14px 0 10px; padding: 9px 14px; border-radius: 11px; border: 1px solid var(--line); border-left: 2px solid var(--accent); background: linear-gradient(135deg, var(--accent-soft), transparent); font-weight: 750; color: #6fd6ff; box-shadow: 0 1px 0 var(--line); }
+  html[data-theme="light"] .per-read-detail .pr-head { color: #283a63; }
+  .per-read-detail .pr-li { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
+  .per-read-detail .pr-bullet { color: var(--accent); font-size: 10px; flex: 0 0 auto; transform: translateY(-1px); }
   .per-read-detail .pr-head:first-child { margin-top: 0; }
   .per-read-detail .pr-h1 { font-size: 16.5px; }
   .per-read-detail .pr-h2 { font-size: 15px; }
   .per-read-detail .pr-h3 { font-size: 14px; opacity: .94; }
   .pg-item.dragging { opacity: .55; transform: scale(1.08); z-index: 6; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  #perGallery .pg-item { touch-action: none; }
   .pg-item.drop-target { outline: 2px dashed var(--accent); outline-offset: -2px; }
   .per-portrait-main.pv, .per-square-thumb.pv { cursor: zoom-in; }
   .per-gallery.pv .pg-item { cursor: zoom-in; }
@@ -809,12 +822,9 @@
     <div class="pd-head">
       <div class="pd-thumb" id="pdThumb"></div>
       <div class="pd-textcol">
+        <div class="pd-count" id="pdCount"></div>
         <div class="pd-name" id="pdName">프로젝트</div>
         <div class="pd-desc" id="pdDesc"></div>
-        <div class="pd-countrow">
-          <div class="pd-count" id="pdCount"></div>
-          <button class="sort-btn" id="pdSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="pdSortLabel">최신순</span></button>
-        </div>
       </div>
     </div>
     <div class="pd-body"><div class="chip-list" id="pdChips"></div></div>
@@ -864,14 +874,14 @@
       <button class="fbtn" data-cmd="insertUnorderedList" title="목록"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></button>
       <button class="fbtn" data-cmd="insertOrderedList" title="번호 목록"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 5h1.5v3M3 11.5h2l-2 2.5h2"/></svg></button>
       <span class="fsep"></span>
-      <button class="fbtn" data-cmd="removeFormat" title="서식 지우기"><svg viewBox="0 0 24 24"><path d="M4 7h16M7 7l3 13M14 7l-1 5M18 20L6 8"/></svg></button>
-      <button class="fbtn" data-cmd="undo" title="실행 취소"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
-      <span class="fsep"></span>
       <button class="fbtn" id="imgBtn" title="이미지 삽입"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
       <button class="fbtn" id="attachBtn" title="파일 첨부"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L10 16.5a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg></button>
       <span class="fsep"></span>
-      <button class="fbtn" id="codeBlockBtn" title="코드 블록"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"/></svg></button>
       <button class="fbtn" id="linkBtn" title="하이퍼링크 삽입"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></button>
+      <button class="fbtn" id="codeBlockBtn" title="코드 블록"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M9.5 9l-2.2 3 2.2 3M14.5 9l2.2 3-2.2 3"/></svg></button>
+      <span class="fsep"></span>
+      <button class="fbtn" id="eraseBtn" title="서식 · 코드블록 · 링크 지우기"><svg viewBox="0 0 24 24"><path d="M16.5 4.5l3 3a2 2 0 0 1 0 2.8L11 19H6.5L4 16.5a2 2 0 0 1 0-2.8l8.7-8.7a2 2 0 0 1 2.8 0z"/><path d="M8.5 9.5l6 6"/><path d="M11 19h9"/></svg></button>
+      <button class="fbtn" data-cmd="undo" title="실행 취소"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
     </div>
     <div class="editor-wrap" id="editorWrap">
       <div class="editor" id="editor" contenteditable="true" data-placeholder="여기에 메모를 작성하거나 붙여넣으세요…"></div>
@@ -953,7 +963,7 @@
         </div>
         <div class="per-divider"></div>
         <div class="per-section per-gallery-sec">
-          <div class="per-label">갤러리</div>
+          <div class="per-label"><span class="sc-dot"></span>갤러리</div>
           <div class="per-gallery" id="perGallery"></div>
         </div>
       </div>
@@ -972,10 +982,10 @@
           </div>
         </div>
         <div class="per-read-detail" id="perRDetail"></div>
-        <div class="per-tok per-read-tok" id="perRTok">— 토큰</div>
+        <div class="per-read-tok"><span class="tok-chip" id="perRTok">— 토큰</span></div>
         <div class="per-divider"></div>
         <div class="per-section">
-          <div class="per-label">갤러리</div>
+          <div class="per-label"><span class="sc-dot"></span>갤러리</div>
           <div class="per-gallery pv" id="perRGallery"></div>
         </div>
       </div>
@@ -1013,10 +1023,6 @@
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
       <span class="brand-logo" id="sbLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">Ink</span></span></span>
-      <div class="sb-shortcuts">
-        <button class="sb-sc primary" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모</button>
-        <button class="sb-sc" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 새 프로젝트</button>
-      </div>
     </div>
     <div class="searchbar sb-searchbar" id="sbSearchbar">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1026,6 +1032,10 @@
       <span class="sb-section-box"><span class="ssb-bar"></span>프로젝트</span>
     </div>
     <div class="sb-list" id="sbList"></div>
+    <div class="sb-actions">
+      <button class="sb-sc primary" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모</button>
+      <button class="sb-sc primary" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 새 프로젝트</button>
+    </div>
     <div class="sb-foot">
       <button class="sb-fbtn" id="sbImport"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg> 열기</button>
       <button class="sb-fbtn" id="sbSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg> 설정</button>

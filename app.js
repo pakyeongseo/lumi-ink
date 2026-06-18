@@ -85,6 +85,7 @@
   }
 
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
+  const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
   function loadSorts() {
     try { st.homeSort = localStorage.getItem("luminkHomeSort") || "recent"; st.noteSort = localStorage.getItem("luminkNoteSort") || "recent"; }
@@ -136,9 +137,8 @@
     card.className = "proj-card";
     card.innerHTML =
       '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' +
-      (p.pinned ? `<span class="pin-badge">${PIN_SVG}</span>` : "") +
       projIconHTML(p, "proj-icon") +
-      `<div class="pc-name">${esc(p.name)}</div>` +
+      `<div class="pc-name">${esc(p.name)}${p.pinned ? PIN_STAR : ""}</div>` +
       `<div class="pc-meta">메모 ${cnt}개 · ${fmtDate(p.updatedAt || p.createdAt)}</div>` +
       `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
     card.dataset.selid = p.id;
@@ -172,7 +172,7 @@
     const mk = (p) => {
       const item = document.createElement("div");
       item.className = "sb-item" + (p.id === st.curProjectId ? " active" : "");
-      item.innerHTML = projIconHTML(p, "sb-ico") + `<div class="sb-name">${p.pinned ? `<span class="mc-pin" style="margin-right:3px">${PIN_SVG}</span>` : ""}${esc(p.name)}</div><div class="sb-num">${notesOf(p.id).length}</div>`;
+      item.innerHTML = projIconHTML(p, "sb-ico") + `<div class="sb-name">${esc(p.name)}${p.pinned ? PIN_STAR : ""}</div><div class="sb-num">${notesOf(p.id).length}</div>`;
       item.addEventListener("click", () => { closeSidebar(); openProject(p.id); });
       attachLongPress(item, () => { closeSidebar(); openProjectSheet(p.id); });
       return item;
@@ -198,7 +198,7 @@
       meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
-      `<div class="mc-body"><div class="mc-title">${n.pinned ? `<span class="mc-pin">${PIN_SVG}</span>` : ""}${esc(n.title)}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
+      `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
       `<span class="mc-type">${TYPE_LABEL[n.type] || ""}</span>`;
     if (col) chip.style.borderColor = col.replace(")", ", .4)").replace("rgb", "rgba");
     chip.dataset.selid = n.id;
@@ -220,23 +220,26 @@
     else { desc.textContent = "설명이 없습니다."; desc.classList.add("empty"); }
     const ns = notesOf(p.id);
     $("pdCount").textContent = `메모 ${ns.length}개`;
-    const sl = $("pdSortLabel"); if (sl) sl.textContent = SORT_LABELS[st.noteSort] || "최신순";
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
     const SECTIONS = [["persona", "페르소나"], ["lorebook", "로어북"], ["free", "자유 메모"]];
+    let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => n.type === t);
       if (!group.length) return;
       const [pin, rest] = partitionPinned(group);
       const ordered = [...pin, ...sortList(rest, st.noteSort, (n) => n.title || "", (n) => n.updatedAt || 0)];
       const sec = document.createElement("div"); sec.className = "chip-section";
-      const lab = document.createElement("div"); lab.className = "chip-section-label";
-      lab.innerHTML = `<span class="csl-dot"></span>${label} <span class="csl-count">· ${group.length}</span>`;
-      sec.appendChild(lab);
+      const head = document.createElement("div"); head.className = "csec-head";
+      head.innerHTML = `<span class="chip-section-label"><span class="csl-dot"></span>${label} <span class="csl-count">· ${group.length}</span></span>` +
+        (firstSec ? `<button class="sort-btn" id="pdSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="pdSortLabel">${SORT_LABELS[st.noteSort] || "최신순"}</span></button>` : "");
+      sec.appendChild(head);
       ordered.forEach((n) => sec.appendChild(buildChip(n)));
       wrap.appendChild(sec);
+      firstSec = false;
     });
+    if ($("pdSort")) $("pdSort").addEventListener("click", () => showSortMenu("note"));
   }
 
   function renderRead() {
@@ -444,6 +447,18 @@
   function wrapCodeBlock() {
     $("editor").focus();
     try { document.execCommand("formatBlock", false, "pre"); } catch (e) {}
+    scheduleSave();
+  }
+  function eraseFormatting() {
+    const ed = $("editor"); ed.focus();
+    const sel = window.getSelection();
+    let range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    if (range && !range.collapsed) {
+      [...ed.querySelectorAll("pre, code")].forEach((el) => { if (range.intersectsNode(el)) el.replaceWith(document.createTextNode(el.textContent)); });
+    }
+    try { document.execCommand("styleWithCSS", false, true); } catch (e) {}
+    document.execCommand("removeFormat", false, null);
+    document.execCommand("unlink", false, null);
     scheduleSave();
   }
   function showAlignMenu() {
@@ -797,8 +812,10 @@
     let html = "";
     lines.forEach((ln) => {
       const m = ln.match(/^\s*(#{1,6})\s+(.+?)\s*$/);
-      if (m) { const lvl = Math.min(m[1].length, 3); html += `<div class="pr-head pr-h${lvl}">${esc(m[2])}</div>`; }
-      else if (ln.trim() === "") html += '<div class="pr-gap"></div>';
+      if (m) { const lvl = Math.min(m[1].length, 3); html += `<div class="pr-head pr-h${lvl}">${esc(m[2])}</div>`; return; }
+      const li = ln.match(/^\s*-\s+(.+?)\s*$/);
+      if (li) { html += `<div class="pr-li"><span class="pr-bullet">▶</span><span>${esc(li[1])}</span></div>`; return; }
+      if (ln.trim() === "") html += '<div class="pr-gap"></div>';
       else html += `<div class="pr-line">${esc(ln)}</div>`;
     });
     return html.trim() ? html : '<span class="pr-empty">(상세 설명 없음)</span>';
@@ -1572,7 +1589,6 @@ ${html}
     $("loreSave").addEventListener("click", async () => { await flushLore(); toast("저장했어요"); });
     $("perSave").addEventListener("click", async () => { await flushPersona(); toast("저장했어요"); });
     $("homeSort").addEventListener("click", () => showSortMenu("home"));
-    $("pdSort").addEventListener("click", () => showSortMenu("note"));
     $("homeSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { doSearch(v); e.target.value = ""; } } });
     $("sbSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = e.target.value.trim(); if (v) { closeSidebar(); doSearch(v); e.target.value = ""; } } });
     $("searchInput").addEventListener("input", (e) => { st.searchQuery = e.target.value; renderSearch(); });
@@ -1632,6 +1648,7 @@ ${html}
       else if (id === "alignBtn") showAlignMenu();
       else if (id === "codeBlockBtn") wrapCodeBlock();
       else if (id === "linkBtn") insertLinkPrompt();
+      else if (id === "eraseBtn") eraseFormatting();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
     };
