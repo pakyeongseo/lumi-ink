@@ -171,8 +171,8 @@
     card.className = "proj-card";
     card.innerHTML =
       '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' +
-      `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}${p.pinned ? `<span class="pc-pin">${PIN_STAR}</span>` : ""}</div>` +
-      `<div class="pc-name">${esc(p.name)}</div>` +
+      `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}</div>` +
+      `<div class="pc-name">${esc(p.name)}${p.pinned ? PIN_STAR : ""}</div>` +
       `<div class="pc-row"><span class="pc-count">메모 ${cnt}</span><span class="pc-time">${fmtDate(p.updatedAt || p.createdAt)}</span></div>` +
       `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
     card.dataset.selid = p.id;
