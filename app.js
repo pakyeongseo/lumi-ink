@@ -58,6 +58,17 @@
 
   /* ---------- migration ---------- */
   async function migrate() {
+    // dedupe duplicate default projects (from older backup-merge bug)
+    const defs = st.projects.filter((p) => p.isDefault).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (defs.length > 1) {
+      const keep = defs[0];
+      for (let i = 1; i < defs.length; i++) {
+        const dup = defs[i];
+        for (const n of st.notes) { if (n.projectId === dup.id) { n.projectId = keep.id; await put("notes", n); } }
+        st.projects = st.projects.filter((p) => p.id !== dup.id);
+        await del("projects", dup.id);
+      }
+    }
     const orphans = st.notes.filter((n) => !n.projectId || !n.type);
     if (orphans.length === 0 && st.projects.length > 0) return;
     let def = st.projects.find((p) => p.isDefault) || st.projects[0];
@@ -143,7 +154,7 @@
       `<div class="pc-meta">메모 ${cnt}개 · ${fmtDate(p.updatedAt || p.createdAt)}</div>` +
       `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
     card.dataset.selid = p.id;
-    if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; card.style.borderWidth = "2px"; }
+    if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; }
     if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
     card.addEventListener("click", (e) => {
       if (st.selMode) { toggleSel(p.id); return; }
@@ -868,7 +879,7 @@
     const n = getNote(st.curNoteId); if (!n) return;
     n.data.gallery = n.data.gallery || [];
     let added = 0;
-    for (const f of files) { if (!/^image\//.test(f.type)) continue; try { n.data.gallery.push(await fileToResized(f, 640)); added++; } catch (e) {} }
+    for (const f of files) { if (!/^image\//.test(f.type)) continue; try { n.data.gallery.push(await fileToResized(f, 1600)); added++; } catch (e) {} }
     if (added) { await savePersona(n, true); renderPerGallery(n); toast(`${added}장 추가했어요`); }
     else toast("이미지를 넣지 못했어요");
   }
@@ -937,11 +948,11 @@
     const n = getNote(st.curNoteId); if (!n || !perImgTarget) return;
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     if (perImgTarget === "gallery") {
-      fileToResized(file, 640).then((data) => { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); savePersona(n, true); renderPerGallery(n); toast("이미지를 추가했어요"); }).catch(() => toast("이미지를 넣지 못했어요"));
+      fileToResized(file, 1600).then((data) => { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); savePersona(n, true); renderPerGallery(n); toast("이미지를 추가했어요"); }).catch(() => toast("이미지를 넣지 못했어요"));
       return;
     }
     const isPt = perImgTarget === "portrait", target = perImgTarget;
-    startCrop(file, isPt ? 3 / 4 : 1, isPt ? 600 : 768, isPt ? 800 : 768, (data) => {
+    startCrop(file, isPt ? 3 / 4 : 1, isPt ? 1200 : 1080, isPt ? 1600 : 1080, (data) => {
       const nn = getNote(st.curNoteId); if (!nn) return;
       nn.data[target] = data; savePersona(nn, true); renderPerImagesEdit(nn); toast("이미지를 적용했어요");
     });
@@ -995,7 +1006,7 @@
     const cv = document.createElement("canvas"); cv.width = s.outW; cv.height = s.outH;
     const ctx = cv.getContext("2d");
     ctx.drawImage(s.img, sx, sy, sw, sh, 0, 0, s.outW, s.outH);
-    const data = cv.toDataURL("image/jpeg", 0.85);
+    const data = cv.toDataURL("image/jpeg", 0.92);
     const cb = s.cb; closeCropper(); cb(data);
   }
   function openPersonaSheet(n) {
@@ -1351,16 +1362,18 @@
         const cw = Math.round(w * sc), ch = Math.round(h * sc);
         const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
         cv.getContext("2d").drawImage(img, 0, 0, cw, ch);
-        res(cv.toDataURL("image/jpeg", 0.85));
+        res(cv.toDataURL("image/jpeg", 0.92));
       }; img.onerror = rej; img.src = fr.result; };
       fr.onerror = rej; fr.readAsDataURL(file);
     });
   }
-  $on("iconInput", "change", async (e) => {
+  $on("iconInput", "change", (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
     if (!f || !iconTargetPid) return;
-    try { const data = await fileToResized(f, 256); const p = getProject(iconTargetPid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("아이콘을 변경했어요"); } }
-    catch (err) { toast("이미지를 불러오지 못했어요"); }
+    const pid = iconTargetPid;
+    startCrop(f, 1, 512, 512, async (data) => {
+      const p = getProject(pid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요"); }
+    });
   });
 
   /* ---------- search ---------- */
@@ -1479,6 +1492,21 @@
       toast("백업을 저장했어요");
     } catch (e) { toast("백업에 실패했어요"); }
   }
+  async function applyImportData(projects, notes, files) {
+    const curDefault = st.projects.find((p) => p.isDefault);
+    const remap = {};
+    for (const p of (projects || [])) {
+      if (p.isDefault && curDefault && p.id !== curDefault.id) { remap[p.id] = curDefault.id; continue; }
+      await put("projects", p);
+    }
+    for (const n of (notes || [])) {
+      if (remap[n.projectId]) n.projectId = remap[n.projectId];
+      await put("notes", n);
+    }
+    for (const f of (files || [])) {
+      try { await put("files", { id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, blob: base64ToBlob(f.data, f.type) }); } catch (e) {}
+    }
+  }
   function restoreBackup(file) {
     const fr = new FileReader();
     fr.onload = () => {
@@ -1490,9 +1518,7 @@
         if (!payload || payload.app !== "lumink" || !Array.isArray(payload.projects)) { toast("올바른 백업 파일이 아니에요"); return; }
         confirmModal("백업 복원", `프로젝트 ${payload.projects.length}개, 메모 ${(payload.notes || []).length}개를 현재 데이터에 병합할까요? 같은 항목은 백업 내용으로 덮어써요.`, "복원", false, async () => {
           try {
-            for (const p of payload.projects) await put("projects", p);
-            for (const n of (payload.notes || [])) await put("notes", n);
-            for (const f of (payload.files || [])) await put("files", { id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, blob: base64ToBlob(f.data, f.type) });
+            await applyImportData(payload.projects, payload.notes || [], payload.files || []);
             await reloadState(); render(); renderSidebar(); toast("복원했어요");
           } catch (e) { toast("복원 중 오류가 났어요"); }
         });
@@ -1776,8 +1802,7 @@ ${gallery}
         confirmModal("백업 복원", `${label} 시점의 백업(프로젝트 ${snap.projects.length} · 메모 ${snap.notes.length})을 현재 데이터에 병합할까요?`, "복원", false, () => {
           confirmModal("정말 복원할까요?", "같은 항목은 백업 내용으로 덮어써져요. 이 작업은 되돌리기 어려워요.", "복원 실행", false, async () => {
             try {
-              for (const p of snap.projects) await put("projects", p);
-              for (const n of snap.notes) await put("notes", n);
+              await applyImportData(snap.projects, snap.notes, []);
               await reloadState(); render(); renderSidebar(); toast("백업을 복원했어요");
             } catch (e) { toast("복원 중 오류가 났어요"); }
           });
