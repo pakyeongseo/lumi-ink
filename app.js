@@ -171,9 +171,9 @@
     card.className = "proj-card";
     card.innerHTML =
       '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' +
-      `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}${p.pinned ? `<span class="pc-pin">${PIN_STAR}</span>` : ""}<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div></div>` +
-      `<div class="pc-name">${esc(p.name)}</div>` +
-      `<div class="pc-row"><span class="pc-count">메모 ${cnt}</span><span class="pc-time">${fmtDate(p.updatedAt || p.createdAt)}</span></div>`;
+      `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}${p.pinned ? `<span class="pc-pin">${PIN_STAR}</span>` : ""}</div>` +
+      `<div class="pc-info"><div class="pc-name">${esc(p.name)}</div><div class="pc-row"><span class="pc-count">메모 ${cnt}</span><span class="pc-time">${fmtDate(p.updatedAt || p.createdAt)}</span></div></div>` +
+      `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
     card.dataset.selid = p.id;
     if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; }
     if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
@@ -196,6 +196,7 @@
     if (pin.length && restSorted.length) { const d = document.createElement("div"); d.className = "grid-div"; grid.appendChild(d); }
     restSorted.forEach((p) => grid.appendChild(makeProjCard(p)));
     renderHomeRecent();
+    const hf = $("hfStats"); if (hf) hf.textContent = `프로젝트 ${st.projects.length} · 메모 ${st.notes.length}`;
   }
   function renderHomeRecent() {
     const wrap = $("homeRecent"); if (!wrap) return;
@@ -359,8 +360,14 @@
 
   /* ---------- navigation actions ---------- */
   function openProject(id) { st.curProjectId = id; go({ s: "project" }); renderSidebar(); }
+  function flushPending() {
+    if (st.saveTimer) flushSave(true);
+    if (loreTimer) flushLore();
+    if (perTimer) flushPersona();
+  }
   function openNote(id) {
     const n = getNote(id); if (!n) return;
+    flushPending();
     st.curNoteId = id;
     if (n.type === "free") go({ s: "read" });
     else if (n.type === "lorebook") go({ s: "lore" });
@@ -444,7 +451,7 @@
     $("saverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
     if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("saverText").textContent = ""; } }, 1500);
   }
-  function scheduleSave() { if (!st.codeMode) normalizeLinks($("editor")); setSaver("dirty"); clearTimeout(st.saveTimer); st.saveTimer = setTimeout(() => flushSave(false), 550); }
+  function scheduleSave() { if (!st.codeMode) normalizeLinks($("editor")); setSaver("dirty"); clearTimeout(st.saveTimer); const id = st.curNoteId; st.saveTimer = setTimeout(() => { if (st.curNoteId === id) flushSave(false); }, 550); }
   async function flushSave(silent) {
     clearTimeout(st.saveTimer); st.saveTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "free") return;
@@ -684,7 +691,7 @@
     if (!silent) setLoreSaver("saved");
     triggerAutoBackup();
   }
-  function scheduleLoreSave() { setLoreSaver("dirty"); clearTimeout(loreTimer); loreTimer = setTimeout(flushLore, 550); }
+  function scheduleLoreSave() { setLoreSaver("dirty"); clearTimeout(loreTimer); const id = st.curNoteId; loreTimer = setTimeout(() => { if (st.curNoteId === id) flushLore(); }, 550); }
   async function flushLore() {
     clearTimeout(loreTimer); loreTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return;
@@ -985,7 +992,7 @@
     else gal.forEach((src) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src); rg.appendChild(it); });
   }
   async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
-  function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); perTimer = setTimeout(flushPersona, 550); }
+  function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); const id = st.curNoteId; perTimer = setTimeout(() => { if (st.curNoteId === id) flushPersona(); }, 550); }
   async function flushPersona() {
     clearTimeout(perTimer); perTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "persona" || !st.perEdit) return;
@@ -1614,7 +1621,56 @@
     updateSelBar();
     document.querySelectorAll(`[data-selid="${id}"]`).forEach((el) => el.classList.toggle("selected", st.selIds.has(id)));
   }
-  function updateSelBar() { $("selCount").textContent = `${st.selIds ? st.selIds.size : 0}개 선택`; }
+  function updateSelBar() {
+    const ids = [...(st.selIds || [])];
+    $("selCount").textContent = `${ids.length}개 선택`;
+    const mb = $("selMerge");
+    if (mb) {
+      let ok = false;
+      if (st.selType === "note" && ids.length >= 2) {
+        const notes = ids.map(getNote).filter(Boolean);
+        const t = notes[0] && notes[0].type;
+        ok = !!t && t !== "persona" && notes.every((n) => n.type === t);
+      }
+      mb.hidden = !ok;
+    }
+  }
+  async function mergeSelected() {
+    const ids = [...(st.selIds || [])];
+    if (ids.length < 2) { toast("2개 이상 선택해 주세요"); return; }
+    const notes = ids.map(getNote).filter(Boolean);
+    const type = notes[0].type;
+    if (type === "persona") { toast("페르소나 메모는 합칠 수 없어요"); return; }
+    if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
+    const pid = notes[0].projectId;
+    if (type === "lorebook") {
+      const merged = notes.map((n) => (n.data && n.data.content) || "").filter((s) => s.trim()).join("\n\n");
+      const nn = await createNote("lorebook", pid);
+      nn.title = "합친 로어북"; nn.data = { content: merged, keywords: [], alwaysActive: false, depthOn: false, depth: 4 };
+      await saveLore(nn, true);
+      exitSelMode(); st.curNoteId = nn.id; toast(`${notes.length}개를 합쳤어요`); go({ s: "lore" });
+      return;
+    }
+    const merged = notes.map((n) => noteHtml(n) || "").filter((s) => s.trim()).join('<div><br></div>');
+    const nn = await createNote("free", pid);
+    nn.data.html = merged; nn.titleLocked = false; nn.title = deriveTitle(merged) || "합친 메모";
+    try {
+      const allFiles = await getAll("files"); const byId = {}; allFiles.forEach((f) => { byId[f.id] = f; });
+      const atts = [];
+      for (const n of notes) {
+        const list = (n.data && n.data.attachments) || [];
+        for (const a of list) {
+          const src = byId[a.id]; if (!src) continue;
+          const nid = uid();
+          await put("files", { id: nid, noteId: nn.id, name: src.name, type: src.type, size: src.size, blob: src.blob, createdAt: now() });
+          atts.push({ id: nid, name: a.name, type: a.type, size: a.size });
+        }
+      }
+      if (atts.length) nn.data.attachments = atts;
+    } catch (e) {}
+    await saveNote(nn);
+    exitSelMode(); st.curNoteId = nn.id; toast(`${notes.length}개를 합쳤어요`); go({ s: "read" });
+  }
   function selectAllCurrent() {
     if (!st.selIds) st.selIds = new Set();
     if (st.selType === "note") notesOf(st.curProjectId).forEach((n) => st.selIds.add(n.id));
@@ -1826,6 +1882,7 @@ ${gallery}
     if (!FS_ZOOM[v]) v = "normal";
     st.fontScale = v;
     document.documentElement.setAttribute("data-fs", v);
+    document.documentElement.style.setProperty("--fs-zoom", FS_ZOOM[v]);
     document.body.style.zoom = FS_ZOOM[v];
     try { localStorage.setItem("luminkFontScale", v); } catch (e) {}
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === v));
@@ -1911,6 +1968,7 @@ ${gallery}
     $on("selCancel", "click", exitSelMode);
     $on("selAll", "click", selectAllCurrent);
     $on("selMove", "click", bulkMove);
+    $on("selMerge", "click", mergeSelected);
     $on("selDelete", "click", bulkDelete);
     $on("homeNewMemo", "click", () => showTypePicker(null));
     $on("homeFab", "click", () => showTypePicker(null));
