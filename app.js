@@ -99,6 +99,15 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
+  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", persona: "#c79bff" };
+  function recentMemos(limit) {
+    limit = limit || 10;
+    const all = st.notes.slice();
+    const pinned = all.filter((n) => n.pinned).sort((a, b) => (b.pinnedAt || 0) - (a.pinnedAt || 0)).slice(0, 3);
+    const pid = new Set(pinned.map((n) => n.id));
+    const rest = all.filter((n) => !pid.has(n.id)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return [...pinned, ...rest].slice(0, limit);
+  }
   function loadSorts() {
     try { st.homeSort = localStorage.getItem("luminkHomeSort") || "recent"; st.noteSort = localStorage.getItem("luminkNoteSort") || "recent"; }
     catch (e) { st.homeSort = "recent"; st.noteSort = "recent"; }
@@ -133,7 +142,7 @@
   }
   async function togglePinProject(id) {
     const p = getProject(id); if (!p) return;
-    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 6) { toast("프로젝트는 최대 6개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
+    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 3) { toast("프로젝트는 최대 3개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
     else { p.pinned = false; delete p.pinnedAt; }
     await put("projects", p); render(); renderSidebar(); toast(p.pinned ? "상단에 고정했어요" : "고정을 해제했어요");
   }
@@ -149,10 +158,9 @@
     card.className = "proj-card";
     card.innerHTML =
       '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' +
-      projIconHTML(p, "proj-icon") +
-      `<div class="pc-name">${esc(p.name)}${p.pinned ? PIN_STAR : ""}</div>` +
-      `<div class="pc-meta">메모 ${cnt}개 · ${fmtDate(p.updatedAt || p.createdAt)}</div>` +
-      `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
+      `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}${p.pinned ? `<span class="pc-pin">${PIN_STAR}</span>` : ""}<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div></div>` +
+      `<div class="pc-name">${esc(p.name)}</div>` +
+      `<div class="pc-row"><span class="pc-count">메모 ${cnt}</span><span class="pc-time">${fmtDate(p.updatedAt || p.createdAt)}</span></div>`;
     card.dataset.selid = p.id;
     if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; }
     if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
@@ -174,6 +182,25 @@
     pin.forEach((p) => grid.appendChild(makeProjCard(p)));
     if (pin.length && restSorted.length) { const d = document.createElement("div"); d.className = "grid-div"; grid.appendChild(d); }
     restSorted.forEach((p) => grid.appendChild(makeProjCard(p)));
+    renderHomeRecent();
+  }
+  function renderHomeRecent() {
+    const wrap = $("homeRecent"); if (!wrap) return;
+    const ms = recentMemos(10);
+    const head = $("homeRecentHead"); if (head) head.style.display = st.projects.length ? "" : "none";
+    if (!st.projects.length) { wrap.innerHTML = ""; return; }
+    if (!ms.length) { wrap.innerHTML = '<div class="hm-recent-empty">아직 메모가 없어요.</div>'; return; }
+    wrap.innerHTML = "";
+    ms.forEach((n) => {
+      const proj = getProject(n.projectId);
+      const it = document.createElement("div"); it.className = "hm-recent-item";
+      it.innerHTML = `<span class="hm-dot" style="background:${TYPE_COLOR[n.type] || "#7b9bff"}"></span>` +
+        `<div class="hm-body"><div class="hm-title">${esc(n.title || "(제목 없음)")}${n.pinned ? PIN_STAR : ""}</div><div class="hm-sub">${esc(proj ? proj.name : "")} · ${TYPE_LABEL[n.type] || ""} · ${fmtDate(n.updatedAt)}</div></div>` +
+        `<div class="hm-more"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
+      it.addEventListener("click", (e) => { if (e.target.closest(".hm-more")) { e.stopPropagation(); openNoteSheet(n.id); return; } openNote(n.id); });
+      attachLongPress(it, () => openNoteSheet(n.id));
+      wrap.appendChild(it);
+    });
   }
 
   function renderSidebar() {
@@ -192,6 +219,20 @@
     pin.forEach((p) => list.appendChild(mk(p)));
     if (pin.length && restSorted.length) { const d = document.createElement("div"); d.className = "sb-divider"; list.appendChild(d); }
     restSorted.forEach((p) => list.appendChild(mk(p)));
+    const rec = $("sbRecent");
+    if (rec) {
+      const ms = recentMemos(10);
+      rec.innerHTML = "";
+      if (!ms.length) { rec.innerHTML = '<div class="sb-recent-empty">아직 메모가 없어요.</div>'; }
+      else ms.forEach((n) => {
+        const proj = getProject(n.projectId);
+        const it = document.createElement("div"); it.className = "sb-memo";
+        it.innerHTML = `<span class="sb-memo-dot" style="background:${TYPE_COLOR[n.type] || "#7b9bff"}"></span><div class="sb-memo-body"><div class="sb-memo-title">${esc(n.title || "(제목 없음)")}${n.pinned ? PIN_STAR : ""}</div><div class="sb-memo-sub">${esc(proj ? proj.name : "")} · ${TYPE_LABEL[n.type] || ""}</div></div>`;
+        it.addEventListener("click", () => { closeSidebar(); openNote(n.id); });
+        attachLongPress(it, () => { closeSidebar(); openNoteSheet(n.id); });
+        rec.appendChild(it);
+      });
+    }
   }
 
   function buildChip(n) {

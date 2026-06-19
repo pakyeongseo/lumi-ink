@@ -173,51 +173,54 @@
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 16px;
   }
   .proj-card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
-    padding: 16px 14px 14px; cursor: pointer; position: relative; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 8px 8px 9px; cursor: pointer; position: relative; overflow: hidden;
     transition: transform .12s, border-color .15s;
-    display: flex; flex-direction: column; gap: 10px; min-height: 132px;
+    display: flex; flex-direction: column; gap: 7px;
   }
   .proj-card:active { transform: scale(.975); }
-  .pin-badge { position: absolute; top: 9px; left: 9px; width: 22px; height: 22px; border-radius: 7px; background: var(--grad-blue); display: grid; place-items: center; z-index: 3; box-shadow: 0 2px 7px rgba(96,90,210,.45); }
+  .pc-thumb { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; }
+  .pc-pin { position: absolute; top: 7px; left: 7px; width: 23px; height: 23px; border-radius: 7px; background: rgba(8,12,22,.5); display: grid; place-items: center; z-index: 3; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .pc-pin .pin-star { margin: 0; width: 13px; height: 13px; }
+  body.sel-mode .pc-pin { display: none; }
+  .pin-badge { position: absolute; top: 9px; left: 9px; width: 22px; height: 22px; border-radius: 7px; background: var(--grad-blue); display: grid; place-items: center; z-index: 3; }
   .pin-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
-  body.sel-mode .pin-badge { display: none; }
   .mc-pin { flex: 0 0 auto; color: var(--accent); display: inline-flex; }
   .mc-pin svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
   .pin-star { width: 13px; height: 13px; fill: var(--accent); flex: 0 0 auto; margin-left: 5px; vertical-align: -1px; filter: drop-shadow(0 0 3px rgba(123,155,255,.5)); }
   .csec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 16px 4px 11px; }
   .chip-section:first-child .csec-head { margin-top: 2px; }
   .csec-head .chip-section-label { margin: 0; }
-  .proj-card::before {
-    content: ""; position: absolute; inset: 0; opacity: .5; pointer-events: none;
-    background: radial-gradient(60% 60% at 80% 0%, rgba(106,208,255,.07), transparent 70%);
-  }
   .proj-icon {
-    width: 52px; height: 52px; border-radius: 14px; position: relative; flex: 0 0 auto;
+    width: 100%; height: 100%; border-radius: 12px; position: relative; flex: 0 0 auto;
     display: grid; place-items: center; overflow: hidden;
     background: linear-gradient(150deg, var(--surface-2), var(--surface-3));
     border: 1px solid var(--line);
   }
   .proj-icon img { width: 100%; height: 100%; object-fit: cover; }
   .proj-icon .frame {
-    position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
+    position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
   }
   .proj-icon .deflogo {
-    width: 24px; height: 24px; border-radius: 7px;
+    width: 30px; height: 30px; border-radius: 8px;
     background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%);
     box-shadow: 0 0 10px rgba(106,208,255,.45);
   }
   .proj-card .pc-name {
-    font-size: 15px; font-weight: 650; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    font-size: 13.5px; font-weight: 650; line-height: 1.25; padding: 0 2px;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .proj-card .pc-meta { font-size: 12px; color: var(--faint); margin-top: auto; }
+  .pc-row { display: flex; align-items: center; gap: 7px; padding: 0 2px; min-width: 0; }
+  .pc-count { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+  .pc-time { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .proj-card .pc-more {
-    position: absolute; top: 8px; right: 6px; width: 32px; height: 32px;
-    display: grid; place-items: center; border-radius: 9px; color: var(--muted);
+    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px;
+    display: grid; place-items: center; border-radius: 8px; color: #fff; z-index: 3;
+    background: rgba(8,12,22,.5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   }
-  .proj-card .pc-more:active { background: var(--surface-2); }
-  .proj-card .pc-more svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+  body.sel-mode .proj-card .pc-more { display: none; }
+  .proj-card .pc-more:active { background: rgba(8,12,22,.75); }
+  .proj-card .pc-more svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
 
   .grid-empty { grid-column: 1 / -1; text-align: center; color: var(--faint); padding: 40px 20px; font-size: 14px; }
 
@@ -359,7 +362,29 @@
   .sb-section-row { padding: 16px 16px 9px; }
   .sb-section-box { display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px 8px 11px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-soft), transparent); border: 1px solid var(--line); font-size: 13px; font-weight: 750; letter-spacing: .02em; color: var(--ink); }
   .sb-section-box .ssb-bar { width: 4px; height: 15px; border-radius: 3px; background: var(--grad-blue); }
-  .sb-list { flex: 1 1 auto; overflow-y: auto; padding: 0 10px 10px; }
+  .sb-list { flex: 1 1 auto; overflow-y: auto; padding: 0 10px 10px; min-height: 64px; }
+  .sb-recent-head { padding: 4px 16px 9px; }
+  .sb-recent { flex: 0 1 auto; overflow-y: auto; padding: 0 10px 6px; max-height: 38vh; min-height: 40px; }
+  .sb-memo { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 11px; cursor: pointer; }
+  .sb-memo:active { background: var(--surface-2); }
+  .sb-memo .sb-memo-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+  .sb-memo .sb-memo-body { flex: 1; min-width: 0; }
+  .sb-memo .sb-memo-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+  .sb-memo .sb-memo-title .pin-star { width: 11px; height: 11px; margin-left: 4px; }
+  .sb-memo .sb-memo-sub { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .sb-recent-empty, .hm-recent-empty { font-size: 12.5px; color: var(--faint); padding: 6px 13px; }
+  /* home recent list */
+  .hm-recent-head { margin-top: 8px; }
+  .hm-recent { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+  .hm-recent-item { display: flex; align-items: center; gap: 11px; padding: 11px 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; cursor: pointer; box-shadow: var(--shadow); }
+  .hm-recent-item:active { transform: scale(.99); }
+  .hm-recent-item .hm-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+  .hm-recent-item .hm-body { flex: 1; min-width: 0; }
+  .hm-recent-item .hm-title { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+  .hm-recent-item .hm-title .pin-star { width: 12px; height: 12px; margin-left: 5px; }
+  .hm-recent-item .hm-sub { font-size: 11.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .hm-recent-item .hm-more { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); }
+  .hm-recent-item .hm-more svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
   .sb-divider { height: 1px; background: var(--line); margin: 4px 12px 6px; }
   .sb-item {
     display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 12px;
@@ -855,6 +880,10 @@
         <button class="sort-btn" id="homeSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="homeSortLabel">최신순</span></button>
       </div>
       <div class="proj-grid" id="projGrid"></div>
+      <div class="sec-row hm-recent-head" id="homeRecentHead">
+        <span class="sec-chip"><span class="sc-dot"></span>최근 수정한 메모</span>
+      </div>
+      <div class="hm-recent" id="homeRecent"></div>
     </div>
     <button class="fab" id="homeFab" aria-label="새 메모"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
   </section>
@@ -901,8 +930,8 @@
       <button class="iconbtn" id="edBack" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
       <div class="tb-title" id="edTitle">메모</div>
       <div class="saver" id="saver"><span class="dot"></span><span id="saverText"></span></div>
-      <button class="iconbtn" id="edSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
       <button class="iconbtn" id="edView" aria-label="보기"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="iconbtn" id="edSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
       <button class="iconbtn" id="edMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
     <div class="formatbar" id="formatbar">
@@ -1090,6 +1119,8 @@
       <span class="sb-section-box"><span class="ssb-bar"></span>프로젝트</span>
     </div>
     <div class="sb-list" id="sbList"></div>
+    <div class="sb-recent-head"><span class="sb-section-box"><span class="ssb-bar"></span>최근 수정한 메모</span></div>
+    <div class="sb-recent" id="sbRecent"></div>
     <div class="sb-actions">
       <button class="sb-sc primary" id="sbNewMemo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> 새 메모</button>
       <button class="sb-sc primary" id="sbNewProject"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 새 프로젝트</button>
