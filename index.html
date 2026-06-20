@@ -368,7 +368,7 @@
   html[data-theme="light"][data-accent="purple"] .searchbar { background: #f3eefb; border-color: #e3d8f4; }
   html[data-theme="light"][data-accent="purple"] .searchbar input { color: #3a2658; }
   html[data-accent="purple"] .lore-switch.on { box-shadow: 0 0 10px rgba(180,131,255,.4); }
-  html[data-theme="light"][data-accent="purple"] .sidebar { background: #eee2f8; }
+  html[data-theme="light"][data-accent="purple"] .sidebar { background: #ece7f2; }
   html[data-accent="purple"] .memo-tag.t-free { background: #6f56e0; }
   html[data-accent="purple"] .memo-tag.t-lorebook { background: #c89bff; }
   html[data-accent="purple"] .memo-tag.t-persona { background: #a04fd8; }
@@ -376,6 +376,109 @@
   html[data-accent="purple"] .lore-preview h2,
   html[data-accent="purple"] .lore-preview h3,
   html[data-accent="purple"] .per-read-detail .pr-head { color: #c9a3ff; }
+
+  /* ===== Gold theme ===== */
+  html[data-accent="gold"] {
+    --bg: #14110a;
+    --bg-2: #181409;
+    --surface: #201b11;
+    --surface-2: #2a2416;
+    --surface-3: #332c1c;
+    --paper: #1a1610;
+    --ink: #f2ede0;
+    --muted: #ada291;
+    --faint: #726959;
+    --line: #322b1d;
+    --line-soft: #241f14;
+    --bar-bg: #261d0e;
+    --bar-bg-2: #2e2412;
+    --bar-line: #564327;
+    --accent: #f5c451;
+    --accent-2: #e0a83c;
+    --accent-deep: #6e5320;
+    --accent-soft: #2a2212;
+    --glow: 0 0 24px rgba(245,196,81,.24);
+    --shadow: 0 1px 4px rgba(150,110,30,.28), 0 6px 16px rgba(28,20,6,.46);
+    --grad-blue: linear-gradient(135deg, #d4a52e, #a87a10);
+    --logo-ink: #f0d79a;
+  }
+  html[data-theme="light"][data-accent="gold"] {
+    --bg: #faf6ec;
+    --bg-2: #f3eede;
+    --surface: #ffffff;
+    --surface-2: #f8f2e3;
+    --surface-3: #efe7d2;
+    --paper: #fffdf7;
+    --ink: #2a2417;
+    --muted: #756c57;
+    --faint: #b8ad95;
+    --line: #ece2cc;
+    --line-soft: #f4ecd8;
+    --bar-bg: #fffdf6;
+    --bar-bg-2: #faf5e8;
+    --bar-line: #ece2cc;
+    --accent: #a8780c;
+    --accent-2: #c2902a;
+    --accent-deep: #ecdcae;
+    --accent-soft: #faf1d8;
+    --glow: 0 0 18px rgba(168,120,12,.16);
+    --shadow: 0 1px 3px rgba(150,110,30,.12), 0 5px 14px rgba(150,110,30,.14);
+    --grad-blue: linear-gradient(135deg, #cf9e30, #a87a10);
+    --logo-ink: #6e5320;
+  }
+  html[data-accent="gold"] body::before {
+    background:
+      radial-gradient(80% 50% at 12% -8%, rgba(245,196,81,.11), transparent 60%),
+      radial-gradient(70% 45% at 100% 0%, rgba(224,168,60,.10), transparent 55%);
+  }
+  html[data-accent="gold"] .brand-logo .niblogo { filter: drop-shadow(0 0 13px rgba(245,196,81,.55)); }
+  html[data-accent="gold"] .brand-logo .niblogo .nib-body { fill: #f7f1e2; }
+  html[data-accent="gold"] .brand-logo .niblogo .nib-ink { fill: #4a3a17; }
+  html[data-accent="gold"] .brand-logo .niblogo .nib-tip { fill: #ffd76b; }
+  html[data-theme="light"][data-accent="gold"] .brand-logo .niblogo { filter: drop-shadow(0 0 6px rgba(168,120,12,.3)); }
+  html[data-theme="light"][data-accent="gold"] .brand-logo .niblogo .nib-body { fill: #d4a52e; }
+  html[data-theme="light"][data-accent="gold"] .brand-logo .niblogo .nib-ink { fill: #fff; }
+  html[data-theme="light"][data-accent="gold"] .brand-logo .niblogo .nib-tip { fill: #8a6612; }
+  html[data-accent="gold"] .proj-icon .deflogo,
+  html[data-accent="gold"] .pd-thumb .deflogo {
+    background: radial-gradient(circle at 38% 30%, #fff0c0, #f5c451 45%, #c8920f 100%);
+    box-shadow: 0 0 10px rgba(245,196,81,.45);
+  }
+  html[data-accent="gold"] .pin-star { filter: drop-shadow(0 0 3px rgba(245,196,81,.5)); }
+  html[data-accent="gold"] .action-card.accent { box-shadow: 0 0 24px rgba(224,168,60,.24); }
+  html[data-accent="gold"] .topbar { box-shadow: 0 2px 7px rgba(150,110,30,.16); }
+  html[data-accent="gold"] .code-toggle.has-bg { background: rgba(245,196,81,.12); }
+  html[data-accent="gold"] .kw-chip,
+  html[data-accent="gold"] .per-tags .kw-chip,
+  html[data-accent="gold"] .per-tags-read .kw-chip { border-color: rgba(245,196,81,.32); }
+  html[data-accent="gold"] .sb-item .sb-ico .deflogo { background: radial-gradient(circle at 38% 30%, #fff0c0, #f5c451 45%, #c8920f 100%); box-shadow: 0 0 7px rgba(245,196,81,.4); }
+  html[data-theme="light"][data-accent="gold"] .tb-title,
+  html[data-theme="light"][data-accent="gold"] .pd-name,
+  html[data-theme="light"][data-accent="gold"] .mc-title,
+  html[data-theme="light"][data-accent="gold"] .per-read-name,
+  html[data-theme="light"][data-accent="gold"] .modal h3,
+  html[data-theme="light"][data-accent="gold"] .sheet-title,
+  html[data-theme="light"][data-accent="gold"] .set-rlabel { color: #4a3a17; }
+  html[data-theme="light"][data-accent="gold"] .pd-count { color: #9a6f0c; }
+  html[data-theme="light"][data-accent="gold"] .lore-preview h1,
+  html[data-theme="light"][data-accent="gold"] .lore-preview h2,
+  html[data-theme="light"][data-accent="gold"] .lore-preview h3 { color: #9a6f0c; }
+  html[data-theme="light"][data-accent="gold"] .per-read-detail .pr-head { color: #9a6f0c; }
+  html[data-theme="light"][data-accent="gold"] .sb-head { background: #fdf8ec; }
+  html[data-theme="light"][data-accent="gold"] .sb-memo,
+  html[data-theme="light"][data-accent="gold"] .sb-item { background: #f8f2e3; border-color: #ece0c4; }
+  html[data-theme="light"][data-accent="gold"] .searchbar { background: #f8f2e3; border-color: #ece0c4; }
+  html[data-theme="light"][data-accent="gold"] .searchbar input { color: #4a3a17; }
+  html[data-accent="gold"] .lore-switch.on { box-shadow: 0 0 10px rgba(245,196,81,.4); }
+  html[data-theme="light"][data-accent="gold"] .sidebar { background: #f3ecd9; }
+  html[data-accent="gold"] .memo-tag { color: #231b09; }
+  html[data-accent="gold"] .memo-tag.t-free { background: #e0a23c; }
+  html[data-accent="gold"] .memo-tag.t-lorebook { background: #ffd373; }
+  html[data-accent="gold"] .memo-tag.t-persona { background: #c88a1e; }
+  html[data-accent="gold"] .lore-preview h1,
+  html[data-accent="gold"] .lore-preview h2,
+  html[data-accent="gold"] .lore-preview h3,
+  html[data-accent="gold"] .per-read-detail .pr-head { color: #ffd97a; }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; overscroll-behavior: none; }
