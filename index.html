@@ -2057,9 +2057,11 @@
   .hidden-input { display: none; }
 
 
-  /* ===== v51 exterior project-frame geometry =====
-     Frames must behave like a physical molding: media stays clipped to the
-     thumbnail, while the molding expands across and slightly beyond its edge. */
+  /* ===== v52 exterior project-frame geometry =====
+     Two-layer structure:
+     - the outer surface stays open so the frame can extend beyond its edge;
+     - only .thumb-media clips the actual image/default mark to rounded corners.
+     This keeps a physical outer molding without turning the thumbnail square. */
   .pc-thumb { overflow: visible; position: relative; }
   .pc-thumb .proj-icon { border-radius: 15px; }
 
@@ -2069,31 +2071,53 @@
   .pd-thumb {
     overflow: visible;
     isolation: isolate;
+    position: relative;
   }
 
+  /* The media layer owns the thumbnail's rounded clipping. It is deliberately
+     separate from the outer shell: the shell must remain unclipped for the frame. */
+  .proj-icon > .thumb-media,
+  .sb-item .sb-ico > .thumb-media,
+  .pick-item .pk-ico > .thumb-media,
+  .pd-thumb > .thumb-media {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: inherit;
+    background: linear-gradient(150deg, var(--surface-2), var(--surface-3));
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+
+  .proj-icon > .thumb-media > img,
+  .sb-item .sb-ico > .thumb-media > img,
+  .pick-item .pk-ico > .thumb-media > img,
+  .pd-thumb > .thumb-media > img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
+  .proj-icon > .thumb-media > .deflogo,
+  .sb-item .sb-ico > .thumb-media > .deflogo,
+  .pick-item .pk-ico > .thumb-media > .deflogo,
+  .pd-thumb > .thumb-media > .deflogo {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* The normal outline is hidden only while a separate molding is applied.
+     The rounded media beneath remains untouched. */
   .proj-icon.has-frame,
   .sb-item .sb-ico.has-frame,
   .pick-item .pk-ico.has-frame,
   .pd-thumb.has-frame {
     border-color: transparent;
-  }
-
-  .proj-icon > img,
-  .sb-item .sb-ico > img,
-  .pick-item .pk-ico > img,
-  .pd-thumb > img {
-    position: relative;
-    z-index: 1;
-    display: block;
-    border-radius: inherit;
-  }
-
-  .proj-icon > .deflogo,
-  .sb-item .sb-ico > .deflogo,
-  .pick-item .pk-ico > .deflogo,
-  .pd-thumb > .deflogo {
-    position: relative;
-    z-index: 1;
+    background: transparent;
   }
 
   .proj-icon.has-frame > .frame,
@@ -2120,13 +2144,13 @@
     height: 100%;
   }
 
-  /* Compact surfaces keep the same exterior-molding proportion without
-     allowing the frame to crowd adjacent labels. */
+  /* Compact surfaces use the same outer-molding logic but a slightly tighter
+     expansion so their frame never collides with neighboring labels. */
   .sb-item .sb-ico.has-frame > .frame,
   .pick-item .pk-ico.has-frame > .frame { inset: -10%; }
 
-  /* Preview tiles need a little breathing room so the outer molding is never
-     mistaken for an inset decoration. */
+  /* Preview tiles also use the two-layer clipping model and need breathing room
+     for the portion of the frame that sits outside the image. */
   .frame-opt .fr-prev.has-frame,
   .fr-bigprev .proj-icon.has-frame { overflow: visible; }
 
