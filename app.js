@@ -16,13 +16,32 @@
     ["gold", "골드", "#d4af37"], ["rosegold", "로즈골드", "#d99a8f"], ["silver", "실버", "#c0c6cc"],
     ["bronze", "브론즈", "#b08d57"], ["white", "화이트", "#f2f2f4"], ["black", "블랙", "#1c1c1e"],
     ["navy", "네이비", "#3a4f8a"], ["burgundy", "버건디", "#8a2336"], ["emerald", "에메랄드", "#1f8a5c"],
-    ["violet", "바이올렛", "#8a5fd0"], ["sky", "스카이", "#5fb0e8"], ["rose", "로즈", "#e06a92"]
+    ["violet", "바이올렛", "#8a5fd0"], ["sky", "스카이", "#5fb0e8"], ["rose", "로즈", "#e06a92"],
+    ["pastel-blue", "파스텔 블루", "#9ed7f2"], ["pastel-aqua", "파스텔 아쿠아", "#9fe7df"],
+    ["pastel-mint", "파스텔 민트", "#afe8c8"], ["pastel-lilac", "파스텔 라일락", "#cbb8f4"],
+    ["pastel-pink", "파스텔 핑크", "#f2b6ca"], ["pastel-peach", "파스텔 피치", "#f5c29e"],
+    ["pastel-butter", "파스텔 버터", "#f3e59a"], ["pastel-rose", "파스텔 로즈", "#edbed4"],
+    ["pastel-sky", "파스텔 스카이", "#b6dff4"]
   ];
+  const FRAME_THEME_TOKEN = "theme";
+  const FRAME_COLOR_SET = new Set(FRAME_COLORS.map(([, , color]) => color.toLowerCase()));
   function frameById(id) { return FRAMES.find((f) => f.id === id) || null; }
+  function normalizeFrameColor(value) {
+    if (value === FRAME_THEME_TOKEN) return FRAME_THEME_TOKEN;
+    if (typeof value !== "string") return null;
+    const color = value.trim().toLowerCase();
+    return FRAME_COLOR_SET.has(color) ? color : null;
+  }
+  function resolveFrameColor(value) {
+    if (value === FRAME_THEME_TOKEN) {
+      return (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "").trim() || "#d4af37";
+    }
+    return normalizeFrameColor(value) || "#d4af37";
+  }
   function frameInner(p) {
     if (!p || !p.frame) return "";
     const f = frameById(p.frame); if (!f) return "";
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">' + f.build(p.frameColor || "#d4af37") + "</svg>";
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">' + f.build(resolveFrameColor(p.frameColor)) + "</svg>";
   }
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
@@ -211,6 +230,17 @@
         await del("projects", dup.id);
       }
     }
+    // v49: 프레임 데이터도 프로젝트 레코드의 일부로 정규화합니다.
+    // 구버전·외부 복원 데이터의 잘못된 프레임 ID/색상은 렌더링 전에 안전하게 제거합니다.
+    for (const project of st.projects) {
+      const validFrame = frameById(project.frame) ? project.frame : null;
+      const validColor = validFrame ? (normalizeFrameColor(project.frameColor) || "#d4af37") : null;
+      if ((project.frame || null) !== validFrame || (project.frameColor || null) !== validColor) {
+        project.frame = validFrame;
+        project.frameColor = validColor;
+        await put("projects", project);
+      }
+    }
     const orphans = st.notes.filter((n) => !n.projectId || !n.type);
     if (orphans.length === 0 && st.projects.length > 0) return;
     let def = st.projects.find((p) => p.isDefault) || st.projects[0];
@@ -233,9 +263,12 @@
   }
 
   /* ---------- renderers ---------- */
+  function projectThumbMedia(p) {
+    return `<div class="thumb-media">${p && p.icon ? `<img src="${p.icon}" alt="">` : '<span class="deflogo"></span>'}</div>`;
+  }
   function projIconHTML(p, cls) {
-    if (p && p.icon) return `<div class="${cls}"><img src="${p.icon}" alt=""><div class="frame">${frameInner(p)}</div></div>`;
-    return `<div class="${cls}"><span class="deflogo"></span><div class="frame">${frameInner(p)}</div></div>`;
+    const framed = !!(p && frameById(p.frame));
+    return `<div class="${cls}${framed ? " has-frame" : ""}">${projectThumbMedia(p)}${framed ? `<div class="frame">${frameInner(p)}</div>` : ""}</div>`;
   }
 
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
@@ -437,8 +470,11 @@
     const p = getProject(st.curProjectId);
     if (!p) { back(); return; }
     $("pdTopTitle").textContent = p.name;
-    $("pdThumb").innerHTML = p.icon ? `<img src="${p.icon}" alt=""><div class="frame">${frameInner(p)}</div>` : `<span class="deflogo"></span><div class="frame">${frameInner(p)}</div>`;
-    if (p.chipColor && CHIP[p.chipColor]) { const c = CHIP[p.chipColor].c, fr = $("pdThumb").querySelector(".frame"); if (fr) fr.style.boxShadow = `inset 0 0 0 1.5px ${c}, inset 0 0 16px ${c}40`; }
+    const hasProjectFrame = !!frameById(p.frame);
+    $("pdThumb").classList.toggle("has-frame", hasProjectFrame);
+    $("pdThumb").innerHTML = projectThumbMedia(p) + (hasProjectFrame ? `<div class="frame">${frameInner(p)}</div>` : '<div class="chip-glow"></div>');
+    // 프레임이 있을 때는 프로젝트 칩 글로우가 액자 색과 섞이지 않도록 적용하지 않습니다.
+    if (!hasProjectFrame && p.chipColor && CHIP[p.chipColor]) { const c = CHIP[p.chipColor].c, glow = $("pdThumb").querySelector(".chip-glow"); if (glow) glow.style.boxShadow = `inset 0 0 0 1.5px ${c}, inset 0 0 16px ${c}40`; }
     $("pdName").textContent = p.name;
     const desc = $("pdDesc");
     const dtags = (p.description || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -546,7 +582,15 @@
   }
 
   /* ---------- project CRUD ---------- */
-  async function saveProject(p) { p.updatedAt = now(); await put("projects", p); }
+  async function saveProject(p) {
+    // 프레임 데이터는 저장 시에도 한 번 더 정규화해 백업·복제·가져오기 경로를 모두 동일하게 보호합니다.
+    if (p) {
+      p.frame = frameById(p.frame) ? p.frame : null;
+      p.frameColor = p.frame ? (normalizeFrameColor(p.frameColor) || "#d4af37") : null;
+      p.updatedAt = now();
+      await put("projects", p);
+    }
+  }
   async function createProject(name, desc) {
     const p = { id: uid(), name: name || "새 프로젝트", description: desc || "", icon: DEFAULT_ICON, createdAt: now(), updatedAt: now() };
     st.projects.push(p); await put("projects", p);
@@ -646,7 +690,10 @@
     const p = getProject(id); if (!p) return;
     const np = {
       id: uid(), name: p.name + " (사본)", description: p.description || "", icon: p.icon || null,
-      chipColor: p.chipColor || null, createdAt: now(), updatedAt: now()
+      chipColor: p.chipColor || null,
+      frame: frameById(p.frame) ? p.frame : null,
+      frameColor: frameById(p.frame) ? (normalizeFrameColor(p.frameColor) || "#d4af37") : null,
+      createdAt: now(), updatedAt: now()
     };
     const copiedNotes = [];
     try {
@@ -2406,16 +2453,16 @@
     $on("iconUpload", "click", () => { iconTargetPid = pid; $("iconInput").click(); });
     $on("iconClose", "click", closeModal);
   }
-  function frameThumbInner(p) { return p && p.icon ? `<img src="${p.icon}" alt="">` : '<span class="deflogo"></span>'; }
+  function frameThumbInner(p) { return projectThumbMedia(p); }
   function frameSvgFor(fid, color) {
     const f = frameById(fid); if (!f) return "";
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">' + f.build(color) + "</svg>";
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">' + f.build(resolveFrameColor(color)) + "</svg>";
   }
   function showFramePicker(pid) {
     const p = getProject(pid); if (!p) return;
-    const prevColor = p.frameColor || "#d4af37";
+    const prevColor = normalizeFrameColor(p.frameColor) || "#d4af37";
     const none = `<div class="frame-opt${p.frame ? "" : " sel"}" data-fid=""><div class="proj-icon fr-prev">${frameThumbInner(p)}</div><span>없음</span></div>`;
-    const grid = FRAMES.map((f) => `<div class="frame-opt${p.frame === f.id ? " sel" : ""}" data-fid="${f.id}"><div class="proj-icon fr-prev">${frameThumbInner(p)}<div class="frame">${frameSvgFor(f.id, prevColor)}</div></div><span>${esc(f.name)}</span></div>`).join("");
+    const grid = FRAMES.map((f) => `<div class="frame-opt${p.frame === f.id ? " sel" : ""}" data-fid="${f.id}"><div class="proj-icon fr-prev has-frame">${frameThumbInner(p)}<div class="frame">${frameSvgFor(f.id, prevColor)}</div></div><span>${esc(f.name)}</span></div>`).join("");
     openModal(`
       <h3>썸네일 프레임</h3><p class="m-sub">${esc(p.name)} · 디자인을 고르면 색을 선택해요</p>
       <div class="frame-grid">${none}${grid}</div>
@@ -2430,23 +2477,26 @@
   }
   function showFrameColorPicker(pid, fid) {
     const p = getProject(pid); if (!p) return;
-    let color = p.frameColor || "#d4af37";
-    const themeAccent = (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "").trim() || "#d4af37";
-    const colors = FRAME_COLORS.concat([["theme", "테마색", themeAccent]]);
-    const sw = (hex) => colors.map(([k, nm, c]) => `<div class="fcolor-sw${color.toLowerCase() === c.toLowerCase() ? " sel" : ""}" data-c="${c}" title="${nm}"><span style="background:${c}"></span></div>`).join("");
+    let color = normalizeFrameColor(p.frameColor) || "#d4af37";
+    const themeAccent = resolveFrameColor(FRAME_THEME_TOKEN);
+    const colors = FRAME_COLORS.concat([[FRAME_THEME_TOKEN, "테마와 연동", themeAccent]]);
+    const sw = () => colors.map(([key, name, value]) => {
+      const previewColor = key === FRAME_THEME_TOKEN ? themeAccent : value;
+      return `<div class="fcolor-sw${color === key ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span style="background:${previewColor}"></span></div>`;
+    }).join("");
     openModal(`
-      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")}</p>
-      <div class="fr-bigprev"><div class="proj-icon">${frameThumbInner(p)}<div class="frame" id="frBigFrame">${frameSvgFor(fid, color)}</div></div></div>
+      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌어요.</p>
+      <div class="fr-bigprev"><div class="proj-icon has-frame">${frameThumbInner(p)}<div class="frame" id="frBigFrame">${frameSvgFor(fid, color)}</div></div></div>
       <div class="fcolor-grid" id="fcGrid">${sw()}</div>
       <div class="m-row"><button class="m-btn" id="fcBack">뒤로</button><button class="m-btn primary" id="fcOk">적용</button></div>
     `);
     const refresh = () => {
       $("frBigFrame").innerHTML = frameSvgFor(fid, color);
-      $("fcGrid").querySelectorAll(".fcolor-sw").forEach((s) => s.classList.toggle("sel", s.dataset.c.toLowerCase() === color.toLowerCase()));
+      $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.classList.toggle("sel", item.dataset.c === color));
     };
-    $("fcGrid").querySelectorAll(".fcolor-sw").forEach((s) => s.addEventListener("click", () => { color = s.dataset.c; refresh(); }));
+    $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.addEventListener("click", () => { color = item.dataset.c; refresh(); }));
     $on("fcBack", "click", () => showFramePicker(pid));
-    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast("프레임을 적용했어요"); });
+    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : "프레임을 적용했어요"); });
   }
   const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
   const MAX_IMAGE_PIXELS = 24 * 1000 * 1000;
@@ -2645,6 +2695,8 @@
       description: cleanImportedText(raw.description, 2000),
       icon: safeImageSource(raw.icon),
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
+      frame: frameById(raw.frame) ? raw.frame : null,
+      frameColor: frameById(raw.frame) ? (normalizeFrameColor(raw.frameColor) || "#d4af37") : null,
       isDefault: !!raw.isDefault,
       pinned: !!raw.pinned,
       pinnedAt: Number(raw.pinnedAt) || undefined,
