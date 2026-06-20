@@ -2134,11 +2134,13 @@
   }
   function characterCoverCandidates(n) {
     const d = ensureCharacterData(n), out = [], seen = new Set();
-    const add = (src, label) => {
+    const add = (src, label, uploaded) => {
       const safe = safeImageSource(src);
       if (!safe || seen.has(safe)) return;
-      seen.add(safe); out.push({ src: safe, label });
+      seen.add(safe); out.push({ src: safe, label, uploaded: !!uploaded });
     };
+    // 캐릭터 페이지 이미지와 분리해서 올린 표지도 다시 열었을 때 선택 상태가 보이도록 맨 앞에 넣습니다.
+    if (d.coverImage) add(d.coverImage, "직접 업로드한 대표 이미지", true);
     d.pages.forEach((page, index) => {
       const name = charPageName(page, "ko") || `캐릭터 ${index + 1}`;
       add(page.square, `${name} · 정사각 썸네일`);
@@ -2146,6 +2148,18 @@
       (page.gallery || []).forEach((src, galleryIndex) => add(src, `${name} · 갤러리 ${galleryIndex + 1}`));
     });
     return out;
+  }
+  function applyUploadedCharacterCover(noteId, file) {
+    if (!file || !/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    startCrop(file, 1, 1080, 1080, async (data) => {
+      const current = getNote(noteId);
+      if (!current || current.type !== "character") return;
+      const dataSet = ensureCharacterData(current);
+      dataSet.coverImage = data;
+      await saveCharacter(current, true);
+      closeModal(); render(); renderSidebar();
+      toast("새 대표 이미지를 적용했어요");
+    });
   }
   async function chooseCharacterCover(n) {
     if (!n || n.type !== "character") return;
@@ -2157,9 +2171,9 @@
     const cards = candidates.map((item, index) => option(item.src, item.label, index, d.coverImage === item.src)).join("");
     openModal(`
       <h3>대표 썸네일 지정</h3>
-      <p class="m-sub">프로젝트 안의 캐릭터 메모 카드에 보일 이미지를 골라요. 선택하지 않으면 첫 번째 캐릭터의 이미지가 자동으로 사용됩니다.</p>
-      <div class="char-cover-grid">${auto}${cards || '<div class="char-cover-empty">먼저 캐릭터 페이지에 정사각 썸네일, 포트레이트 또는 갤러리 이미지를 추가해 주세요.</div>'}</div>
-      <div class="m-row"><button class="m-btn" type="button" id="charCoverClose">닫기</button></div>
+      <p class="m-sub">프로젝트 안의 캐릭터 메모 카드에 보일 이미지를 골라요. 캐릭터 페이지 이미지와 별개로 새 대표 이미지를 올릴 수도 있습니다.</p>
+      <div class="char-cover-grid">${auto}${cards || '<div class="char-cover-empty">선택할 이미지가 아직 없어요. 아래 버튼으로 대표 이미지를 새로 올리거나, 캐릭터 페이지에 이미지를 추가해 주세요.</div>'}</div>
+      <div class="m-row"><button class="m-btn primary" type="button" id="charCoverUpload">새 대표 이미지 업로드</button><button class="m-btn" type="button" id="charCoverClose">닫기</button></div>
     `);
     const box = $("modalBox");
     box.querySelectorAll("[data-cover-index]").forEach((button) => button.addEventListener("click", async () => {
@@ -2169,6 +2183,10 @@
       closeModal(); render(); renderSidebar();
       toast(d.coverImage ? "대표 썸네일을 지정했어요" : "대표 썸네일을 자동 선택으로 바꿨어요");
     }));
+    $on("charCoverUpload", "click", () => {
+      const input = $("charCoverInput");
+      if (input) { input.dataset.noteId = n.id; input.click(); }
+    });
     $on("charCoverClose", "click", closeModal);
   }
   function openCharacterSheet(n) {
@@ -3690,6 +3708,11 @@ ${gallery}
     $on("charPortrait", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "portrait"; $("charImgInput").click(); });
     $on("charSquare", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "square"; $("charImgInput").click(); });
     $on("charImgInput", "change", async (e) => { const files = e.target.files ? [...e.target.files] : []; e.target.value = ""; if (!files.length) return; if (charImgTarget === "gallery") await addCharGalleryFiles(files); else applyCharImage(files[0]); });
+    $on("charCoverInput", "change", (e) => {
+      const input = e.currentTarget, file = input.files && input.files[0], noteId = input.dataset.noteId;
+      input.value = ""; delete input.dataset.noteId;
+      if (file && noteId) applyUploadedCharacterCover(noteId, file);
+    });
     $on("charCreatorImgInput", "change", (e) => { const file = e.target.files && e.target.files[0]; e.target.value = ""; if (file) insertCreatorImage(file); });
     $on("charCreatorOpen", "click", openCreatorMemoModal);
     $on("charCreatorCodeToggle", "click", () => setCreatorCodeMode(!creatorCodeMode));
