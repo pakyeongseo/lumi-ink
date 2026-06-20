@@ -62,6 +62,7 @@
       const cur = n.data || {};
       return !jsonSame({ ko: cur.ko || {}, en: cur.en || {} }, d.data);
     }
+    if (d.type === "character") return !jsonSame(characterTextSnapshot(n, false), d.data);
     return false;
   }
   async function restoreDraft(n, d) {
@@ -79,6 +80,20 @@
       n.data.en = Object.assign({}, n.data.en || {}, jsonCopy(d.data.en) || {});
       if (!n.titleLocked) n.title = (n.data.ko.name || "").trim() || (n.data.en.name || "").trim() || "이름 없는 페르소나";
       await savePersona(n, true);
+    } else if (d.type === "character") {
+      const cur = ensureCharacterData(n), text = d.data && Array.isArray(d.data.pages) ? d.data : null;
+      if (text) {
+        text.pages.forEach((saved) => {
+          const page = cur.pages.find((p) => p.id === saved.id); if (!page) return;
+          ["ko", "en"].forEach((lang) => {
+            const o = saved[lang] || {}; page[lang].name = String(o.name || ""); page[lang].detail = String(o.detail || "");
+            page[lang].tags = Array.isArray(o.tags) ? o.tags.map(String).filter(Boolean) : page[lang].tags;
+          });
+          page.creatorMemo = String(saved.creatorMemo || "");
+        });
+        if (text.activeId && cur.pages.some((p) => p.id === text.activeId)) cur.activeId = text.activeId;
+      }
+      syncCharacterTitle(n); await saveCharacter(n, true);
     }
     discardDraft(n);
   }
@@ -90,8 +105,7 @@
     if (draftPrompted.has(token)) return;
     draftPrompted.add(token);
     setTimeout(() => {
-      const expectedScreen = type === "free" ? "editor" : type === "lorebook" ? "lore" : "persona";
-      if (getNote(n.id) !== n || st.curNoteId !== n.id || curView().s !== expectedScreen) return;
+      if (getNote(n.id) !== n || curView().s === "home") return;
       openModal(`<h3>저장되지 않은 임시 기록</h3><p class="m-sub">${esc(n.title || "이 메모")}에 앱 종료 전 남아 있던 임시 기록이 있어요. 복구할까요?</p><div class="m-row"><button class="m-btn" id="draftDiscard">버리기</button><button class="m-btn primary" id="draftRestore">복구</button></div>`);
       $on("draftDiscard", "click", () => { discardDraft(n); closeModal(); toast("임시 기록을 지웠어요"); });
       $on("draftRestore", "click", async () => {
@@ -103,7 +117,7 @@
   }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "settings", "search"];
+  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "character", "settings", "search"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -115,6 +129,7 @@
     else if (v.s === "editor") renderEditorMeta();
     else if (v.s === "lore") renderLore();
     else if (v.s === "persona") renderPersona();
+    else if (v.s === "character") renderCharacter();
     else if (v.s === "settings") renderSettings();
     else if (v.s === "search") renderSearch();
   }
@@ -125,6 +140,7 @@
     if (cur === "editor") flushSave(true);
     if (cur === "lore") flushLore();
     if (cur === "persona") flushPersona();
+    if (cur === "character") flushCharacter();
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
   }
   function closeTopOverlay() {
@@ -141,6 +157,7 @@
     if (curView().s === "editor") flushSave(true);
     if (curView().s === "lore") flushLore();
     if (curView().s === "persona") flushPersona();
+    if (curView().s === "character") flushCharacter();
     if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
     else history.pushState({}, "");
   });
@@ -188,8 +205,8 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
-  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", persona: "#c79bff" };
-  const TYPE_TAG = { free: "F", lorebook: "R", persona: "P" };
+  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", persona: "#c79bff", character: "#ff9fcb" };
+  const TYPE_TAG = { free: "F", lorebook: "R", persona: "P", character: "C" };
   function memoTagHTML(n) { return `<span class="memo-tag t-${n.type}">${TYPE_TAG[n.type] || "?"}</span>`; }
   function recentMemos(limit, scope) {
     limit = limit || 10;
@@ -358,6 +375,12 @@
       const img = d.square || d.portrait || DEFAULT_ICON;
       lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
       meta = perTagsPreview(d);
+    } else if (n.type === "character") {
+      const d = ensureCharacterData(n), page = activeCharacterPage(n);
+      const img = page.square || page.portrait || DEFAULT_ICON;
+      lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
+      const tags = (page.ko && page.ko.tags) || (page.en && page.en.tags) || [];
+      meta = `${d.pages.length}명 · ${tags.length ? tags.join(", ") : "캐릭터 카드"}`;
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
@@ -390,7 +413,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["persona", "페르소나"], ["lorebook", "로어북"], ["free", "자유 메모"]];
+    const SECTIONS = [["character", "캐릭터"], ["persona", "페르소나"], ["lorebook", "로어북"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => n.type === t);
@@ -455,6 +478,7 @@
     if (st.saveTimer) flushSave(true);
     if (loreTimer) flushLore();
     if (perTimer) flushPersona();
+    if (charTimer) flushCharacter();
   }
   function openNote(id) {
     const n = getNote(id); if (!n) return;
@@ -463,6 +487,7 @@
     if (n.type === "free") go({ s: "read" });
     else if (n.type === "lorebook") go({ s: "lore" });
     else if (n.type === "persona") { st.perEdit = false; go({ s: "persona" }); }
+    else if (n.type === "character") { st.charEdit = false; go({ s: "character" }); }
     else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
@@ -601,12 +626,13 @@
   async function createNote(type, projectId) {
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "persona" ? "이름 없는 페르소나" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
+          : type === "character" ? { activeId: null, pages: [makeCharacterPage()] }
           : {}
     };
     st.notes.push(n); await put("notes", n);
@@ -923,6 +949,7 @@
       s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
       s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
       s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      s = s.replace(/(^|\s)(@@[A-Za-z0-9_가-힣./:-]+)/g, "$1<span class=\"md-command\">$2</span>");
       return s;
     };
     const lines = (md || "").replace(/\r\n/g, "\n").split("\n");
@@ -937,6 +964,7 @@
       if ((bm = tline.match(/^<\/([^<>]*)>$/))) { closeLists(); if (tagStack.length) { const nm = tagStack.pop(); out.push(`</div><div class="md-tag-close">&lt;/${esc(nm)}&gt;</div></div>`); } continue; }
       if (/^\s*$/.test(raw)) { closeLists(); continue; }
       let m;
+      if ((m = raw.match(/^\s*(@@[A-Za-z0-9_가-힣./:-]+)(?:\s+(.+))?\s*$/))) { closeLists(); out.push(`<div class="md-command-line"><span class="md-command">${esc(m[1])}</span>${m[2] ? `<span class="md-command-text">${inline(m[2])}</span>` : ""}</div>`); continue; }
       if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
       if ((m = raw.match(/^\s*-\s+([^:：]+)[:：]\s*(.*)$/))) { closeLists(); out.push(`<div class="md-mini"><span class="md-mini-key">${inline(m[1].trim())}</span>${inline(m[2])}</div>`); continue; }
       if (/^\s*>\s?/.test(raw)) { closeLists(); out.push(`<blockquote>${inline(raw.replace(/^\s*>\s?/, ""))}</blockquote>`); continue; }
@@ -1462,6 +1490,294 @@
     ]);
   }
 
+
+  /* ---------- character memo ---------- */
+  let charTimer = null, charImgTarget = null, charLang = "ko";
+  function makeCharacterPage() {
+    return { id: uid(), portrait: null, square: null, gallery: [], creatorMemo: "", ko: { name: "", tags: [], detail: "" }, en: { name: "", tags: [], detail: "" } };
+  }
+  function ensureCharacterPage(page) {
+    const p = page && typeof page === "object" ? page : makeCharacterPage();
+    if (!p.id) p.id = uid();
+    p.portrait = typeof p.portrait === "string" ? p.portrait : null;
+    p.square = typeof p.square === "string" ? p.square : null;
+    p.gallery = Array.isArray(p.gallery) ? p.gallery.filter((x) => typeof x === "string") : [];
+    p.creatorMemo = String(p.creatorMemo || "");
+    ["ko", "en"].forEach((lang) => {
+      p[lang] = p[lang] && typeof p[lang] === "object" ? p[lang] : {};
+      p[lang].name = String(p[lang].name || "");
+      p[lang].detail = String(p[lang].detail || "");
+      p[lang].tags = Array.isArray(p[lang].tags) ? p[lang].tags.map(String).filter(Boolean) : (p[lang].brief ? [String(p[lang].brief)] : []);
+      delete p[lang].brief;
+    });
+    return p;
+  }
+  function ensureCharacterData(n) {
+    const d = n.data = n.data && typeof n.data === "object" ? n.data : {};
+    d.pages = Array.isArray(d.pages) && d.pages.length ? d.pages.map(ensureCharacterPage) : [makeCharacterPage()];
+    if (!d.activeId || !d.pages.some((p) => p.id === d.activeId)) d.activeId = d.pages[0].id;
+    return d;
+  }
+  function activeCharacterPage(n) {
+    const d = ensureCharacterData(n);
+    return d.pages.find((p) => p.id === d.activeId) || d.pages[0];
+  }
+  function charPageName(page, lang) {
+    const a = page && page[lang] ? page[lang].name : "";
+    const b = page && page[lang === "ko" ? "en" : "ko"] ? page[lang === "ko" ? "en" : "ko"].name : "";
+    return (a || b || "이름 없는 캐릭터").trim();
+  }
+  function syncCharacterTitle(n) {
+    if (!n || n.titleLocked) return;
+    const d = ensureCharacterData(n), first = d.pages[0];
+    const base = charPageName(first, "ko");
+    n.title = d.pages.length > 1 ? `${base} 외 ${d.pages.length - 1}명` : base;
+    const title = $("charTitle"); if (title) title.textContent = n.title;
+  }
+  function characterTextSnapshot(n, fromEditor) {
+    const d = ensureCharacterData(n);
+    const copy = { activeId: d.activeId, pages: d.pages.map((p) => ({ id: p.id, ko: { name: p.ko.name, tags: p.ko.tags.slice(), detail: p.ko.detail }, en: { name: p.en.name, tags: p.en.tags.slice(), detail: p.en.detail }, creatorMemo: p.creatorMemo })) };
+    if (fromEditor && st.charEdit) {
+      const page = copy.pages.find((p) => p.id === d.activeId) || copy.pages[0];
+      if (page) {
+        page.ko.name = $("charKoName").value; page.ko.detail = $("charKoDetail").value;
+        page.en.name = $("charEnName").value; page.en.detail = $("charEnDetail").value;
+        page.creatorMemo = $("charCreatorMemo").value;
+      }
+    }
+    return copy;
+  }
+  function setCharSaver(mode) {
+    const s = $("charSaver"); if (!s) return;
+    s.className = "saver " + mode;
+    $("charSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("charSaverText").textContent = ""; } }, 1500);
+  }
+  async function saveCharacter(n, silent) {
+    if (!n) return;
+    n.updatedAt = now(); await put("notes", n);
+    const p = getProject(n.projectId); if (p) saveProject(p);
+    if (!silent) setCharSaver("saved");
+    triggerAutoBackup();
+  }
+  function updateCharTokens(n) {
+    const page = activeCharacterPage(n), ko = page.ko.detail || "", en = page.en.detail || "";
+    $("charKoTok").textContent = "계산 중…"; $("charEnTok").textContent = "계산 중…";
+    ensureTokenizer().then((ok) => {
+      if (getNote(st.curNoteId) !== n || curView().s !== "character") return;
+      if (ok && window.__luminkCountTokens) {
+        $("charKoTok").innerHTML = `<b>${window.__luminkCountTokens(ko)}</b> 토큰`;
+        $("charEnTok").innerHTML = `<b>${window.__luminkCountTokens(en)}</b> tokens`;
+      } else { $("charKoTok").textContent = "계산 불가"; $("charEnTok").textContent = "계산 불가"; }
+    });
+  }
+  function renderCharNav(n, read) {
+    const d = ensureCharacterData(n), wrap = $(read ? "charRNav" : "charNav");
+    wrap.innerHTML = ""; wrap.hidden = d.pages.length < 2;
+    d.pages.forEach((page) => {
+      const b = document.createElement("button"); b.className = "char-nav-card" + (page.id === d.activeId ? " active" : "");
+      const src = page.square || page.portrait || DEFAULT_ICON;
+      b.innerHTML = `<span class="char-nav-thumb"><img src="${src}" alt=""></span><span class="char-nav-name">${esc(charPageName(page, charLang))}</span>`;
+      b.title = charPageName(page, charLang);
+      b.addEventListener("click", () => switchCharacterPage(page.id));
+      wrap.appendChild(b);
+    });
+    const add = $(read ? "charRAddPage" : "charAddPage"); if (add) add.title = "새 캐릭터 페이지 추가";
+    $("charPageCount").textContent = `캐릭터 ${d.pages.findIndex((p) => p.id === d.activeId) + 1} / ${d.pages.length}`;
+  }
+  function renderCharTags(n, lang) {
+    const page = activeCharacterPage(n), wrap = $(lang === "ko" ? "charKoTags" : "charEnTags"), input = $(lang === "ko" ? "charKoTagInput" : "charEnTagInput");
+    wrap.querySelectorAll(".kw-chip").forEach((x) => x.remove());
+    page[lang].tags.forEach((tag, idx) => {
+      const chip = document.createElement("span"); chip.className = "kw-chip";
+      chip.innerHTML = `<span>${esc(tag)}</span><button aria-label="삭제">×</button>`;
+      chip.querySelector("button").addEventListener("click", async () => {
+        page[lang].tags.splice(idx, 1); await saveCharacter(n, true); renderCharTags(n, lang);
+      });
+      wrap.insertBefore(chip, input);
+    });
+  }
+  function renderCharImagesEdit(n) {
+    const page = activeCharacterPage(n), portrait = $("charPortrait"), square = $("charSquare"), squareEn = $("charSquareEn");
+    portrait.innerHTML = page.portrait ? `<img src="${page.portrait}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_PT;
+    square.innerHTML = page.square ? `<img src="${page.square}" alt=""><button class="per-del" aria-label="삭제">${PER_X}</button>` : PER_PH_SQ;
+    squareEn.innerHTML = page.square || page.portrait ? `<img src="${page.square || page.portrait}" alt="">` : PER_PH_SQ;
+    const pd = portrait.querySelector(".per-del"), sd = square.querySelector(".per-del");
+    if (pd) pd.addEventListener("click", (e) => { e.stopPropagation(); removeCharImage("portrait"); });
+    if (sd) sd.addEventListener("click", (e) => { e.stopPropagation(); removeCharImage("square"); });
+  }
+  function renderCharGallery(n, read) {
+    const page = activeCharacterPage(n), pageId = page.id, wrap = $(read ? "charRGallery" : "charGallery"), gal = page.gallery || [];
+    wrap.innerHTML = "";
+    if (read && !gal.length) { wrap.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; return; }
+    gal.forEach((src, idx) => {
+      const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`;
+      if (read) it.addEventListener("click", () => openLightbox(src, gal, idx));
+      else {
+        const delBtn = document.createElement("button"); delBtn.className = "pg-del"; delBtn.setAttribute("aria-label", "삭제"); delBtn.innerHTML = PER_X;
+        delBtn.addEventListener("click", async (e) => {
+          e.stopPropagation(); const removed = page.gallery.splice(idx, 1)[0]; await saveCharacter(n, true); renderCharGallery(n, false);
+          const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
+          toastAction("갤러리 이미지를 삭제했어요", "되돌리기", async () => {
+            if (undoToken !== token) return; undoToken = null; if (undoTimer) clearTimeout(undoTimer);
+            const cur = getNote(n.id); if (!cur || cur.type !== "character") return;
+            const target = ensureCharacterData(cur).pages.find((item) => item.id === pageId); if (!target) return;
+            target.gallery.splice(Math.min(idx, target.gallery.length), 0, removed);
+            await saveCharacter(cur, true); renderCharacter(); toast("삭제를 되돌렸어요");
+          }, 6000);
+          undoTimer = setTimeout(() => { if (undoToken === token) undoToken = null; }, 6200);
+        });
+        it.appendChild(delBtn);
+      }
+      wrap.appendChild(it);
+    });
+    if (!read) {
+      const add = document.createElement("div"); add.className = "pg-add"; add.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+      add.addEventListener("click", () => { charImgTarget = "gallery"; $("charImgInput").click(); }); wrap.appendChild(add);
+    }
+  }
+  function renderCharacterEdit(n) {
+    const page = activeCharacterPage(n);
+    $("charKoName").value = page.ko.name || ""; $("charKoDetail").value = page.ko.detail || "";
+    $("charEnName").value = page.en.name || ""; $("charEnDetail").value = page.en.detail || "";
+    $("charCreatorMemo").value = page.creatorMemo || "";
+    renderCharImagesEdit(n); renderCharTags(n, "ko"); renderCharTags(n, "en"); renderCharGallery(n, false);
+  }
+  function renderCharacterRead(n) {
+    const page = activeCharacterPage(n), o = page[charLang] || {};
+    $("charRPortrait").innerHTML = page.portrait ? `<img src="${page.portrait}" alt="">` : '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>이미지 없음</span></div>';
+    $("charRPortrait").onclick = page.portrait ? () => openLightbox(page.portrait, [page.portrait], 0) : null;
+    const sq = page.square || page.portrait;
+    $("charRSquare").innerHTML = `<img src="${sq || DEFAULT_ICON}" alt="">`;
+    $("charRSquare").onclick = sq ? () => openLightbox(sq, [sq], 0) : null;
+    $("charRName").textContent = o.name || "";
+    const tags = $("charRTags"); tags.innerHTML = ""; (o.tags || []).forEach((tag) => { const chip = document.createElement("span"); chip.className = "kw-chip"; chip.textContent = tag; tags.appendChild(chip); });
+    $("charRDetail").innerHTML = personaDetailHTML(o.detail);
+    const creator = $("charRCreator");
+    creator.hidden = !page.creatorMemo.trim();
+    creator.innerHTML = page.creatorMemo.trim() ? personaDetailHTML(page.creatorMemo) : "";
+    const token = $("charRTok"); token.textContent = "계산 중…";
+    ensureTokenizer().then((ok) => {
+      if (getNote(st.curNoteId) !== n || st.charEdit) return;
+      if (ok && window.__luminkCountTokens) token.innerHTML = `<b>${window.__luminkCountTokens(o.detail || "")}</b> ${charLang === "en" ? "tokens" : "토큰"}`;
+      else token.textContent = "계산 불가";
+    });
+    renderCharGallery(n, true);
+    const d = ensureCharacterData(n), sw = $("charPageSwitch"), index = d.pages.findIndex((p) => p.id === d.activeId);
+    sw.hidden = d.pages.length < 2;
+    $("charPrev").disabled = index <= 0; $("charNext").disabled = index >= d.pages.length - 1;
+    $("charSwitchHint").textContent = `${index + 1} / ${d.pages.length} · 좌우로 넘기기`;
+  }
+  function setCharLang(lang) {
+    charLang = lang;
+    document.querySelectorAll("#screen-character [data-char-lang]").forEach((b) => b.classList.toggle("active", b.dataset.charLang === lang));
+    $("charFormKo").hidden = lang !== "ko"; $("charFormEn").hidden = lang !== "en";
+    const n = getNote(st.curNoteId); if (n && n.type === "character") { renderCharNav(n, false); renderCharNav(n, true); if (!st.charEdit) renderCharacterRead(n); }
+  }
+  function renderCharacter() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") { back(); return; }
+    ensureCharacterData(n); syncCharacterTitle(n);
+    $("charTitle").textContent = n.title || "캐릭터";
+    $("charEditView").hidden = !st.charEdit; $("charReadView").hidden = !!st.charEdit; $("charSave").hidden = !st.charEdit;
+    $("charViewIcon").innerHTML = st.charEdit ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
+    $("charViewToggle").title = st.charEdit ? "보기 모드로" : "편집 모드로";
+    setCharLang(charLang || "ko"); renderCharNav(n, false); renderCharNav(n, true);
+    if (st.charEdit) renderCharacterEdit(n); else renderCharacterRead(n);
+    setCharSaver(""); updateCharTokens(n); queueDraftRecovery(n, "character");
+  }
+  function scheduleCharSave() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !st.charEdit) return;
+    writeDraft(n, "character", characterTextSnapshot(n, true));
+    setCharSaver("dirty"); clearTimeout(charTimer); const id = n.id;
+    charTimer = setTimeout(() => { if (st.curNoteId === id) flushCharacter(); }, 550);
+  }
+  async function flushCharacter() {
+    clearTimeout(charTimer); charTimer = null;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !st.charEdit) return;
+    const page = activeCharacterPage(n);
+    page.ko.name = $("charKoName").value; page.ko.detail = $("charKoDetail").value;
+    page.en.name = $("charEnName").value; page.en.detail = $("charEnDetail").value;
+    page.creatorMemo = $("charCreatorMemo").value;
+    syncCharacterTitle(n); await saveCharacter(n); clearDraftIfSynced(n, "character", characterTextSnapshot(n, false)); updateCharTokens(n);
+  }
+  async function addCharTag(lang) {
+    const input = $(lang === "ko" ? "charKoTagInput" : "charEnTagInput"), raw = input.value.trim(); if (!raw) return;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const page = activeCharacterPage(n); raw.split(",").map((x) => x.trim()).filter(Boolean).forEach((tag) => { if (!page[lang].tags.includes(tag)) page[lang].tags.push(tag); });
+    input.value = ""; await saveCharacter(n, true); renderCharTags(n, lang);
+  }
+  async function switchCharacterPage(id) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const d = ensureCharacterData(n); if (!d.pages.some((p) => p.id === id) || d.activeId === id) return;
+    if (st.charEdit) await flushCharacter(); d.activeId = id; await saveCharacter(n, true); renderCharacter();
+  }
+  async function stepCharacter(delta) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const d = ensureCharacterData(n), index = d.pages.findIndex((p) => p.id === d.activeId), target = d.pages[index + delta];
+    if (target) await switchCharacterPage(target.id);
+  }
+  async function addCharacterPage() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    if (st.charEdit) await flushCharacter();
+    const d = ensureCharacterData(n), page = makeCharacterPage(); d.pages.push(page); d.activeId = page.id; st.charEdit = true; syncCharacterTitle(n); await saveCharacter(n, true); renderCharacter(); toast("새 캐릭터 페이지를 추가했어요");
+  }
+  async function removeActiveCharacterPage() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    if (st.charEdit) await flushCharacter();
+    const d = ensureCharacterData(n); if (d.pages.length < 2) { toast("캐릭터 페이지는 최소 1개가 필요해요"); return; }
+    const idx = d.pages.findIndex((p) => p.id === d.activeId), removed = d.pages.splice(idx, 1)[0]; d.activeId = d.pages[Math.max(0, idx - 1)].id; syncCharacterTitle(n); await saveCharacter(n, true); renderCharacter();
+    const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
+    toastAction("캐릭터 페이지를 삭제했어요", "되돌리기", async () => {
+      if (undoToken !== token) return; undoToken = null; if (undoTimer) clearTimeout(undoTimer);
+      const cur = getNote(n.id); if (!cur || cur.type !== "character") return; const data = ensureCharacterData(cur); data.pages.splice(Math.min(idx, data.pages.length), 0, removed); data.activeId = removed.id; syncCharacterTitle(cur); await saveCharacter(cur, true); renderCharacter(); toast("삭제를 되돌렸어요");
+    }, 6000);
+    undoTimer = setTimeout(() => { if (undoToken === token) undoToken = null; }, 6200);
+  }
+  function applyCharImage(file) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !charImgTarget || !/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    const page = activeCharacterPage(n), pageId = page.id, target = charImgTarget;
+    if (target === "gallery") {
+      fileToResized(file, 1600).then(async (data) => { const cur = getNote(n.id); if (!cur) return; const p = ensureCharacterData(cur).pages.find((x) => x.id === pageId); if (!p) return; p.gallery.push(data); await saveCharacter(cur, true); renderCharGallery(cur, false); toast("이미지를 추가했어요"); }).catch((e) => toast((e && e.message) || "이미지를 넣지 못했어요"));
+      return;
+    }
+    const isPortrait = target === "portrait";
+    startCrop(file, isPortrait ? 3 / 4 : 1, isPortrait ? 1200 : 1080, isPortrait ? 1600 : 1080, async (data) => {
+      const cur = getNote(n.id); if (!cur) return; const p = ensureCharacterData(cur).pages.find((x) => x.id === pageId); if (!p) return; p[target] = data; await saveCharacter(cur, true); renderCharacter(); toast("이미지를 적용했어요");
+    });
+  }
+  async function addCharGalleryFiles(files) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const page = activeCharacterPage(n); let added = 0, rejected = 0;
+    for (const file of files) { try { page.gallery.push(await fileToResized(file, 1600)); added++; } catch (e) { rejected++; } }
+    if (added) { await saveCharacter(n, true); renderCharGallery(n, false); toast(rejected ? `${added}장 추가 · ${rejected}장 제외` : `${added}장 추가했어요`); }
+    else toast(imageLimitText());
+  }
+  async function removeCharImage(kind) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    activeCharacterPage(n)[kind] = null; await saveCharacter(n, true); renderCharImagesEdit(n);
+  }
+  function toggleCharView() {
+    if (st.charEdit) { flushCharacter(); st.charEdit = false; } else st.charEdit = true;
+    renderCharacter();
+  }
+  function openCharacterSheet(n) {
+    const d = ensureCharacterData(n);
+    const items = [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
+      { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
+      { icon: IC.rename, label: "메모 이름 바꾸기", fn: () => renameModal("캐릭터 메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveCharacter(n, true); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.save, label: "HTML로 저장", fn: async () => { if (st.charEdit) await flushCharacter(); chooseCharacterExportOptions(n.id); } }
+    ];
+    if (d.pages.length > 1) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M8 5h8M8 19h8M12 5v14"/><path d="M5 12h14"/></svg>', label: "현재 캐릭터 페이지 삭제", danger: true, fn: () => removeActiveCharacterPage() });
+    items.push(
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "캐릭터 메모 삭제", danger: true, fn: () => confirmModal("캐릭터 메모 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    );
+    openSheet(n.title, items);
+  }
+
   /* ---------- attachments ---------- */
   const MAX_ATTACH = 15 * 1024 * 1024;
   const DL_SVG = '<svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>';
@@ -1599,13 +1915,17 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
         <div><div class="tc-name">페르소나</div><div class="tc-desc">국문/영문 카드 · 이미지 · 토큰</div></div>
       </div>
+      <div class="type-card" data-t="character">
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/></svg></div>
+        <div><div class="tc-name">캐릭터 메모</div><div class="tc-desc">한 메모 안의 복수 캐릭터 카드 · 제작 메모</div></div>
+      </div>
       <div class="m-row"><button class="m-btn" data-x="cancel">취소</button></div>
     `);
     $("modalBox").querySelectorAll(".type-card").forEach((card) => {
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; if (t === "character") st.charEdit = true; go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : t === "character" ? "character" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -1627,7 +1947,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $on("pickCancel", "click", closeModal);
-    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : "editor" }); }); });
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; if (type === "character") st.charEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : type === "character" ? "character" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -1735,6 +2055,7 @@
     const n = getNote(id); if (!n) return;
     if (n.type === "lorebook") { openLoreSheet(n); return; }
     if (n.type === "persona") { openPersonaSheet(n); return; }
+    if (n.type === "character") { openCharacterSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.select, label: "선택", fn: () => enterSelMode("note", id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(id) },
@@ -1839,6 +2160,7 @@
     if (!n) return "";
     if (n.type === "lorebook") { const d = n.data || {}; return ((d.content || "") + " " + ((d.keywords || []).join(" "))).toLowerCase(); }
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
+    if (n.type === "character") { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
     return plainText(noteHtml(n)).toLowerCase();
   }
   function doSearch(q) {
@@ -1903,6 +2225,7 @@
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
     const av = $("setAccentVal"); if (av && ACCENTS[st.accent || "blue"]) av.innerHTML = `<span class="accent-dot"></span>${ACCENTS[st.accent || "blue"].name}`;
+    const toolbar = $("setToolbarModeVal"); if (toolbar) toolbar.textContent = st.formatbarMode === "folded" ? "접어두기" : "항상 표시";
     updateStorageUsage();
   }
   const FONT_PRESETS = [
@@ -2016,6 +2339,21 @@
       en: lang(src.en)
     };
   }
+  function normalizeImportedCharacterData(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const pages = Array.isArray(src.pages) ? src.pages : [];
+    const normalized = pages.map((page) => {
+      const p = normalizeImportedPersonaData(page);
+      return {
+        id: isSafeRecordId(page && page.id) ? page.id : uid(), portrait: p.portrait, square: p.square, gallery: p.gallery,
+        ko: p.ko, en: p.en, creatorMemo: cleanImportedText(page && page.creatorMemo, 200000)
+      };
+    }).slice(0, 100);
+    const safePages = normalized.length ? normalized : [makeCharacterPage()];
+    const activeId = isSafeRecordId(src.activeId) && safePages.some((p) => p.id === src.activeId) ? src.activeId : safePages[0].id;
+    return { activeId, pages: safePages };
+  }
+
   function normalizeImportedAttachments(raw) {
     if (!Array.isArray(raw)) return [];
     return raw.map((a) => {
@@ -2030,11 +2368,11 @@
   }
   function normalizeImportedNote(raw) {
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
-    const type = ["free", "lorebook", "persona"].includes(raw.type) ? raw.type : null;
+    const type = ["free", "lorebook", "persona", "character"].includes(raw.type) ? raw.type : null;
     if (!type) return null;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
-      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "lorebook" ? "이름 없는 로어북" : "제목 없는 메모"),
+      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "lorebook" ? "이름 없는 로어북" : "제목 없는 메모"),
       titleLocked: !!raw.titleLocked,
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
       createdAt: Number(raw.createdAt) || now(),
@@ -2060,8 +2398,10 @@
         depthOn: !!data.depthOn,
         depth: Math.min(999, Math.max(0, Number(data.depth) || 4))
       };
-    } else {
+    } else if (type === "persona") {
       note.data = normalizeImportedPersonaData(data);
+    } else {
+      note.data = normalizeImportedCharacterData(data);
     }
     return note;
   }
@@ -2184,7 +2524,7 @@
       if (st.selType === "note" && ids.length >= 2) {
         const notes = ids.map(getNote).filter(Boolean);
         const t = notes[0] && notes[0].type;
-        ok = !!t && t !== "persona" && notes.every((n) => n.type === t);
+        ok = !!t && t !== "persona" && t !== "character" && notes.every((n) => n.type === t);
       }
       mb.hidden = !ok;
     }
@@ -2194,7 +2534,7 @@
     if (ids.length < 2) { toast("2개 이상 선택해 주세요"); return; }
     const notes = ids.map(getNote).filter(Boolean);
     const type = notes[0].type;
-    if (type === "persona") { toast("페르소나 메모는 합칠 수 없어요"); return; }
+    if (type === "persona" || type === "character") { toast("페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
     if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
     const pid = notes[0].projectId;
     if (type === "lorebook") {
@@ -2363,6 +2703,41 @@ ${gallery}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast("HTML로 저장했어요");
   }
+  function chooseCharacterExportOptions(id) {
+    const accent = ACCENTS[st.accent || "blue"] || ACCENTS.blue;
+    openModal(`<h3>캐릭터 HTML로 저장</h3><p class="m-sub">현재 컬러 테마(<b>${esc(accent.name)}</b>)를 유지한 채 밝기를 고르고, 제작용 메모 포함 여부를 정해요.</p><label class="lore-toggle-wrap" style="margin:5px 0 16px"><input type="checkbox" id="cxCreator"> 크리에이터 메모 포함</label><p class="m-sub" style="margin-top:-7px">기본값은 미포함이에요. 공유용 카드에 제작 메모가 섞이지 않도록 보호합니다.</p><div class="m-row"><button class="m-btn" id="cxLight">밝게</button><button class="m-btn primary" id="cxDark">어둡게</button></div>`);
+    const run = (theme) => { const includeCreator = !!$("cxCreator").checked; closeModal(); exportCharacterHtml(id, theme, includeCreator); };
+    $on("cxLight", "click", () => run("light")); $on("cxDark", "click", () => run("dark"));
+  }
+  function exportCharacterHtml(id, theme, includeCreator) {
+    const n = getNote(id); if (!n || n.type !== "character") return;
+    const d = ensureCharacterData(n);
+    const langBlock = (page, lang, label) => {
+      const o = page[lang] || {}, has = (o.name || "").trim() || (o.detail || "").trim() || (o.tags || []).length;
+      if (!has) return "";
+      const tags = (o.tags || []).map((tag) => `<span class="kw-chip">${esc(tag)}</span>`).join("");
+      const sq = page.square || page.portrait;
+      return `<section class="lang"><div class="lang-head">${label}</div><div class="idrow">${sq ? `<div class="sq"><img src="${sq}" alt=""></div>` : ""}<div class="idtext"><div class="pname">${esc(o.name || "(이름 없음)")}</div><div class="tags">${tags}</div></div></div><div class="detail">${personaDetailHTML(o.detail)}</div></section>`;
+    };
+    const pageHtml = d.pages.map((page, index) => {
+      const portrait = page.portrait ? `<div class="portrait"><img src="${page.portrait}" alt=""></div>` : "";
+      const gallery = page.gallery && page.gallery.length ? `<div class="gal-label">갤러리</div><div class="gallery">${page.gallery.map((src) => `<img src="${src}" alt="">`).join("")}</div>` : "";
+      const creator = includeCreator && page.creatorMemo.trim() ? `<section class="creator"><div class="creator-label">CREATOR NOTE</div><div class="detail">${personaDetailHTML(page.creatorMemo)}</div></section>` : "";
+      return `<article class="char-page" data-page="${index}"${index ? " hidden" : ""}>${portrait}${langBlock(page, "ko", "한국어")}${langBlock(page, "en", "English")}${creator}${gallery}</article>`;
+    }).join("");
+    const nav = d.pages.length > 1 ? `<nav class="cnav">${d.pages.map((page, index) => { const src = page.square || page.portrait; return `<button type="button" data-page="${index}"${index === 0 ? ' class="active"' : ""}>${src ? `<img src="${src}" alt="">` : `<span class="nav-placeholder">${index + 1}</span>`}<span>${esc(charPageName(page, "ko"))}</span></button>`; }).join("")}</nav>` : "";
+    const exportData = jsonCopy(d) || { activeId: d.activeId, pages: d.pages };
+    if (!includeCreator) exportData.pages.forEach((page) => { page.creatorMemo = ""; });
+    const payload = JSON.stringify({ app: "lumink", kind: "character", title: n.title, data: exportData }).replace(/</g, "\\u003c");
+    const css = personaExportCSS(theme === "dark" ? "dark" : "light") + `.cnav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 5px}.cnav button{border:1px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").line};background:transparent;color:inherit;border-radius:12px;padding:6px 9px;display:flex;gap:7px;align-items:center;cursor:pointer;white-space:nowrap;font:inherit;font-size:12px}.cnav button.active{border-color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.cnav img,.nav-placeholder{width:28px;height:28px;border-radius:8px;object-fit:cover;background:${personaExportPalette(theme === "dark" ? "dark" : "light").panel2};display:grid;place-items:center}.char-page[hidden]{display:none}.creator{margin:0 0 28px}.creator-label{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.11em;color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};padding:5px 12px;border-radius:999px;margin-bottom:11px}.creator .detail{border-left:3px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}`;
+    const doc = `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="character"><title>${esc(n.title || "캐릭터 메모")}</title><style>${css}</style></head><body><main class="wrap"><h1 class="ptitle">${esc(n.title || "캐릭터 메모")}</h1>${nav}${pageHtml}<div class="foot">Lumi Ink · 캐릭터 메모</div></main><script type="application/json" id="lumink-character">${payload}<\/script><script>(function(){var pages=[].slice.call(document.querySelectorAll('.char-page')),buttons=[].slice.call(document.querySelectorAll('.cnav button'));function show(i){pages.forEach(function(p,x){p.hidden=x!==i});buttons.forEach(function(b,x){b.classList.toggle('active',x===i)});window.scrollTo({top:0,behavior:'smooth'})}buttons.forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.page)})})})();<\/script></body></html>`;
+    const name = ((n.title || "character").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "character") + ".html";
+    const blob = new Blob([doc], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500); toast("캐릭터 HTML로 저장했어요");
+  }
+
   const SAFE_HTML_TAGS = new Set(["a", "abbr", "b", "blockquote", "br", "code", "del", "div", "em", "font", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li", "ol", "p", "pre", "s", "span", "strike", "strong", "u", "ul"]);
   const DROP_HTML_TAGS = new Set(["script", "style", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "video", "audio", "svg", "math", "template"]);
   const SAFE_STYLE_PROPS = new Set(["color", "background-color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "white-space", "max-width", "border-radius", "vertical-align"]);
@@ -2452,7 +2827,7 @@ ${gallery}
   }
   function importHtmlPayload(raw, file) {
     let pTag = null;
-    try { pTag = new DOMParser().parseFromString(raw, "text/html").getElementById("lumink-persona"); } catch (e) {}
+    try { const doc = new DOMParser().parseFromString(raw, "text/html"); pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character"); } catch (e) {}
     pickTargetProject(st.curProjectId, async (pid) => {
       if (pTag) {
         try {
@@ -2464,6 +2839,14 @@ ${gallery}
             await savePersona(n, true);
             st.curNoteId = n.id; perLang = "ko"; st.perEdit = false; st.curProjectId = pid;
             toast("페르소나를 불러왔어요"); go({ s: "persona" }); return;
+          }
+          if (pl && pl.kind === "character" && pl.data) {
+            const n = await createNote("character", pid);
+            n.title = cleanImportedText(pl.title, 180) || file.name.replace(/\.(html?)$/i, "") || "불러온 캐릭터 메모";
+            n.titleLocked = true; n.data = normalizeImportedCharacterData(pl.data);
+            await saveCharacter(n, true);
+            st.curNoteId = n.id; charLang = "ko"; st.charEdit = false; st.curProjectId = pid;
+            toast("캐릭터 메모를 불러왔어요"); go({ s: "character" }); return;
           }
         } catch (e) {}
       }
@@ -2551,6 +2934,31 @@ ${gallery}
   }
   function detectFontScale() { let v = "normal"; try { v = localStorage.getItem("luminkFontScale") || "normal"; } catch (e) {} applyFontScale(v); }
 
+  /* ---------- free memo toolbar / install icon ---------- */
+  function applyFormatbarMode(mode) {
+    st.formatbarMode = mode === "folded" ? "folded" : "always";
+    document.body.classList.toggle("formatbar-folded", st.formatbarMode === "folded");
+    try { localStorage.setItem("luminkFormatbarMode", st.formatbarMode); } catch (e) {}
+    const value = $("setToolbarModeVal"); if (value) value.textContent = st.formatbarMode === "folded" ? "접어두기" : "항상 표시";
+  }
+  function detectFormatbarMode() { let mode = "always"; try { mode = localStorage.getItem("luminkFormatbarMode") || "always"; } catch (e) {} applyFormatbarMode(mode); }
+  function toggleFormatbarFold() { document.body.classList.toggle("formatbar-folded"); }
+  function openFormatbarModePicker() {
+    const current = st.formatbarMode === "folded" ? "folded" : "always";
+    openModal(`<h3>자유 메모 툴바</h3><p class="m-sub">기본 상태를 정해요. 접어둔 상태에서도 왼쪽 화살표로 잠시 펼칠 수 있어요.</p><div class="size-list"><div class="size-item toolbar-mode" data-v="always">항상 표시${current === "always" ? ' <span style="margin-left:auto;color:var(--accent);font-weight:800">✓</span>' : ""}</div><div class="size-item toolbar-mode" data-v="folded">접어두기${current === "folded" ? ' <span style="margin-left:auto;color:var(--accent);font-weight:800">✓</span>' : ""}</div></div><div class="m-row"><button class="m-btn" id="tbModeClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".toolbar-mode").forEach((item) => item.addEventListener("click", () => { applyFormatbarMode(item.dataset.v); closeModal(); }));
+    $on("tbModeClose", "click", closeModal);
+  }
+  function openInstallIconPicker() {
+    const choices = [
+      ["ink", "잉크 블루", "차분한 기본 펜촉"], ["violet", "바이올렛", "몽환적인 보랏빛 펜촉"],
+      ["rose", "로즈", "부드러운 핑크 펜촉"], ["forest", "포레스트", "짙은 초록 펜촉"]
+    ];
+    openModal(`<h3>앱 설치 아이콘</h3><p class="m-sub">아이콘을 고르면 해당 설치 전용 페이지로 이동해요. 이미 설치한 앱의 아이콘을 바꾸려면 기존 앱을 삭제한 뒤 다시 설치해 주세요.</p><div class="install-icon-grid">${choices.map(([id,name,sub]) => `<button class="install-icon-choice" data-install-icon="${id}"><img src="./icon-${id}-192.png" alt="${name}"><span><b>${name}</b><small>${sub}</small></span></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="installIconClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll("[data-install-icon]").forEach((button) => button.addEventListener("click", () => { window.location.href = `./install-${button.dataset.installIcon}.html`; }));
+    $on("installIconClose", "click", closeModal);
+  }
+
   /* ---------- auto backup (last 10 snapshots) ---------- */
   let autoBkTimer = null, autoBkLast = 0;
   function triggerAutoBackup() {
@@ -2633,6 +3041,8 @@ ${gallery}
       $on("storageClose", "click", closeModal);
     });
     $on("setAccent", "click", openAccentPicker);
+    $on("setToolbarMode", "click", openFormatbarModePicker);
+    $on("setInstallIcon", "click", openInstallIconPicker);
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
@@ -2662,9 +3072,9 @@ ${gallery}
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         const s = curView().s;
-        if (s === "editor" || s === "lore" || s === "persona") {
+        if (s === "editor" || s === "lore" || s === "persona" || s === "character") {
           e.preventDefault();
-          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else flushPersona();
+          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else if (s === "persona") flushPersona(); else flushCharacter();
           toast("저장했어요");
         }
       }
@@ -2735,6 +3145,7 @@ ${gallery}
       const id = b.id;
       if (id === "hiliteBtn") return;
       e.preventDefault();
+      if (id === "formatbarToggle") { toggleFormatbarFold(); return; }
       if (b.dataset.cmd) exec(b.dataset.cmd, b.dataset.val);
       else if (id === "fsDown") fontStep(-1);
       else if (id === "fsUp") fontStep(1);
@@ -2778,6 +3189,38 @@ ${gallery}
     $on("perImgInput", "change", (e) => { const files = e.target.files ? [...e.target.files] : []; if (files.length) { if (perImgTarget === "gallery") addGalleryFiles(files); else applyPerImage(files[0]); } e.target.value = ""; });
     $on("perViewToggle", "click", togglePerView);
     $on("perMore", "click", () => openNoteSheet(st.curNoteId));
+
+    // character memo
+    ["charKoName", "charKoDetail", "charEnName", "charEnDetail", "charCreatorMemo"].forEach((id) => {
+      $(id).addEventListener("input", scheduleCharSave);
+      $(id).addEventListener("blur", () => flushCharacter());
+    });
+    $on("charKoTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addCharTag("ko"); } });
+    $on("charKoTagInput", "blur", () => addCharTag("ko"));
+    $on("charEnTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addCharTag("en"); } });
+    $on("charEnTagInput", "blur", () => addCharTag("en"));
+    document.querySelectorAll("#screen-character [data-char-lang]").forEach((tab) => tab.addEventListener("click", () => setCharLang(tab.dataset.charLang)));
+    $on("charPortrait", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "portrait"; $("charImgInput").click(); });
+    $on("charSquare", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "square"; $("charImgInput").click(); });
+    $on("charImgInput", "change", async (e) => { const files = e.target.files ? [...e.target.files] : []; e.target.value = ""; if (!files.length) return; if (charImgTarget === "gallery") await addCharGalleryFiles(files); else applyCharImage(files[0]); });
+    $on("charViewToggle", "click", toggleCharView);
+    $on("charMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("charSave", "click", async () => { await flushCharacter(); toast("저장했어요"); });
+    $on("charAddPage", "click", addCharacterPage);
+    $on("charRAddPage", "click", addCharacterPage);
+    $on("charPrev", "click", () => stepCharacter(-1));
+    $on("charNext", "click", () => stepCharacter(1));
+    let charSwipe = null;
+    $on("charScroll", "touchstart", (e) => {
+      if (st.charEdit || e.target.closest("textarea,input,button,.char-nav")) { charSwipe = null; return; }
+      const t = e.touches && e.touches[0]; if (t) charSwipe = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+    $on("charScroll", "touchend", (e) => {
+      if (!charSwipe) return; const t = e.changedTouches && e.changedTouches[0], start = charSwipe; charSwipe = null; if (!t) return;
+      const dx = t.clientX - start.x, dy = t.clientY - start.y;
+      if (Math.abs(dx) >= 58 && Math.abs(dx) > Math.abs(dy) * 1.35) stepCharacter(dx > 0 ? -1 : 1);
+    }, { passive: true });
+    $on("charScroll", "touchcancel", () => { charSwipe = null; }, { passive: true });
     // lightbox
     $on("lbClose", "click", closeLightbox);
     $on("lbPrev", "click", () => stepLightbox(-1));
@@ -2814,8 +3257,8 @@ ${gallery}
       stage.addEventListener("pointercancel", () => { dragging = false; });
     })();
 
-    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushPersona(); });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushPersona(); } });
+    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushPersona(); flushCharacter(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushPersona(); flushCharacter(); } });
   }
 
   /* ---------- init ---------- */
@@ -2825,6 +3268,7 @@ ${gallery}
     detectHiliteColor();
     detectUserFont();
     detectFontScale();
+    detectFormatbarMode();
     loadSorts();
     try {
       Object.keys(localStorage).filter((k) => k.indexOf(DRAFT_PREFIX) === 0).forEach((k) => {

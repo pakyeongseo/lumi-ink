@@ -7,10 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Lumi Ink</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" type="image/png" href="./favicon.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<title>루미잉크</title>
+<link rel="manifest" id="pwaManifest" href="./manifest.json">
+<script>(function(){var icon=new URLSearchParams(location.search).get("pwa-icon");if(["ink","violet","rose","forest"].includes(icon)){var manifest=document.getElementById("pwaManifest");if(manifest)manifest.href="./manifest-"+icon+".json";}})();</script>
+<link rel="icon" type="image/png" href="./icon-ink-192.png">
+<link rel="apple-touch-icon" href="./icon-ink-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
 <style>
@@ -1366,6 +1367,12 @@
     flex: 0 0 auto; display: flex; align-items: center; gap: 1px; flex-wrap: wrap; row-gap: 3px;
     padding: 5px 6px; background: var(--bar-bg); border-bottom: 1px solid var(--bar-line);
   }
+  .formatbar-toggle { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .formatbar-toggle svg { transition: transform .2s ease; }
+  body.formatbar-folded .formatbar { min-height: 46px; max-height: 46px; overflow: hidden; flex-wrap: nowrap; }
+  body.formatbar-folded .formatbar > *:not(.formatbar-toggle):not(.code-toggle):not(.code-label) { display: none; }
+  body.formatbar-folded .formatbar-toggle svg { transform: rotate(180deg); }
+  body.formatbar-folded .formatbar .code-label { overflow: hidden; text-overflow: ellipsis; }
   .fbtn {
     flex: 0 0 auto; min-width: 34px; height: 36px; padding: 0 7px;
     border: none; background: transparent; color: var(--ink);
@@ -1481,7 +1488,7 @@
   html[data-theme="light"] .sb-memo { background: #f6f8fd; border-color: #e1e8f4; }
   .sb-memo:active { background: var(--surface-3); }
   .memo-tag { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; letter-spacing: 0; }
-  .memo-tag.t-free { background: #5b7cff; } .memo-tag.t-lorebook { background: #34c2e8; } .memo-tag.t-persona { background: #a779f0; }
+  .memo-tag.t-free { background: #5b7cff; } .memo-tag.t-lorebook { background: #34c2e8; } .memo-tag.t-persona { background: #a779f0; } .memo-tag.t-character { background: var(--accent-2); }
   .sb-memo .sb-memo-body { flex: 1; min-width: 0; }
   .sb-memo .sb-memo-title { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
   .sb-memo .sb-memo-title .pin-star { width: 12px; height: 12px; margin-left: 5px; }
@@ -1748,6 +1755,16 @@
   .lore-preview .md-tag-body > :last-child, .per-read-detail .md-tag-body > :last-child { margin-bottom: 0; }
   .lore-preview .md-mini, .per-read-detail .pr-mini { margin: 6px 0; line-height: 1.6; }
   .lore-preview .md-mini-key, .per-read-detail .pr-mini-key { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .9em; padding: 2px 10px; border-radius: 7px; margin-right: 8px; }
+  .lore-preview .md-command { display: inline-flex; align-items: center; font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--accent-soft)); border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line)); border-radius: 7px; padding: 1px 7px; letter-spacing: .01em; }
+  .lore-preview .md-command-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 9px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); border-left: 3px solid var(--accent); border-radius: 10px; background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent); }
+  .lore-preview .md-command-text { color: var(--muted); font-size: .94em; }
+  .install-icon-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 10px 0 4px; }
+  .install-icon-choice { display: flex; align-items: center; gap: 10px; text-align: left; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 13px; color: var(--ink); background: var(--surface); cursor: pointer; font: inherit; }
+  .install-icon-choice:active { transform: scale(.98); border-color: var(--accent); }
+  .install-icon-choice img { width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto; box-shadow: var(--shadow); }
+  .install-icon-choice span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .install-icon-choice b { font-size: 13px; color: var(--ink); }
+  .install-icon-choice small { color: var(--muted); font-size: 10.5px; line-height: 1.3; }
 
   /* lorebook export multi-select */
   .lore-pick-list { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 4px; max-height: 46vh; overflow-y: auto; }
@@ -1840,6 +1857,33 @@
   .memo-chip .mc-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .memo-chip .mc-thumb::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.16), 0 0 8px rgba(106,208,255,.12); }
 
+  /* ===== Character memo: roster pages ===== */
+  #charEditView, #charReadView { padding: 17px 16px calc(68px + var(--safe-bottom)); }
+  .char-roster { display: flex; align-items: stretch; gap: 8px; margin: 0 0 16px; }
+  .char-nav { min-width: 0; flex: 1; display: flex; gap: 8px; overflow-x: auto; padding: 2px 1px 4px; scrollbar-width: none; }
+  .char-nav::-webkit-scrollbar { display: none; }
+  .char-nav-card { flex: 0 0 74px; min-width: 74px; padding: 6px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--muted); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .char-nav-card.active { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-soft), var(--surface)); color: var(--ink); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), var(--glow); }
+  .char-nav-thumb { width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; background: var(--surface-2); display: grid; place-items: center; }
+  .char-nav-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .char-nav-name { display: block; font-size: 10.5px; line-height: 1.3; margin-top: 5px; font-weight: 700; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .char-add-page { flex: 0 0 48px; border: 1.5px dashed var(--accent); border-radius: 13px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .char-add-page svg { width: 23px; height: 23px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .char-page-count { display: inline-flex; align-items: center; gap: 5px; color: var(--faint); font-size: 11px; font-weight: 700; margin: 2px 0 12px; }
+  .char-page-count b { color: var(--accent); }
+  .char-creator { margin-top: 17px; }
+  .char-creator-note { min-height: 112px; }
+  .char-creator-read { position: relative; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 70%, var(--surface)), var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); border-radius: 14px; padding: 15px 16px; margin: 14px 0 7px; white-space: pre-wrap; line-height: 1.7; color: var(--ink); }
+  .char-creator-read:empty::before { content: "(크리에이터 메모 없음)"; color: var(--faint); }
+  .char-creator-read::before { content: "CREATOR NOTE"; display: block; margin-bottom: 8px; color: var(--accent); font-size: 10px; letter-spacing: .11em; font-weight: 850; }
+  .char-page-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 17px 0 3px; }
+  .char-page-switch .char-arrow { width: 42px; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+  .char-page-switch .char-arrow svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .char-page-switch .char-arrow:disabled { opacity: .27; cursor: default; }
+  .char-page-switch .char-hint { flex: 1; min-width: 0; text-align: center; color: var(--faint); font-size: 11.5px; font-weight: 650; }
+  body.char-view-on #charEditView { display: none; }
+  body.char-view-on #charSave { display: none; }
+  #charGallery .pg-item { touch-action: none; }
   /* lightbox */
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(6,8,14,.93); display: flex; align-items: center; justify-content: center; padding: 20px; isolation: isolate; }
   .lightbox[hidden] { display: none; }
@@ -2076,6 +2120,7 @@
       <button class="iconbtn" id="edMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
     </div>
     <div class="formatbar" id="formatbar">
+      <button class="fbtn formatbar-toggle" id="formatbarToggle" title="툴바 접기 / 펼치기" aria-label="툴바 접기 / 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
       <button class="fbtn code-toggle has-bg" id="codeToggle" title="코드 보기 / 편집"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg></button>
       <span class="code-label" id="codeLabel">HTML 소스 편집 중</span>
       <span class="fsep"></span>
@@ -2219,6 +2264,49 @@
     </div>
   </section>
 
+  <!-- ============ CHARACTER MEMO ============ -->
+  <section class="screen" id="screen-character">
+    <div class="topbar">
+      <button class="iconbtn nav-menu" aria-label="메뉴"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tb-title" id="charTitle">캐릭터</div>
+      <div class="saver" id="charSaver"><span class="dot"></span><span id="charSaverText"></span></div>
+      <button class="iconbtn" id="charSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
+      <button class="iconbtn" id="charViewToggle" aria-label="편집/보기"><svg id="charViewIcon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+      <button class="iconbtn" id="charMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
+    </div>
+    <div class="per-scroll char-scroll" id="charScroll">
+      <div id="charEditView">
+        <div class="char-roster"><div class="char-nav" id="charNav"></div><button class="char-add-page" id="charAddPage" aria-label="캐릭터 추가"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+        <div class="char-page-count" id="charPageCount"></div>
+        <div class="per-portrait-main" id="charPortrait"><div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>포트레이트 — 탭하여 추가</span></div></div>
+        <div class="per-tabs">
+          <button class="per-tab active" data-char-lang="ko">한국어</button><button class="per-tab" data-char-lang="en">English</button>
+        </div>
+        <div class="per-form" id="charFormKo">
+          <div class="per-id-row"><div class="per-square-thumb" id="charSquare"></div><div class="per-id-fields"><input class="m-input" id="charKoName" maxlength="80" placeholder="이름"><div class="per-tags" id="charKoTags"><input class="kw-input" id="charKoTagInput" placeholder="태그 (쉼표·엔터)" autocapitalize="off"></div></div></div>
+          <div class="per-field-label">상세 설명 <span class="per-tok" id="charKoTok">— 토큰</span></div><textarea class="m-textarea per-detail" id="charKoDetail" placeholder="성격 · 배경 · 말투 등 상세 설정"></textarea>
+        </div>
+        <div class="per-form" id="charFormEn" hidden>
+          <div class="per-id-row"><div class="per-square-thumb" id="charSquareEn" aria-hidden="true"></div><div class="per-id-fields"><input class="m-input" id="charEnName" maxlength="80" placeholder="Name"><div class="per-tags" id="charEnTags"><input class="kw-input" id="charEnTagInput" placeholder="Tags (comma·enter)" autocapitalize="off"></div></div></div>
+          <div class="per-field-label">Description <span class="per-tok" id="charEnTok">— tokens</span></div><textarea class="m-textarea per-detail" id="charEnDetail" placeholder="Personality · background · speech style"></textarea>
+        </div>
+        <div class="char-creator"><div class="per-field-label">크리에이터 메모 <span class="lore-hint">내보내기 때 포함 여부 선택</span></div><textarea class="m-textarea char-creator-note" id="charCreatorMemo" placeholder="제작 메모 · 연출 주의점 · 관계성 설계 등을 자유롭게 기록하세요"></textarea></div>
+        <div class="per-divider"></div><div class="per-section per-gallery-sec"><div class="per-label"><span class="sc-dot"></span>갤러리</div><div class="per-gallery" id="charGallery"></div></div>
+      </div>
+      <div id="charReadView" hidden>
+        <div class="char-roster"><div class="char-nav" id="charRNav"></div><button class="char-add-page" id="charRAddPage" aria-label="캐릭터 추가"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+        <div class="per-portrait-main pv" id="charRPortrait"></div>
+        <div class="per-tabs"><button class="per-tab active" data-char-lang="ko">한국어</button><button class="per-tab" data-char-lang="en">English</button></div>
+        <div class="per-read-id"><div class="per-square-thumb pv" id="charRSquare"></div><div class="per-read-idtext"><div class="per-read-name" id="charRName"></div><div class="per-tags-read" id="charRTags"></div></div></div>
+        <div class="per-read-detail" id="charRDetail"></div><div class="per-read-tok"><span class="tok-chip" id="charRTok">— 토큰</span></div>
+        <div class="char-creator-read" id="charRCreator"></div>
+        <div class="per-divider"></div><div class="per-section"><div class="per-label"><span class="sc-dot"></span>갤러리</div><div class="per-gallery pv" id="charRGallery"></div></div>
+        <div class="char-page-switch" id="charPageSwitch" hidden><button class="char-arrow" id="charPrev" aria-label="이전 캐릭터"><svg viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7"/></svg></button><div class="char-hint" id="charSwitchHint"></div><button class="char-arrow" id="charNext" aria-label="다음 캐릭터"><svg viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></svg></button></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ SEARCH ============ -->
   <section class="screen" id="screen-search">
     <div class="topbar">
@@ -2285,6 +2373,7 @@
   <input type="file" id="attachInput" class="hidden-input">
   <input type="file" id="imgInput" class="hidden-input" accept="image/*">
   <input type="file" id="perImgInput" class="hidden-input" multiple>
+  <input type="file" id="charImgInput" class="hidden-input" accept="image/*" multiple>
 
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="screen-settings">
@@ -2313,6 +2402,14 @@
           <div class="seg" id="fontSizeSeg">
             <button data-fs="small">작게</button><button data-fs="normal">보통</button><button data-fs="large">크게</button>
           </div>
+        </div>
+        <div class="set-row" id="setToolbarMode">
+          <div class="set-rtext"><div class="set-rlabel">자유 메모 툴바</div><div class="set-rsub">항상 표시하거나 접어둘 수 있어요</div></div>
+          <div class="set-rval" id="setToolbarModeVal">항상 표시</div>
+        </div>
+        <div class="set-row" id="setInstallIcon">
+          <div class="set-rtext"><div class="set-rlabel">앱 설치 아이콘</div><div class="set-rsub">설치 전 아이콘 스타일을 선택</div></div>
+          <div class="set-rval">고르기 ›</div>
         </div>
       </div>
       <div class="set-group">
@@ -2396,7 +2493,7 @@
     purple: { name: "라벤더 퍼플",  c: "#c79bff" },
     grey:   { name: "미스티 그레이",c: "#b8bdcc" }
   };
-  const TYPE_LABEL = { free: "자유", lorebook: "로어북", persona: "페르소나" };
+  const TYPE_LABEL = { free: "자유", lorebook: "로어북", persona: "페르소나", character: "캐릭터" };
 
   /* ---------- IndexedDB ---------- */
   const DB_NAME = "inkMemoDB", DB_VER = 4;

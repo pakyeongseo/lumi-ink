@@ -1,7 +1,7 @@
 /* 잉크 메모 — Service Worker
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
-const CACHE = "ink-memo-v44";
+const CACHE = "ink-memo-v46";
 
 const ASSETS = [
   "./",
@@ -10,8 +10,24 @@ const ASSETS = [
   "./assets-icons.js",
   "./tokenizer.js",
   "./manifest.json",
+  "./manifest-ink.json",
+  "./manifest-violet.json",
+  "./manifest-rose.json",
+  "./manifest-forest.json",
+  "./install-ink.html",
+  "./install-violet.html",
+  "./install-rose.html",
+  "./install-forest.html",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-ink-192.png",
+  "./icon-ink-512.png",
+  "./icon-violet-192.png",
+  "./icon-violet-512.png",
+  "./icon-rose-192.png",
+  "./icon-rose-512.png",
+  "./icon-forest-192.png",
+  "./icon-forest-512.png",
   "./favicon.png"
 ];
 
