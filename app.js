@@ -24,12 +24,16 @@
     ["pastel-sky", "파스텔 스카이", "#b6dff4"]
   ];
   const FRAME_THEME_TOKEN = "theme";
+  const FRAME_COLOR_BY_KEY = new Map(FRAME_COLORS.map(([key, , color]) => [key, color.toLowerCase()]));
   const FRAME_COLOR_SET = new Set(FRAME_COLORS.map(([, , color]) => color.toLowerCase()));
   function frameById(id) { return FRAMES.find((f) => f.id === id) || null; }
   function normalizeFrameColor(value) {
     if (value === FRAME_THEME_TOKEN) return FRAME_THEME_TOKEN;
     if (typeof value !== "string") return null;
     const color = value.trim().toLowerCase();
+    // v49 초기 구현은 색상 키(gold, pastel-pink)를 저장했어요.
+    // 기존 프로젝트·백업도 열 때 실제 HEX 값으로 승격해 보존합니다.
+    if (FRAME_COLOR_BY_KEY.has(color)) return FRAME_COLOR_BY_KEY.get(color);
     return FRAME_COLOR_SET.has(color) ? color : null;
   }
   function resolveFrameColor(value) {
@@ -2480,9 +2484,12 @@
     let color = normalizeFrameColor(p.frameColor) || "#d4af37";
     const themeAccent = resolveFrameColor(FRAME_THEME_TOKEN);
     const colors = FRAME_COLORS.concat([[FRAME_THEME_TOKEN, "테마와 연동", themeAccent]]);
+    const isSelectedFrameColor = (key, value) => key === FRAME_THEME_TOKEN
+      ? color === FRAME_THEME_TOKEN
+      : color === value.toLowerCase();
     const sw = () => colors.map(([key, name, value]) => {
       const previewColor = key === FRAME_THEME_TOKEN ? themeAccent : value;
-      return `<div class="fcolor-sw${color === key ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span style="background:${previewColor}"></span></div>`;
+      return `<div class="fcolor-sw${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span style="background:${previewColor}"></span></div>`;
     }).join("");
     openModal(`
       <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌어요.</p>
@@ -2492,9 +2499,19 @@
     `);
     const refresh = () => {
       $("frBigFrame").innerHTML = frameSvgFor(fid, color);
-      $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.classList.toggle("sel", item.dataset.c === color));
+      $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => {
+        const key = item.dataset.c;
+        const value = key === FRAME_THEME_TOKEN ? themeAccent : FRAME_COLOR_BY_KEY.get(key);
+        item.classList.toggle("sel", key === FRAME_THEME_TOKEN
+          ? color === FRAME_THEME_TOKEN
+          : color === value);
+      });
     };
-    $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.addEventListener("click", () => { color = item.dataset.c; refresh(); }));
+    $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.addEventListener("click", () => {
+      const key = item.dataset.c;
+      color = key === FRAME_THEME_TOKEN ? FRAME_THEME_TOKEN : (FRAME_COLOR_BY_KEY.get(key) || color);
+      refresh();
+    }));
     $on("fcBack", "click", () => showFramePicker(pid));
     $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : "프레임을 적용했어요"); });
   }
