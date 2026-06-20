@@ -1907,8 +1907,26 @@
   .creator-read-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px 9px 15px; border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent); color: var(--accent); font-size: 10px; letter-spacing: .11em; font-weight: 850; }
   .creator-open { border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--line)); background: var(--accent-soft); color: var(--accent); border-radius: 8px; padding: 5px 8px; font-size: 11px; font-weight: 750; letter-spacing: 0; cursor: pointer; }
   .creator-open:active { transform: scale(.96); }
-  .char-creator-preview { padding: 13px 15px 15px; white-space: pre-wrap; line-height: 1.66; color: var(--muted); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .char-creator-preview { display: none; }
   .creator-modal-body { max-height: min(58vh, 560px); overflow: auto; padding: 14px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); line-height: 1.72; }
+  /* Home projects are a contained archive surface: a large collection scrolls here
+     instead of pushing the recent-memo section indefinitely downward. */
+  .home-project-box { margin: 0 16px; max-height: min(46vh, 520px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+  .home-project-box .proj-grid { padding: 10px; }
+  .home-project-box .grid-empty { min-height: 116px; display: grid; place-items: center; }
+  .home-project-box::-webkit-scrollbar, .sb-list::-webkit-scrollbar { width: 7px; }
+  .home-project-box::-webkit-scrollbar-thumb, .sb-list::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 999px; }
+  .sb-list { overscroll-behavior: contain; }
+  /* Character memo cover picker */
+  .char-cover-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; max-height: min(50vh, 410px); overflow-y: auto; padding: 3px; margin: 13px 0 17px; }
+  .char-cover-option { min-width: 0; padding: 5px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--muted); cursor: pointer; text-align: left; }
+  .char-cover-option.selected { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 42%, transparent), var(--glow); background: color-mix(in srgb, var(--accent-soft) 76%, var(--surface)); color: var(--ink); }
+  .char-cover-option:active { transform: scale(.97); }
+  .char-cover-media { display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; background: linear-gradient(145deg, var(--surface-3), var(--surface)); }
+  .char-cover-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .char-cover-auto-mark { font-size: 20px; font-weight: 850; color: var(--accent); }
+  .char-cover-label { display: block; margin: 6px 2px 1px; font-size: 10.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .char-cover-empty { grid-column: 1 / -1; padding: 21px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--faint); font-size: 13px; line-height: 1.6; text-align: center; }
   .creator-modal-body img { max-width: 100%; height: auto; border-radius: 8px; }
   .creator-modal-body a { color: var(--accent); }
   .creator-modal-body pre { white-space: pre-wrap; word-break: break-word; }
@@ -2198,7 +2216,7 @@
         <span class="sec-chip"><span class="sc-dot"></span>프로젝트</span>
         <button class="sort-btn" id="homeSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="homeSortLabel">최신순</span></button>
       </div>
-      <div class="proj-grid" id="projGrid"></div>
+      <div class="home-project-box" id="homeProjectBox"><div class="proj-grid" id="projGrid"></div></div>
       <div class="sec-row hm-recent-head" id="homeRecentHead">
         <span class="sec-chip"><span class="sc-dot"></span>최근 수정한 메모</span>
       </div>
@@ -2460,7 +2478,6 @@
         <div class="per-read-detail" id="charRDetail"></div><div class="per-read-tok"><span class="tok-chip" id="charRTok">— 토큰</span></div>
         <div class="char-creator-read" id="charRCreator" hidden>
           <div class="creator-read-head"><span>CREATOR NOTE</span><button class="creator-open" id="charCreatorOpen" type="button">크게 보기</button></div>
-          <div class="char-creator-preview" id="charRCreatorPreview"></div>
         </div>
         <div class="per-divider"></div><div class="per-section"><div class="per-label"><span class="sc-dot"></span>갤러리</div><div class="per-gallery pv" id="charRGallery"></div></div>
         <div class="char-page-switch" id="charPageSwitch" hidden><button class="char-arrow" id="charPrev" aria-label="이전 캐릭터"><svg viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7"/></svg></button><div class="char-hint" id="charSwitchHint"></div><button class="char-arrow" id="charNext" aria-label="다음 캐릭터"><svg viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></svg></button></div>

@@ -23,7 +23,7 @@
     ["pastel-butter", "파스텔 버터", "#f3e59a"], ["pastel-rose", "파스텔 로즈", "#edbed4"],
     ["pastel-sky", "파스텔 스카이", "#b6dff4"],
     ["glass", "투명 글래스", "rgba(255,255,255,.48)"],
-    ["punch", "투명 펀칭", "punch"]
+    ["punch", "글래시한 명암", "punch"]
   ];
   const FRAME_THEME_TOKEN = "theme";
   const FRAME_PUNCH_TOKEN = "punch";
@@ -468,7 +468,7 @@
       meta = perTagsPreview(d);
     } else if (n.type === "character") {
       const d = ensureCharacterData(n), page = activeCharacterPage(n);
-      const img = page.square || page.portrait || DEFAULT_ICON;
+      const img = characterCoverImage(n);
       lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
       const tags = (page.ko && page.ko.tags) || (page.en && page.en.tags) || [];
       meta = `${d.pages.length}명 · ${tags.length ? tags.join(", ") : "캐릭터 카드"}`;
@@ -1706,7 +1706,16 @@
     const d = n.data = n.data && typeof n.data === "object" ? n.data : {};
     d.pages = Array.isArray(d.pages) && d.pages.length ? d.pages.map(ensureCharacterPage) : [makeCharacterPage()];
     if (!d.activeId || !d.pages.some((p) => p.id === d.activeId)) d.activeId = d.pages[0].id;
+    // 대표 썸네일은 캐릭터 메모의 프로젝트 목록용 표지입니다.
+    // 기존 데이터는 자동 대표(첫 페이지 이미지)로 자연스럽게 폴백합니다.
+    d.coverImage = safeImageSource(d.coverImage) || null;
     return d;
+  }
+  function characterCoverImage(n) {
+    const d = ensureCharacterData(n);
+    if (d.coverImage) return d.coverImage;
+    const first = d.pages[0] || activeCharacterPage(n);
+    return (first && (first.square || first.portrait || (first.gallery && first.gallery[0]))) || DEFAULT_ICON;
   }
   function activeCharacterPage(n) {
     const d = ensureCharacterData(n);
@@ -1988,9 +1997,15 @@
   function openCreatorMemoModal() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
     const html = normalizeCreatorMemo(activeCharacterPage(n).creatorMemo); if (!html) return;
-    openModal(`<h3>크리에이터 메모</h3><div class="creator-modal-body read-body">${html}</div><div class="m-row"><button class="m-btn primary" id="creatorReadClose">닫기</button></div>`);
-    attachReadCodeCopy($("modalBox"));
-    $on("creatorReadClose", "click", closeModal);
+    openModal(`<h3>크리에이터 메모</h3><div class="creator-modal-body read-body">${html}</div><div class="m-row"><button class="m-btn primary" type="button" data-creator-modal-close>닫기</button></div>`);
+    const box = $("modalBox");
+    attachReadCodeCopy(box);
+    // 모달 안에서 생성되는 버튼은 전역 ID 바인딩 대신 해당 모달 인스턴스에 직접 묶습니다.
+    // 리치 본문에 같은 ID가 섞여도 닫기 동작이 흔들리지 않게 합니다.
+    const closeButton = box && box.querySelector("[data-creator-modal-close]");
+    if (closeButton) closeButton.addEventListener("click", (event) => {
+      event.preventDefault(); event.stopPropagation(); closeModal();
+    });
   }
 
   function renderCharacterEdit(n) {
@@ -2013,7 +2028,6 @@
     $("charRDetail").innerHTML = personaDetailHTML(o.detail);
     const creator = $("charRCreator"), creatorHtml = normalizeCreatorMemo(page.creatorMemo);
     creator.hidden = !creatorHtml.trim();
-    $("charRCreatorPreview").textContent = creatorMemoPreview(creatorHtml);
     const token = $("charRTok"); token.textContent = "계산 중…";
     ensureTokenizer().then((ok) => {
       if (getNote(st.curNoteId) !== n || st.charEdit) return;
@@ -2118,12 +2132,52 @@
     if (st.charEdit) { flushCharacter(); st.charEdit = false; } else st.charEdit = true;
     renderCharacter();
   }
+  function characterCoverCandidates(n) {
+    const d = ensureCharacterData(n), out = [], seen = new Set();
+    const add = (src, label) => {
+      const safe = safeImageSource(src);
+      if (!safe || seen.has(safe)) return;
+      seen.add(safe); out.push({ src: safe, label });
+    };
+    d.pages.forEach((page, index) => {
+      const name = charPageName(page, "ko") || `캐릭터 ${index + 1}`;
+      add(page.square, `${name} · 정사각 썸네일`);
+      add(page.portrait, `${name} · 포트레이트`);
+      (page.gallery || []).forEach((src, galleryIndex) => add(src, `${name} · 갤러리 ${galleryIndex + 1}`));
+    });
+    return out;
+  }
+  async function chooseCharacterCover(n) {
+    if (!n || n.type !== "character") return;
+    if (st.charEdit && st.curNoteId === n.id) await flushCharacter();
+    const d = ensureCharacterData(n), candidates = characterCoverCandidates(n);
+    const autoSrc = characterCoverImage(n);
+    const option = (src, label, index, selected) => `<button type="button" class="char-cover-option${selected ? " selected" : ""}" data-cover-index="${index}"><span class="char-cover-media">${src ? `<img src="${src}" alt="">` : '<span class="char-cover-auto-mark">A</span>'}</span><span class="char-cover-label">${esc(label)}</span></button>`;
+    const auto = option(autoSrc, "자동 선택 · 첫 캐릭터 이미지", -1, !d.coverImage);
+    const cards = candidates.map((item, index) => option(item.src, item.label, index, d.coverImage === item.src)).join("");
+    openModal(`
+      <h3>대표 썸네일 지정</h3>
+      <p class="m-sub">프로젝트 안의 캐릭터 메모 카드에 보일 이미지를 골라요. 선택하지 않으면 첫 번째 캐릭터의 이미지가 자동으로 사용됩니다.</p>
+      <div class="char-cover-grid">${auto}${cards || '<div class="char-cover-empty">먼저 캐릭터 페이지에 정사각 썸네일, 포트레이트 또는 갤러리 이미지를 추가해 주세요.</div>'}</div>
+      <div class="m-row"><button class="m-btn" type="button" id="charCoverClose">닫기</button></div>
+    `);
+    const box = $("modalBox");
+    box.querySelectorAll("[data-cover-index]").forEach((button) => button.addEventListener("click", async () => {
+      const index = Number(button.dataset.coverIndex);
+      d.coverImage = index < 0 ? null : (candidates[index] ? candidates[index].src : null);
+      await saveCharacter(n, true);
+      closeModal(); render(); renderSidebar();
+      toast(d.coverImage ? "대표 썸네일을 지정했어요" : "대표 썸네일을 자동 선택으로 바꿨어요");
+    }));
+    $on("charCoverClose", "click", closeModal);
+  }
   function openCharacterSheet(n) {
     const d = ensureCharacterData(n);
     const items = [
       { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "메모 이름 바꾸기", fn: () => renameModal("캐릭터 메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveCharacter(n, true); render(); } }) },
+      { icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5L5 21"/></svg>', label: "대표 썸네일 지정", fn: () => chooseCharacterCover(n) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.save, label: "HTML로 저장", fn: async () => { if (st.charEdit) await flushCharacter(); chooseCharacterExportOptions(n.id); } }
     ];
@@ -2514,7 +2568,7 @@
       return `<div class="fcolor-sw${isGlass ? " glass" : ""}${isPunch ? " punch" : ""}${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span${isGlass ? "" : isPunch ? ` style="${punchStyle}"` : ` style="background:${previewColor}"`}></span></div>`;
     }).join("");
     openModal(`
-      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌며, ‘투명 글래스’는 썸네일 위에 반투명하게 겹쳐지고, ‘투명 펀칭’은 이미지에 홈을 낸 듯한 엣지로 보여요.</p>
+      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌며, ‘투명 글래스’는 썸네일 위에 반투명하게 겹쳐지고, ‘글래시한 명암’은 반투명 하이라이트와 그림자로 유리 같은 깊이를 더해요.</p>
       <div class="fr-bigprev"><div class="proj-icon has-frame">${frameThumbInner(p)}<div class="frame" id="frBigFrame">${frameSvgFor(fid, color)}</div></div></div>
       <div class="fcolor-grid" id="fcGrid">${sw()}</div>
       <div class="m-row"><button class="m-btn" id="fcBack">뒤로</button><button class="m-btn primary" id="fcOk">적용</button></div>
@@ -2535,7 +2589,7 @@
       refresh();
     }));
     $on("fcBack", "click", () => showFramePicker(pid));
-    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : color === FRAME_PUNCH_TOKEN ? "투명 펀칭 프레임을 적용했어요" : "프레임을 적용했어요"); });
+    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : color === FRAME_PUNCH_TOKEN ? "글래시한 명암 프레임을 적용했어요" : "프레임을 적용했어요"); });
   }
   const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
   const MAX_IMAGE_PIXELS = 24 * 1000 * 1000;
@@ -2774,7 +2828,7 @@
     }).slice(0, 100);
     const safePages = normalized.length ? normalized : [makeCharacterPage()];
     const activeId = isSafeRecordId(src.activeId) && safePages.some((p) => p.id === src.activeId) ? src.activeId : safePages[0].id;
-    return { activeId, pages: safePages };
+    return { activeId, coverImage: safeImageSource(src.coverImage), pages: safePages };
   }
 
   function normalizeImportedAttachments(raw) {
