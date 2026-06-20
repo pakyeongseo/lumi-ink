@@ -1499,6 +1499,7 @@
     $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
+    const av = $("setAccentVal"); if (av && ACCENTS[st.accent || "blue"]) av.innerHTML = `<span class="accent-dot"></span>${ACCENTS[st.accent || "blue"].name}`;
   }
   const FONT_PRESETS = [
     { name: "Pretendard", label: "프리텐다드", url: "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" },
@@ -1877,6 +1878,35 @@ ${gallery}
   }
   function detectTheme() { let t = null; try { t = localStorage.getItem("luminkTheme"); } catch (e) {} applyTheme(t || "dark"); }
 
+  /* ---------- color theme (accent) ---------- */
+  const ACCENTS = {
+    blue: { name: "블루", grad: "linear-gradient(135deg, #7b9bff, #b58bff)", ig: ["#7b9bff", "#b58bff"] },
+    pink: { name: "핑크", grad: "linear-gradient(135deg, #ff93cb, #c98bff)", ig: ["#ff93cb", "#c98bff"] }
+  };
+  function applyAccent(name) {
+    if (!ACCENTS[name]) name = "blue";
+    st.accent = name;
+    if (name === "blue") document.documentElement.removeAttribute("data-accent");
+    else document.documentElement.setAttribute("data-accent", name);
+    const ig = ACCENTS[name].ig;
+    const a = $("igA"), bb = $("igB");
+    if (a) a.setAttribute("stop-color", ig[0]);
+    if (bb) bb.setAttribute("stop-color", ig[1]);
+    try { localStorage.setItem("luminkAccent", name); } catch (e) {}
+    const v = $("setAccentVal"); if (v) v.innerHTML = `<span class="accent-dot"></span>${ACCENTS[name].name}`;
+  }
+  function detectAccent() { let a = "blue"; try { a = localStorage.getItem("luminkAccent") || "blue"; } catch (e) {} applyAccent(a); }
+  function openAccentPicker() {
+    const cur = st.accent || "blue";
+    const opts = Object.keys(ACCENTS).map((k) => `<div class="accent-opt${k === cur ? " sel" : ""}" data-accent="${k}"><span class="ao-sw" style="background:${ACCENTS[k].grad}"></span><span class="ao-name">${ACCENTS[k].name}</span><span class="ao-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>`).join("");
+    openModal(`<h3>컬러 테마</h3><p class="m-sub">앱 전체 강조색을 골라요. 밝게·어둡게 테마와 함께 적용돼요.</p><div class="accent-opts">${opts}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);
+    $on("acClose", "click", closeModal);
+    document.querySelectorAll(".accent-opt").forEach((el) => el.addEventListener("click", () => {
+      applyAccent(el.dataset.accent);
+      document.querySelectorAll(".accent-opt").forEach((x) => x.classList.toggle("sel", x === el));
+    }));
+  }
+
   /* ---------- font scale ---------- */
   const FS_ZOOM = { small: 0.9, normal: 1, large: 1.12 };
   function applyFontScale(v) {
@@ -1963,6 +1993,7 @@ ${gallery}
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
     $on("setAutoBackup", "click", openAutoBackupList);
+    $on("setAccent", "click", openAccentPicker);
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
@@ -2129,6 +2160,7 @@ ${gallery}
   /* ---------- init ---------- */
   async function init() {
     detectTheme();
+    detectAccent();
     detectUserFont();
     detectFontScale();
     loadSorts();
