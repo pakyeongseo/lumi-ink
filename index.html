@@ -2055,6 +2055,81 @@
   .pd-countrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 7px; }
 
   .hidden-input { display: none; }
+
+
+  /* ===== v51 exterior project-frame geometry =====
+     Frames must behave like a physical molding: media stays clipped to the
+     thumbnail, while the molding expands across and slightly beyond its edge. */
+  .pc-thumb { overflow: visible; position: relative; }
+  .pc-thumb .proj-icon { border-radius: 15px; }
+
+  .proj-icon,
+  .sb-item .sb-ico,
+  .pick-item .pk-ico,
+  .pd-thumb {
+    overflow: visible;
+    isolation: isolate;
+  }
+
+  .proj-icon.has-frame,
+  .sb-item .sb-ico.has-frame,
+  .pick-item .pk-ico.has-frame,
+  .pd-thumb.has-frame {
+    border-color: transparent;
+  }
+
+  .proj-icon > img,
+  .sb-item .sb-ico > img,
+  .pick-item .pk-ico > img,
+  .pd-thumb > img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    border-radius: inherit;
+  }
+
+  .proj-icon > .deflogo,
+  .sb-item .sb-ico > .deflogo,
+  .pick-item .pk-ico > .deflogo,
+  .pd-thumb > .deflogo {
+    position: relative;
+    z-index: 1;
+  }
+
+  .proj-icon.has-frame > .frame,
+  .sb-item .sb-ico.has-frame > .frame,
+  .pick-item .pk-ico.has-frame > .frame,
+  .pd-thumb.has-frame > .frame {
+    position: absolute;
+    inset: -11%;
+    width: auto;
+    height: auto;
+    z-index: 4;
+    display: block;
+    border-radius: inherit;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .34));
+  }
+
+  .proj-icon.has-frame > .frame svg,
+  .sb-item .sb-ico.has-frame > .frame svg,
+  .pick-item .pk-ico.has-frame > .frame svg,
+  .pd-thumb.has-frame > .frame svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Compact surfaces keep the same exterior-molding proportion without
+     allowing the frame to crowd adjacent labels. */
+  .sb-item .sb-ico.has-frame > .frame,
+  .pick-item .pk-ico.has-frame > .frame { inset: -10%; }
+
+  /* Preview tiles need a little breathing room so the outer molding is never
+     mistaken for an inset decoration. */
+  .frame-opt .fr-prev.has-frame,
+  .fr-bigprev .proj-icon.has-frame { overflow: visible; }
+
 </style>
 </head>
 <body>
