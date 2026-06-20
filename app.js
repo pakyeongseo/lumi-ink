@@ -1887,7 +1887,9 @@ ${gallery}
     gold: { name: "골드", grad: "linear-gradient(135deg, #ffd86b, #e0a23c)", ig: ["#ffd86b", "#e0a23c"] },
     pblue: { name: "파스텔 블루", grad: "linear-gradient(135deg, #8fb6ec, #9ba6e6)", ig: ["#8fb6ec", "#9ba6e6"] },
     ppink: { name: "파스텔 핑크", grad: "linear-gradient(135deg, #efa6cc, #d3a6e8)", ig: ["#efa6cc", "#d3a6e8"] },
-    polive: { name: "파스텔 올리브", grad: "linear-gradient(135deg, #a8b85e, #93b06e)", ig: ["#a8b85e", "#93b06e"] }
+    polive: { name: "파스텔 올리브", grad: "linear-gradient(135deg, #a8b85e, #93b06e)", ig: ["#a8b85e", "#93b06e"] },
+    ppurple: { name: "파스텔 퍼플", grad: "linear-gradient(135deg, #b39ee8, #a3a6e6)", ig: ["#c5aef0", "#b3b0ee"] },
+    pgold: { name: "파스텔 골드", grad: "linear-gradient(135deg, #e8d49a, #d8c182)", ig: ["#e8d49a", "#d8c182"] }
   };
   function applyAccent(name) {
     if (!ACCENTS[name]) name = "blue";
