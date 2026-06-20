@@ -41,7 +41,7 @@
   function closeTopOverlay() {
     if (st.selMode) { exitSelMode(); return true; }
     if (!$("cropper").hidden) { closeCropper(); return true; }
-    if (!$("lightbox").hidden) { $("lightbox").hidden = true; return true; }
+    if (!$("lightbox").hidden) { closeLightbox(); return true; }
     if ($("modalScrim").classList.contains("open")) { closeModal(); return true; }
     if (document.body.classList.contains("sheet-open")) { closeSheet(); return true; }
     if (document.body.classList.contains("sidebar-open")) { closeSidebar(); return true; }
@@ -514,30 +514,145 @@
     });
     setCur(colorCur); drawSaved();
   }
-  function toggleHilite() {
-    $("editor").focus();
+  const HILITE_COLORS = [
+    { id: "sky", label: "하늘색", value: "#a8e4ff" },
+    { id: "pink", label: "핑크색", value: "#ffb6d9" },
+    { id: "green", label: "연두색", value: "#c7f4ae" },
+    { id: "purple", label: "연보라색", value: "#dec7ff" },
+    { id: "yellow", label: "노란색", value: "#ffe27a" }
+  ];
+  let hiliteColor = "#ffe27a";
+
+  function getHiliteColor() {
+    const saved = HILITE_COLORS.find((x) => x.value === hiliteColor);
+    return saved ? saved.value : "#ffe27a";
+  }
+  function setHiliteColor(color) {
+    const found = HILITE_COLORS.find((x) => x.value === color);
+    if (!found) return;
+    hiliteColor = found.value;
+    try { localStorage.setItem("luminkHiliteColor", hiliteColor); } catch (e) {}
+    const btn = $("hiliteBtn");
+    if (btn) {
+      btn.style.setProperty("--hilite-color", hiliteColor);
+      btn.setAttribute("aria-label", `형광펜 · ${found.label}`);
+      btn.title = `형광펜 · ${found.label} (길게 눌러 색상 선택)`;
+    }
+  }
+  function detectHiliteColor() {
+    let saved = null;
+    try { saved = localStorage.getItem("luminkHiliteColor"); } catch (e) {}
+    setHiliteColor(HILITE_COLORS.some((x) => x.value === saved) ? saved : "#ffe27a");
+  }
+  function captureEditorRange() {
     const sel = window.getSelection();
-    if (!sel.rangeCount || sel.isCollapsed) { toast("형광펜을 칠할 텍스트를 선택해 주세요"); return; }
+    const ed = $("editor");
+    if (!sel || !sel.rangeCount || !ed) return null;
     const range = sel.getRangeAt(0);
-    let anc = range.commonAncestorContainer;
-    if (anc.nodeType === 3) anc = anc.parentElement;
-    const existing = anc && anc.closest && anc.closest("span.lumi-hl");
-    if (existing) {
-      const parent = existing.parentNode;
-      while (existing.firstChild) parent.insertBefore(existing.firstChild, existing);
-      parent.removeChild(existing); parent.normalize();
+    return ed.contains(range.commonAncestorContainer) ? range.cloneRange() : null;
+  }
+  function restoreEditorRange(range) {
+    const ed = $("editor");
+    if (!ed) return false;
+    try { ed.focus({ preventScroll: true }); } catch (e) { ed.focus(); }
+    if (!range) return false;
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+    return true;
+  }
+  function unwrapHighlight(el) {
+    const parent = el && el.parentNode;
+    if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el); parent.normalize();
+  }
+  function toggleHilite(color, savedRange, forceColor) {
+    const range = savedRange || captureEditorRange();
+    if (!range || range.collapsed) { toast("형광펜을 칠할 텍스트를 선택해 주세요"); return; }
+    restoreEditorRange(range);
+    const sel = window.getSelection();
+    const activeRange = sel && sel.rangeCount ? sel.getRangeAt(0) : range;
+    let start = activeRange.startContainer;
+    let end = activeRange.endContainer;
+    if (start.nodeType === 3) start = start.parentElement;
+    if (end.nodeType === 3) end = end.parentElement;
+    const existing = start && start.closest && start.closest("span.lumi-hl");
+    const isSingleExisting = existing && end && existing.contains(end);
+    if (isSingleExisting) {
+      if (forceColor) {
+        existing.style.backgroundColor = color || getHiliteColor();
+        existing.style.color = "#222";
+      } else {
+        unwrapHighlight(existing);
+      }
       scheduleSave(); return;
     }
     try {
       const mark = document.createElement("span");
-      mark.className = "lumi-hl"; mark.style.background = "#ffe27a"; mark.style.color = "#222";
-      mark.style.borderRadius = "3px"; mark.style.padding = "0 1px";
-      range.surroundContents(mark);
+      mark.className = "lumi-hl";
+      mark.style.backgroundColor = color || getHiliteColor();
+      mark.style.color = "#222";
+      mark.style.borderRadius = "3px";
+      mark.style.padding = "0 1px";
+      activeRange.surroundContents(mark);
       sel.removeAllRanges();
     } catch (e) {
-      try { document.execCommand("styleWithCSS", false, true); document.execCommand("hiliteColor", false, "#ffe27a"); } catch (e2) {}
+      try {
+        document.execCommand("styleWithCSS", false, true);
+        document.execCommand("hiliteColor", false, color || getHiliteColor());
+      } catch (e2) {}
     }
     scheduleSave();
+  }
+  function openHilitePicker(savedRange) {
+    const current = getHiliteColor();
+    openModal(`<h3>형광펜 색상</h3><p class="m-sub">색을 고르면 현재 선택한 텍스트에 바로 적용돼요.</p>
+      <div class="hilite-picker">${HILITE_COLORS.map((x) => `<button class="hilite-choice${x.value === current ? " sel" : ""}" data-color="${x.value}" aria-label="${x.label}"><span class="hilite-swatch" style="background:${x.value}"></span><span>${x.label}</span></button>`).join("")}</div>
+      <div class="m-row"><button class="m-btn" id="hiliteCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll(".hilite-choice").forEach((btn) => btn.addEventListener("click", () => {
+      const color = btn.dataset.color;
+      setHiliteColor(color);
+      closeModal();
+      if (savedRange && !savedRange.collapsed) toggleHilite(color, savedRange, true);
+      else toast(`${HILITE_COLORS.find((x) => x.value === color).label}으로 바꿨어요`);
+    }));
+    $on("hiliteCancel", "click", closeModal);
+  }
+  function bindHiliteButton() {
+    const btn = $("hiliteBtn");
+    if (!btn) return;
+    let holdTimer = null, held = false, savedRange = null, pointerId = null;
+    const clear = () => { clearTimeout(holdTimer); holdTimer = null; };
+    const reset = () => { clear(); held = false; savedRange = null; pointerId = null; btn.classList.remove("holding"); };
+    btn.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      savedRange = captureEditorRange();
+      pointerId = e.pointerId;
+      held = false;
+      btn.classList.add("holding");
+      try { btn.setPointerCapture(pointerId); } catch (x) {}
+      holdTimer = setTimeout(() => {
+        holdTimer = null; held = true; btn.classList.remove("holding");
+        if (navigator.vibrate) navigator.vibrate(12);
+        openHilitePicker(savedRange);
+      }, 480);
+    });
+    btn.addEventListener("pointerup", (e) => {
+      if (pointerId != null && e.pointerId !== pointerId) return;
+      const wasHeld = held;
+      const range = savedRange;
+      reset();
+      if (!wasHeld) toggleHilite(getHiliteColor(), range, false);
+    });
+    btn.addEventListener("pointercancel", reset);
+    btn.addEventListener("lostpointercapture", () => { if (!held) clear(); });
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
+    btn.addEventListener("click", (e) => {
+      if (e.detail !== 0) return;
+      e.preventDefault();
+      toggleHilite(getHiliteColor(), captureEditorRange(), false);
+    });
   }
   function fontStep(d) {
     $("editor").focus();
@@ -973,10 +1088,10 @@
   function renderPerRead(n) {
     const d = n.data, o = d[perLang] || {};
     $("perRPortrait").innerHTML = d.portrait ? `<img src="${d.portrait}" alt="">` : '<div class="per-ph"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M20 15l-5-4L6 19"/></svg><span>이미지 없음</span></div>';
-    $("perRPortrait").onclick = d.portrait ? () => openLightbox(d.portrait) : null;
+    $("perRPortrait").onclick = d.portrait ? () => openLightbox(d.portrait, [d.portrait], 0) : null;
     const sqSrc = d.square || d.portrait;
     $("perRSquare").innerHTML = `<img src="${sqSrc || DEFAULT_ICON}" alt="">`;
-    $("perRSquare").onclick = sqSrc ? () => openLightbox(sqSrc) : null;
+    $("perRSquare").onclick = sqSrc ? () => openLightbox(sqSrc, [sqSrc], 0) : null;
     $("perRName").textContent = o.name || "";
     const rt = $("perRTags"); rt.innerHTML = "";
     (o.tags || []).forEach((t) => { const c = document.createElement("span"); c.className = "kw-chip"; c.textContent = t; rt.appendChild(c); });
@@ -990,7 +1105,7 @@
     const rg = $("perRGallery"); rg.innerHTML = "";
     const gal = d.gallery || [];
     if (!gal.length) { rg.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; }
-    else gal.forEach((src) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src); rg.appendChild(it); });
+    else gal.forEach((src, idx) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src, gal, idx); rg.appendChild(it); });
   }
   async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
   function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); const id = st.curNoteId; perTimer = setTimeout(() => { if (st.curNoteId === id) flushPersona(); }, 550); }
@@ -1036,7 +1151,42 @@
     if (st.perEdit) { flushPersona(); st.perEdit = false; } else { st.perEdit = true; }
     renderPersona();
   }
-  function openLightbox(src) { if (!src) return; $("lightboxImg").src = src; $("lightbox").hidden = false; }
+  let lightboxItems = [], lightboxIndex = 0;
+  function closeLightbox() {
+    $("lightbox").hidden = true;
+    $("lightboxImg").removeAttribute("src");
+    lightboxItems = []; lightboxIndex = 0;
+  }
+  function renderLightboxImage() {
+    const img = $("lightboxImg");
+    const total = lightboxItems.length;
+    const src = lightboxItems[lightboxIndex];
+    if (!src) { closeLightbox(); return; }
+    img.src = src;
+    img.alt = total > 1 ? `갤러리 이미지 ${lightboxIndex + 1} / ${total}` : "확대 이미지";
+    const multi = total > 1;
+    const prev = $("lbPrev"), next = $("lbNext"), counter = $("lbCounter");
+    prev.hidden = !multi; next.hidden = !multi; counter.hidden = !multi;
+    prev.disabled = lightboxIndex <= 0;
+    next.disabled = lightboxIndex >= total - 1;
+    counter.textContent = `${lightboxIndex + 1} / ${total}`;
+  }
+  function openLightbox(src, items, index) {
+    if (!src) return;
+    const list = (Array.isArray(items) && items.length ? items : [src]).filter(Boolean);
+    if (!list.length) return;
+    lightboxItems = list;
+    lightboxIndex = Number.isInteger(index) && list[index] === src ? index : Math.max(0, list.indexOf(src));
+    $("lightbox").hidden = false;
+    renderLightboxImage();
+  }
+  function stepLightbox(delta) {
+    if (lightboxItems.length < 2) return;
+    const next = lightboxIndex + delta;
+    if (next < 0 || next >= lightboxItems.length) return;
+    lightboxIndex = next;
+    renderLightboxImage();
+  }
 
   // image cropper
   let cropState = null;
@@ -1711,47 +1861,64 @@ ${html}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast(".html로 저장했어요");
   }
-  function personaExportCSS(theme) {
-    const D = theme === "dark";
-    const c = D ? {
-      bg: "#0f1320", text: "#e7e9f2", titleC: "#aebcec", panel: "#171c2b", panel2: "#1d2335", line: "#2a3147",
-      chipBg: "#1b2740", chipC: "#7fbfff", chipBd: "#2f5183", headC: "#6fd6ff", accent: "#6ad0ff", muted: "#aeb4c7", shadow: "0 4px 18px rgba(0,0,0,.45)"
-    } : {
-      bg: "#f4f6fb", text: "#1c2233", titleC: "#283a63", panel: "#fff", panel2: "#e7ebf5", line: "#e2e7f1",
-      chipBg: "#e9f0fc", chipC: "#3a6fd0", chipBd: "#cfe0fa", headC: "#283a63", accent: "#3a6fd0", muted: "#9aa0b4", shadow: "0 2px 10px rgba(60,90,160,.06)"
+  function personaExportPalette(theme) {
+    const root = document.documentElement;
+    const hadTheme = root.hasAttribute("data-theme");
+    const previousTheme = root.getAttribute("data-theme");
+    root.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+    const css = getComputedStyle(root);
+    const read = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+    const palette = {
+      bg: read("--bg", "#0d0f17"),
+      text: read("--ink", "#e9eaf2"),
+      title: read("--logo-ink", "#aebcec"),
+      panel: read("--surface", "#181b26"),
+      panel2: read("--surface-2", "#20242f"),
+      line: read("--line", "#272b38"),
+      chipBg: read("--accent-soft", "#16202f"),
+      chipColor: read("--accent", "#6ad0ff"),
+      muted: read("--muted", "#9a9fb2"),
+      shadow: read("--shadow", "0 1px 4px rgba(46,86,170,.30), 0 6px 16px rgba(14,22,48,.46)")
     };
+    if (hadTheme) root.setAttribute("data-theme", previousTheme);
+    else root.removeAttribute("data-theme");
+    return palette;
+  }
+  function personaExportCSS(theme) {
+    const c = personaExportPalette(theme);
     return `body{margin:0;background:${c.bg};color:${c.text};font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Segoe UI",sans-serif;word-break:break-word}
 .wrap{max-width:680px;margin:0 auto;padding:28px 18px 64px}
-.ptitle{font-size:24px;font-weight:800;color:${c.titleC};margin:0 0 18px}
+.ptitle{font-size:24px;font-weight:800;color:${c.title};margin:0 0 18px}
 .portrait{width:280px;max-width:82%;aspect-ratio:3/4;margin:0 auto 24px;border-radius:16px;overflow:hidden;background:${c.panel2};box-shadow:${c.shadow}}
 .portrait img{width:100%;height:100%;object-fit:cover;display:block}
 .lang{margin:0 0 28px}
-.lang-head{display:inline-block;font-weight:700;font-size:13px;color:${c.chipC};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin-bottom:13px}
+.lang-head{display:inline-block;font-weight:700;font-size:13px;color:${c.chipColor};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin-bottom:13px}
 .idrow{display:flex;gap:14px;align-items:center;margin-bottom:14px}
 .sq{width:100px;height:100px;border-radius:15px;overflow:hidden;flex:0 0 auto;background:${c.panel2}}
 .sq img{width:100%;height:100%;object-fit:cover;display:block}
 .pname{font-size:21px;font-weight:750;margin-bottom:8px}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
-.kw-chip{display:inline-block;background:${c.chipBg};color:${c.chipC};border:1px solid ${c.chipBd};padding:4px 11px;border-radius:8px;font-size:13px}
+.kw-chip{display:inline-block;background:${c.chipBg};color:${c.chipColor};border:1px solid ${c.line};padding:4px 11px;border-radius:8px;font-size:13px}
 .detail{background:${c.panel};border:1px solid ${c.line};border-radius:14px;padding:15px 16px;line-height:1.72;font-size:15.5px;box-shadow:${c.shadow}}
 .detail .pr-line{white-space:pre-wrap}.detail .pr-gap{height:.7em}.detail .pr-empty{color:${c.muted}}
-.detail .pr-head{margin:14px 0 10px;padding:9px 14px;border-radius:11px;border:1px solid ${c.line};border-left:2px solid ${c.accent};background:linear-gradient(135deg,${c.chipBg},transparent);font-weight:750;color:${c.headC}}
+.detail .pr-head{margin:14px 0 10px;padding:9px 14px;border-radius:11px;border:1px solid ${c.line};border-left:2px solid ${c.chipColor};background:linear-gradient(135deg,${c.chipBg},transparent);font-weight:750;color:${c.chipColor}}
 .detail .pr-head:first-child{margin-top:0}
 .detail .pr-li{display:flex;gap:7px;align-items:baseline;margin:4px 0;padding-left:9px}
-.detail .pr-bullet{color:${c.accent};font-size:8px;flex:0 0 auto}
+.detail .pr-bullet{color:${c.chipColor};font-size:8px;flex:0 0 auto}
 .detail .pr-mini{margin:6px 0;line-height:1.6}
-.detail .pr-mini-key{display:inline-block;background:${c.chipBg};color:${c.chipC};font-weight:700;font-size:.9em;padding:2px 10px;border-radius:7px;margin-right:8px}
+.detail .pr-mini-key{display:inline-block;background:${c.chipBg};color:${c.chipColor};font-weight:700;font-size:.9em;padding:2px 10px;border-radius:7px;margin-right:8px}
 .detail .md-tag{margin:13px 0}
-.detail .md-tag-open,.detail .md-tag-close{font-family:ui-monospace,monospace;font-size:.82em;font-weight:700;color:${c.accent};opacity:.82}
+.detail .md-tag-open,.detail .md-tag-close{font-family:ui-monospace,monospace;font-size:.82em;font-weight:700;color:${c.chipColor};opacity:.82}
 .detail .md-tag-open{margin-bottom:5px}.detail .md-tag-close{margin-top:5px}
-.detail .md-tag-body{padding:9px 13px;border-left:2px solid ${c.accent};border-radius:0 10px 10px 0;background:${D ? "rgba(106,208,255,.09)" : "rgba(58,111,208,.07)"}}
-.gal-label{display:inline-block;font-weight:700;font-size:13px;color:${c.chipC};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin:24px 0 12px}
+.detail .md-tag-body{padding:9px 13px;border-left:2px solid ${c.chipColor};border-radius:0 10px 10px 0;background:${c.chipBg}}
+.gal-label{display:inline-block;font-weight:700;font-size:13px;color:${c.chipColor};background:${c.chipBg};padding:5px 13px;border-radius:999px;margin:24px 0 12px}
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:11px;display:block}
 .foot{margin-top:30px;text-align:center;color:${c.muted};font-size:12px}`;
   }
   function choosePersonaExportTheme(id) {
-    openModal(`<h3>HTML로 저장</h3><p class="m-sub">내보낼 카드 테마를 선택하세요.</p><div class="m-row"><button class="m-btn" id="pxLight">밝게</button><button class="m-btn primary" id="pxDark">어둡게</button></div>`);
+    const accent = ACCENTS[st.accent || "blue"] || ACCENTS.blue;
+    openModal(`<h3>HTML로 저장</h3><p class="m-sub">현재 컬러 테마(<b>${esc(accent.name)}</b>)를 유지한 채, 저장할 카드의 밝기만 골라요.</p><div class="m-row"><button class="m-btn" id="pxLight">밝게</button><button class="m-btn primary" id="pxDark">어둡게</button></div>`);
     $on("pxLight", "click", () => { closeModal(); exportPersonaHtml(id, "light"); });
     $on("pxDark", "click", () => { closeModal(); exportPersonaHtml(id, "dark"); });
   }
@@ -2111,10 +2278,10 @@ ${gallery}
     const fb = $("formatbar");
     const fbHandler = (e) => {
       const b = e.target.closest(".fbtn"); if (!b) return;
-      e.preventDefault();
       const id = b.id;
+      if (id === "hiliteBtn") return;
+      e.preventDefault();
       if (b.dataset.cmd) exec(b.dataset.cmd, b.dataset.val);
-      else if (id === "hiliteBtn") toggleHilite();
       else if (id === "fsDown") fontStep(-1);
       else if (id === "fsUp") fontStep(1);
       else if (id === "fsList") showFontSizes();
@@ -2129,6 +2296,7 @@ ${gallery}
     };
     fb.addEventListener("mousedown", fbHandler);
     fb.addEventListener("touchstart", fbHandler, { passive: false });
+    bindHiliteButton();
 
     // lorebook
     $on("loreEdit", "input", scheduleLoreSave);
@@ -2157,8 +2325,16 @@ ${gallery}
     $on("perViewToggle", "click", togglePerView);
     $on("perMore", "click", () => openNoteSheet(st.curNoteId));
     // lightbox
-    $on("lbClose", "click", () => { $("lightbox").hidden = true; });
-    $on("lightbox", "click", (e) => { if (e.target.id === "lightbox") $("lightbox").hidden = true; });
+    $on("lbClose", "click", closeLightbox);
+    $on("lbPrev", "click", () => stepLightbox(-1));
+    $on("lbNext", "click", () => stepLightbox(1));
+    $on("lightbox", "click", (e) => { if (e.target.id === "lightbox") closeLightbox(); });
+    document.addEventListener("keydown", (e) => {
+      if ($("lightbox").hidden) return;
+      if (e.key === "Escape") { e.preventDefault(); closeLightbox(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); stepLightbox(-1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); stepLightbox(1); }
+    });
     // cropper
     $on("cropCancel", "click", closeCropper);
     $on("cropOk", "click", commitCrop);
@@ -2179,6 +2355,7 @@ ${gallery}
   async function init() {
     detectTheme();
     detectAccent();
+    detectHiliteColor();
     detectUserFont();
     detectFontScale();
     loadSorts();
