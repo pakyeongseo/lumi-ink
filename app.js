@@ -1894,7 +1894,11 @@ ${gallery}
     burgundy: { name: "버건디", grad: "linear-gradient(135deg, #c0405e, #9a2f48)", ig: ["#e0607e", "#d05068"] },
     dgreen: { name: "딥그린", grad: "linear-gradient(135deg, #2faa72, #1f8a6a)", ig: ["#3fc78a", "#3aa890"] },
     dviolet: { name: "딥바이올렛", grad: "linear-gradient(135deg, #8a4ee0, #6a3fc8)", ig: ["#a06ef0", "#8a5fe0"] },
-    lgold: { name: "럭셔리골드", grad: "linear-gradient(135deg, #c89a28, #a87c14)", ig: ["#f0c64a", "#d9a832"] }
+    lgold: { name: "럭셔리골드", grad: "linear-gradient(135deg, #c89a28, #a87c14)", ig: ["#f0c64a", "#d9a832"] },
+    mono: { name: "무채색", grad: "linear-gradient(135deg, #b8b8c0, #909098)", ig: ["#c8c8d0", "#a8a8b0"] },
+    brown: { name: "브라운", grad: "linear-gradient(135deg, #b58a56, #98703e)", ig: ["#d2a878", "#c0905e"] },
+    silver: { name: "메탈릭 실버", grad: "linear-gradient(135deg, #9aabbc, #7e8ea0)", ig: ["#bcc8d4", "#9fb0c0"] },
+    mgold: { name: "메탈릭 골드", grad: "linear-gradient(135deg, #d4b842, #b89826)", ig: ["#e8cc5e", "#ccae3e"] }
   };
   function applyAccent(name) {
     if (!ACCENTS[name]) name = "blue";
