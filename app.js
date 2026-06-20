@@ -1881,7 +1881,8 @@ ${gallery}
   /* ---------- color theme (accent) ---------- */
   const ACCENTS = {
     blue: { name: "블루", grad: "linear-gradient(135deg, #7b9bff, #b58bff)", ig: ["#7b9bff", "#b58bff"] },
-    pink: { name: "핑크", grad: "linear-gradient(135deg, #ff93cb, #c98bff)", ig: ["#ff93cb", "#c98bff"] }
+    pink: { name: "핑크", grad: "linear-gradient(135deg, #ff93cb, #c98bff)", ig: ["#ff93cb", "#c98bff"] },
+    green: { name: "그린", grad: "linear-gradient(135deg, #45e3a6, #4fd6c4)", ig: ["#45e3a6", "#4fd6c4"] }
   };
   function applyAccent(name) {
     if (!ACCENTS[name]) name = "blue";
