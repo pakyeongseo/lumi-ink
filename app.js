@@ -89,7 +89,7 @@
             const o = saved[lang] || {}; page[lang].name = String(o.name || ""); page[lang].detail = String(o.detail || "");
             page[lang].tags = Array.isArray(o.tags) ? o.tags.map(String).filter(Boolean) : page[lang].tags;
           });
-          page.creatorMemo = String(saved.creatorMemo || "");
+          page.creatorMemo = normalizeCreatorMemo(saved.creatorMemo);
         });
         if (text.activeId && cur.pages.some((p) => p.id === text.activeId)) cur.activeId = text.activeId;
       }
@@ -133,15 +133,35 @@
     else if (v.s === "settings") renderSettings();
     else if (v.s === "search") renderSearch();
   }
-  function go(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
-  function back() {
+  let navTransition = false;
+  function commitGo(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
+  function go(view) {
+    const cur = curView();
+    // 자유 메모 에디터는 화면을 떠난 뒤 발생하는 blur/timer가 다른 메모에 쓰이지 않도록
+    // 저장 완료 → 세션 종료 → 화면 전환 순서로만 이동합니다.
+    if (cur && cur.s === "editor" && view && view.s !== "editor") {
+      if (navTransition) return;
+      navTransition = true;
+      void (async () => { try { await leaveFreeEditor(); commitGo(view); } finally { navTransition = false; } })();
+      return;
+    }
+    commitGo(view);
+  }
+  async function flushCurrentView(cur) {
+    if (cur === "editor") await leaveFreeEditor();
+    else if (cur === "lore") await flushLore();
+    else if (cur === "persona") await flushPersona();
+    else if (cur === "character") await flushCharacter();
+  }
+  async function back() {
     if (st.selMode) { exitSelMode(); return; }
+    if (navTransition) return;
     const cur = curView().s;
-    if (cur === "editor") flushSave(true);
-    if (cur === "lore") flushLore();
-    if (cur === "persona") flushPersona();
-    if (cur === "character") flushCharacter();
-    if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
+    navTransition = true;
+    try {
+      await flushCurrentView(cur);
+      if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
+    } finally { navTransition = false; }
   }
   function closeTopOverlay() {
     if (st.selMode) { exitSelMode(); return true; }
@@ -154,12 +174,15 @@
   }
   window.addEventListener("popstate", () => {
     if (closeTopOverlay()) { history.pushState({}, ""); return; }
-    if (curView().s === "editor") flushSave(true);
-    if (curView().s === "lore") flushLore();
-    if (curView().s === "persona") flushPersona();
-    if (curView().s === "character") flushCharacter();
-    if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
-    else history.pushState({}, "");
+    if (navTransition) { history.pushState({}, ""); return; }
+    navTransition = true;
+    void (async () => {
+      try {
+        await flushCurrentView(curView().s);
+        if (st.viewStack.length > 1) { st.viewStack.pop(); render(); }
+        else history.pushState({}, "");
+      } finally { navTransition = false; }
+    })();
   });
 
   /* ---------- migration ---------- */
@@ -462,36 +485,52 @@
   function renderEditorMeta() {
     const n = getNote(st.curNoteId);
     if (!n) { back(); return; }
+    beginFreeEditorSession(n);
     $("edTitle").textContent = n.title || "메모";
-    const html = noteHtml(n);
-    if ($("editor").innerHTML !== html) $("editor").innerHTML = html;
-    if ($("codeArea").value !== html) $("codeArea").value = html;
-    if (st.codeMode) { st.codeMode = false; document.body.classList.remove("code-mode"); $("codeToggle").classList.remove("active"); }
     setSaver("");
     renderAttachments("edAttach", n, true);
     queueDraftRecovery(n, "free");
   }
 
   /* ---------- navigation actions ---------- */
-  function openProject(id) { st.curProjectId = id; go({ s: "project" }); renderSidebar(); }
-  function flushPending() {
-    if (st.saveTimer) flushSave(true);
-    if (loreTimer) flushLore();
-    if (perTimer) flushPersona();
-    if (charTimer) flushCharacter();
+  async function openProject(id) {
+    if (navTransition) return;
+    navTransition = true;
+    try {
+      if (curView().s === "editor") await leaveFreeEditor();
+      st.curProjectId = id; commitGo({ s: "project" }); renderSidebar();
+    } finally { navTransition = false; }
   }
-  function openNote(id) {
-    const n = getNote(id); if (!n) return;
-    flushPending();
-    st.curNoteId = id;
-    if (n.type === "free") go({ s: "read" });
-    else if (n.type === "lorebook") go({ s: "lore" });
-    else if (n.type === "persona") { st.perEdit = false; go({ s: "persona" }); }
-    else if (n.type === "character") { st.charEdit = false; go({ s: "character" }); }
-    else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
+  async function flushPending() {
+    if (curView().s === "editor") await leaveFreeEditor();
+    else if (st.saveTimer || (freeEditorSession && freeEditorSession.active)) await flushSave(true);
+    if (loreTimer) await flushLore();
+    if (perTimer) await flushPersona();
+    if (charTimer) await flushCharacter();
+  }
+  async function openNote(id) {
+    const n = getNote(id); if (!n || navTransition) return;
+    navTransition = true;
+    try {
+      await flushPending();
+      // flush가 끝난 뒤에만 선택 noteId를 교체합니다. 이전 에디터의 DOM이 새 메모에 쓰일 여지를 차단합니다.
+      st.curNoteId = id;
+      if (n.type === "free") commitGo({ s: "read" });
+      else if (n.type === "lorebook") commitGo({ s: "lore" });
+      else if (n.type === "persona") { st.perEdit = false; commitGo({ s: "persona" }); }
+      else if (n.type === "character") { st.charEdit = false; commitGo({ s: "character" }); }
+      else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
+    } finally { navTransition = false; }
   }
   function editCurrentNote() { const n = getNote(st.curNoteId); if (n && n.type === "free") go({ s: "editor" }); }
-  function goHome() { closeSidebar(); st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render(); }
+  async function goHome() {
+    if (navTransition) return;
+    navTransition = true;
+    try {
+      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor();
+      st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render();
+    } finally { navTransition = false; }
+  }
 
   /* ---------- project CRUD ---------- */
   async function saveProject(p) { p.updatedAt = now(); await put("projects", p); }
@@ -661,32 +700,89 @@
   }
 
   /* ---------- free-memo editor ---------- */
+  // 에디터 DOM은 한 개만 재사용됩니다. noteId를 세션으로 묶지 않으면 뒤늦은 blur·timer가
+  // 다음에 연 빈 메모에 이전 DOM 내용을 덮어쓰는 경쟁 상태가 생길 수 있어요.
+  let freeEditorSession = null;
   function setSaver(mode) {
     const s = $("saver"); s.className = "saver " + mode;
     $("saverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
     if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("saverText").textContent = ""; } }, 1500);
   }
-  function scheduleSave() {
-    if (!st.codeMode) normalizeLinks($("editor"));
-    const n = getNote(st.curNoteId); if (n && n.type === "free") writeDraft(n, "free", freeDraftFromEditor());
-    setSaver("dirty"); clearTimeout(st.saveTimer); const id = st.curNoteId; st.saveTimer = setTimeout(() => { if (st.curNoteId === id) flushSave(false); }, 550);
+  function beginFreeEditorSession(n) {
+    const html = noteHtml(n), editor = $("editor"), code = $("codeArea");
+    const same = freeEditorSession && freeEditorSession.active && freeEditorSession.noteId === n.id;
+    if (!same) {
+      clearTimeout(st.saveTimer); st.saveTimer = null;
+      freeEditorSession = { noteId: n.id, active: true, dirty: false, revision: 0, lastQueuedRevision: -1, inFlight: Promise.resolve() };
+      editor.innerHTML = html; code.value = html;
+    } else if (!freeEditorSession.dirty) {
+      if (editor.innerHTML !== html) editor.innerHTML = html;
+      if (code.value !== html) code.value = html;
+    }
+    if (st.codeMode) { st.codeMode = false; document.body.classList.remove("code-mode"); $("codeToggle").classList.remove("active"); }
   }
-  async function flushSave(silent) {
+  function activeFreeSession(expectedId) {
+    const session = freeEditorSession;
+    if (!session || !session.active || !session.noteId) return null;
+    if (expectedId && session.noteId !== expectedId) return null;
+    if (st.curNoteId !== session.noteId) return null;
+    return session;
+  }
+  function scheduleSave() {
+    const session = activeFreeSession();
+    if (!session || curView().s !== "editor") return;
+    if (!st.codeMode) normalizeLinks($("editor"));
+    const n = getNote(session.noteId); if (!n || n.type !== "free") return;
+    session.dirty = true; session.revision += 1;
+    writeDraft(n, "free", freeDraftFromEditor());
+    setSaver("dirty"); clearTimeout(st.saveTimer);
+    const id = session.noteId, revision = session.revision;
+    st.saveTimer = setTimeout(() => {
+      if (activeFreeSession(id) === session && session.revision >= revision) void flushSave(false, id);
+    }, 550);
+  }
+  function flushSave(silent, expectedId) {
     clearTimeout(st.saveTimer); st.saveTimer = null;
-    const n = getNote(st.curNoteId); if (!n || n.type !== "free") return;
-    const draft = freeDraftFromEditor(), html = draft.html;
-    if (html === noteHtml(n)) { clearDraftIfSynced(n, "free", draft); return; }
-    n.data = n.data || {}; n.data.html = html;
-    if (!n.titleLocked) { n.title = deriveTitle(html); $("edTitle").textContent = n.title; }
-    await saveNote(n);
-    clearDraftIfSynced(n, "free", draft);
-    if (!silent) setSaver("saved");
+    const session = activeFreeSession(expectedId);
+    if (!session || !session.dirty) return session && session.inFlight ? session.inFlight : Promise.resolve();
+    const noteId = session.noteId, n = getNote(noteId);
+    if (!n || n.type !== "free") return Promise.resolve();
+    const draft = freeDraftFromEditor(), html = draft.html, revision = session.revision;
+    if (session.lastQueuedRevision === revision) return session.inFlight || Promise.resolve();
+    session.lastQueuedRevision = revision;
+    const write = async () => {
+      const note = getNote(noteId);
+      if (!note || note.type !== "free") return;
+      if (html === noteHtml(note)) {
+        if (freeEditorSession === session && session.revision === revision) { session.dirty = false; clearDraftIfSynced(note, "free", draft); }
+        return;
+      }
+      note.data = note.data || {}; note.data.html = html;
+      if (!note.titleLocked) { note.title = deriveTitle(html); if (st.curNoteId === noteId) $("edTitle").textContent = note.title; }
+      await saveNote(note);
+      if (freeEditorSession === session && session.revision === revision) {
+        session.dirty = false; clearDraftIfSynced(note, "free", draft);
+        if (!silent) setSaver("saved");
+      }
+    };
+    session.inFlight = (session.inFlight || Promise.resolve()).then(write, write);
+    return session.inFlight;
+  }
+  async function leaveFreeEditor() {
+    const session = freeEditorSession;
+    if (!session || !session.active) return;
+    await flushSave(true, session.noteId);
+    if (freeEditorSession === session) {
+      session.active = false; session.noteId = null; session.dirty = false;
+      clearTimeout(st.saveTimer); st.saveTimer = null;
+    }
   }
   function exec(cmd, val) { $("editor").focus(); try { document.execCommand("styleWithCSS", false, true); } catch (e) {} document.execCommand(cmd, false, val || null); scheduleSave(); }
-  function setCodeMode(on) {
-    if (on === st.codeMode || !st.curNoteId) return;
-    flushSave(true);
-    const html = noteHtml(getNote(st.curNoteId));
+  async function setCodeMode(on) {
+    const session = activeFreeSession();
+    if (!session || on === st.codeMode) return;
+    await flushSave(true, session.noteId);
+    const html = noteHtml(getNote(session.noteId));
     if (on) $("codeArea").value = html; else $("editor").innerHTML = html;
     st.codeMode = on;
     document.body.classList.toggle("code-mode", on);
@@ -965,12 +1061,12 @@
       if (/^\s*$/.test(raw)) { closeLists(); continue; }
       let m;
       if ((m = raw.match(/^\s*(@@[A-Za-z0-9_가-힣./:-]+)(?:\s+(.+))?\s*$/))) { closeLists(); out.push(`<div class="md-command-line"><span class="md-command">${esc(m[1])}</span>${m[2] ? `<span class="md-command-text">${inline(m[2])}</span>` : ""}</div>`); continue; }
-      if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
-      if ((m = raw.match(/^\s*-\s+([^:：]+)[:：]\s*(.*)$/))) { closeLists(); out.push(`<div class="md-mini"><span class="md-mini-key">${inline(m[1].trim())}</span>${inline(m[2])}</div>`); continue; }
+      if ((m = raw.match(/^(#{1,3})\s*(.+?)\s*$/))) { closeLists(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
+      if ((m = raw.match(/^\s*-\s*([^:：]+)[:：]\s*(.*)$/))) { closeLists(); out.push(`<div class="md-mini"><span class="md-mini-key">${inline(m[1].trim())}</span>${inline(m[2])}</div>`); continue; }
       if (/^\s*>\s?/.test(raw)) { closeLists(); out.push(`<blockquote>${inline(raw.replace(/^\s*>\s?/, ""))}</blockquote>`); continue; }
-      if (/^\s*([-*+])\s+/.test(raw)) { if (!inUl) { closeLists(); out.push("<ul>"); inUl = true; } out.push(`<li>${inline(raw.replace(/^\s*[-*+]\s+/, ""))}</li>`); continue; }
-      if (/^\s*\d+\.\s+/.test(raw)) { if (!inOl) { closeLists(); out.push("<ol>"); inOl = true; } out.push(`<li>${inline(raw.replace(/^\s*\d+\.\s+/, ""))}</li>`); continue; }
       if (/^\s*(---|\*\*\*|___)\s*$/.test(raw)) { closeLists(); out.push("<hr>"); continue; }
+      if (/^\s*([-*+])\s*(.+)$/.test(raw)) { if (!inUl) { closeLists(); out.push("<ul>"); inUl = true; } out.push(`<li>${inline(raw.replace(/^\s*[-*+]\s*/, ""))}</li>`); continue; }
+      if (/^\s*\d+\.\s+/.test(raw)) { if (!inOl) { closeLists(); out.push("<ol>"); inOl = true; } out.push(`<li>${inline(raw.replace(/^\s*\d+\.\s+/, ""))}</li>`); continue; }
       closeLists(); out.push(`<p>${inline(raw)}</p>`);
     }
     if (inCode) out.push("<pre><code>" + esc(code.join("\n")) + "</code></pre>");
@@ -1312,11 +1408,11 @@
     const lines = cleaned.split(/\r?\n/);
     let html = "";
     lines.forEach((ln) => {
-      const m = ln.match(/^\s*(#{1,6})\s+(.+?)\s*$/);
+      const m = ln.match(/^\s*(#{1,6})\s*(.+?)\s*$/);
       if (m) { const lvl = Math.min(m[1].length, 3); html += `<div class="pr-head pr-h${lvl}">${esc(m[2])}</div>`; return; }
-      const mini = ln.match(/^\s*-\s+([^:：]+)[:：]\s*(.*)$/);
+      const mini = ln.match(/^\s*-\s*([^:：]+)[:：]\s*(.*)$/);
       if (mini) { html += `<div class="pr-mini"><span class="pr-mini-key">${esc(mini[1].trim())}</span>${esc(mini[2])}</div>`; return; }
-      const li = ln.match(/^\s*-\s+(.+?)\s*$/);
+      const li = ln.match(/^\s*-\s*(.+?)\s*$/);
       if (li) { html += `<div class="pr-li"><span class="pr-bullet">▶</span><span>${esc(li[1])}</span></div>`; return; }
       if (ln.trim() === "") html += '<div class="pr-gap"></div>';
       else html += `<div class="pr-line">${esc(ln)}</div>`;
@@ -1492,7 +1588,19 @@
 
 
   /* ---------- character memo ---------- */
-  let charTimer = null, charImgTarget = null, charLang = "ko";
+  let charTimer = null, charImgTarget = null, charLang = "ko", creatorCodeMode = false;
+  function normalizeCreatorMemo(value) {
+    const raw = String(value || "");
+    if (!raw.trim()) return "";
+    // v46의 일반 텍스트 메모는 줄바꿈을 보존해 리치 HTML로 부드럽게 마이그레이션합니다.
+    const source = /<\/?[a-z][^>]*>/i.test(raw) ? raw : esc(raw).replace(/\r?\n/g, "<br>");
+    return sanitize(source).html;
+  }
+  function creatorMemoPreview(html) {
+    const text = plainText(normalizeCreatorMemo(html)).replace(/\s+/g, " ").trim();
+    if (!text) return "";
+    return text.length > 150 ? text.slice(0, 150) + "…" : text;
+  }
   function makeCharacterPage() {
     return { id: uid(), portrait: null, square: null, gallery: [], creatorMemo: "", ko: { name: "", tags: [], detail: "" }, en: { name: "", tags: [], detail: "" } };
   }
@@ -1502,7 +1610,7 @@
     p.portrait = typeof p.portrait === "string" ? p.portrait : null;
     p.square = typeof p.square === "string" ? p.square : null;
     p.gallery = Array.isArray(p.gallery) ? p.gallery.filter((x) => typeof x === "string") : [];
-    p.creatorMemo = String(p.creatorMemo || "");
+    p.creatorMemo = normalizeCreatorMemo(p.creatorMemo);
     ["ko", "en"].forEach((lang) => {
       p[lang] = p[lang] && typeof p[lang] === "object" ? p[lang] : {};
       p[lang].name = String(p[lang].name || "");
@@ -1542,7 +1650,7 @@
       if (page) {
         page.ko.name = $("charKoName").value; page.ko.detail = $("charKoDetail").value;
         page.en.name = $("charEnName").value; page.en.detail = $("charEnDetail").value;
-        page.creatorMemo = $("charCreatorMemo").value;
+        page.creatorMemo = getCreatorMemoHtml();
       }
     }
     return copy;
@@ -1636,11 +1744,179 @@
       add.addEventListener("click", () => { charImgTarget = "gallery"; $("charImgInput").click(); }); wrap.appendChild(add);
     }
   }
+  function getCreatorEditor() { return $("charCreatorEditor"); }
+  function creatorRange() {
+    const ed = getCreatorEditor(), sel = window.getSelection();
+    if (!ed || !sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    return ed.contains(range.commonAncestorContainer) ? range.cloneRange() : null;
+  }
+  function restoreCreatorRange(range) {
+    const ed = getCreatorEditor(); if (!ed) return false;
+    try { ed.focus({ preventScroll: true }); } catch (e) { ed.focus(); }
+    if (!range) return false;
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); return true;
+  }
+  function getCreatorMemoHtml() {
+    const raw = creatorCodeMode ? $("charCreatorCode").value : getCreatorEditor().innerHTML;
+    return normalizeCreatorMemo(raw);
+  }
+  function renderCreatorEditor(html) {
+    const safe = normalizeCreatorMemo(html), editor = getCreatorEditor(), code = $("charCreatorCode");
+    creatorCodeMode = false;
+    editor.hidden = false; code.hidden = true;
+    if (editor.innerHTML !== safe) editor.innerHTML = safe;
+    if (code.value !== safe) code.value = safe;
+    $("charCreatorCodeToggle").classList.remove("active");
+  }
+  function scheduleCreatorSave() { scheduleCharSave(); }
+  function creatorExec(cmd, val) {
+    const ed = getCreatorEditor(); ed.focus();
+    try { document.execCommand("styleWithCSS", false, true); } catch (e) {}
+    document.execCommand(cmd, false, val || null); scheduleCreatorSave();
+  }
+  async function setCreatorCodeMode(on) {
+    if (on === creatorCodeMode) return;
+    if (on) $("charCreatorCode").value = getCreatorMemoHtml();
+    else getCreatorEditor().innerHTML = normalizeCreatorMemo($("charCreatorCode").value);
+    creatorCodeMode = on;
+    getCreatorEditor().hidden = on; $("charCreatorCode").hidden = !on;
+    $("charCreatorCodeToggle").classList.toggle("active", on);
+    if (on) $("charCreatorCode").focus(); else getCreatorEditor().focus();
+    scheduleCreatorSave();
+  }
+  function creatorFontStep(delta) {
+    const ed = getCreatorEditor(); ed.focus();
+    let size = parseInt(document.queryCommandValue("fontSize"), 10); if (!size || isNaN(size)) size = 3;
+    document.execCommand("fontSize", false, String(Math.min(7, Math.max(1, size + delta)))); scheduleCreatorSave();
+  }
+  function openCreatorFontSizes() {
+    const range = creatorRange();
+    if (!range || range.collapsed) { toast("크기를 바꿀 텍스트를 선택해 주세요"); return; }
+    const sizes = [["아주 작게",1,12],["작게",2,14],["보통",3,16],["크게",4,19],["더 크게",5,23],["제목",6,28],["대제목",7,34]];
+    openModal(`<h3>글자 크기</h3><div class="size-list">${sizes.map(([name,value,px]) => `<div class="size-item creator-size" data-v="${value}" style="font-size:${px}px">${name}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="creatorSizeClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".creator-size").forEach((item) => item.addEventListener("click", () => {
+      closeModal(); restoreCreatorRange(range); document.execCommand("fontSize", false, item.dataset.v); scheduleCreatorSave();
+    }));
+    $on("creatorSizeClose", "click", closeModal);
+  }
+  function openCreatorColorEditor() {
+    const range = creatorRange();
+    if (!range || range.collapsed) { toast("색을 바꿀 텍스트를 선택해 주세요"); return; }
+    let current = colorCur;
+    try { current = localStorage.getItem("luminkLastColor") || current; } catch (e) {}
+    const palette = COLOR_PALETTE.map((c) => `<button class="ce-sw creator-color" data-c="${c}" style="background:${c}"></button>`).join("");
+    openModal(`<h3>글자 색</h3><div class="ce-preview"><span class="ce-preview-chip" id="ccPrevChip"></span><span class="ce-preview-text" id="ccPrevText">가나다 Sample</span></div><div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="ccPalette">${palette}</div><div class="ce-section-label">직접 입력</div><div class="ce-custom-row"><input type="color" class="ce-native" id="ccNative"><input class="ce-hex" id="ccHex" maxlength="7" spellcheck="false" placeholder="#000000"></div><div class="m-row"><button class="m-btn" id="ccCancel">취소</button><button class="m-btn primary" id="ccApply">적용</button></div>`);
+    const set = (value) => { const hex = normHex(value); if (!hex) return; current = hex; $("ccPrevChip").style.background = hex; $("ccPrevText").style.color = hex; $("ccNative").value = hex; if (document.activeElement !== $("ccHex")) $("ccHex").value = hex; $("modalBox").querySelectorAll(".creator-color").forEach((b) => b.classList.toggle("sel", b.dataset.c === hex)); };
+    $("modalBox").querySelectorAll(".creator-color").forEach((b) => b.addEventListener("click", () => set(b.dataset.c)));
+    $on("ccNative", "input", (e) => set(e.target.value));
+    $on("ccHex", "input", (e) => { const hex = normHex(e.target.value); if (hex) set(hex); });
+    $on("ccCancel", "click", closeModal);
+    $on("ccApply", "click", () => { try { localStorage.setItem("luminkLastColor", current); } catch (e) {} closeModal(); restoreCreatorRange(range); document.execCommand("styleWithCSS", false, true); document.execCommand("foreColor", false, current); $("charCreatorColorSwatch").style.background = current; scheduleCreatorSave(); });
+    set(current);
+  }
+  function toggleCreatorHilite(color, savedRange, forceColor) {
+    const range = savedRange || creatorRange();
+    if (!range || range.collapsed) { toast("형광펜을 칠할 텍스트를 선택해 주세요"); return; }
+    restoreCreatorRange(range);
+    const sel = window.getSelection(), active = sel && sel.rangeCount ? sel.getRangeAt(0) : range;
+    let start = active.startContainer, end = active.endContainer;
+    if (start.nodeType === 3) start = start.parentElement; if (end.nodeType === 3) end = end.parentElement;
+    const existing = start && start.closest && start.closest("span.lumi-hl");
+    if (existing && end && existing.contains(end)) {
+      if (forceColor) { existing.style.backgroundColor = color || getHiliteColor(); existing.style.color = "#222"; }
+      else unwrapHighlight(existing);
+      scheduleCreatorSave(); return;
+    }
+    try {
+      const mark = document.createElement("span"); mark.className = "lumi-hl"; mark.style.backgroundColor = color || getHiliteColor(); mark.style.color = "#222"; mark.style.borderRadius = "3px"; mark.style.padding = "0 1px";
+      active.surroundContents(mark); sel.removeAllRanges();
+    } catch (e) { try { document.execCommand("styleWithCSS", false, true); document.execCommand("hiliteColor", false, color || getHiliteColor()); } catch (e2) {} }
+    scheduleCreatorSave();
+  }
+  function openCreatorHilitePicker(range) {
+    const current = getHiliteColor();
+    openModal(`<h3>형광펜 색상</h3><p class="m-sub">색을 고르면 현재 선택한 텍스트에 바로 적용돼요.</p><div class="hilite-picker">${HILITE_COLORS.map((x) => `<button class="hilite-choice${x.value === current ? " sel" : ""}" data-color="${x.value}" aria-label="${x.label}"><span class="hilite-swatch" style="background:${x.value}"></span><span>${x.label}</span></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="creatorHiliteCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll(".hilite-choice").forEach((btn) => btn.addEventListener("click", () => { const color = btn.dataset.color; setHiliteColor(color); $("charCreatorHiliteBtn").style.setProperty("--hilite-color", color); closeModal(); if (range && !range.collapsed) toggleCreatorHilite(color, range, true); else toast(`${HILITE_COLORS.find((x) => x.value === color).label}으로 바꿨어요`); }));
+    $on("creatorHiliteCancel", "click", closeModal);
+  }
+  function bindCreatorHiliteButton() {
+    const btn = $("charCreatorHiliteBtn"); if (!btn) return;
+    let timer = null, held = false, saved = null, pointerId = null;
+    const clear = () => { clearTimeout(timer); timer = null; };
+    const reset = () => { clear(); held = false; saved = null; pointerId = null; btn.classList.remove("holding"); };
+    btn.addEventListener("pointerdown", (e) => { if (e.button != null && e.button !== 0) return; e.preventDefault(); saved = creatorRange(); pointerId = e.pointerId; held = false; btn.classList.add("holding"); try { btn.setPointerCapture(pointerId); } catch (x) {} timer = setTimeout(() => { timer = null; held = true; btn.classList.remove("holding"); if (navigator.vibrate) navigator.vibrate(12); openCreatorHilitePicker(saved); }, 480); });
+    btn.addEventListener("pointerup", (e) => { if (pointerId != null && e.pointerId !== pointerId) return; const wasHeld = held, range = saved; reset(); if (!wasHeld) toggleCreatorHilite(getHiliteColor(), range, false); });
+    btn.addEventListener("pointercancel", reset); btn.addEventListener("lostpointercapture", () => { if (!held) clear(); }); btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+  async function insertCreatorImage(file) {
+    if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    try { const data = await fileToResized(file, 1280); getCreatorEditor().focus(); document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`); scheduleCreatorSave(); }
+    catch (e) { toast((e && e.message) || "이미지를 넣지 못했어요"); }
+  }
+  function wrapCreatorCodeBlock() { getCreatorEditor().focus(); try { document.execCommand("formatBlock", false, "pre"); } catch (e) {} scheduleCreatorSave(); }
+  function eraseCreatorFormatting() {
+    const ed = getCreatorEditor(); ed.focus(); const sel = window.getSelection(), range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    if (range && !range.collapsed) [...ed.querySelectorAll("pre, code")].forEach((el) => { if (range.intersectsNode(el)) el.replaceWith(document.createTextNode(el.textContent)); });
+    try { document.execCommand("styleWithCSS", false, true); } catch (e) {} document.execCommand("removeFormat", false, null); document.execCommand("unlink", false, null); scheduleCreatorSave();
+  }
+  function showCreatorAlignMenu() {
+    const range = creatorRange();
+    const items = [["justifyLeft","왼쪽 정렬","M4 6h16M4 12h10M4 18h13"],["justifyCenter","가운데 정렬","M4 6h16M7 12h10M5 18h14"],["justifyRight","오른쪽 정렬","M4 6h16M10 12h10M7 18h13"]];
+    openModal(`<h3>정렬</h3><div class="size-list">${items.map(([cmd,name,path]) => `<div class="size-item creator-align" data-c="${cmd}"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:-4px;margin-right:10px"><path d="${path}"/></svg>${name}</div>`).join("")}</div><div class="m-row"><button class="m-btn" id="creatorAlignClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll(".creator-align").forEach((item) => item.addEventListener("click", () => { closeModal(); restoreCreatorRange(range); document.execCommand(item.dataset.c, false, null); scheduleCreatorSave(); }));
+    $on("creatorAlignClose", "click", closeModal);
+  }
+  function insertCreatorLink() {
+    const range = creatorRange();
+    if (!range || range.collapsed) { toast("링크를 걸 텍스트를 먼저 선택해 주세요"); return; }
+    openModal(`<h3>링크 삽입</h3><div class="m-field-label">연결할 주소</div><input class="m-input" id="creatorLinkUrl" placeholder="https://…" inputmode="url" autocapitalize="off" autocorrect="off"><div class="m-row"><button class="m-btn" id="creatorLinkCancel">취소</button><button class="m-btn primary" id="creatorLinkOk">삽입</button></div>`);
+    setTimeout(() => $("creatorLinkUrl").focus(), 120);
+    $on("creatorLinkCancel", "click", closeModal);
+    $on("creatorLinkOk", "click", () => { let url = $("creatorLinkUrl").value.trim(); if (!url) return; if (!/^https?:\/\//i.test(url)) url = "https://" + url; closeModal(); restoreCreatorRange(range); document.execCommand("createLink", false, url); normalizeLinks(getCreatorEditor()); scheduleCreatorSave(); });
+  }
+  function creatorLinkifyBeforeCaret() {
+    try {
+      const ed = getCreatorEditor(), sel = window.getSelection();
+      if (!ed || !sel || !sel.rangeCount || !sel.isCollapsed) return;
+      const r = sel.getRangeAt(0), node = r.startContainer;
+      if (!ed.contains(node) || node.nodeType !== 3 || (node.parentElement && node.parentElement.closest("a"))) return;
+      const caret = r.startOffset, before = node.textContent.slice(0, caret), m = before.match(/(https?:\/\/[^\s]+)(\s)$/);
+      if (!m) return;
+      const url = m[1], start = caret - m[0].length, end = start + url.length;
+      const rng = document.createRange(); rng.setStart(node, start); rng.setEnd(node, end);
+      const a = document.createElement("a"); a.href = url; a.className = "lumi-link"; a.target = "_blank"; a.rel = "noopener noreferrer";
+      rng.surroundContents(a);
+      const after = a.nextSibling, sel2 = window.getSelection(), c = document.createRange();
+      if (after && after.nodeType === 3) c.setStart(after, Math.min(1, after.textContent.length)); else c.setStartAfter(a);
+      c.collapse(true); sel2.removeAllRanges(); sel2.addRange(c); scheduleCreatorSave();
+    } catch (e) {}
+  }
+  function onCreatorPaste(e) {
+    const text = ((e.clipboardData || window.clipboardData) || {}).getData ? (e.clipboardData || window.clipboardData).getData("text") : "";
+    const url = (text || "").trim(), ed = getCreatorEditor();
+    if (!url || !/^https?:\/\/[^\s]+$/i.test(url) || !ed) return;
+    e.preventDefault();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && !sel.isCollapsed) document.execCommand("createLink", false, url);
+    else document.execCommand("insertHTML", false, `<a href="${url.replace(/"/g, "%22")}">${esc(url)}</a>&nbsp;`);
+    normalizeLinks(ed); scheduleCreatorSave();
+  }
+
+  function openCreatorMemoModal() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const html = normalizeCreatorMemo(activeCharacterPage(n).creatorMemo); if (!html) return;
+    openModal(`<h3>크리에이터 메모</h3><div class="creator-modal-body read-body">${html}</div><div class="m-row"><button class="m-btn primary" id="creatorReadClose">닫기</button></div>`);
+    attachReadCodeCopy($("modalBox"));
+    $on("creatorReadClose", "click", closeModal);
+  }
+
   function renderCharacterEdit(n) {
     const page = activeCharacterPage(n);
     $("charKoName").value = page.ko.name || ""; $("charKoDetail").value = page.ko.detail || "";
     $("charEnName").value = page.en.name || ""; $("charEnDetail").value = page.en.detail || "";
-    $("charCreatorMemo").value = page.creatorMemo || "";
+    renderCreatorEditor(page.creatorMemo);
+    const hilite = $("charCreatorHiliteBtn"); if (hilite) hilite.style.setProperty("--hilite-color", getHiliteColor());
     renderCharImagesEdit(n); renderCharTags(n, "ko"); renderCharTags(n, "en"); renderCharGallery(n, false);
   }
   function renderCharacterRead(n) {
@@ -1653,9 +1929,9 @@
     $("charRName").textContent = o.name || "";
     const tags = $("charRTags"); tags.innerHTML = ""; (o.tags || []).forEach((tag) => { const chip = document.createElement("span"); chip.className = "kw-chip"; chip.textContent = tag; tags.appendChild(chip); });
     $("charRDetail").innerHTML = personaDetailHTML(o.detail);
-    const creator = $("charRCreator");
-    creator.hidden = !page.creatorMemo.trim();
-    creator.innerHTML = page.creatorMemo.trim() ? personaDetailHTML(page.creatorMemo) : "";
+    const creator = $("charRCreator"), creatorHtml = normalizeCreatorMemo(page.creatorMemo);
+    creator.hidden = !creatorHtml.trim();
+    $("charRCreatorPreview").textContent = creatorMemoPreview(creatorHtml);
     const token = $("charRTok"); token.textContent = "계산 중…";
     ensureTokenizer().then((ok) => {
       if (getNote(st.curNoteId) !== n || st.charEdit) return;
@@ -1697,7 +1973,7 @@
     const page = activeCharacterPage(n);
     page.ko.name = $("charKoName").value; page.ko.detail = $("charKoDetail").value;
     page.en.name = $("charEnName").value; page.en.detail = $("charEnDetail").value;
-    page.creatorMemo = $("charCreatorMemo").value;
+    page.creatorMemo = getCreatorMemoHtml();
     syncCharacterTitle(n); await saveCharacter(n); clearDraftIfSynced(n, "character", characterTextSnapshot(n, false)); updateCharTokens(n);
   }
   async function addCharTag(lang) {
@@ -2722,14 +2998,15 @@ ${gallery}
     const pageHtml = d.pages.map((page, index) => {
       const portrait = page.portrait ? `<div class="portrait"><img src="${page.portrait}" alt=""></div>` : "";
       const gallery = page.gallery && page.gallery.length ? `<div class="gal-label">갤러리</div><div class="gallery">${page.gallery.map((src) => `<img src="${src}" alt="">`).join("")}</div>` : "";
-      const creator = includeCreator && page.creatorMemo.trim() ? `<section class="creator"><div class="creator-label">CREATOR NOTE</div><div class="detail">${personaDetailHTML(page.creatorMemo)}</div></section>` : "";
+      const creatorHtml = normalizeCreatorMemo(page.creatorMemo);
+      const creator = includeCreator && creatorHtml.trim() ? `<section class="creator"><div class="creator-label">CREATOR NOTE</div><div class="detail creator-rich">${creatorHtml}</div></section>` : "";
       return `<article class="char-page" data-page="${index}"${index ? " hidden" : ""}>${portrait}${langBlock(page, "ko", "한국어")}${langBlock(page, "en", "English")}${creator}${gallery}</article>`;
     }).join("");
     const nav = d.pages.length > 1 ? `<nav class="cnav">${d.pages.map((page, index) => { const src = page.square || page.portrait; return `<button type="button" data-page="${index}"${index === 0 ? ' class="active"' : ""}>${src ? `<img src="${src}" alt="">` : `<span class="nav-placeholder">${index + 1}</span>`}<span>${esc(charPageName(page, "ko"))}</span></button>`; }).join("")}</nav>` : "";
     const exportData = jsonCopy(d) || { activeId: d.activeId, pages: d.pages };
     if (!includeCreator) exportData.pages.forEach((page) => { page.creatorMemo = ""; });
     const payload = JSON.stringify({ app: "lumink", kind: "character", title: n.title, data: exportData }).replace(/</g, "\\u003c");
-    const css = personaExportCSS(theme === "dark" ? "dark" : "light") + `.cnav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 5px}.cnav button{border:1px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").line};background:transparent;color:inherit;border-radius:12px;padding:6px 9px;display:flex;gap:7px;align-items:center;cursor:pointer;white-space:nowrap;font:inherit;font-size:12px}.cnav button.active{border-color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.cnav img,.nav-placeholder{width:28px;height:28px;border-radius:8px;object-fit:cover;background:${personaExportPalette(theme === "dark" ? "dark" : "light").panel2};display:grid;place-items:center}.char-page[hidden]{display:none}.creator{margin:0 0 28px}.creator-label{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.11em;color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};padding:5px 12px;border-radius:999px;margin-bottom:11px}.creator .detail{border-left:3px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}`;
+    const css = personaExportCSS(theme === "dark" ? "dark" : "light") + `.cnav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 5px}.cnav button{border:1px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").line};background:transparent;color:inherit;border-radius:12px;padding:6px 9px;display:flex;gap:7px;align-items:center;cursor:pointer;white-space:nowrap;font:inherit;font-size:12px}.cnav button.active{border-color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.cnav img,.nav-placeholder{width:28px;height:28px;border-radius:8px;object-fit:cover;background:${personaExportPalette(theme === "dark" ? "dark" : "light").panel2};display:grid;place-items:center}.char-page[hidden]{display:none}.creator{margin:0 0 28px}.creator-label{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.11em;color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};padding:5px 12px;border-radius:999px;margin-bottom:11px}.creator .detail{border-left:3px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.creator-rich img{max-width:100%;height:auto;border-radius:8px}.creator-rich pre{overflow:auto}.creator-rich a{color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}`;
     const doc = `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="character"><title>${esc(n.title || "캐릭터 메모")}</title><style>${css}</style></head><body><main class="wrap"><h1 class="ptitle">${esc(n.title || "캐릭터 메모")}</h1>${nav}${pageHtml}<div class="foot">Lumi Ink · 캐릭터 메모</div></main><script type="application/json" id="lumink-character">${payload}<\/script><script>(function(){var pages=[].slice.call(document.querySelectorAll('.char-page')),buttons=[].slice.call(document.querySelectorAll('.cnav button'));function show(i){pages.forEach(function(p,x){p.hidden=x!==i});buttons.forEach(function(b,x){b.classList.toggle('active',x===i)});window.scrollTo({top:0,behavior:'smooth'})}buttons.forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.page)})})})();<\/script></body></html>`;
     const name = ((n.title || "character").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "character") + ".html";
@@ -2951,8 +3228,11 @@ ${gallery}
   }
   function openInstallIconPicker() {
     const choices = [
-      ["ink", "잉크 블루", "차분한 기본 펜촉"], ["violet", "바이올렛", "몽환적인 보랏빛 펜촉"],
-      ["rose", "로즈", "부드러운 핑크 펜촉"], ["forest", "포레스트", "짙은 초록 펜촉"]
+      ["ink", "잉크 블루", "차분한 기본 펜촉"], ["gold", "골드", "온화한 금빛 펜촉"],
+      ["violet", "바이올렛", "몽환적인 보랏빛 펜촉"], ["rose", "로즈", "부드러운 장밋빛 펜촉"],
+      ["forest", "포레스트", "짙은 숲빛 펜촉"], ["pastel-blue", "파스텔 블루", "맑고 부드러운 하늘빛"],
+      ["pastel-pink", "파스텔 핑크", "포근한 솜사탕빛"], ["pastel-green", "파스텔 그린", "산뜻한 새잎빛"],
+      ["pastel-purple", "파스텔 퍼플", "은은한 라일락빛"], ["pastel-yellow", "파스텔 옐로우", "따스한 레몬빛"]
     ];
     openModal(`<h3>앱 설치 아이콘</h3><p class="m-sub">아이콘을 고르면 해당 설치 전용 페이지로 이동해요. 이미 설치한 앱의 아이콘을 바꾸려면 기존 앱을 삭제한 뒤 다시 설치해 주세요.</p><div class="install-icon-grid">${choices.map(([id,name,sub]) => `<button class="install-icon-choice" data-install-icon="${id}"><img src="./icon-${id}-192.png" alt="${name}"><span><b>${name}</b><small>${sub}</small></span></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="installIconClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-install-icon]").forEach((button) => button.addEventListener("click", () => { window.location.href = `./install-${button.dataset.installIcon}.html`; }));
@@ -3060,9 +3340,9 @@ ${gallery}
     $on("pdSelect", "click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
     $on("pdFab", "click", () => showTypePicker(st.curProjectId));
     $on("readEdit", "click", editCurrentNote);
-    $on("edView", "click", () => { flushSave(true); go({ s: "read" }); });
+    $on("edView", "click", async () => { if (navTransition) return; navTransition = true; try { await leaveFreeEditor(); commitGo({ s: "read" }); } finally { navTransition = false; } });
     $on("readMore", "click", () => openNoteSheet(st.curNoteId));
-    $on("edBack", "click", () => { flushSave(true); back(); });
+    $on("edBack", "click", () => { void back(); });
     $on("edMore", "click", () => openNoteSheet(st.curNoteId));
     $on("sbNewProject", "click", () => { closeSidebar(); showProjectForm(null, () => { render(); renderSidebar(); }); });
     $on("sbNewMemo", "click", () => { closeSidebar(); showTypePicker(null); });
@@ -3132,9 +3412,9 @@ ${gallery}
 
     // editor
     $on("editor", "input", scheduleSave);
-    $on("editor", "blur", () => flushSave(false));
+    $on("editor", "blur", () => { const s = freeEditorSession; if (s && s.active) void flushSave(false, s.noteId); });
     $on("codeArea", "input", scheduleSave);
-    $on("codeArea", "blur", () => flushSave(false));
+    $on("codeArea", "blur", () => { const s = freeEditorSession; if (s && s.active) void flushSave(false, s.noteId); });
     $on("attachInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
     $on("imgInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) insertImage(f); e.target.value = ""; });
     $on("editor", "paste", onEditorPaste);
@@ -3191,10 +3471,16 @@ ${gallery}
     $on("perMore", "click", () => openNoteSheet(st.curNoteId));
 
     // character memo
-    ["charKoName", "charKoDetail", "charEnName", "charEnDetail", "charCreatorMemo"].forEach((id) => {
+    ["charKoName", "charKoDetail", "charEnName", "charEnDetail"].forEach((id) => {
       $(id).addEventListener("input", scheduleCharSave);
       $(id).addEventListener("blur", () => flushCharacter());
     });
+    $on("charCreatorEditor", "input", scheduleCreatorSave);
+    $on("charCreatorCode", "input", scheduleCreatorSave);
+    $on("charCreatorEditor", "blur", () => flushCharacter());
+    $on("charCreatorCode", "blur", () => flushCharacter());
+    $on("charCreatorEditor", "paste", onCreatorPaste);
+    $on("charCreatorEditor", "keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(creatorLinkifyBeforeCaret, 0); });
     $on("charKoTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addCharTag("ko"); } });
     $on("charKoTagInput", "blur", () => addCharTag("ko"));
     $on("charEnTagInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addCharTag("en"); } });
@@ -3203,6 +3489,28 @@ ${gallery}
     $on("charPortrait", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "portrait"; $("charImgInput").click(); });
     $on("charSquare", "click", (e) => { if (e.target.closest(".per-del")) return; charImgTarget = "square"; $("charImgInput").click(); });
     $on("charImgInput", "change", async (e) => { const files = e.target.files ? [...e.target.files] : []; e.target.value = ""; if (!files.length) return; if (charImgTarget === "gallery") await addCharGalleryFiles(files); else applyCharImage(files[0]); });
+    $on("charCreatorImgInput", "change", (e) => { const file = e.target.files && e.target.files[0]; e.target.value = ""; if (file) insertCreatorImage(file); });
+    $on("charCreatorOpen", "click", openCreatorMemoModal);
+    $on("charCreatorCodeToggle", "click", () => setCreatorCodeMode(!creatorCodeMode));
+    const creatorToolbar = $("charCreatorToolbar");
+    const creatorToolbarHandler = (e) => {
+      const btn = e.target.closest(".fbtn"); if (!btn) return;
+      const id = btn.id; if (id === "charCreatorHiliteBtn") return;
+      e.preventDefault();
+      if (btn.dataset.creatorCmd) creatorExec(btn.dataset.creatorCmd, btn.dataset.val);
+      else if (id === "charCreatorFsDown") creatorFontStep(-1);
+      else if (id === "charCreatorFsUp") creatorFontStep(1);
+      else if (id === "charCreatorFsList") openCreatorFontSizes();
+      else if (id === "charCreatorColorBtn") openCreatorColorEditor();
+      else if (id === "charCreatorAlignBtn") showCreatorAlignMenu();
+      else if (id === "charCreatorImgBtn") $("charCreatorImgInput").click();
+      else if (id === "charCreatorLinkBtn") insertCreatorLink();
+      else if (id === "charCreatorCodeBlockBtn") wrapCreatorCodeBlock();
+      else if (id === "charCreatorEraseBtn") eraseCreatorFormatting();
+    };
+    creatorToolbar.addEventListener("mousedown", creatorToolbarHandler);
+    creatorToolbar.addEventListener("touchstart", creatorToolbarHandler, { passive: false });
+    bindCreatorHiliteButton();
     $on("charViewToggle", "click", toggleCharView);
     $on("charMore", "click", () => openNoteSheet(st.curNoteId));
     $on("charSave", "click", async () => { await flushCharacter(); toast("저장했어요"); });

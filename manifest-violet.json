@@ -12,8 +12,8 @@
     "minimal-ui"
   ],
   "orientation": "portrait-primary",
-  "background_color": "#251438",
-  "theme_color": "#251438",
+  "background_color": "#3d2b67",
+  "theme_color": "#3d2b67",
   "categories": [
     "productivity",
     "utilities"
@@ -44,7 +44,7 @@
       },
       "icons": [
         {
-          "src": "./icon-192.png",
+          "src": "./icon-violet-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
