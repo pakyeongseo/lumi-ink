@@ -70,21 +70,77 @@
 
   /* ===== Color themes (accent) ===== */
   html[data-accent="pink"] {
+    --bg: #110d13;
+    --bg-2: #161017;
+    --surface: #1d161f;
+    --surface-2: #261d28;
+    --surface-3: #2e2431;
+    --paper: #191219;
+    --ink: #f0e9ef;
+    --muted: #a99ba5;
+    --faint: #6f646c;
+    --line: #2f2531;
+    --line-soft: #221b24;
+    --bar-bg: #241627;
+    --bar-bg-2: #2c1a2f;
+    --bar-line: #4c2c4e;
     --accent: #ff86c0;
     --accent-2: #c98bff;
     --accent-deep: #7e3a5f;
     --accent-soft: #2c1a25;
     --glow: 0 0 24px rgba(255,134,192,.24);
+    --shadow: 0 1px 4px rgba(150,46,120,.28), 0 6px 16px rgba(30,14,30,.46);
     --grad-blue: linear-gradient(135deg, #ff93cb, #c98bff);
+    --logo-ink: #ecb1d3;
   }
   html[data-theme="light"][data-accent="pink"] {
+    --bg: #faf2f6;
+    --bg-2: #f4ebf1;
+    --surface: #ffffff;
+    --surface-2: #fbf0f6;
+    --surface-3: #f4e6ee;
+    --paper: #fffcfe;
+    --ink: #2a1d26;
+    --muted: #7a5f6e;
+    --faint: #bba5b2;
+    --line: #efdce8;
+    --line-soft: #f5e9f0;
+    --bar-bg: #fffafd;
+    --bar-bg-2: #fdf4f9;
+    --bar-line: #f0dde9;
     --accent: #d84e95;
     --accent-2: #b06ae0;
     --accent-deep: #f1c6dd;
     --accent-soft: #fce4f0;
     --glow: 0 0 18px rgba(216,78,149,.16);
+    --shadow: 0 1px 3px rgba(170,80,140,.12), 0 5px 14px rgba(170,80,140,.14);
     --grad-blue: linear-gradient(135deg, #ff8fc7, #b78bf0);
+    --logo-ink: #6e2a52;
   }
+  /* pink: recolor hardcoded blue-tinted bits */
+  html[data-accent="pink"] body::before {
+    background:
+      radial-gradient(80% 50% at 12% -8%, rgba(255,134,192,.11), transparent 60%),
+      radial-gradient(70% 45% at 100% 0%, rgba(201,139,255,.10), transparent 55%);
+  }
+  html[data-accent="pink"] .brand-logo .niblogo { filter: drop-shadow(0 0 13px rgba(255,134,192,.55)); }
+  html[data-accent="pink"] .brand-logo .niblogo .nib-body { fill: #faeef5; }
+  html[data-accent="pink"] .brand-logo .niblogo .nib-ink { fill: #5e2a4e; }
+  html[data-theme="light"][data-accent="pink"] .brand-logo .niblogo { filter: drop-shadow(0 0 6px rgba(216,78,149,.3)); }
+  html[data-theme="light"][data-accent="pink"] .brand-logo .niblogo .nib-body { fill: #d06a9e; }
+  html[data-theme="light"][data-accent="pink"] .brand-logo .niblogo .nib-ink { fill: #fff; }
+  html[data-accent="pink"] .proj-icon .deflogo,
+  html[data-accent="pink"] .pd-thumb .deflogo {
+    background: radial-gradient(circle at 38% 30%, #ffd9ec, #ff86c0 45%, #c14e8e 100%);
+    box-shadow: 0 0 10px rgba(255,134,192,.45);
+  }
+  html[data-accent="pink"] .pin-star { filter: drop-shadow(0 0 3px rgba(255,134,192,.5)); }
+  html[data-accent="pink"] .fab { box-shadow: 0 2px 8px rgba(220,90,170,.45), 0 5px 16px rgba(110,30,80,.4); }
+  html[data-accent="pink"] .action-card.accent { box-shadow: 0 0 24px rgba(201,139,255,.24); }
+  html[data-theme="light"][data-accent="pink"] .fbtn { color: #b03a78; }
+  html[data-theme="light"][data-accent="pink"] .pd-count { color: #b03a78; }
+  html[data-theme="light"][data-accent="pink"] .lore-preview h1, html[data-theme="light"][data-accent="pink"] .lore-preview h2, html[data-theme="light"][data-accent="pink"] .lore-preview h3 { color: #b03a78; }
+  html[data-theme="light"][data-accent="pink"] .per-read-detail .pr-head { color: #b03a78; }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; overscroll-behavior: none; }
