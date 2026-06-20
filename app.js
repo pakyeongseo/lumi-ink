@@ -5,13 +5,102 @@
 (function () {
   const L = window.__lumink;
   const st = L.state;
-  const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast,
+  const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast, toastAction,
           noteHtml, notesOf, getProject, getNote } = L.h;
   const { CHIP, TYPE_LABEL, openDB, store, getAll, put, del } = L;
   function $on(id, type, fn, opts) { const el = $(id); if (el) el.addEventListener(type, fn, opts); else console.warn("[bind] #" + id + " not found — skipped"); }
   const ICONS = window.__luminkIcons || [];
   const DEFAULT_ICON = ICONS[0] ? ICONS[0].data : null;
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+
+  /* ---------- crash-safe local drafts ---------- */
+  const DRAFT_PREFIX = "lumink:draft:v1:";
+  const DRAFT_MAX_CHARS = 700000;
+  const DRAFT_MAX_AGE = 1000 * 60 * 60 * 24 * 14;
+  const draftPrompted = new Set();
+  function jsonCopy(v) { try { return JSON.parse(JSON.stringify(v)); } catch (e) { return null; } }
+  function jsonSame(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; } }
+  function draftKey(n) { return DRAFT_PREFIX + (n && n.id ? n.id : ""); }
+  function readDraft(n) {
+    if (!n || !n.id) return null;
+    try {
+      const raw = localStorage.getItem(draftKey(n));
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (!d || d.noteId !== n.id || !d.type || !d.at || (Date.now() - d.at) > DRAFT_MAX_AGE) { localStorage.removeItem(draftKey(n)); return null; }
+      return d;
+    } catch (e) { return null; }
+  }
+  function writeDraft(n, type, data) {
+    if (!n || !n.id || !data) return;
+    try {
+      const item = { noteId: n.id, type, at: Date.now(), data: jsonCopy(data) };
+      const raw = JSON.stringify(item);
+      // localStorage는 대용량 이미지 초안 저장소가 아니므로 텍스트 중심으로만 안전망을 둡니다.
+      if (raw.length > DRAFT_MAX_CHARS) return;
+      localStorage.setItem(draftKey(n), raw);
+    } catch (e) { /* 저장공간이 부족해도 편집을 막지 않음 */ }
+  }
+  function discardDraft(n) { try { if (n && n.id) localStorage.removeItem(draftKey(n)); } catch (e) {} }
+  function clearDraftIfSynced(n, type, data) {
+    const d = readDraft(n);
+    if (d && d.type === type && jsonSame(d.data, data)) discardDraft(n);
+  }
+  function freeDraftFromEditor() { return { html: st.codeMode ? $("codeArea").value : $("editor").innerHTML }; }
+  function loreDraftFromEditor(n) { const d = jsonCopy((n && n.data) || {}) || {}; d.content = $("loreEdit").value; return d; }
+  function personaDraftFromEditor(n) {
+    const d = n && n.data ? n.data : {}; const ko = jsonCopy(d.ko || {}) || {}, en = jsonCopy(d.en || {}) || {};
+    ko.name = $("perKoName").value; ko.detail = $("perKoDetail").value;
+    en.name = $("perEnName").value; en.detail = $("perEnDetail").value;
+    return { ko, en };
+  }
+  function draftDiffers(n, d) {
+    if (!n || !d || !d.data) return false;
+    if (d.type === "free") return !jsonSame({ html: noteHtml(n) }, d.data);
+    if (d.type === "lorebook") return !jsonSame((n.data || {}).content || "", d.data.content || "");
+    if (d.type === "persona") {
+      const cur = n.data || {};
+      return !jsonSame({ ko: cur.ko || {}, en: cur.en || {} }, d.data);
+    }
+    return false;
+  }
+  async function restoreDraft(n, d) {
+    if (!n || !d) return;
+    if (d.type === "free") {
+      n.data = n.data || {}; n.data.html = String((d.data && d.data.html) || "");
+      if (!n.titleLocked) n.title = deriveTitle(n.data.html);
+      await saveNote(n);
+    } else if (d.type === "lorebook") {
+      n.data = Object.assign({}, n.data || {}, jsonCopy(d.data) || {});
+      await saveLore(n, true);
+    } else if (d.type === "persona") {
+      n.data = n.data || {};
+      n.data.ko = Object.assign({}, n.data.ko || {}, jsonCopy(d.data.ko) || {});
+      n.data.en = Object.assign({}, n.data.en || {}, jsonCopy(d.data.en) || {});
+      if (!n.titleLocked) n.title = (n.data.ko.name || "").trim() || (n.data.en.name || "").trim() || "이름 없는 페르소나";
+      await savePersona(n, true);
+    }
+    discardDraft(n);
+  }
+  function queueDraftRecovery(n, type) {
+    if (!n || n.type !== type) return;
+    const d = readDraft(n);
+    if (!d || d.type !== type || d.at <= (n.updatedAt || 0) || !draftDiffers(n, d)) return;
+    const token = n.id + ":" + d.at;
+    if (draftPrompted.has(token)) return;
+    draftPrompted.add(token);
+    setTimeout(() => {
+      const expectedScreen = type === "free" ? "editor" : type === "lorebook" ? "lore" : "persona";
+      if (getNote(n.id) !== n || st.curNoteId !== n.id || curView().s !== expectedScreen) return;
+      openModal(`<h3>저장되지 않은 임시 기록</h3><p class="m-sub">${esc(n.title || "이 메모")}에 앱 종료 전 남아 있던 임시 기록이 있어요. 복구할까요?</p><div class="m-row"><button class="m-btn" id="draftDiscard">버리기</button><button class="m-btn primary" id="draftRestore">복구</button></div>`);
+      $on("draftDiscard", "click", () => { discardDraft(n); closeModal(); toast("임시 기록을 지웠어요"); });
+      $on("draftRestore", "click", async () => {
+        closeModal();
+        try { await restoreDraft(n, d); render(); toast("임시 기록을 복구했어요"); }
+        catch (e) { toast("임시 기록을 복구하지 못했어요"); }
+      });
+    }, 80);
+  }
 
   /* ---------- routing ---------- */
   const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "settings", "search"];
@@ -357,6 +446,7 @@
     if (st.codeMode) { st.codeMode = false; document.body.classList.remove("code-mode"); $("codeToggle").classList.remove("active"); }
     setSaver("");
     renderAttachments("edAttach", n, true);
+    queueDraftRecovery(n, "free");
   }
 
   /* ---------- navigation actions ---------- */
@@ -385,27 +475,125 @@
     st.projects.push(p); await put("projects", p);
     return p;
   }
-  async function deleteProject(id) {
-    const p = getProject(id); if (!p) return;
+  let undoTimer = null, undoToken = null;
+  async function snapshotDeletedItems(projects, notes) {
+    const ids = new Set(); notes.forEach((n) => ((n.data && n.data.attachments) || []).forEach((a) => a && a.id && ids.add(a.id)));
+    const files = [];
+    for (const id of ids) { const f = await getOne("files", id); if (f) files.push(f); }
+    return { projects: (projects || []).map(jsonCopy).filter(Boolean), notes: (notes || []).map(jsonCopy).filter(Boolean), files };
+  }
+  async function restoreDeletedItems(bundle) {
+    for (const p of bundle.projects || []) await put("projects", p);
+    for (const n of bundle.notes || []) await put("notes", n);
+    for (const f of bundle.files || []) await put("files", f);
+    await reloadState(); render(); renderSidebar();
+  }
+  function armUndo(message, bundle) {
+    const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
+    toastAction(message, "되돌리기", async () => {
+      if (undoToken !== token) return;
+      undoToken = null; if (undoTimer) clearTimeout(undoTimer);
+      try { await restoreDeletedItems(bundle); toast("삭제를 되돌렸어요"); } catch (e) { toast("되돌리지 못했어요"); }
+    }, 6000);
+    undoTimer = setTimeout(() => { if (undoToken === token) undoToken = null; }, 6200);
+  }
+  async function deleteNotesBatch(ids, options) {
+    const notes = [...new Set(ids || [])].map(getNote).filter(Boolean); if (!notes.length) return;
+    const bundle = options && options.noUndo ? null : await snapshotDeletedItems([], notes);
     await doAutoBackup();
-    const ns = notesOf(id);
-    for (const n of ns) { await purgeNoteFiles(n); await del("notes", n.id); }
-    st.notes = st.notes.filter((n) => n.projectId !== id);
-    st.projects = st.projects.filter((x) => x.id !== id);
-    await del("projects", id);
-    if (st.curProjectId === id) st.curProjectId = null;
-    toast("프로젝트를 삭제했어요");
+    for (const n of notes) { await purgeNoteFiles(n); await del("notes", n.id); }
+    const removed = new Set(notes.map((n) => n.id));
+    st.notes = st.notes.filter((n) => !removed.has(n.id));
+    if (bundle) armUndo(notes.length === 1 ? "메모를 삭제했어요" : `${notes.length}개 메모를 삭제했어요`, bundle);
+  }
+  async function deleteProjectsBatch(ids, options) {
+    const projects = [...new Set(ids || [])].map(getProject).filter((p) => p && !p.isDefault); if (!projects.length) return;
+    const pids = new Set(projects.map((p) => p.id)), notes = st.notes.filter((n) => pids.has(n.projectId));
+    const bundle = options && options.noUndo ? null : await snapshotDeletedItems(projects, notes);
+    await doAutoBackup();
+    for (const n of notes) { await purgeNoteFiles(n); await del("notes", n.id); }
+    for (const p of projects) await del("projects", p.id);
+    st.notes = st.notes.filter((n) => !pids.has(n.projectId));
+    st.projects = st.projects.filter((p) => !pids.has(p.id));
+    if (pids.has(st.curProjectId)) st.curProjectId = null;
+    if (bundle) armUndo(projects.length === 1 ? "프로젝트를 삭제했어요" : `${projects.length}개 프로젝트를 삭제했어요`, bundle);
+  }
+  async function deleteProject(id, options) { await deleteProjectsBatch([id], options); }
+
+  function copyNoteData(data) { return JSON.parse(JSON.stringify(data || {})); }
+  async function buildNoteCopy(src, projectId, title) {
+    const copy = {
+      id: uid(), projectId, type: src.type,
+      title: title == null ? src.title : title,
+      titleLocked: !!src.titleLocked,
+      chipColor: src.chipColor || null,
+      createdAt: now(), updatedAt: now(),
+      data: copyNoteData(src.data)
+    };
+    const attachments = (src.data && Array.isArray(src.data.attachments)) ? src.data.attachments : [];
+    const createdFileIds = [];
+    const copiedAttachments = [];
+    try {
+      for (const attachment of attachments) {
+        const sourceFile = await getOne("files", attachment.id);
+        // 기존에 이미 누락된 파일은 복제본에 깨진 참조를 남기지 않아요.
+        if (!sourceFile || !sourceFile.blob) continue;
+        const newId = uid();
+        const type = sourceFile.type || attachment.type || "application/octet-stream";
+        const blob = sourceFile.blob.slice(0, sourceFile.blob.size, type);
+        await put("files", {
+          id: newId, noteId: copy.id,
+          name: sourceFile.name || attachment.name || "첨부파일",
+          type, size: sourceFile.size == null ? blob.size : sourceFile.size,
+          blob, createdAt: now()
+        });
+        createdFileIds.push(newId);
+        copiedAttachments.push({
+          id: newId,
+          name: sourceFile.name || attachment.name || "첨부파일",
+          type,
+          size: sourceFile.size == null ? blob.size : sourceFile.size
+        });
+      }
+      if (attachments.length) {
+        if (copiedAttachments.length) copy.data.attachments = copiedAttachments;
+        else delete copy.data.attachments;
+      }
+      return copy;
+    } catch (err) {
+      await Promise.all(createdFileIds.map((fileId) => del("files", fileId).catch(() => {})));
+      throw err;
+    }
   }
   async function duplicateProject(id) {
     const p = getProject(id); if (!p) return;
-    const np = await createProject(p.name + " (사본)", p.description);
-    np.icon = p.icon || null; await put("projects", np);
-    const ns = notesOf(id);
-    for (const n of ns) {
-      const copy = { id: uid(), projectId: np.id, type: n.type, title: n.title, chipColor: n.chipColor || null, createdAt: now(), updatedAt: now(), data: JSON.parse(JSON.stringify(n.data || {})) };
-      st.notes.push(copy); await put("notes", copy);
+    const np = {
+      id: uid(), name: p.name + " (사본)", description: p.description || "", icon: p.icon || null,
+      chipColor: p.chipColor || null, createdAt: now(), updatedAt: now()
+    };
+    const copiedNotes = [];
+    try {
+      await put("projects", np);
+      for (const n of notesOf(id)) {
+        let copy = null;
+        try {
+          copy = await buildNoteCopy(n, np.id, n.title);
+          await put("notes", copy);
+          copiedNotes.push(copy);
+        } catch (err) {
+          if (copy) await purgeNoteFiles(copy).catch(() => {});
+          throw err;
+        }
+      }
+      st.projects.push(np);
+      st.notes.push(...copiedNotes);
+      toast("프로젝트를 복제했어요");
+    } catch (e) {
+      await Promise.all(copiedNotes.map((n) => purgeNoteFiles(n).catch(() => {})));
+      await Promise.all(copiedNotes.map((n) => del("notes", n.id).catch(() => {})));
+      await del("projects", np.id).catch(() => {});
+      toast("프로젝트 복제에 실패했어요");
     }
-    toast("프로젝트를 복제했어요");
   }
 
   /* ---------- note CRUD ---------- */
@@ -426,19 +614,19 @@
     st.curNoteId = n.id;
     return n;
   }
-  async function deleteNote(id) {
-    const n = getNote(id);
-    await doAutoBackup();
-    await purgeNoteFiles(n);
-    st.notes = st.notes.filter((n) => n.id !== id);
-    await del("notes", id);
-    toast("메모를 삭제했어요");
-  }
+  async function deleteNote(id, options) { await deleteNotesBatch([id], options); }
   async function duplicateNote(id, targetPid) {
     const src = getNote(id); if (!src) return;
-    const copy = { id: uid(), projectId: targetPid || src.projectId, type: src.type, title: src.title + " (사본)", chipColor: src.chipColor || null, createdAt: now(), updatedAt: now(), data: JSON.parse(JSON.stringify(src.data || {})) };
-    st.notes.push(copy); await put("notes", copy);
-    toast("복제했어요");
+    let copy = null;
+    try {
+      copy = await buildNoteCopy(src, targetPid || src.projectId, src.title + " (사본)");
+      await put("notes", copy);
+      st.notes.push(copy);
+      toast("복제했어요");
+    } catch (e) {
+      if (copy) await purgeNoteFiles(copy).catch(() => {});
+      toast("메모 복제에 실패했어요");
+    }
   }
   async function moveNote(id, targetPid) {
     const n = getNote(id); if (!n) return;
@@ -452,15 +640,20 @@
     $("saverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
     if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("saverText").textContent = ""; } }, 1500);
   }
-  function scheduleSave() { if (!st.codeMode) normalizeLinks($("editor")); setSaver("dirty"); clearTimeout(st.saveTimer); const id = st.curNoteId; st.saveTimer = setTimeout(() => { if (st.curNoteId === id) flushSave(false); }, 550); }
+  function scheduleSave() {
+    if (!st.codeMode) normalizeLinks($("editor"));
+    const n = getNote(st.curNoteId); if (n && n.type === "free") writeDraft(n, "free", freeDraftFromEditor());
+    setSaver("dirty"); clearTimeout(st.saveTimer); const id = st.curNoteId; st.saveTimer = setTimeout(() => { if (st.curNoteId === id) flushSave(false); }, 550);
+  }
   async function flushSave(silent) {
     clearTimeout(st.saveTimer); st.saveTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "free") return;
-    const html = st.codeMode ? $("codeArea").value : $("editor").innerHTML;
-    if (html === noteHtml(n)) return;
+    const draft = freeDraftFromEditor(), html = draft.html;
+    if (html === noteHtml(n)) { clearDraftIfSynced(n, "free", draft); return; }
     n.data = n.data || {}; n.data.html = html;
     if (!n.titleLocked) { n.title = deriveTitle(html); $("edTitle").textContent = n.title; }
     await saveNote(n);
+    clearDraftIfSynced(n, "free", draft);
     if (!silent) setSaver("saved");
   }
   function exec(cmd, val) { $("editor").focus(); try { document.execCommand("styleWithCSS", false, true); } catch (e) {} document.execCommand(cmd, false, val || null); scheduleSave(); }
@@ -683,7 +876,7 @@
       $("editor").focus();
       document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`);
       scheduleSave();
-    } catch (e) { toast("이미지를 넣지 못했어요"); }
+    } catch (e) { toast((e && e.message) || "이미지를 넣지 못했어요"); }
   }
   function wrapCodeBlock() {
     $("editor").focus();
@@ -789,6 +982,7 @@
     document.body.classList.toggle("lore-preview-on", !!(d.content && d.content.trim()));
     setLoreSaver("");
     updateLoreTokens(n);
+    queueDraftRecovery(n, "lorebook");
   }
   function renderKeywords(n) {
     const wrap = $("loreKeywords"), input = $("loreKwInput");
@@ -807,13 +1001,17 @@
     if (!silent) setLoreSaver("saved");
     triggerAutoBackup();
   }
-  function scheduleLoreSave() { setLoreSaver("dirty"); clearTimeout(loreTimer); const id = st.curNoteId; loreTimer = setTimeout(() => { if (st.curNoteId === id) flushLore(); }, 550); }
+  function scheduleLoreSave() {
+    const n = getNote(st.curNoteId); if (n && n.type === "lorebook") writeDraft(n, "lorebook", loreDraftFromEditor(n));
+    setLoreSaver("dirty"); clearTimeout(loreTimer); const id = st.curNoteId; loreTimer = setTimeout(() => { if (st.curNoteId === id) flushLore(); }, 550);
+  }
   async function flushLore() {
     clearTimeout(loreTimer); loreTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return;
-    const c = $("loreEdit").value;
-    if (c === (n.data.content || "")) return;
+    const c = $("loreEdit").value, draft = loreDraftFromEditor(n);
+    if (c === (n.data.content || "")) { clearDraftIfSynced(n, "lorebook", draft); return; }
     n.data.content = c; await saveLore(n);
+    clearDraftIfSynced(n, "lorebook", draft);
     $("lorePreview").innerHTML = mdToHtml(c);
     updateLoreTokens(n);
   }
@@ -968,6 +1166,7 @@
     setPerLang(perLang || "ko");
     if (st.perEdit) renderPerEdit(n); else renderPerRead(n);
     setPerSaver(""); updatePerTokens(n);
+    queueDraftRecovery(n, "persona");
   }
   function setPerLang(lang) {
     perLang = lang;
@@ -1016,7 +1215,18 @@
     g.forEach((src, idx) => {
       const it = document.createElement("div"); it.className = "pg-item"; it.dataset.idx = idx;
       it.innerHTML = `<img src="${src}" alt="" draggable="false"><button class="pg-del" aria-label="삭제">${PER_X}</button>`;
-      it.querySelector(".pg-del").addEventListener("click", (e) => { e.stopPropagation(); n.data.gallery.splice(idx, 1); savePersona(n, true); renderPerGallery(n); });
+      it.querySelector(".pg-del").addEventListener("click", async (e) => {
+        e.stopPropagation(); const removed = n.data.gallery.splice(idx, 1)[0];
+        await savePersona(n, true); renderPerGallery(n);
+        const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
+        toastAction("갤러리 이미지를 삭제했어요", "되돌리기", async () => {
+          if (undoToken !== token) return; undoToken = null; if (undoTimer) clearTimeout(undoTimer);
+          const cur = getNote(n.id); if (!cur || cur.type !== "persona") return;
+          cur.data.gallery = cur.data.gallery || []; cur.data.gallery.splice(Math.min(idx, cur.data.gallery.length), 0, removed);
+          await savePersona(cur, true); renderPerGallery(cur); toast("삭제를 되돌렸어요");
+        }, 6000);
+        undoTimer = setTimeout(() => { if (undoToken === token) undoToken = null; }, 6200);
+      });
       attachGalleryDrag(it, n);
       wrap.appendChild(it);
     });
@@ -1064,10 +1274,10 @@
   async function addGalleryFiles(files) {
     const n = getNote(st.curNoteId); if (!n) return;
     n.data.gallery = n.data.gallery || [];
-    let added = 0;
-    for (const f of files) { if (!/^image\//.test(f.type)) continue; try { n.data.gallery.push(await fileToResized(f, 1600)); added++; } catch (e) {} }
-    if (added) { await savePersona(n, true); renderPerGallery(n); toast(`${added}장 추가했어요`); }
-    else toast("이미지를 넣지 못했어요");
+    let added = 0, rejected = 0;
+    for (const f of files) { try { n.data.gallery.push(await fileToResized(f, 1600)); added++; } catch (e) { rejected++; } }
+    if (added) { await savePersona(n, true); renderPerGallery(n); toast(rejected ? `${added}장 추가 · ${rejected}장 제외` : `${added}장 추가했어요`); }
+    else toast(imageLimitText());
   }
   function personaDetailHTML(text) {
     const cleaned = String(text || "").replace(/<user\b[^>]*>/gi, "").replace(/<\/user>/gi, "");
@@ -1108,15 +1318,19 @@
     else gal.forEach((src, idx) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src, gal, idx); rg.appendChild(it); });
   }
   async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
-  function schedulePerSave() { setPerSaver("dirty"); clearTimeout(perTimer); const id = st.curNoteId; perTimer = setTimeout(() => { if (st.curNoteId === id) flushPersona(); }, 550); }
+  function schedulePerSave() {
+    const n = getNote(st.curNoteId); if (n && n.type === "persona" && st.perEdit) writeDraft(n, "persona", personaDraftFromEditor(n));
+    setPerSaver("dirty"); clearTimeout(perTimer); const id = st.curNoteId; perTimer = setTimeout(() => { if (st.curNoteId === id) flushPersona(); }, 550);
+  }
   async function flushPersona() {
     clearTimeout(perTimer); perTimer = null;
     const n = getNote(st.curNoteId); if (!n || n.type !== "persona" || !st.perEdit) return;
-    const d = n.data;
-    d.ko.name = $("perKoName").value; d.ko.detail = $("perKoDetail").value;
-    d.en.name = $("perEnName").value; d.en.detail = $("perEnDetail").value;
+    const draft = personaDraftFromEditor(n), d = n.data;
+    d.ko.name = draft.ko.name; d.ko.detail = draft.ko.detail;
+    d.en.name = draft.en.name; d.en.detail = draft.en.detail;
     if (!n.titleLocked) { n.title = (d.ko.name.trim() || d.en.name.trim() || "이름 없는 페르소나"); $("perTitle").textContent = n.title; }
     await savePersona(n);
+    clearDraftIfSynced(n, "persona", draft);
     updatePerTokens(n);
   }
   function updatePerTokens(n) {
@@ -1134,7 +1348,7 @@
     const n = getNote(st.curNoteId); if (!n || !perImgTarget) return;
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     if (perImgTarget === "gallery") {
-      fileToResized(file, 1600).then((data) => { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); savePersona(n, true); renderPerGallery(n); toast("이미지를 추가했어요"); }).catch(() => toast("이미지를 넣지 못했어요"));
+      fileToResized(file, 1600).then((data) => { n.data.gallery = n.data.gallery || []; n.data.gallery.push(data); savePersona(n, true); renderPerGallery(n); toast("이미지를 추가했어요"); }).catch((e) => toast((e && e.message) || "이미지를 넣지 못했어요"));
       return;
     }
     const isPt = perImgTarget === "portrait", target = perImgTarget;
@@ -1157,12 +1371,16 @@
     $("lightboxImg").removeAttribute("src");
     lightboxItems = []; lightboxIndex = 0;
   }
+  function preloadLightboxNeighbors() {
+    [-1, 1].forEach((delta) => { const src = lightboxItems[lightboxIndex + delta]; if (src) { const img = new Image(); img.src = src; } });
+  }
   function renderLightboxImage() {
     const img = $("lightboxImg");
     const total = lightboxItems.length;
     const src = lightboxItems[lightboxIndex];
     if (!src) { closeLightbox(); return; }
     img.src = src;
+    preloadLightboxNeighbors();
     img.alt = total > 1 ? `갤러리 이미지 ${lightboxIndex + 1} / ${total}` : "확대 이미지";
     const multi = total > 1;
     const prev = $("lbPrev"), next = $("lbNext"), counter = $("lbCounter");
@@ -1194,7 +1412,8 @@
   async function startCrop(file, ratio, outW, outH, cb) {
     let url;
     try {
-      url = URL.createObjectURL(file); const img = await loadImg(url);
+      const checked = await validateImageFile(file);
+      url = checked.url; const img = checked.img;
       const stage = $("cropStage"), cimg = $("cropImg"), zoom = $("cropZoom");
       $("cropper").hidden = false;
       const wrap = stage.parentElement;
@@ -1207,7 +1426,7 @@
       const baseScale = Math.max(stageW / img.naturalWidth, stageH / img.naturalHeight);
       cropState = { img, url, stageW, stageH, iw: img.naturalWidth, ih: img.naturalHeight, baseScale, zoom: 1, tx: 0, ty: 0, outW, outH, cb };
       zoom.value = 1; centerCrop(); applyCropTransform();
-    } catch (e) { toast("이미지를 불러오지 못했어요"); if (url) URL.revokeObjectURL(url); }
+    } catch (e) { toast((e && e.message) || "이미지를 불러오지 못했어요"); if (url) URL.revokeObjectURL(url); }
   }
   function centerCrop() { const s = cropState, sc = s.baseScale * s.zoom; s.tx = (s.stageW - s.iw * sc) / 2; s.ty = (s.stageH - s.ih * sc) / 2; clampCrop(); }
   function clampCrop() { const s = cropState, sc = s.baseScale * s.zoom; s.tx = Math.min(0, Math.max(s.stageW - s.iw * sc, s.tx)); s.ty = Math.min(0, Math.max(s.stageH - s.ih * sc, s.ty)); }
@@ -1576,18 +1795,35 @@
     $on("iconUpload", "click", () => { iconTargetPid = pid; $("iconInput").click(); });
     $on("iconClose", "click", closeModal);
   }
-  function fileToResized(file, max) {
+  const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+  const MAX_IMAGE_PIXELS = 24 * 1000 * 1000;
+  function imageLimitText() { return "이미지는 12MB 이하, 2,400만 픽셀 이하만 넣을 수 있어요"; }
+  function loadImageFile(file) {
     return new Promise((res, rej) => {
-      const fr = new FileReader();
-      fr.onload = () => { const img = new Image(); img.onload = () => {
-        let w = img.width, h = img.height; const sc = Math.min(1, max / Math.max(w, h));
-        const cw = Math.round(w * sc), ch = Math.round(h * sc);
-        const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
-        cv.getContext("2d").drawImage(img, 0, 0, cw, ch);
-        res(cv.toDataURL("image/jpeg", 0.92));
-      }; img.onerror = rej; img.src = fr.result; };
-      fr.onerror = rej; fr.readAsDataURL(file);
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => res({ img, url });
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("이미지를 열 수 없어요")); };
+      img.src = url;
     });
+  }
+  async function validateImageFile(file) {
+    if (!file || !/^image\//.test(file.type) || /svg/i.test(file.type)) throw new Error("이미지 파일만 넣을 수 있어요");
+    if (file.size > MAX_IMAGE_BYTES) throw new Error(imageLimitText());
+    const loaded = await loadImageFile(file);
+    const pixels = loaded.img.naturalWidth * loaded.img.naturalHeight;
+    const meta = { width: loaded.img.naturalWidth, height: loaded.img.naturalHeight, img: loaded.img, url: loaded.url };
+    if (!meta.width || !meta.height || pixels > MAX_IMAGE_PIXELS) { URL.revokeObjectURL(loaded.url); throw new Error(imageLimitText()); }
+    return meta;
+  }
+  async function fileToResized(file, max) {
+    const { img, url } = await validateImageFile(file);
+    try {
+      const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const cw = Math.max(1, Math.round(img.naturalWidth * sc)), ch = Math.max(1, Math.round(img.naturalHeight * sc));
+      const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+      cv.getContext("2d").drawImage(img, 0, 0, cw, ch);
+      return cv.toDataURL("image/jpeg", 0.92);
+    } finally { URL.revokeObjectURL(url); }
   }
   $on("iconInput", "change", (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
@@ -1645,11 +1881,29 @@
   }
 
   /* ---------- settings ---------- */
+  async function updateStorageUsage() {
+    const value = $("setStorageVal"), sub = $("setStorageSub"); if (!value || !sub) return;
+    value.textContent = "계산 중";
+    try {
+      const [files, backups] = await Promise.all([getAll("files"), getAll("backups")]);
+      const attachmentBytes = files.reduce((sum, f) => sum + (Number(f.size) || (f.blob && f.blob.size) || 0), 0);
+      if (navigator.storage && navigator.storage.estimate) {
+        const est = await navigator.storage.estimate();
+        const usage = Number(est.usage) || 0, quota = Number(est.quota) || 0;
+        value.textContent = quota ? `${fmtSize(usage)} / ${fmtSize(quota)}` : fmtSize(usage);
+        sub.textContent = `첨부 ${files.length}개 · ${fmtSize(attachmentBytes)} · 자동 백업 ${backups.length}개`;
+      } else {
+        value.textContent = fmtSize(attachmentBytes);
+        sub.textContent = `첨부 ${files.length}개 · 자동 백업 ${backups.length}개 · 브라우저 전체 용량은 확인 불가`;
+      }
+    } catch (e) { value.textContent = "확인 불가"; sub.textContent = "브라우저 저장공간 정보를 읽지 못했어요"; }
+  }
   function renderSettings() {
     $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
     const av = $("setAccentVal"); if (av && ACCENTS[st.accent || "blue"]) av.innerHTML = `<span class="accent-dot"></span>${ACCENTS[st.accent || "blue"].name}`;
+    updateStorageUsage();
   }
   const FONT_PRESETS = [
     { name: "Pretendard", label: "프리텐다드", url: "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" },
@@ -1715,20 +1969,170 @@
       toast("백업을 저장했어요");
     } catch (e) { toast("백업에 실패했어요"); }
   }
+  function cleanImportedText(value, max) {
+    return typeof value === "string" ? value.slice(0, max || 100000) : "";
+  }
+  function isSafeRecordId(value) {
+    return typeof value === "string" && value.length > 0 && value.length <= 180;
+  }
+  function safeImageSource(value) {
+    if (typeof value !== "string") return null;
+    const src = value.trim();
+    // 앱이 생성하는 이미지 형식만 수용합니다. 외부 원격 주소·SVG·스크립트 URI는 차단해요.
+    if (!/^data:image\/(?:png|jpe?g|gif|webp|avif);base64,/i.test(src)) return null;
+    return src.length <= 32 * 1024 * 1024 ? src : null;
+  }
+  function normalizeImportedProject(raw) {
+    if (!raw || !isSafeRecordId(raw.id)) return null;
+    return {
+      id: raw.id,
+      name: cleanImportedText(raw.name, 120) || "이름 없는 프로젝트",
+      description: cleanImportedText(raw.description, 2000),
+      icon: safeImageSource(raw.icon),
+      chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
+      isDefault: !!raw.isDefault,
+      pinned: !!raw.pinned,
+      pinnedAt: Number(raw.pinnedAt) || undefined,
+      createdAt: Number(raw.createdAt) || now(),
+      updatedAt: Number(raw.updatedAt) || now()
+    };
+  }
+  function normalizeImportedPersonaData(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const lang = (value) => {
+      const o = value && typeof value === "object" ? value : {};
+      const rawTags = Array.isArray(o.tags) ? o.tags : (typeof o.brief === "string" && o.brief.trim() ? [o.brief] : []);
+      return {
+        name: cleanImportedText(o.name, 240),
+        detail: cleanImportedText(o.detail, 200000),
+        tags: rawTags.map((tag) => cleanImportedText(String(tag), 120).trim()).filter(Boolean).slice(0, 100)
+      };
+    };
+    return {
+      portrait: safeImageSource(src.portrait),
+      square: safeImageSource(src.square),
+      gallery: (Array.isArray(src.gallery) ? src.gallery : []).map(safeImageSource).filter(Boolean).slice(0, 100),
+      ko: lang(src.ko),
+      en: lang(src.en)
+    };
+  }
+  function normalizeImportedAttachments(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((a) => {
+      if (!a || !isSafeRecordId(a.id)) return null;
+      return {
+        id: a.id,
+        name: cleanImportedText(a.name, 240) || "첨부파일",
+        type: cleanImportedText(a.type, 180) || "application/octet-stream",
+        size: Math.max(0, Number(a.size) || 0)
+      };
+    }).filter(Boolean);
+  }
+  function normalizeImportedNote(raw) {
+    if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
+    const type = ["free", "lorebook", "persona"].includes(raw.type) ? raw.type : null;
+    if (!type) return null;
+    const note = {
+      id: raw.id, projectId: raw.projectId, type,
+      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "lorebook" ? "이름 없는 로어북" : "제목 없는 메모"),
+      titleLocked: !!raw.titleLocked,
+      chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
+      createdAt: Number(raw.createdAt) || now(),
+      updatedAt: Number(raw.updatedAt) || now(),
+      pinned: !!raw.pinned,
+      pinnedAt: Number(raw.pinnedAt) || undefined,
+      pinnedHome: !!raw.pinnedHome,
+      pinnedHomeAt: Number(raw.pinnedHomeAt) || undefined,
+      pinnedSide: !!raw.pinnedSide,
+      pinnedSideAt: Number(raw.pinnedSideAt) || undefined,
+      data: {}
+    };
+    const data = raw.data && typeof raw.data === "object" ? raw.data : {};
+    if (type === "free") {
+      note.data.html = sanitize(cleanImportedText(data.html, 1000000)).html;
+      const attachments = normalizeImportedAttachments(data.attachments);
+      if (attachments.length) note.data.attachments = attachments;
+    } else if (type === "lorebook") {
+      note.data = {
+        content: cleanImportedText(data.content, 500000),
+        keywords: (Array.isArray(data.keywords) ? data.keywords : []).map((key) => cleanImportedText(String(key), 180).trim()).filter(Boolean).slice(0, 300),
+        alwaysActive: !!data.alwaysActive,
+        depthOn: !!data.depthOn,
+        depth: Math.min(999, Math.max(0, Number(data.depth) || 4))
+      };
+    } else {
+      note.data = normalizeImportedPersonaData(data);
+    }
+    return note;
+  }
+  function fileBlobFromImport(raw) {
+    if (raw && raw.blob instanceof Blob) return raw.blob;
+    if (raw && typeof raw.data === "string") {
+      try { return base64ToBlob(raw.data, raw.type); } catch (e) { return null; }
+    }
+    return null;
+  }
+  function normalizeImportedFile(raw) {
+    if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.noteId)) return null;
+    const blob = fileBlobFromImport(raw);
+    if (!blob) return null;
+    return {
+      id: raw.id, noteId: raw.noteId,
+      name: cleanImportedText(raw.name, 240) || "첨부파일",
+      type: cleanImportedText(raw.type, 180) || blob.type || "application/octet-stream",
+      size: Math.max(0, Number(raw.size) || blob.size || 0),
+      createdAt: Number(raw.createdAt) || now(), blob
+    };
+  }
   async function applyImportData(projects, notes, files) {
     const curDefault = st.projects.find((p) => p.isDefault);
     const remap = {};
-    for (const p of (projects || [])) {
+    const importedProjects = (projects || []).map(normalizeImportedProject).filter(Boolean);
+    const importedNotes = (notes || []).map(normalizeImportedNote).filter(Boolean);
+    const importedFiles = (files || []).map(normalizeImportedFile).filter(Boolean);
+    for (const p of importedProjects) {
       if (p.isDefault && curDefault && p.id !== curDefault.id) { remap[p.id] = curDefault.id; continue; }
       await put("projects", p);
     }
-    for (const n of (notes || [])) {
+    for (const n of importedNotes) {
       if (remap[n.projectId]) n.projectId = remap[n.projectId];
       await put("notes", n);
     }
-    for (const f of (files || [])) {
-      try { await put("files", { id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, blob: base64ToBlob(f.data, f.type) }); } catch (e) {}
+    for (const f of importedFiles) {
+      try { await put("files", f); } catch (e) {}
     }
+  }
+  async function replaceImportData(projects, notes, files) {
+    await clearStore("notes"); await clearStore("projects"); await clearStore("files");
+    await reloadState();
+    await applyImportData(projects, notes, files);
+  }
+  function restorePayloadLabel(payload, label) {
+    const files = Array.isArray(payload.files) ? ` · 첨부 ${payload.files.length}` : "";
+    return `${label || "선택한 백업"} · 프로젝트 ${(payload.projects || []).length} · 메모 ${(payload.notes || []).length}${files}`;
+  }
+  function openRestoreModePicker(payload, label) {
+    const summary = restorePayloadLabel(payload, label);
+    openModal(`<h3>백업 복원 방식</h3><p class="m-sub">${esc(summary)}</p>
+      <button class="restore-mode" id="restoreMerge"><b>현재 데이터에 병합</b><span>같은 ID의 항목만 백업 내용으로 덮어쓰고, 나머지 현재 데이터는 유지해요.</span></button>
+      <button class="restore-mode warning" id="restoreReplace"><b>백업 시점으로 완전히 교체</b><span>현재 프로젝트·메모·첨부파일을 지우고 백업 내용만 남겨요.</span></button>
+      <p class="m-sub" style="margin:12px 0 0">복원 직전 현재 상태는 자동 백업으로 한 번 더 저장합니다.</p>
+      <div class="m-row"><button class="m-btn" id="restoreCancel">취소</button></div>`);
+    $on("restoreCancel", "click", closeModal);
+    $on("restoreMerge", "click", () => confirmModal("병합 복원", "현재 데이터는 유지하고, 같은 항목만 백업 내용으로 덮어씁니다. 계속할까요?", "병합 복원", false, async () => {
+      try {
+        await doAutoBackup();
+        await applyImportData(payload.projects || [], payload.notes || [], payload.files || []);
+        await reloadState(); render(); renderSidebar(); toast("병합 복원했어요");
+      } catch (e) { toast("복원 중 오류가 났어요"); }
+    }));
+    $on("restoreReplace", "click", () => confirmModal("완전 교체 복원", "현재 프로젝트·메모·첨부파일을 지우고 백업 시점으로 되돌립니다. 방금 상태는 자동 백업에 보관돼요.", "완전 교체", true, async () => {
+      try {
+        await doAutoBackup();
+        await replaceImportData(payload.projects || [], payload.notes || [], payload.files || []);
+        await reloadState(); goHome(); renderSidebar(); toast("백업 시점으로 되돌렸어요");
+      } catch (e) { toast("복원 중 오류가 났어요"); }
+    }));
   }
   function restoreBackup(file) {
     const fr = new FileReader();
@@ -1739,21 +2143,19 @@
         if (!tag) { toast("백업 데이터를 찾지 못했어요"); return; }
         const payload = JSON.parse(tag.textContent);
         if (!payload || payload.app !== "lumink" || !Array.isArray(payload.projects)) { toast("올바른 백업 파일이 아니에요"); return; }
-        confirmModal("백업 복원", `프로젝트 ${payload.projects.length}개, 메모 ${(payload.notes || []).length}개를 현재 데이터에 병합할까요? 같은 항목은 백업 내용으로 덮어써요.`, "복원", false, async () => {
-          try {
-            await applyImportData(payload.projects, payload.notes || [], payload.files || []);
-            await reloadState(); render(); renderSidebar(); toast("복원했어요");
-          } catch (e) { toast("복원 중 오류가 났어요"); }
-        });
+        openRestoreModePicker(payload, "선택한 백업 파일");
       } catch (e) { toast("복원에 실패했어요"); }
     };
     fr.onerror = () => toast("파일을 읽지 못했어요");
     fr.readAsText(file, "UTF-8");
   }
   function resetData() {
-    confirmModal("데이터 초기화", "모든 프로젝트와 메모가 영구 삭제됩니다. 먼저 백업을 권장해요.", "계속", true, () => {
-      confirmModal("정말 초기화할까요?", "이 작업은 되돌릴 수 없어요.", "전부 삭제", true, async () => {
-        try { await clearStore("notes"); await clearStore("projects"); await clearStore("files"); } catch (e) {}
+    confirmModal("데이터 초기화", "모든 프로젝트·메모·첨부파일과 자동 백업이 영구 삭제됩니다. 먼저 전체 백업을 권장해요.", "계속", true, () => {
+      confirmModal("정말 초기화할까요?", "자동 백업을 포함해 되돌릴 수 없어요.", "전부 삭제", true, async () => {
+        try {
+          if (autoBkTimer) { clearTimeout(autoBkTimer); autoBkTimer = null; }
+          await clearStore("notes"); await clearStore("projects"); await clearStore("files"); await clearStore("backups");
+        } catch (e) {}
         location.reload();
       });
     });
@@ -1833,8 +2235,8 @@
     const ids = [...(st.selIds || [])]; if (!ids.length) { toast("선택된 항목이 없어요"); return; }
     const isNote = st.selType === "note";
     confirmModal(isNote ? "메모 삭제" : "프로젝트 삭제", `선택한 ${ids.length}개를 삭제할까요?${isNote ? "" : " 소속 메모도 함께 삭제돼요."}`, "삭제", true, async () => {
-      for (const id of ids) { if (isNote) await deleteNote(id); else { const p = getProject(id); if (p && !p.isDefault) await deleteProject(id); } }
-      exitSelMode(); renderSidebar(); toast("삭제했어요");
+      if (isNote) await deleteNotesBatch(ids); else await deleteProjectsBatch(ids);
+      exitSelMode(); renderSidebar();
     });
   }
   function bulkMove() {
@@ -1961,16 +2363,60 @@ ${gallery}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast("HTML로 저장했어요");
   }
+  const SAFE_HTML_TAGS = new Set(["a", "abbr", "b", "blockquote", "br", "code", "del", "div", "em", "font", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li", "ol", "p", "pre", "s", "span", "strike", "strong", "u", "ul"]);
+  const DROP_HTML_TAGS = new Set(["script", "style", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "video", "audio", "svg", "math", "template"]);
+  const SAFE_STYLE_PROPS = new Set(["color", "background-color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "white-space", "max-width", "border-radius", "vertical-align"]);
+  function safeCss(style) {
+    if (typeof style !== "string") return "";
+    return style.split(";").map((part) => {
+      const idx = part.indexOf(":"); if (idx < 1) return "";
+      const prop = part.slice(0, idx).trim().toLowerCase();
+      const value = part.slice(idx + 1).trim();
+      if (!SAFE_STYLE_PROPS.has(prop) || !value || value.length > 180) return "";
+      if (/url\s*\(|expression\s*\(|@import|javascript:|behavior\s*:|-moz-binding/i.test(value)) return "";
+      return `${prop}:${value}`;
+    }).filter(Boolean).join(";");
+  }
+  function safeLinkHref(value) {
+    const href = typeof value === "string" ? value.trim() : "";
+    if (!href) return "";
+    if (/^(https?:|mailto:|tel:|#)/i.test(href)) return href;
+    return "";
+  }
+  function unwrapHtmlElement(el) {
+    const parent = el.parentNode; if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    el.remove();
+  }
   function sanitize(html) {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    doc.querySelectorAll("script, link[rel='stylesheet'], meta, base").forEach((el) => el.remove());
-    doc.querySelectorAll("*").forEach((el) => [...el.attributes].forEach((a) => {
-      const nm = a.name.toLowerCase();
-      if (nm.startsWith("on")) el.removeAttribute(a.name);
-      if ((nm === "href" || nm === "src") && /^\s*javascript:/i.test(a.value)) el.removeAttribute(a.name);
-    }));
+    const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
     const titleEl = doc.querySelector("title");
-    return { html: doc.body ? doc.body.innerHTML.trim() : html, title: titleEl ? titleEl.textContent.trim() : "" };
+    [...doc.body.querySelectorAll("*")].forEach((el) => {
+      const tag = el.tagName.toLowerCase();
+      if (DROP_HTML_TAGS.has(tag)) { el.remove(); return; }
+      if (!SAFE_HTML_TAGS.has(tag)) { unwrapHtmlElement(el); return; }
+      const attrs = [...el.attributes].map((a) => [a.name.toLowerCase(), a.value]);
+      [...el.attributes].forEach((a) => el.removeAttribute(a.name));
+      const attr = (name) => { const found = attrs.find(([key]) => key === name); return found ? found[1] : ""; };
+      const style = safeCss(attr("style")); if (style) el.setAttribute("style", style);
+      const title = cleanImportedText(attr("title"), 240); if (title) el.setAttribute("title", title);
+      if (tag === "a") {
+        const href = safeLinkHref(attr("href"));
+        if (href) el.setAttribute("href", href);
+        else unwrapHtmlElement(el);
+        if (href && attr("target") === "_blank") { el.setAttribute("target", "_blank"); el.setAttribute("rel", "noopener noreferrer"); }
+      } else if (tag === "img") {
+        const src = safeImageSource(attr("src"));
+        if (!src) { el.remove(); return; }
+        el.setAttribute("src", src);
+        const alt = cleanImportedText(attr("alt"), 240); if (alt) el.setAttribute("alt", alt);
+      } else if (tag === "font") {
+        const color = cleanImportedText(attr("color"), 80); if (color && !/url\s*\(|expression|javascript:/i.test(color)) el.setAttribute("color", color);
+        const face = cleanImportedText(attr("face"), 120); if (face) el.setAttribute("face", face);
+        const size = cleanImportedText(attr("size"), 12); if (/^[1-7]|[+-][1-7]$/.test(size)) el.setAttribute("size", size);
+      }
+    });
+    return { html: doc.body ? doc.body.innerHTML.trim() : "", title: titleEl ? cleanImportedText(titleEl.textContent, 180).trim() : "" };
   }
   function importHtmlFile(file) {
     const fr = new FileReader();
@@ -2013,8 +2459,8 @@ ${gallery}
           const pl = JSON.parse(pTag.textContent);
           if (pl && pl.kind === "persona" && pl.data) {
             const n = await createNote("persona", pid);
-            n.title = pl.title || file.name.replace(/\.(html?)$/i, "") || "불러온 페르소나";
-            n.titleLocked = true; n.data = pl.data;
+            n.title = cleanImportedText(pl.title, 180) || file.name.replace(/\.(html?)$/i, "") || "불러온 페르소나";
+            n.titleLocked = true; n.data = normalizeImportedPersonaData(pl.data);
             await savePersona(n, true);
             st.curNoteId = n.id; perLang = "ko"; st.perEdit = false; st.curProjectId = pid;
             toast("페르소나를 불러왔어요"); go({ s: "persona" }); return;
@@ -2116,8 +2562,17 @@ ${gallery}
   async function doAutoBackup() {
     autoBkLast = Date.now();
     try {
-      const snap = { id: "bk_" + autoBkLast, ts: autoBkLast,
-        projects: JSON.parse(JSON.stringify(st.projects)), notes: JSON.parse(JSON.stringify(st.notes)) };
+      const files = await getAll("files");
+      // Blob은 불변값이라 스냅샷에 안전하게 보관되며, 원본 파일 레코드와 독립적으로 복원됩니다.
+      const snapFiles = files.map((f) => ({
+        id: f.id, noteId: f.noteId, name: f.name, type: f.type,
+        size: f.size, createdAt: f.createdAt, blob: f.blob
+      }));
+      const snap = {
+        id: "bk_" + autoBkLast, version: 2, ts: autoBkLast,
+        projects: JSON.parse(JSON.stringify(st.projects)),
+        notes: JSON.parse(JSON.stringify(st.notes)), files: snapFiles
+      };
       await put("backups", snap);
       const all = (await getAll("backups")).sort((a, b) => b.ts - a.ts);
       for (let i = 10; i < all.length; i++) await del("backups", all[i].id);
@@ -2129,21 +2584,15 @@ ${gallery}
       if (!all.length) { openModal(`<h3>자동 백업</h3><p class="m-sub">아직 저장된 자동 백업이 없어요. 메모를 저장하면 자동으로 스냅샷이 쌓여요.</p><div class="m-row"><button class="m-btn primary" id="abClose">확인</button></div>`); $on("abClose", "click", closeModal); return; }
       const rows = all.map((s) => {
         const dt = new Date(s.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
-        return `<div class="lore-pick" data-bk="${s.id}"><div class="lp-body"><div class="lp-name">${label}</div><div class="lp-meta">프로젝트 ${s.projects.length} · 메모 ${s.notes.length}</div></div><button class="ce-addbtn ab-restore" data-bk="${s.id}">복원</button></div>`;
+        const fileLabel = Array.isArray(s.files) ? ` · 첨부 ${s.files.length}` : " · 첨부 미포함";
+        return `<div class="lore-pick" data-bk="${s.id}"><div class="lp-body"><div class="lp-name">${label}</div><div class="lp-meta">프로젝트 ${s.projects.length} · 메모 ${s.notes.length}${fileLabel}</div></div><button class="ce-addbtn ab-restore" data-bk="${s.id}">복원 ›</button></div>`;
       }).join("");
-      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}개 스냅샷. 복원하면 그 시점의 프로젝트·메모가 현재 데이터에 병합돼요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abClose2">닫기</button></div>`);
+      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}개 스냅샷. v44부터 첨부파일도 함께 보관합니다. 복원 방식은 병합 또는 완전 교체를 고를 수 있어요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abClose2">닫기</button></div>`);
       $on("abClose2", "click", closeModal);
       document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
         const snap = all.find((x) => x.id === btn.dataset.bk); if (!snap) return;
         const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
-        confirmModal("백업 복원", `${label} 시점의 백업(프로젝트 ${snap.projects.length} · 메모 ${snap.notes.length})을 현재 데이터에 병합할까요?`, "복원", false, () => {
-          confirmModal("정말 복원할까요?", "같은 항목은 백업 내용으로 덮어써져요. 이 작업은 되돌리기 어려워요.", "복원 실행", false, async () => {
-            try {
-              await applyImportData(snap.projects, snap.notes, []);
-              await reloadState(); render(); renderSidebar(); toast("백업을 복원했어요");
-            } catch (e) { toast("복원 중 오류가 났어요"); }
-          });
-        });
+        openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [] }, `${label} 자동 백업`);
       }));
     });
   }
@@ -2178,6 +2627,11 @@ ${gallery}
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
     $on("setAutoBackup", "click", openAutoBackupList);
+    $on("setStorage", "click", () => {
+      const val = $("setStorageVal").textContent, sub = $("setStorageSub").textContent;
+      openModal(`<h3>저장공간</h3><p class="m-sub"><b>${esc(val)}</b><br>${esc(sub)}<br><br>표시 용량은 이 사이트가 브라우저에 저장한 데이터와 자동 백업을 포함해요. 이미지가 많을수록 자동 백업도 함께 커집니다.</p><div class="m-row"><button class="m-btn primary" id="storageClose">확인</button></div>`);
+      $on("storageClose", "click", closeModal);
+    });
     $on("setAccent", "click", openAccentPicker);
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
@@ -2329,6 +2783,19 @@ ${gallery}
     $on("lbPrev", "click", () => stepLightbox(-1));
     $on("lbNext", "click", () => stepLightbox(1));
     $on("lightbox", "click", (e) => { if (e.target.id === "lightbox") closeLightbox(); });
+    let lightboxSwipe = null;
+    $on("lightbox", "touchstart", (e) => {
+      if ($("lightbox").hidden || e.target.closest("button")) return;
+      const t = e.touches && e.touches[0]; if (t) lightboxSwipe = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+    $on("lightbox", "touchend", (e) => {
+      if (!lightboxSwipe) return;
+      const t = e.changedTouches && e.changedTouches[0], start = lightboxSwipe; lightboxSwipe = null;
+      if (!t) return;
+      const dx = t.clientX - start.x, dy = t.clientY - start.y;
+      if (Math.abs(dx) >= 56 && Math.abs(dx) > Math.abs(dy) * 1.35) stepLightbox(dx > 0 ? -1 : 1);
+    }, { passive: true });
+    $on("lightbox", "touchcancel", () => { lightboxSwipe = null; }, { passive: true });
     document.addEventListener("keydown", (e) => {
       if ($("lightbox").hidden) return;
       if (e.key === "Escape") { e.preventDefault(); closeLightbox(); }
@@ -2359,6 +2826,11 @@ ${gallery}
     detectUserFont();
     detectFontScale();
     loadSorts();
+    try {
+      Object.keys(localStorage).filter((k) => k.indexOf(DRAFT_PREFIX) === 0).forEach((k) => {
+        try { const d = JSON.parse(localStorage.getItem(k)); if (!d || !d.at || (Date.now() - d.at) > DRAFT_MAX_AGE) localStorage.removeItem(k); } catch (e) { localStorage.removeItem(k); }
+      });
+    } catch (e) {}
     try { bind(); } catch (e) { console.warn("bind", e); }
     try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
     catch (e) { console.warn("DB error", e); toast("저장소를 열 수 없어요"); }

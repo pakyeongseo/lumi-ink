@@ -1618,6 +1618,9 @@
     transition: opacity .2s, transform .2s; z-index: 90; max-width: 86vw; text-align: center; box-shadow: var(--shadow);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.has-action { pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 8px 9px 8px 16px; text-align: left; }
+  .toast .toast-action { border: none; border-radius: 999px; background: var(--accent); color: #07121f; font: inherit; font-size: 12.5px; font-weight: 800; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+  html[data-theme="light"] .toast .toast-action { color: #fff; }
 
   /* ===== sidebar additions ===== */
   .sb-home-hint { font-size: 11px; color: var(--faint); margin-top: 4px; letter-spacing: .02em; }
@@ -1840,7 +1843,7 @@
   /* lightbox */
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(6,8,14,.93); display: flex; align-items: center; justify-content: center; padding: 20px; isolation: isolate; }
   .lightbox[hidden] { display: none; }
-  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain; box-shadow: 0 18px 44px rgba(0,0,0,.38); }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain; box-shadow: 0 18px 44px rgba(0,0,0,.38); touch-action: pan-y; }
   .lb-close, .lb-nav { position: absolute; border: 1px solid rgba(255,255,255,.17); color: #fff; background: rgba(10,13,24,.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; cursor: pointer; }
   .lb-close { top: calc(12px + var(--safe-top)); right: 14px; width: 40px; height: 40px; border-radius: 12px; }
   .lb-close svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; }
@@ -1894,6 +1897,11 @@
   .ce-hex { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 14px; font-family: ui-monospace, monospace; outline: none; }
   .ce-hex:focus { border-color: var(--accent); }
   .ce-addbtn { flex: 0 0 auto; padding: 0 14px; height: 40px; border: none; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .restore-mode { display: flex; flex-direction: column; gap: 5px; width: 100%; margin: 9px 0; padding: 14px 15px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--ink); cursor: pointer; }
+  .restore-mode b { color: var(--accent); font-size: 14px; }
+  .restore-mode span { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+  .restore-mode.warning b { color: var(--danger); }
+  .restore-mode:active { transform: scale(.985); background: var(--surface-3); }
   .ce-saved-empty { font-size: 12.5px; color: var(--faint); margin-bottom: 14px; }
   .ce-preview { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 13px; border-radius: 10px; background: var(--surface-2); }
   .ce-preview-chip { width: 26px; height: 26px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(128,128,128,.25); }
@@ -2310,16 +2318,20 @@
       <div class="set-group">
         <div class="set-gtitle">데이터</div>
         <div class="set-row" id="setBackup">
-          <div class="set-rtext"><div class="set-rlabel">전체 백업</div><div class="set-rsub">모든 프로젝트·메모를 .html 한 파일로 저장</div></div>
+          <div class="set-rtext"><div class="set-rlabel">전체 백업</div><div class="set-rsub">프로젝트·메모·첨부파일을 .html 한 파일로 저장</div></div>
           <div class="set-rval">내보내기 ›</div>
         </div>
         <div class="set-row" id="setRestore">
-          <div class="set-rtext"><div class="set-rlabel">백업 복원</div><div class="set-rsub">백업 .html을 불러와 데이터 병합</div></div>
+          <div class="set-rtext"><div class="set-rlabel">백업 복원</div><div class="set-rsub">병합 또는 백업 시점으로 완전 교체</div></div>
           <div class="set-rval">가져오기 ›</div>
         </div>
         <div class="set-row" id="setAutoBackup">
           <div class="set-rtext"><div class="set-rlabel">자동 백업</div><div class="set-rsub">저장할 때마다 최근 10개 스냅샷 보관</div></div>
           <div class="set-rval">불러오기 ›</div>
+        </div>
+        <div class="set-row" id="setStorage">
+          <div class="set-rtext"><div class="set-rlabel">저장공간</div><div class="set-rsub" id="setStorageSub">첨부파일과 자동 백업 용량 계산</div></div>
+          <div class="set-rval" id="setStorageVal">계산 중</div>
         </div>
         <div class="set-row danger" id="setReset">
           <div class="set-rtext"><div class="set-rlabel">데이터 초기화</div><div class="set-rsub">모든 데이터를 영구 삭제</div></div>
@@ -2455,7 +2467,18 @@
   function preview(html) { return plainText(html).slice(0, 60); }
 
   let toastTimer = null;
-  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1900); }
+  function hideToast() { const t = $("toast"); t.classList.remove("show", "has-action"); t.textContent = ""; }
+  function toast(msg, duration) {
+    const t = $("toast"); clearTimeout(toastTimer); t.classList.remove("has-action"); t.textContent = msg; t.classList.add("show");
+    toastTimer = setTimeout(hideToast, duration || 1900);
+  }
+  function toastAction(msg, label, onAction, duration) {
+    const t = $("toast"); clearTimeout(toastTimer); t.textContent = ""; t.classList.add("has-action", "show");
+    const text = document.createElement("span"); text.textContent = msg;
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "toast-action"; btn.textContent = label;
+    btn.addEventListener("click", async () => { clearTimeout(toastTimer); hideToast(); try { await onAction(); } catch (e) {} });
+    t.append(text, btn); toastTimer = setTimeout(hideToast, duration || 6000);
+  }
 
   function noteHtml(n) { return (n && n.data && typeof n.data.html === "string") ? n.data.html : ""; }
   function notesOf(pid) { return notes.filter((n) => n.projectId === pid).sort((a, b) => b.updatedAt - a.updatedAt); }
@@ -2475,7 +2498,7 @@
       get saveTimer(){return saveTimer;}, set saveTimer(v){saveTimer=v;},
       get viewStack(){return viewStack;}, set viewStack(v){viewStack=v;}
     },
-    h: { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast, noteHtml, notesOf, getProject, getNote }
+    h: { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast, toastAction, noteHtml, notesOf, getProject, getNote }
   };
 })();
 </script>
