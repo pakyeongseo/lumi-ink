@@ -1889,7 +1889,12 @@ ${gallery}
     ppink: { name: "파스텔 핑크", grad: "linear-gradient(135deg, #efa6cc, #d3a6e8)", ig: ["#efa6cc", "#d3a6e8"] },
     polive: { name: "파스텔 올리브", grad: "linear-gradient(135deg, #a8b85e, #93b06e)", ig: ["#a8b85e", "#93b06e"] },
     ppurple: { name: "파스텔 퍼플", grad: "linear-gradient(135deg, #b39ee8, #a3a6e6)", ig: ["#c5aef0", "#b3b0ee"] },
-    pgold: { name: "파스텔 골드", grad: "linear-gradient(135deg, #e8d49a, #d8c182)", ig: ["#e8d49a", "#d8c182"] }
+    pgold: { name: "파스텔 골드", grad: "linear-gradient(135deg, #e8d49a, #d8c182)", ig: ["#e8d49a", "#d8c182"] },
+    navy: { name: "네이비", grad: "linear-gradient(135deg, #3f6fd8, #4a5fc8)", ig: ["#5b8def", "#6f7fe0"] },
+    burgundy: { name: "버건디", grad: "linear-gradient(135deg, #c0405e, #9a2f48)", ig: ["#e0607e", "#d05068"] },
+    dgreen: { name: "딥그린", grad: "linear-gradient(135deg, #2faa72, #1f8a6a)", ig: ["#3fc78a", "#3aa890"] },
+    dviolet: { name: "딥바이올렛", grad: "linear-gradient(135deg, #8a4ee0, #6a3fc8)", ig: ["#a06ef0", "#8a5fe0"] },
+    lgold: { name: "럭셔리골드", grad: "linear-gradient(135deg, #c89a28, #a87c14)", ig: ["#f0c64a", "#d9a832"] }
   };
   function applyAccent(name) {
     if (!ACCENTS[name]) name = "blue";
@@ -1906,12 +1911,12 @@ ${gallery}
   function detectAccent() { let a = "blue"; try { a = localStorage.getItem("luminkAccent") || "blue"; } catch (e) {} applyAccent(a); }
   function openAccentPicker() {
     const cur = st.accent || "blue";
-    const opts = Object.keys(ACCENTS).map((k) => `<div class="accent-opt${k === cur ? " sel" : ""}" data-accent="${k}"><span class="ao-sw" style="background:${ACCENTS[k].grad}"></span><span class="ao-name">${ACCENTS[k].name}</span><span class="ao-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>`).join("");
-    openModal(`<h3>컬러 테마</h3><p class="m-sub">앱 전체 강조색을 골라요. 밝게·어둡게 테마와 함께 적용돼요.</p><div class="accent-opts">${opts}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);
+    const cells = Object.keys(ACCENTS).map((k) => `<div class="accent-cell${k === cur ? " sel" : ""}" data-accent="${k}"><span class="ac-sw" style="background:${ACCENTS[k].grad}"></span><span class="ac-name">${ACCENTS[k].name}</span></div>`).join("");
+    openModal(`<h3>컬러 테마</h3><p class="m-sub">앱 전체 강조색을 골라요. 밝게·어둡게 테마와 함께 적용돼요.</p><div class="accent-grid">${cells}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);
     $on("acClose", "click", closeModal);
-    document.querySelectorAll(".accent-opt").forEach((el) => el.addEventListener("click", () => {
+    document.querySelectorAll(".accent-cell").forEach((el) => el.addEventListener("click", () => {
       applyAccent(el.dataset.accent);
-      document.querySelectorAll(".accent-opt").forEach((x) => x.classList.toggle("sel", x === el));
+      document.querySelectorAll(".accent-cell").forEach((x) => x.classList.toggle("sel", x === el));
     }));
   }
 
