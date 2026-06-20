@@ -1294,6 +1294,20 @@
   .proj-icon .frame {
     position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
   }
+  .proj-icon .frame svg { width: 100%; height: 100%; display: block; }
+  .frame-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px 10px; margin: 10px 0 16px; max-height: 56vh; overflow-y: auto; padding: 2px; }
+  .frame-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 4px; border-radius: 12px; border: 1.5px solid transparent; }
+  .frame-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .frame-opt .fr-prev { width: 74px; height: 74px; border-radius: 13px; }
+  .frame-opt span { font-size: 11px; color: var(--muted); }
+  .frame-opt.sel span { color: var(--accent); font-weight: 700; }
+  .fr-bigprev { display: grid; place-items: center; margin: 6px 0 14px; }
+  .fr-bigprev .proj-icon { width: 130px; height: 130px; border-radius: 18px; }
+  .fr-bigprev .frame { border-radius: 18px; }
+  .fcolor-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 11px; margin-bottom: 16px; }
+  .fcolor-sw { display: grid; place-items: center; cursor: pointer; aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent; }
+  .fcolor-sw span { width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(128,128,128,.25) inset; }
+  .fcolor-sw.sel { border-color: var(--accent); }
   .proj-icon .deflogo {
     width: 27px; height: 27px; border-radius: 8px;
     background: radial-gradient(circle at 38% 30%, #bfe9ff, #6ad0ff 45%, #3f7fd6 100%);
@@ -2642,6 +2656,7 @@
 })();
 </script>
 <script src="./assets-icons.js"></script>
+<script src="./assets-frames.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
