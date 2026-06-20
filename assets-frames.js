@@ -134,6 +134,75 @@
         '<circle cx="13" cy="11.5" r="1.5" fill="' + c + '"/>';
       return band(c, 5, 11, 12) + beadRing(c, 18.5, 22, 78, 9.3, 1.5) + corners(orn);
     } }
+,
+    // 11. Slim hairline — two ultra-thin concentric lines
+    { id: "slim-hairline", name: "슬림 헤어라인", build: function (c) {
+      return line(c, 7, 1.1, 12, "1") + line(c, 11, 0.7, 9, ".5");
+    } },
+
+    // 12. Slim corner bracket — thin L brackets at corners only
+    { id: "slim-bracket", name: "슬림 코너 브래킷", build: function (c) {
+      var orn = '<path d="M9 24 L9 11 Q9 9 11 9 L24 9" fill="none" stroke="' + c + '" stroke-width="1.7" stroke-linecap="round"/>';
+      return corners(orn);
+    } },
+
+    // 13. Slim inset dot — inset line plus small corner dots
+    { id: "slim-insetdot", name: "슬림 인셋 닷", build: function (c) {
+      var orn = '<circle cx="12" cy="12" r="2" fill="' + c + '"/>';
+      return line(c, 9, 1.2, 10, ".95") + corners(orn);
+    } },
+
+    // 14. Slim fine bead — sparse fine-bead ring
+    { id: "slim-finebead", name: "슬림 파인 비드", build: function (c) {
+      return line(c, 14, 0.9, 7, ".7") + beadRing(c, 9.5, 16, 84, 8.5, 1.1);
+    } },
+
+    // 15. Slim diamond corners — thin border with tiny diamonds
+    { id: "slim-diamond", name: "슬림 다이아 코너", build: function (c) {
+      var orn = '<polygon points="12,7.5 16.5,12 12,16.5 7.5,12" fill="' + c + '"/>';
+      return line(c, 8, 1, 9, ".85") + corners(orn);
+    } },
+
+    // 16. Slim mini notch — thin border with cut corners
+    { id: "slim-notch", name: "슬림 미니 노치", build: function (c) {
+      var orn = '<path d="M8 17 L17 8" fill="none" stroke="' + c + '" stroke-width="1.6" stroke-linecap="round"/>' +
+                '<circle cx="9" cy="9" r="1.4" fill="' + c + '"/>';
+      return line(c, 10, 1.2, 4, ".9") + corners(orn);
+    } },
+
+    // 17. Slim sprig — delicate vines at corners
+    { id: "slim-sprig", name: "슬림 덩굴", build: function (c) {
+      var orn = '<path d="M10 27 C13 19 19 13 27 10" fill="none" stroke="' + c + '" stroke-width="1.3" stroke-linecap="round"/>' +
+                '<path d="M16 18 q-4 -1 -5 -5 q5 0 5 5 Z" fill="' + c + '"/>' +
+                '<path d="M19 15 q-1 -4 -5 -5 q0 5 5 5 Z" fill="' + c + '"/>';
+      return line(c, 9, 0.9, 11, ".7") + corners(orn);
+    } },
+
+    // 18. Slim wave — a single slim scalloped wave
+    { id: "slim-wave", name: "슬림 물결", build: function (c) {
+      var s = '', x, r = 4, y = 12, step = r * 2;
+      for (x = 14 + r; x <= 86; x += step) {
+        s += '<path d="M' + (x - r) + ' ' + y + ' A' + r + ' ' + r + ' 0 0 1 ' + (x + r) + ' ' + y + '" fill="none" stroke="' + c + '" stroke-width="1.2"/>';
+        s += '<path d="M' + (x - r) + ' ' + (100 - y) + ' A' + r + ' ' + r + ' 0 0 0 ' + (x + r) + ' ' + (100 - y) + '" fill="none" stroke="' + c + '" stroke-width="1.2"/>';
+        s += '<path d="M' + y + ' ' + (x - r) + ' A' + r + ' ' + r + ' 0 0 0 ' + y + ' ' + (x + r) + '" fill="none" stroke="' + c + '" stroke-width="1.2"/>';
+        s += '<path d="M' + (100 - y) + ' ' + (x - r) + ' A' + r + ' ' + r + ' 0 0 1 ' + (100 - y) + ' ' + (x + r) + '" fill="none" stroke="' + c + '" stroke-width="1.2"/>';
+      }
+      return s;
+    } },
+
+    // 19. Slim dashed — fine dashed frame
+    { id: "slim-dashed", name: "슬림 점선", build: function (c) {
+      return '<rect x="9" y="9" width="82" height="82" rx="10" fill="none" stroke="' + c + '" stroke-width="1.4" stroke-dasharray="3.2 3.2" stroke-linecap="round"/>' +
+        line(c, 14, 0.7, 7, ".4");
+    } },
+
+    // 20. Slim sparkle — tiny star sparks at corners
+    { id: "slim-sparkle", name: "슬림 스파클", build: function (c) {
+      var orn = '<path d="M12 6 L13.1 10.9 L18 12 L13.1 13.1 L12 18 L10.9 13.1 L6 12 L10.9 10.9 Z" fill="' + c + '"/>' +
+                '<circle cx="22" cy="9" r="0.9" fill="' + c + '"/><circle cx="9" cy="22" r="0.9" fill="' + c + '"/>';
+      return line(c, 8, 0.9, 11, ".8") + corners(orn);
+    } }
+
   ];
 
   window.__luminkFrames = FRAMES;

@@ -21,14 +21,17 @@
     ["pastel-mint", "파스텔 민트", "#afe8c8"], ["pastel-lilac", "파스텔 라일락", "#cbb8f4"],
     ["pastel-pink", "파스텔 핑크", "#f2b6ca"], ["pastel-peach", "파스텔 피치", "#f5c29e"],
     ["pastel-butter", "파스텔 버터", "#f3e59a"], ["pastel-rose", "파스텔 로즈", "#edbed4"],
-    ["pastel-sky", "파스텔 스카이", "#b6dff4"]
+    ["pastel-sky", "파스텔 스카이", "#b6dff4"],
+    ["glass", "투명 글래스", "rgba(255,255,255,.48)"],
+    ["punch", "투명 펀칭", "punch"]
   ];
   const FRAME_THEME_TOKEN = "theme";
-  const FRAME_COLOR_BY_KEY = new Map(FRAME_COLORS.map(([key, , color]) => [key, color.toLowerCase()]));
-  const FRAME_COLOR_SET = new Set(FRAME_COLORS.map(([, , color]) => color.toLowerCase()));
+  const FRAME_PUNCH_TOKEN = "punch";
+  const FRAME_COLOR_BY_KEY = new Map(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([key, , color]) => [key, color.toLowerCase()]));
+  const FRAME_COLOR_SET = new Set(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([, , color]) => color.toLowerCase()));
   function frameById(id) { return FRAMES.find((f) => f.id === id) || null; }
   function normalizeFrameColor(value) {
-    if (value === FRAME_THEME_TOKEN) return FRAME_THEME_TOKEN;
+    if (value === FRAME_THEME_TOKEN || value === FRAME_PUNCH_TOKEN) return value;
     if (typeof value !== "string") return null;
     const color = value.trim().toLowerCase();
     // v49 초기 구현은 색상 키(gold, pastel-pink)를 저장했어요.
@@ -40,12 +43,27 @@
     if (value === FRAME_THEME_TOKEN) {
       return (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "").trim() || "#d4af37";
     }
+    if (value === FRAME_PUNCH_TOKEN) return FRAME_PUNCH_TOKEN;
     return normalizeFrameColor(value) || "#d4af37";
+  }
+  function punchedFrameInner(f) {
+    if (!f) return "";
+    const hi = f.build("#ffffff");
+    const lo = f.build("#000000");
+    const mid = f.build("rgba(255,255,255,.24)");
+    return '<g opacity=".18">' + mid + '</g>' +
+      '<g opacity=".24" transform="translate(-0.5,-0.5)">' + hi + '</g>' +
+      '<g opacity=".18" transform="translate(0.6,0.6)">' + lo + '</g>';
+  }
+  function frameSvgMarkup(fid, color) {
+    const f = frameById(fid); if (!f) return "";
+    const resolved = resolveFrameColor(color);
+    const inner = resolved === FRAME_PUNCH_TOKEN ? punchedFrameInner(f) : f.build(resolved);
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">' + inner + "</svg>";
   }
   function frameInner(p) {
     if (!p || !p.frame) return "";
-    const f = frameById(p.frame); if (!f) return "";
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">' + f.build(resolveFrameColor(p.frameColor)) + "</svg>";
+    return frameSvgMarkup(p.frame, p.frameColor);
   }
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
@@ -2459,8 +2477,7 @@
   }
   function frameThumbInner(p) { return projectThumbMedia(p); }
   function frameSvgFor(fid, color) {
-    const f = frameById(fid); if (!f) return "";
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">' + f.build(resolveFrameColor(color)) + "</svg>";
+    return frameSvgMarkup(fid, color);
   }
   function showFramePicker(pid) {
     const p = getProject(pid); if (!p) return;
@@ -2484,15 +2501,20 @@
     let color = normalizeFrameColor(p.frameColor) || "#d4af37";
     const themeAccent = resolveFrameColor(FRAME_THEME_TOKEN);
     const colors = FRAME_COLORS.concat([[FRAME_THEME_TOKEN, "테마와 연동", themeAccent]]);
-    const isSelectedFrameColor = (key, value) => key === FRAME_THEME_TOKEN
-      ? color === FRAME_THEME_TOKEN
-      : color === value.toLowerCase();
+    const isSelectedFrameColor = (key, value) => {
+      if (key === FRAME_THEME_TOKEN) return color === FRAME_THEME_TOKEN;
+      if (key === FRAME_PUNCH_TOKEN) return color === FRAME_PUNCH_TOKEN;
+      return color === value.toLowerCase();
+    };
     const sw = () => colors.map(([key, name, value]) => {
       const previewColor = key === FRAME_THEME_TOKEN ? themeAccent : value;
-      return `<div class="fcolor-sw${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span style="background:${previewColor}"></span></div>`;
+      const isGlass = key === "glass";
+      const isPunch = key === FRAME_PUNCH_TOKEN;
+      const punchStyle = 'background:linear-gradient(135deg, rgba(255,255,255,.68), rgba(255,255,255,.15)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.85), inset 0 0 0 6px rgba(255,255,255,.14), 0 0 0 1px rgba(87,106,146,.32);';
+      return `<div class="fcolor-sw${isGlass ? " glass" : ""}${isPunch ? " punch" : ""}${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span${isGlass ? "" : isPunch ? ` style="${punchStyle}"` : ` style="background:${previewColor}"`}></span></div>`;
     }).join("");
     openModal(`
-      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌어요.</p>
+      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌며, ‘투명 글래스’는 썸네일 위에 반투명하게 겹쳐지고, ‘투명 펀칭’은 이미지에 홈을 낸 듯한 엣지로 보여요.</p>
       <div class="fr-bigprev"><div class="proj-icon has-frame">${frameThumbInner(p)}<div class="frame" id="frBigFrame">${frameSvgFor(fid, color)}</div></div></div>
       <div class="fcolor-grid" id="fcGrid">${sw()}</div>
       <div class="m-row"><button class="m-btn" id="fcBack">뒤로</button><button class="m-btn primary" id="fcOk">적용</button></div>
@@ -2501,7 +2523,7 @@
       $("frBigFrame").innerHTML = frameSvgFor(fid, color);
       $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => {
         const key = item.dataset.c;
-        const value = key === FRAME_THEME_TOKEN ? themeAccent : FRAME_COLOR_BY_KEY.get(key);
+        const value = key === FRAME_THEME_TOKEN ? themeAccent : (key === FRAME_PUNCH_TOKEN ? FRAME_PUNCH_TOKEN : FRAME_COLOR_BY_KEY.get(key));
         item.classList.toggle("sel", key === FRAME_THEME_TOKEN
           ? color === FRAME_THEME_TOKEN
           : color === value);
@@ -2509,11 +2531,11 @@
     };
     $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.addEventListener("click", () => {
       const key = item.dataset.c;
-      color = key === FRAME_THEME_TOKEN ? FRAME_THEME_TOKEN : (FRAME_COLOR_BY_KEY.get(key) || color);
+      color = key === FRAME_THEME_TOKEN ? FRAME_THEME_TOKEN : (key === FRAME_PUNCH_TOKEN ? FRAME_PUNCH_TOKEN : (FRAME_COLOR_BY_KEY.get(key) || color));
       refresh();
     }));
     $on("fcBack", "click", () => showFramePicker(pid));
-    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : "프레임을 적용했어요"); });
+    $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : color === FRAME_PUNCH_TOKEN ? "투명 펀칭 프레임을 적용했어요" : "프레임을 적용했어요"); });
   }
   const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
   const MAX_IMAGE_PIXELS = 24 * 1000 * 1000;
