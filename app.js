@@ -1688,13 +1688,13 @@
         writeCustomLogTemplates(readCustomLogTemplates().filter((item) => item.id !== id));
         const savedFavorites = readLogTemplateFavorites(); savedFavorites.delete(id); writeLogTemplateFavorites(savedFavorites);
         const current = getNote(st.curNoteId); if (current && current.data.templateId === id && !current.data.templateSnapshot) { current.data.templateId = "system-ink-frame"; await saveLog(current, true); }
-        logTemplateTab = "custom"; showLogTemplatePicker();
+        showLogTemplatePicker();
       });
     }));
   }
   function showLogTemplatePicker() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
-    if (!["builtin", "custom", "favorite"].includes(logTemplateTab)) logTemplateTab = "builtin";
+    logTemplateTab = "builtin"; logTemplateQuery = ""; logTemplateSortAsc = true;
     openModal(`<div class="log-template-manager"><h3>로그 디자인 템플릿</h3><p class="m-sub">템플릿을 길게 누르면 즐겨찾기 상단에 고정됩니다.</p><div class="log-template-tabs" role="tablist" aria-label="템플릿 구분"><button data-log-tab="builtin" role="tab">기본 <small></small></button><button data-log-tab="custom" role="tab">사용자 <small></small></button><button data-log-tab="favorite" role="tab">즐겨찾기 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="logTemplateSearch" type="search" autocomplete="off" placeholder="템플릿 제목·내용 검색" value="${esc(logTemplateQuery)}"><button class="m-btn" id="logTemplateSort" type="button">이름순 ↑</button></div><div class="log-template-list" id="logTemplateList"></div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div></div>`);
     $("modalBox").querySelectorAll("[data-log-tab]").forEach((button) => button.addEventListener("click", () => { logTemplateTab = button.dataset.logTab; drawLogTemplatePicker(); }));
     $("logTemplateSearch").addEventListener("input", (event) => { logTemplateQuery = event.target.value; drawLogTemplatePicker(); });

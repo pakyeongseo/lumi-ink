@@ -11,7 +11,10 @@
     "lumi-smoke-whiskey.json", "lumi-starship-hud.json", "lumi-vellum-scroll.json",
     "lumi-amethyst-luxe.json", "lumi-concerto-stage.json", "lumi-maple-autumn.json", "lumi-mono-contrast.json",
     "lumi-painter-canvas.json", "lumi-sakura-spring.json", "lumi-snowflake-winter.json", "lumi-storybook-gilt.json",
-    "lumi-verdant-summer.json", "lumi-wedding-march.json"
+    "lumi-verdant-summer.json", "lumi-wedding-march.json",
+    "lumi-bordeaux-vintage.json", "lumi-carrot-patch.json", "lumi-first-rose.json", "lumi-grandfather-clock.json",
+    "lumi-harvest-moon.json", "lumi-holy-night.json", "lumi-old-library.json", "lumi-requiem-rest.json",
+    "lumi-royal-crimson.json", "lumi-starry-night.json"
   ];
 
   window.__luminkLogBuiltins = [

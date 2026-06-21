@@ -1,0 +1,120 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-harvest-moon",
+  "name": "한가위 문",
+  "description": "남색 밤하늘과 보름달빛의 추석 로그. 낮의 단풍이나 무협 한지와 달리 정겨운 달밤 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#101832,#16203e 55%,#121a32)",
+      "color": "#c6c4d2",
+      "border": "1px solid #9a7e44",
+      "border-radius": "14px",
+      "padding": "28px 26px",
+      "box-shadow": "0 18px 46px rgba(6,10,24,.55), inset 0 0 70px rgba(200,170,90,.08)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#ecd28a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "text-align": "center",
+      "border-bottom": "1px solid #44496a",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f2e2b0",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9aa6cc",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5fb3a8",
+        "border": "1px solid #3a7a72",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em",
+        "box-shadow": "0 0 12px rgba(95,179,168,.22)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f2db90",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a4aad0",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#101832",
+      "background-color": "#ecd28a",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "box-shadow": "0 0 12px rgba(236,210,138,.45)"
+    }
+  }
+}
