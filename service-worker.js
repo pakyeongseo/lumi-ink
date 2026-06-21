@@ -1,7 +1,8 @@
 /* 잉크 메모 — Service Worker
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
-const CACHE = "ink-memo-v59";
+const CACHE_PREFIX = "ink-memo-";
+const CACHE = "ink-memo-v59-log1";
 
 const ASSETS = [
   "./",
@@ -9,6 +10,8 @@ const ASSETS = [
   "./app.js",
   "./assets-icons.js",
   "./assets-frames.js",
+  "./log-templates.js",
+  "./lumink-log-template-guide.md",
   "./tokenizer.js",
   "./manifest.json",
   "./manifest-ink.json",
@@ -56,11 +59,14 @@ const ASSETS = [
   "./favicon.png"
 ];
 
+const REQUIRED_ASSETS = ["./", "./index.html", "./app.js", "./assets-icons.js", "./assets-frames.js", "./log-templates.js", "./tokenizer.js", "./manifest.json"];
+
 // 설치: 핵심 파일 미리 캐싱
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(ASSETS))
+      .then((cache) => cache.addAll(REQUIRED_ASSETS)
+        .then(() => Promise.all(ASSETS.filter((asset) => !REQUIRED_ASSETS.includes(asset)).map((asset) => cache.add(asset).catch(() => null)))))
       .then(() => self.skipWaiting())
   );
 });
@@ -69,7 +75,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -84,18 +90,23 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // 앱 코드(HTML/JS)는 네트워크 우선 — 항상 최신 버전을 받고, 오프라인일 때만 캐시로 폴백
-  const isAppCode = req.mode === "navigate" || /\.(html|js)$/i.test(url.pathname);
+  const isNavigation = req.mode === "navigate";
+  const isAppCode = isNavigation || /\.(html|js)$/i.test(url.pathname);
   if (isAppCode) {
     event.respondWith(
       fetch(req)
         .then((res) => {
           if (res && res.status === 200 && res.type === "basic") {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            return caches.open(CACHE).then((c) => c.put(req, copy)).then(() => res);
           }
           return res;
         })
-        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
+        .catch(() => caches.match(req).then((cached) => {
+          if (cached) return cached;
+          if (isNavigation) return caches.match("./index.html").then((shell) => shell || new Response("오프라인 상태입니다.", { status: 503 }));
+          return new Response("오프라인 상태입니다.", { status: 503 });
+        }))
     );
     return;
   }
@@ -108,11 +119,11 @@ self.addEventListener("fetch", (event) => {
         .then((res) => {
           if (res && res.status === 200 && res.type === "basic") {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            return caches.open(CACHE).then((c) => c.put(req, copy)).then(() => res);
           }
           return res;
         })
-        .catch(() => caches.match("./index.html"));
+        .catch(() => new Response("오프라인 상태입니다.", { status: 503 }));
     })
   );
 });

@@ -7,7 +7,7 @@
   const st = L.state;
   const { $, uid, now, esc, fmtDate, plainText, deriveTitle, preview, toast, toastAction,
           noteHtml, notesOf, getProject, getNote } = L.h;
-  const { CHIP, TYPE_LABEL, openDB, store, getAll, put, del } = L;
+  const { CHIP, TYPE_LABEL, openDB, store, getAll, put, del, transact } = L;
   function $on(id, type, fn, opts) { const el = $(id); if (el) el.addEventListener(type, fn, opts); else console.warn("[bind] #" + id + " not found — skipped"); }
   const ICONS = window.__luminkIcons || [];
   const DEFAULT_ICON = ICONS[0] ? ICONS[0].data : null;
@@ -102,6 +102,11 @@
   }
   function freeDraftFromEditor() { return { html: st.codeMode ? $("codeArea").value : $("editor").innerHTML }; }
   function loreDraftFromEditor(n) { const d = jsonCopy((n && n.data) || {}) || {}; d.content = $("loreEdit").value; return d; }
+  function logDraftFromEditor(n) {
+    const d = jsonCopy((n && n.data) || {}) || {};
+    d.content = $("logEdit").value; d.personaName = $("logMaskName").value; d.personaAlias = $("logMaskAlias").value;
+    return d;
+  }
   function personaDraftFromEditor(n) {
     const d = n && n.data ? n.data : {}; const ko = jsonCopy(d.ko || {}) || {}, en = jsonCopy(d.en || {}) || {};
     ko.name = $("perKoName").value; ko.detail = $("perKoDetail").value;
@@ -112,6 +117,7 @@
     if (!n || !d || !d.data) return false;
     if (d.type === "free") return !jsonSame({ html: noteHtml(n) }, d.data);
     if (d.type === "lorebook") return !jsonSame((n.data || {}).content || "", d.data.content || "");
+    if (d.type === "log") return !jsonSame(n.data || {}, d.data);
     if (d.type === "persona") {
       const cur = n.data || {};
       return !jsonSame({ ko: cur.ko || {}, en: cur.en || {} }, d.data);
@@ -128,6 +134,10 @@
     } else if (d.type === "lorebook") {
       n.data = Object.assign({}, n.data || {}, jsonCopy(d.data) || {});
       await saveLore(n, true);
+    } else if (d.type === "log") {
+      n.data = normalizeLogData(Object.assign({}, n.data || {}, jsonCopy(d.data) || {}));
+      if (!n.titleLocked) n.title = deriveLogTitle(n.data.content);
+      await saveLog(n, true);
     } else if (d.type === "persona") {
       n.data = n.data || {};
       n.data.ko = Object.assign({}, n.data.ko || {}, jsonCopy(d.data.ko) || {});
@@ -171,7 +181,7 @@
   }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore", "persona", "character", "settings", "search"];
+  const SCREENS = ["home", "project", "read", "editor", "lore", "log", "persona", "character", "settings", "search"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -182,6 +192,7 @@
     else if (v.s === "read") renderRead();
     else if (v.s === "editor") renderEditorMeta();
     else if (v.s === "lore") renderLore();
+    else if (v.s === "log") renderLog();
     else if (v.s === "persona") renderPersona();
     else if (v.s === "character") renderCharacter();
     else if (v.s === "settings") renderSettings();
@@ -199,11 +210,18 @@
       void (async () => { try { await leaveFreeEditor(); commitGo(view); } finally { navTransition = false; } })();
       return;
     }
+    if (cur && cur.s === "log" && view && view.s !== "log") {
+      if (navTransition) return;
+      navTransition = true;
+      void (async () => { try { await flushLog(); commitGo(view); } finally { navTransition = false; } })();
+      return;
+    }
     commitGo(view);
   }
   async function flushCurrentView(cur) {
     if (cur === "editor") await leaveFreeEditor();
     else if (cur === "lore") await flushLore();
+    else if (cur === "log") await flushLog();
     else if (cur === "persona") await flushPersona();
     else if (cur === "character") await flushCharacter();
   }
@@ -263,7 +281,8 @@
         await put("projects", project);
       }
     }
-    const orphans = st.notes.filter((n) => !n.projectId || !n.type);
+    const projectIds = new Set(st.projects.map((p) => p.id));
+    const orphans = st.notes.filter((n) => !n.projectId || !n.type || !projectIds.has(n.projectId));
     if (orphans.length === 0 && st.projects.length > 0) return;
     let def = st.projects.find((p) => p.isDefault) || st.projects[0];
     if (!def) {
@@ -271,6 +290,12 @@
       st.projects.push(def); await put("projects", def);
     }
     for (const n of orphans) {
+      if (n.type && n.data && typeof n.data === "object") {
+        n.projectId = def.id;
+        n.updatedAt = n.updatedAt || now();
+        await put("notes", n);
+        continue;
+      }
       const html = (n.data && n.data.html != null) ? n.data.html : (n.html || "");
       n.projectId = def.id;
       n.type = "free";
@@ -296,8 +321,8 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
-  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", persona: "#c79bff", character: "#ff9fcb" };
-  const TYPE_TAG = { free: "F", lorebook: "R", persona: "P", character: "C" };
+  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb" };
+  const TYPE_TAG = { free: "F", lorebook: "R", log: "L", persona: "P", character: "C" };
   function memoTagHTML(n) { return `<span class="memo-tag t-${n.type}">${TYPE_TAG[n.type] || "?"}</span>`; }
   function recentMemos(limit, scope) {
     limit = limit || 10;
@@ -482,7 +507,7 @@
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
-      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : (preview(noteHtml(n)) || "빈 메모");
+      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
@@ -514,7 +539,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["character", "캐릭터"], ["persona", "페르소나"], ["lorebook", "로어북"], ["free", "자유 메모"]];
+    const SECTIONS = [["character", "캐릭터"], ["persona", "페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => n.type === t);
@@ -576,6 +601,7 @@
     navTransition = true;
     try {
       if (curView().s === "editor") await leaveFreeEditor();
+      else if (curView().s === "log") await flushLog();
       st.curProjectId = id; commitGo({ s: "project" }); renderSidebar();
     } finally { navTransition = false; }
   }
@@ -583,6 +609,7 @@
     if (curView().s === "editor") await leaveFreeEditor();
     else if (st.saveTimer || (freeEditorSession && freeEditorSession.active)) await flushSave(true);
     if (loreTimer) await flushLore();
+    if (logTimer) await flushLog();
     if (perTimer) await flushPersona();
     if (charTimer) await flushCharacter();
   }
@@ -595,6 +622,7 @@
       st.curNoteId = id;
       if (n.type === "free") commitGo({ s: "read" });
       else if (n.type === "lorebook") commitGo({ s: "lore" });
+      else if (n.type === "log") { logEditMode = false; commitGo({ s: "log" }); }
       else if (n.type === "persona") { st.perEdit = false; commitGo({ s: "persona" }); }
       else if (n.type === "character") { st.charEdit = false; commitGo({ s: "character" }); }
       else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
@@ -605,7 +633,7 @@
     if (navTransition) return;
     navTransition = true;
     try {
-      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor();
+      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "log") await flushLog();
       st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render();
     } finally { navTransition = false; }
   }
@@ -750,21 +778,22 @@
   }
 
   /* ---------- note CRUD ---------- */
-  async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); triggerAutoBackup(); }
+  async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) await saveProject(p); triggerAutoBackup(); }
   async function createNote(type, projectId) {
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
+          : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
           : type === "character" ? { activeId: null, pages: [makeCharacterPage()] }
           : {}
     };
     st.notes.push(n); await put("notes", n);
-    const p = getProject(projectId); if (p) saveProject(p);
+    const p = getProject(projectId); if (p) await saveProject(p);
     st.curNoteId = n.id;
     return n;
   }
@@ -1210,7 +1239,7 @@
   }
   async function saveLore(n, silent) {
     n.updatedAt = now(); await put("notes", n);
-    const p = getProject(n.projectId); if (p) saveProject(p);
+    const p = getProject(n.projectId); if (p) await saveProject(p);
     if (!silent) setLoreSaver("saved");
     triggerAutoBackup();
   }
@@ -1343,6 +1372,260 @@
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("로어북 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    ]);
+  }
+
+  /* ---------- styled log memo ---------- */
+  const LOG_TEMPLATE_STORAGE = "luminkLogTemplatesV1";
+  const LOG_STYLE_PROPS = new Set(["background", "background-color", "color", "border", "border-left", "border-right", "border-top", "border-bottom", "border-radius", "padding", "padding-left", "padding-right", "padding-top", "padding-bottom", "margin", "margin-left", "margin-right", "margin-top", "margin-bottom", "box-shadow", "font-family", "font-size", "font-weight", "font-style", "text-decoration", "line-height", "letter-spacing", "text-align", "white-space", "word-break", "overflow-wrap", "display", "width", "max-width", "min-width", "height", "min-height"]);
+  let logEditMode = true, logTimer = null;
+
+  function cleanLogStyle(raw) {
+    const out = {};
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+    Object.entries(raw).slice(0, 60).forEach(([key, val]) => {
+      const prop = String(key).trim().toLowerCase(), value = typeof val === "string" ? val.trim() : "";
+      if (!LOG_STYLE_PROPS.has(prop) || !value || value.length > 220) return;
+      if (/url\s*\(|expression\s*\(|@import|javascript:|behavior\s*:|-moz-binding/i.test(value)) return;
+      out[prop] = value;
+    });
+    return out;
+  }
+  function riskyLogPattern(pattern) {
+    return pattern.length > 300 || /(\([^)]*[+*][^)]*\))[+*{]/.test(pattern) || /(\.\*){2,}|(\.\+){2,}/.test(pattern) || /\\[1-9]/.test(pattern);
+  }
+  function normalizeLogTemplate(raw) {
+    if (!raw || raw.kind !== "lumink-log-template" || Number(raw.schemaVersion) !== 1) throw new Error("루미잉크 로그 템플릿 v1 형식이 아니에요");
+    const id = String(raw.id || "").trim();
+    if (!/^[a-z0-9][a-z0-9-]{2,63}$/i.test(id)) throw new Error("템플릿 id는 영문·숫자·하이픈 3~64자로 작성해 주세요");
+    const styles = {}, srcStyles = raw.styles && typeof raw.styles === "object" ? raw.styles : {};
+    ["canvas", "header", "body", "paragraph", "empty"].forEach((key) => { styles[key] = cleanLogStyle(srcStyles[key]); });
+    const rules = (Array.isArray(raw.rules) ? raw.rules : []).slice(0, 20).map((rule, index) => {
+      const pattern = typeof rule.pattern === "string" ? rule.pattern : "";
+      if (!pattern || riskyLogPattern(pattern)) throw new Error(`${index + 1}번째 정규식이 너무 복잡하거나 안전하지 않아요`);
+      let flags = String(rule.flags || "g").replace(/[^gimu]/g, ""); if (!flags.includes("g")) flags += "g"; flags = [...new Set(flags)].join("");
+      try { new RegExp(pattern, flags); } catch (e) { throw new Error(`${index + 1}번째 정규식을 읽을 수 없어요`); }
+      return {
+        id: cleanImportedText(rule.id, 80) || `rule-${index + 1}`,
+        label: cleanImportedText(rule.label, 120) || `규칙 ${index + 1}`,
+        pattern, flags, capture: Math.min(9, Math.max(0, Number(rule.capture) || 0)),
+        stripDelimiters: !!rule.stripDelimiters, style: cleanLogStyle(rule.style)
+      };
+    });
+    const persona = raw.persona && typeof raw.persona === "object" ? raw.persona : {};
+    return {
+      kind: "lumink-log-template", schemaVersion: 1, id,
+      name: cleanImportedText(raw.name, 100) || id,
+      description: cleanImportedText(raw.description, 300), author: cleanImportedText(raw.author, 100),
+      styles, rules, persona: { maskText: cleanImportedText(persona.maskText, 80) || "•••", style: cleanLogStyle(persona.style) }
+    };
+  }
+  function builtInLogTemplates() {
+    return (Array.isArray(window.__luminkLogBuiltins) ? window.__luminkLogBuiltins : []).map((template) => {
+      try { return normalizeLogTemplate(template); } catch (e) { return null; }
+    }).filter(Boolean);
+  }
+  function readCustomLogTemplates() {
+    try {
+      const list = JSON.parse(localStorage.getItem(LOG_TEMPLATE_STORAGE) || "[]");
+      return (Array.isArray(list) ? list : []).map((template) => { try { return normalizeLogTemplate(template); } catch (e) { return null; } }).filter(Boolean).slice(0, 20);
+    } catch (e) { return []; }
+  }
+  function writeCustomLogTemplates(list) {
+    try { localStorage.setItem(LOG_TEMPLATE_STORAGE, JSON.stringify((list || []).slice(0, 20))); return true; }
+    catch (e) { toast("템플릿 저장공간이 부족해요"); return false; }
+  }
+  function allLogTemplates(n) {
+    const list = [...builtInLogTemplates(), ...readCustomLogTemplates()];
+    const snap = n && n.data && n.data.templateSnapshot;
+    if (snap) { try { const template = normalizeLogTemplate(snap); if (!list.some((item) => item.id === template.id)) list.push(template); } catch (e) {} }
+    return list;
+  }
+  function getLogTemplate(n) {
+    const list = allLogTemplates(n), id = n && n.data && n.data.templateId;
+    return list.find((template) => template.id === id) || list[0] || normalizeLogTemplate({ kind: "lumink-log-template", schemaVersion: 1, id: "system-fallback", name: "기본", styles: {}, rules: [], persona: {} });
+  }
+  function normalizeLogData(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    let snapshot = null;
+    if (src.templateSnapshot) { try { snapshot = normalizeLogTemplate(src.templateSnapshot); } catch (e) {} }
+    return {
+      content: cleanImportedText(src.content, 500000),
+      templateId: cleanImportedText(src.templateId, 80) || "system-ink-frame",
+      personaName: cleanImportedText(src.personaName, 80), personaAlias: cleanImportedText(src.personaAlias, 80),
+      templateSnapshot: snapshot
+    };
+  }
+  function logStyleAttr(style) {
+    return Object.entries(cleanLogStyle(style)).map(([key, value]) => `${key}:${value}`).join(";");
+  }
+  function mergeLogStyle(a, b) { return Object.assign({}, a || {}, b || {}); }
+  function applyLogRule(segments, rule) {
+    const next = [];
+    segments.forEach((segment) => {
+      const text = segment.text || ""; let regex;
+      try { regex = new RegExp(rule.pattern, rule.flags); } catch (e) { next.push(segment); return; }
+      let last = 0, match, count = 0;
+      while ((match = regex.exec(text)) && count++ < 1000) {
+        if (!match[0]) { regex.lastIndex += 1; continue; }
+        const fullStart = match.index, fullEnd = fullStart + match[0].length;
+        const capture = rule.capture > 0 && typeof match[rule.capture] === "string" ? match[rule.capture] : match[0];
+        const inside = rule.capture > 0 ? match[0].indexOf(capture) : 0;
+        const targetStart = fullStart + Math.max(0, inside), targetEnd = targetStart + capture.length;
+        if (rule.stripDelimiters) {
+          if (fullStart > last) next.push({ text: text.slice(last, fullStart), style: segment.style });
+        } else {
+          if (targetStart > last) next.push({ text: text.slice(last, targetStart), style: segment.style });
+        }
+        if (capture) next.push({ text: capture, style: mergeLogStyle(segment.style, rule.style) });
+        if (!rule.stripDelimiters && fullEnd > targetEnd) next.push({ text: text.slice(targetEnd, fullEnd), style: segment.style });
+        last = fullEnd;
+      }
+      if (last < text.length) next.push({ text: text.slice(last), style: segment.style });
+      else if (!text.length) next.push(segment);
+    });
+    return next;
+  }
+  function applyPersonaMask(segments, name, alias, style) {
+    if (!name) return segments;
+    const out = [];
+    segments.forEach((segment) => {
+      let at = 0, index;
+      while ((index = segment.text.indexOf(name, at)) >= 0) {
+        if (index > at) out.push({ text: segment.text.slice(at, index), style: segment.style });
+        out.push({ text: alias, style: mergeLogStyle(segment.style, style) }); at = index + name.length;
+      }
+      if (at < segment.text.length) out.push({ text: segment.text.slice(at), style: segment.style });
+      else if (!segment.text.length) out.push(segment);
+    });
+    return out;
+  }
+  function renderLogLine(text, template, data) {
+    let segments = [{ text: String(text || ""), style: {} }];
+    template.rules.forEach((rule) => { segments = applyLogRule(segments, rule); });
+    const alias = (data.personaAlias || template.persona.maskText || "•••").trim();
+    segments = applyPersonaMask(segments, (data.personaName || "").trim(), alias, template.persona.style);
+    return segments.map((segment) => {
+      const style = logStyleAttr(segment.style), textHtml = esc(segment.text);
+      return style ? `<span style="${esc(style)}">${textHtml}</span>` : textHtml;
+    }).join("");
+  }
+  function renderLogInlineHtml(n) {
+    const data = normalizeLogData(n && n.data), template = getLogTemplate(n), styles = template.styles;
+    const lines = String(data.content || "").split(/\r?\n/);
+    const body = lines.map((line) => line.length
+      ? `<div style="${esc(logStyleAttr(styles.paragraph))}">${renderLogLine(line, template, data)}</div>`
+      : `<div style="${esc(logStyleAttr(styles.empty))}"><br></div>`).join("");
+    const header = `<div style="${esc(logStyleAttr(styles.header))}">${esc((n && n.title) || "로그")}</div>`;
+    return `<div data-lumink-log="1" style="${esc(logStyleAttr(styles.canvas))}">${header}<div style="${esc(logStyleAttr(styles.body))}">${body}</div></div>`;
+  }
+  function deriveLogTitle(content) {
+    const first = String(content || "").split(/\r?\n/).map((line) => line.replace(/[\[\]*_'"`]/g, "").trim()).find(Boolean) || "";
+    return first ? first.slice(0, 52) : "이름 없는 로그";
+  }
+  function setLogSaver(mode) {
+    const saver = $("logSaver"); if (!saver) return;
+    saver.className = "saver " + (mode || ""); $("logSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (saver.classList.contains("saved")) { saver.className = "saver"; $("logSaverText").textContent = ""; } }, 1500);
+  }
+  function renderLogPreview(n) {
+    const preview = $("logPreview");
+    if (!(n.data && n.data.content || "").trim()) { preview.innerHTML = '<div class="log-preview-empty">원본 텍스트를 입력하면 여기에 디자인이 적용됩니다.</div>'; return; }
+    preview.innerHTML = renderLogInlineHtml(n);
+  }
+  function renderLog() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") { back(); return; }
+    n.data = normalizeLogData(n.data); const template = getLogTemplate(n);
+    $("logTitle").textContent = n.title || "로그"; $("logEdit").value = n.data.content;
+    $("logMaskName").value = n.data.personaName; $("logMaskAlias").value = n.data.personaAlias;
+    $("logTemplateName").textContent = template.name; $("logTemplateDesc").textContent = template.description || template.author || "로그 디자인";
+    $("logEditView").hidden = !logEditMode; $("logPreviewView").hidden = logEditMode;
+    $("logModeLabel").textContent = logEditMode ? "원본 텍스트 편집 중" : "정규식 디자인 보기 중";
+    $("logViewToggle").title = logEditMode ? "꾸며진 로그 보기" : "원본 텍스트 편집";
+    $("logViewIcon").innerHTML = logEditMode ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
+    if (!logEditMode) renderLogPreview(n); setLogSaver(""); queueDraftRecovery(n, "log");
+  }
+  async function saveLog(n, silent) {
+    if (!n) return; n.data = normalizeLogData(n.data); n.updatedAt = now(); await put("notes", n);
+    const project = getProject(n.projectId); if (project) await saveProject(project);
+    if (!silent) setLogSaver("saved"); triggerAutoBackup();
+  }
+  function scheduleLogSave() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    writeDraft(n, "log", logDraftFromEditor(n)); setLogSaver("dirty"); clearTimeout(logTimer); const id = n.id;
+    logTimer = setTimeout(() => { if (st.curNoteId === id) void flushLog(); }, 550);
+  }
+  async function flushLog() {
+    clearTimeout(logTimer); logTimer = null; const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    const draft = logDraftFromEditor(n); n.data = normalizeLogData(Object.assign({}, n.data || {}, draft));
+    if (!n.titleLocked) { n.title = deriveLogTitle(n.data.content); $("logTitle").textContent = n.title; }
+    await saveLog(n); clearDraftIfSynced(n, "log", n.data);
+  }
+  async function toggleLogView() { await flushLog(); logEditMode = !logEditMode; renderLog(); }
+  async function applyLogMask() {
+    await flushLog(); const n = getNote(st.curNoteId); if (!n) return;
+    logEditMode = false; renderLog(); toast(n.data.personaName ? "보기에서 페르소나명을 가렸어요" : "가릴 이름을 비웠어요");
+  }
+  async function selectLogTemplate(template) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    const isBuiltIn = builtInLogTemplates().some((item) => item.id === template.id);
+    n.data.templateId = template.id; n.data.templateSnapshot = isBuiltIn ? null : template; await saveLog(n, true); closeModal(); renderLog(); toast("로그 템플릿을 적용했어요");
+  }
+  function showLogTemplatePicker() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    const customIds = new Set(readCustomLogTemplates().map((template) => template.id)), templates = allLogTemplates(n);
+    const rows = templates.map((template) => `<div class="log-template-item${template.id === n.data.templateId ? " active" : ""}"><button class="log-template-main" data-log-template="${esc(template.id)}"><b>${esc(template.name)}</b><small>${esc(template.description || template.author || template.id)}</small></button>${customIds.has(template.id) ? `<button class="log-template-del" data-log-delete="${esc(template.id)}" aria-label="사용자 템플릿 삭제">×</button>` : ""}</div>`).join("");
+    openModal(`<h3>로그 디자인 템플릿</h3><p class="m-sub">정규식과 인라인 스타일로 원문을 안전하게 꾸밉니다.</p><div class="log-template-list">${rows}</div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll("[data-log-template]").forEach((button) => button.addEventListener("click", () => { const template = templates.find((item) => item.id === button.dataset.logTemplate); if (template) void selectLogTemplate(template); }));
+    $("modalBox").querySelectorAll("[data-log-delete]").forEach((button) => button.addEventListener("click", () => {
+      const id = button.dataset.logDelete;
+      confirmModal("사용자 템플릿 삭제", "이 템플릿을 목록에서 삭제할까요? 이미 적용된 메모에는 백업 사본이 유지됩니다.", "삭제", true, async () => {
+        writeCustomLogTemplates(readCustomLogTemplates().filter((item) => item.id !== id));
+        const current = getNote(st.curNoteId); if (current && current.data.templateId === id && !current.data.templateSnapshot) { current.data.templateId = "system-ink-frame"; await saveLog(current, true); }
+        showLogTemplatePicker();
+      });
+    }));
+    $on("logTemplateUpload", "click", () => $("logTemplateInput").click()); $on("logTemplateClose", "click", closeModal);
+  }
+  function importLogTemplateFile(file) {
+    if (!file || file.size > 200 * 1024) { toast("템플릿은 200KB 이하 JSON만 사용할 수 있어요"); return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const template = normalizeLogTemplate(JSON.parse(String(reader.result || "")));
+        const builtInIds = new Set(builtInLogTemplates().map((item) => item.id));
+        if (builtInIds.has(template.id)) throw new Error("기본 템플릿과 다른 id를 사용해 주세요");
+        const list = readCustomLogTemplates().filter((item) => item.id !== template.id); list.unshift(template);
+        if (!writeCustomLogTemplates(list)) return;
+        await selectLogTemplate(template);
+      } catch (e) { toast((e && e.message) || "템플릿 JSON을 읽지 못했어요", 3200); }
+    };
+    reader.onerror = () => toast("템플릿 파일을 읽지 못했어요"); reader.readAsText(file, "UTF-8");
+  }
+  async function copyLogInlineHtml(id) {
+    if (st.curNoteId === id) await flushLog();
+    const n = getNote(id); if (!n || n.type !== "log") return;
+    clipboardCopy(renderLogInlineHtml(n)).then((ok) => toast(ok ? "인라인 HTML 코드를 복사했어요" : "복사하지 못했어요"));
+  }
+  async function exportLogHtml(id) {
+    if (st.curNoteId === id) await flushLog();
+    const n = getNote(id); if (!n || n.type !== "log") return;
+    const payload = JSON.stringify({ app: "lumink", kind: "log", title: n.title, data: normalizeLogData(n.data) }).replace(/</g, "\\u003c");
+    const doc = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="log"><title>${esc(n.title || "로그")}</title></head><body style="margin:0;padding:24px;background:#f4f5f8">${renderLogInlineHtml(n)}<script type="application/json" id="lumink-log">${payload}<\/script></body></html>`;
+    downloadDoc(doc, `${((n.title || "log").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "log")}.html`, "text/html"); toast("꾸며진 로그 HTML을 저장했어요");
+  }
+  function openLogSheet(n) {
+    openSheet(n.title, [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
+      { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("로그 이름", n.title, async (value) => { if (value) { n.title = value; n.titleLocked = true; await saveLog(n, true); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.icon, label: "디자인 템플릿", fn: showLogTemplatePicker },
+      { icon: IC.copy, label: "인라인 HTML 코드 복사", fn: () => void copyLogInlineHtml(n.id) },
+      { icon: IC.save, label: "꾸며진 HTML 파일로 저장", fn: () => void exportLogHtml(n.id) },
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("로그 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
     ]);
   }
 
@@ -1530,7 +1813,7 @@
     if (!gal.length) { rg.innerHTML = '<div style="grid-column:1/-1;color:var(--faint);font-size:13px">이미지 없음</div>'; }
     else gal.forEach((src, idx) => { const it = document.createElement("div"); it.className = "pg-item"; it.innerHTML = `<img src="${src}" alt="">`; it.onclick = () => openLightbox(src, gal, idx); rg.appendChild(it); });
   }
-  async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
+  async function savePersona(n, silent) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) await saveProject(p); if (!silent) setPerSaver("saved"); triggerAutoBackup(); }
   function schedulePerSave() {
     const n = getNote(st.curNoteId); if (n && n.type === "persona" && st.perEdit) writeDraft(n, "persona", personaDraftFromEditor(n));
     setPerSaver("dirty"); clearTimeout(perTimer); const id = st.curNoteId; perTimer = setTimeout(() => { if (st.curNoteId === id) flushPersona(); }, 550);
@@ -1762,7 +2045,7 @@
   async function saveCharacter(n, silent) {
     if (!n) return;
     n.updatedAt = now(); await put("notes", n);
-    const p = getProject(n.projectId); if (p) saveProject(p);
+    const p = getProject(n.projectId); if (p) await saveProject(p);
     if (!silent) setCharSaver("saved");
     triggerAutoBackup();
   }
@@ -2348,6 +2631,10 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></div>
         <div><div class="tc-name">로어북</div><div class="tc-desc">마크다운 · 키워드 · 토큰 · World Info 내보내기</div></div>
       </div>
+      <div class="type-card" data-t="log">
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/></svg></div>
+        <div><div class="tc-name">로그 저장</div><div class="tc-desc">정규식 디자인 · 이름 가림 · 게시용 HTML 내보내기</div></div>
+      </div>
       <div class="type-card" data-t="persona">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
         <div><div class="tc-name">페르소나</div><div class="tc-desc">국문/영문 카드 · 이미지 · 토큰</div></div>
@@ -2362,7 +2649,7 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; if (t === "character") st.charEdit = true; go({ s: t === "lorebook" ? "lore" : t === "persona" ? "persona" : t === "character" ? "character" : "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; if (t === "character") st.charEdit = true; if (t === "log") logEditMode = true; go({ s: t === "lorebook" ? "lore" : t === "log" ? "log" : t === "persona" ? "persona" : t === "character" ? "character" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -2384,7 +2671,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $on("pickCancel", "click", closeModal);
-    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; if (type === "character") st.charEdit = true; go({ s: type === "lorebook" ? "lore" : type === "persona" ? "persona" : type === "character" ? "character" : "editor" }); }); });
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; if (type === "character") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "lorebook" ? "lore" : type === "log" ? "log" : type === "persona" ? "persona" : type === "character" ? "character" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -2491,6 +2778,7 @@
   function openNoteSheet(id) {
     const n = getNote(id); if (!n) return;
     if (n.type === "lorebook") { openLoreSheet(n); return; }
+    if (n.type === "log") { openLogSheet(n); return; }
     if (n.type === "persona") { openPersonaSheet(n); return; }
     if (n.type === "character") { openCharacterSheet(n); return; }
     openSheet(n.title, [
@@ -2659,6 +2947,7 @@
   function getNoteSearchText(n) {
     if (!n) return "";
     if (n.type === "lorebook") { const d = n.data || {}; return ((d.content || "") + " " + ((d.keywords || []).join(" "))).toLowerCase(); }
+    if (n.type === "log") { const d = n.data || {}; return [d.content, d.personaName, d.personaAlias].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "character") { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
     return plainText(noteHtml(n)).toLowerCase();
@@ -2870,11 +3159,11 @@
   }
   function normalizeImportedNote(raw) {
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
-    const type = ["free", "lorebook", "persona", "character"].includes(raw.type) ? raw.type : null;
+    const type = ["free", "lorebook", "log", "persona", "character"].includes(raw.type) ? raw.type : null;
     if (!type) return null;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
-      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "lorebook" ? "이름 없는 로어북" : "제목 없는 메모"),
+      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
       titleLocked: !!raw.titleLocked,
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
       createdAt: Number(raw.createdAt) || now(),
@@ -2900,6 +3189,8 @@
         depthOn: !!data.depthOn,
         depth: Math.min(999, Math.max(0, Number(data.depth) || 4))
       };
+    } else if (type === "log") {
+      note.data = normalizeLogData(data);
     } else if (type === "persona") {
       note.data = normalizeImportedPersonaData(data);
     } else {
@@ -2926,28 +3217,58 @@
       createdAt: Number(raw.createdAt) || now(), blob
     };
   }
-  async function applyImportData(projects, notes, files) {
-    const curDefault = st.projects.find((p) => p.isDefault);
+  function prepareImportData(projects, notes, files, existingFiles, replace) {
+    const curDefault = replace ? null : st.projects.find((p) => p.isDefault);
     const remap = {};
     const importedProjects = (projects || []).map(normalizeImportedProject).filter(Boolean);
-    const importedNotes = (notes || []).map(normalizeImportedNote).filter(Boolean);
-    const importedFiles = (files || []).map(normalizeImportedFile).filter(Boolean);
-    for (const p of importedProjects) {
-      if (p.isDefault && curDefault && p.id !== curDefault.id) { remap[p.id] = curDefault.id; continue; }
-      await put("projects", p);
+    const sourceNotes = (notes || []).map(normalizeImportedNote).filter(Boolean);
+    const projectsToWrite = [];
+    for (const project of importedProjects) {
+      if (project.isDefault && curDefault && project.id !== curDefault.id) { remap[project.id] = curDefault.id; continue; }
+      projectsToWrite.push(project);
     }
-    for (const n of importedNotes) {
-      if (remap[n.projectId]) n.projectId = remap[n.projectId];
-      await put("notes", n);
+
+    if (replace && projectsToWrite.length) {
+      const primaryDefault = projectsToWrite.find((project) => project.isDefault) || projectsToWrite[0];
+      projectsToWrite.forEach((project) => { project.isDefault = project.id === primaryDefault.id; });
     }
-    for (const f of importedFiles) {
-      try { await put("files", f); } catch (e) {}
+
+    if (replace && !projectsToWrite.length && sourceNotes.length) {
+      projectsToWrite.push({ id: uid(), name: "기본 메모함", description: "복원된 메모가 모입니다.", icon: DEFAULT_ICON, isDefault: true, createdAt: now(), updatedAt: now() });
     }
+
+    const availableProjects = replace ? projectsToWrite.slice() : [...st.projects, ...projectsToWrite];
+    const projectIds = new Set(availableProjects.map((project) => project.id));
+    const fallbackProject = curDefault || availableProjects.find((project) => project.isDefault) || availableProjects[0];
+    const notesToWrite = sourceNotes.map((note) => {
+      if (remap[note.projectId]) note.projectId = remap[note.projectId];
+      if (!projectIds.has(note.projectId) && fallbackProject) note.projectId = fallbackProject.id;
+      return projectIds.has(note.projectId) ? note : null;
+    }).filter(Boolean);
+
+    const availableNoteIds = new Set((replace ? notesToWrite : [...st.notes, ...notesToWrite]).map((note) => note.id));
+    const filesToWrite = (files || []).map(normalizeImportedFile).filter((file) => file && availableNoteIds.has(file.noteId));
+    const availableFileIds = new Set([...(replace ? [] : (existingFiles || [])).map((file) => file.id), ...filesToWrite.map((file) => file.id)]);
+    for (const note of notesToWrite) {
+      if (note.type === "free" && note.data && Array.isArray(note.data.attachments)) {
+        note.data.attachments = note.data.attachments.filter((attachment) => availableFileIds.has(attachment.id));
+      }
+    }
+    return { projects: projectsToWrite, notes: notesToWrite, files: filesToWrite };
+  }
+  async function applyImportData(projects, notes, files, replace) {
+    const existingFiles = replace ? [] : await getAll("files");
+    const data = prepareImportData(projects, notes, files, existingFiles, !!replace);
+    await transact(["projects", "notes", "files"], "readwrite", (tx) => {
+      const projectStore = tx.objectStore("projects"), noteStore = tx.objectStore("notes"), fileStore = tx.objectStore("files");
+      if (replace) { projectStore.clear(); noteStore.clear(); fileStore.clear(); }
+      data.projects.forEach((project) => projectStore.put(project));
+      data.notes.forEach((note) => noteStore.put(note));
+      data.files.forEach((file) => fileStore.put(file));
+    });
   }
   async function replaceImportData(projects, notes, files) {
-    await clearStore("notes"); await clearStore("projects"); await clearStore("files");
-    await reloadState();
-    await applyImportData(projects, notes, files);
+    await applyImportData(projects, notes, files, true);
   }
   function restorePayloadLabel(payload, label) {
     const files = Array.isArray(payload.files) ? ` · 첨부 ${payload.files.length}` : "";
@@ -2964,7 +3285,7 @@
     $on("restoreMerge", "click", () => confirmModal("병합 복원", "현재 데이터는 유지하고, 같은 항목만 백업 내용으로 덮어씁니다. 계속할까요?", "병합 복원", false, async () => {
       try {
         await doAutoBackup();
-        await applyImportData(payload.projects || [], payload.notes || [], payload.files || []);
+        await applyImportData(payload.projects || [], payload.notes || [], payload.files || [], false);
         await reloadState(); render(); renderSidebar(); toast("병합 복원했어요");
       } catch (e) { toast("복원 중 오류가 났어요"); }
     }));
@@ -3045,6 +3366,13 @@
       nn.title = "합친 로어북"; nn.data = { content: merged, keywords: [], alwaysActive: false, depthOn: false, depth: 4 };
       await saveLore(nn, true);
       exitSelMode(); st.curNoteId = nn.id; toast(`${notes.length}개를 합쳤어요`); go({ s: "lore" });
+      return;
+    }
+    if (type === "log") {
+      const first = normalizeLogData(notes[0].data), merged = notes.map((n) => String((n.data && n.data.content) || "")).filter((text) => text.trim()).join("\n\n");
+      const nn = await createNote("log", pid);
+      nn.title = "합친 로그"; nn.titleLocked = true; nn.data = Object.assign({}, first, { content: merged });
+      await saveLog(nn, true); exitSelMode(); st.curNoteId = nn.id; logEditMode = false; toast(`${notes.length}개를 합쳤어요`); go({ s: "log" });
       return;
     }
     const merged = notes.map((n) => noteHtml(n) || "").filter((s) => s.trim()).join('<div><br></div>');
@@ -3330,7 +3658,7 @@ ${gallery}
   }
   function importHtmlPayload(raw, file) {
     let pTag = null;
-    try { const doc = new DOMParser().parseFromString(raw, "text/html"); pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character"); } catch (e) {}
+    try { const doc = new DOMParser().parseFromString(raw, "text/html"); pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character") || doc.getElementById("lumink-log"); } catch (e) {}
     pickTargetProject(st.curProjectId, async (pid) => {
       if (pTag) {
         try {
@@ -3350,6 +3678,13 @@ ${gallery}
             await saveCharacter(n, true);
             st.curNoteId = n.id; charLang = "ko"; st.charEdit = false; st.curProjectId = pid;
             toast("캐릭터 메모를 불러왔어요"); go({ s: "character" }); return;
+          }
+          if (pl && pl.kind === "log" && pl.data) {
+            const n = await createNote("log", pid);
+            n.title = cleanImportedText(pl.title, 180) || file.name.replace(/\.(html?)$/i, "") || "불러온 로그";
+            n.titleLocked = true; n.data = normalizeLogData(pl.data);
+            await saveLog(n, true); st.curNoteId = n.id; st.curProjectId = pid; logEditMode = false;
+            toast("로그를 불러왔어요"); go({ s: "log" }); return;
           }
         } catch (e) {}
       }
@@ -3575,12 +3910,13 @@ ${gallery}
     $on("sbSettings", "click", () => { closeSidebar(); go({ s: "settings" }); });
     $on("edSave", "click", async () => { await flushSave(true); toast("저장했어요"); });
     $on("loreSave", "click", async () => { await flushLore(); toast("저장했어요"); });
+    $on("logSave", "click", async () => { await flushLog(); toast("저장했어요"); });
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         const s = curView().s;
-        if (s === "editor" || s === "lore" || s === "persona" || s === "character") {
+        if (s === "editor" || s === "lore" || s === "log" || s === "persona" || s === "character") {
           e.preventDefault();
-          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else if (s === "persona") flushPersona(); else flushCharacter();
+          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else flushCharacter();
           toast("저장했어요");
         }
       }
@@ -3679,6 +4015,17 @@ ${gallery}
     $on("loreActiveWrap", "click", toggleLoreActive);
     $on("lorePreviewBtn", "click", toggleLorePreview);
     $on("loreMore", "click", () => openNoteSheet(st.curNoteId));
+
+    // styled log
+    $on("logEdit", "input", scheduleLogSave);
+    $on("logEdit", "blur", () => flushLog());
+    $on("logMaskName", "input", scheduleLogSave);
+    $on("logMaskAlias", "input", scheduleLogSave);
+    $on("logMaskApply", "click", applyLogMask);
+    $on("logTemplateBtn", "click", showLogTemplatePicker);
+    $on("logViewToggle", "click", toggleLogView);
+    $on("logMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("logTemplateInput", "change", (e) => { const file = e.target.files && e.target.files[0]; e.target.value = ""; if (file) importLogTemplateFile(file); });
 
     // persona
     ["perKoName", "perKoDetail", "perEnName", "perEnDetail"].forEach((id) => {
@@ -3796,8 +4143,8 @@ ${gallery}
       stage.addEventListener("pointercancel", () => { dragging = false; });
     })();
 
-    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushPersona(); flushCharacter(); });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushPersona(); flushCharacter(); } });
+    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); } });
   }
 
   /* ---------- init ---------- */
