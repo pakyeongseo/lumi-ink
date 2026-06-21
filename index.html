@@ -1332,8 +1332,10 @@
     display: grid; place-items: center; border-radius: 8px; color: var(--muted); background: none; z-index: 3;
   }
   body.sel-mode .proj-card .pc-more { display: none; }
-  .proj-card .pc-more:active { background: var(--surface-2); }
-  .proj-card .pc-more svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .proj-card .pc-more:active { background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+  .proj-card .pc-more .home-more-gradient { width: 18px; height: 18px; display: block; overflow: visible; filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--accent) 32%, transparent)); }
+  .home-more-gradient .home-more-stop-a { stop-color: var(--accent); }
+  .home-more-gradient .home-more-stop-b { stop-color: var(--accent-2); }
 
   .grid-empty { grid-column: 1 / -1; text-align: center; color: var(--faint); padding: 40px 20px; font-size: 14px; }
 
@@ -1525,8 +1527,9 @@
   .hm-recent-item .hm-title { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
   .hm-recent-item .hm-title .pin-star { width: 12px; height: 12px; margin-left: 5px; }
   .hm-recent-item .hm-sub { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-  .hm-recent-item .hm-more { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); }
-  .hm-recent-item .hm-more svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .hm-recent-item .hm-more { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; }
+  .hm-recent-item .hm-more:active { background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+  .hm-recent-item .hm-more .home-more-gradient { width: 18px; height: 18px; display: block; overflow: visible; filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--accent) 32%, transparent)); }
   .sb-divider { height: 1px; background: var(--line); margin: 4px 12px 6px; }
   .sb-item {
     display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px;

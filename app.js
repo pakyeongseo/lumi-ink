@@ -362,6 +362,13 @@
     if (scope === "home") renderHomeRecent(); else renderSidebar();
     toast(n[flag] ? "상단에 고정했어요" : "고정을 해제했어요");
   }
+  // Home card overflow icon: each instance owns a unique SVG gradient ID so
+  // project and recent-memo menus can use the active theme's full accent gradient.
+  function homeMoreIcon(key) {
+    const safe = String(key || "item").replace(/[^a-zA-Z0-9_-]/g, "");
+    const gid = "home-more-grad-" + safe;
+    return `<svg class="home-more-gradient" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${gid}" x1="3" y1="4" x2="21" y2="20" gradientUnits="userSpaceOnUse"><stop class="home-more-stop-a" offset="0"/><stop class="home-more-stop-b" offset="1"/></linearGradient></defs><circle cx="12" cy="5" r="1.55" fill="url(#${gid})"/><circle cx="12" cy="12" r="1.55" fill="url(#${gid})"/><circle cx="12" cy="19" r="1.55" fill="url(#${gid})"/></svg>`;
+  }
   function makeProjCard(p) {
     const cnt = notesOf(p.id).length;
     const card = document.createElement("div");
@@ -371,7 +378,7 @@
       `<div class="pc-thumb">${projIconHTML(p, "proj-icon")}</div>` +
       `<div class="pc-name">${esc(p.name)}${p.pinned ? PIN_STAR : ""}</div>` +
       `<div class="pc-row"><span class="pc-count">메모 ${cnt}</span><span class="pc-time">${fmtDate(p.updatedAt || p.createdAt)}</span></div>` +
-      `<div class="pc-more" data-pid="${p.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
+      `<div class="pc-more" data-pid="${p.id}" aria-label="프로젝트 메뉴">${homeMoreIcon("project-" + p.id)}</div>`;
     card.dataset.selid = p.id;
     if (p.chipColor && CHIP[p.chipColor]) { card.style.borderColor = CHIP[p.chipColor].c + "cc"; }
     if (st.selMode && st.selIds && st.selIds.has(p.id)) card.classList.add("selected");
@@ -408,7 +415,7 @@
       const it = document.createElement("div"); it.className = "hm-recent-item";
       it.innerHTML = memoTagHTML(n) +
         `<div class="hm-body"><div class="hm-title">${esc(n.title || "(제목 없음)")}${n.pinnedHome ? PIN_STAR : ""}</div><div class="hm-sub">${esc(proj ? proj.name : "")} · ${TYPE_LABEL[n.type] || ""} · ${fmtDate(n.updatedAt)}</div></div>` +
-        `<div class="hm-more"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></div>`;
+        `<div class="hm-more" aria-label="메모 메뉴">${homeMoreIcon("recent-" + n.id)}</div>`;
       it.addEventListener("click", (e) => { if (e.target.closest(".hm-more")) { e.stopPropagation(); openRecentSheet(n, "home"); return; } openNote(n.id); });
       attachLongPress(it, () => openRecentSheet(n, "home"));
       wrap.appendChild(it);
