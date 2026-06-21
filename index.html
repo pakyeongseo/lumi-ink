@@ -2179,6 +2179,41 @@
   .frame-opt .fr-prev.has-frame,
   .fr-bigprev .proj-icon.has-frame { overflow: visible; }
 
+
+
+  /* ===== v58 light-theme chromatic hierarchy =====
+     Keep navigation and archive titles visibly tied to the currently selected
+     light palette, while preserving the accent highlight for active rows. */
+  html[data-theme="light"] .sb-section-box,
+  html[data-theme="light"] .sec-chip,
+  html[data-theme="light"] .section-label,
+  html[data-theme="light"] .sb-item:not(.active) .sb-name,
+  html[data-theme="light"] .sb-memo .sb-memo-title,
+  html[data-theme="light"] .proj-card .pc-name,
+  html[data-theme="light"] .hm-recent-item .hm-title,
+  html[data-theme="light"] .memo-chip .mc-title {
+    color: var(--logo-ink);
+  }
+
+  /* Lumi ✦ Ink — the star glow now follows every accent palette. */
+  .brand-logo .bstar {
+    filter: drop-shadow(0 0 4px var(--accent));
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 78%, transparent));
+  }
+
+  /* Search placeholders and the clear control use each light theme's ink hue
+     instead of the former fixed blue-grey values. */
+  html[data-theme="light"] .searchbar input::placeholder {
+    color: var(--muted);
+    color: color-mix(in srgb, var(--logo-ink) 48%, var(--surface));
+    opacity: 1;
+  }
+  html[data-theme="light"] .searchbar .sb-clear svg,
+  html[data-theme="light"] .sb-clear svg {
+    stroke: var(--muted);
+    stroke: color-mix(in srgb, var(--logo-ink) 56%, var(--surface));
+  }
+
 </style>
 </head>
 <body>

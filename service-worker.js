@@ -1,7 +1,7 @@
 /* 잉크 메모 — Service Worker
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
-const CACHE = "ink-memo-v57";
+const CACHE = "ink-memo-v58";
 
 const ASSETS = [
   "./",
