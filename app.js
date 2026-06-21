@@ -1380,8 +1380,10 @@
 
   /* ---------- styled log memo ---------- */
   const LOG_TEMPLATE_STORAGE = "luminkLogTemplatesV1";
+  const LOG_TEMPLATE_FAVORITES_STORAGE = "luminkLogTemplateFavoritesV1";
   const LOG_STYLE_PROPS = new Set(["background", "background-color", "color", "border", "border-left", "border-right", "border-top", "border-bottom", "border-radius", "padding", "padding-left", "padding-right", "padding-top", "padding-bottom", "margin", "margin-left", "margin-right", "margin-top", "margin-bottom", "box-shadow", "font-family", "font-size", "font-weight", "font-style", "text-decoration", "line-height", "letter-spacing", "text-align", "white-space", "word-break", "overflow-wrap", "display", "width", "max-width", "min-width", "height", "min-height"]);
   let logEditMode = true, logTimer = null, bundledLogTemplates = [], bundledLogTemplatesReady = null;
+  let logTemplateTab = "builtin", logTemplateQuery = "", logTemplateSortAsc = true;
 
   function cleanLogStyle(raw) {
     const out = {};
@@ -1456,6 +1458,16 @@
   function writeCustomLogTemplates(list) {
     try { localStorage.setItem(LOG_TEMPLATE_STORAGE, JSON.stringify((list || []).slice(0, 20))); return true; }
     catch (e) { toast("템플릿 저장공간이 부족해요"); return false; }
+  }
+  function readLogTemplateFavorites() {
+    try {
+      const list = JSON.parse(localStorage.getItem(LOG_TEMPLATE_FAVORITES_STORAGE) || "[]");
+      return new Set((Array.isArray(list) ? list : []).map((id) => String(id || "").trim()).filter(Boolean).slice(0, 200));
+    } catch (e) { return new Set(); }
+  }
+  function writeLogTemplateFavorites(favorites) {
+    try { localStorage.setItem(LOG_TEMPLATE_FAVORITES_STORAGE, JSON.stringify([...favorites].slice(0, 200))); return true; }
+    catch (e) { toast("즐겨찾기를 저장하지 못했어요"); return false; }
   }
   function allLogTemplates(n) {
     const list = [...builtInLogTemplates(), ...readCustomLogTemplates()];
@@ -1611,21 +1623,84 @@
     const isBuiltIn = builtInLogTemplates().some((item) => item.id === template.id);
     n.data.templateId = template.id; n.data.templateSnapshot = isBuiltIn ? null : template; await saveLog(n, true); closeModal(); renderLog(); toast("로그 템플릿을 적용했어요");
   }
-  function showLogTemplatePicker() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
-    const customIds = new Set(readCustomLogTemplates().map((template) => template.id)), templates = allLogTemplates(n);
-    const rows = templates.map((template) => `<div class="log-template-item${template.id === n.data.templateId ? " active" : ""}"><button class="log-template-main" data-log-template="${esc(template.id)}"><b>${esc(template.name)}</b><small>${esc(template.description || template.author || template.id)}</small></button>${customIds.has(template.id) ? `<button class="log-template-del" data-log-delete="${esc(template.id)}" aria-label="사용자 템플릿 삭제">×</button>` : ""}</div>`).join("");
-    openModal(`<h3>로그 디자인 템플릿</h3><p class="m-sub">정규식과 인라인 스타일로 원문을 안전하게 꾸밉니다.</p><div class="log-template-list">${rows}</div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div>`);
-    $("modalBox").querySelectorAll("[data-log-template]").forEach((button) => button.addEventListener("click", () => { const template = templates.find((item) => item.id === button.dataset.logTemplate); if (template) void selectLogTemplate(template); }));
-    $("modalBox").querySelectorAll("[data-log-delete]").forEach((button) => button.addEventListener("click", () => {
-      const id = button.dataset.logDelete;
+  function toggleLogTemplateFavorite(id) {
+    const favorites = readLogTemplateFavorites(), adding = !favorites.has(id);
+    if (adding) favorites.add(id); else favorites.delete(id);
+    if (!writeLogTemplateFavorites(favorites)) return;
+    drawLogTemplatePicker();
+    toast(adding ? "즐겨찾기에 고정했어요" : "즐겨찾기에서 해제했어요");
+  }
+  function bindLogTemplatePress(button, template) {
+    let timer = null, held = false, startX = 0, startY = 0;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    const hold = () => { if (held) return; held = true; cancel(); toggleLogTemplateFavorite(template.id); };
+    button.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      held = false; startX = event.clientX; startY = event.clientY; cancel();
+      timer = setTimeout(hold, 560);
+    });
+    button.addEventListener("pointermove", (event) => {
+      if (Math.abs(event.clientX - startX) > 10 || Math.abs(event.clientY - startY) > 10) cancel();
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((name) => button.addEventListener(name, cancel));
+    button.addEventListener("contextmenu", (event) => { event.preventDefault(); hold(); });
+    button.addEventListener("click", (event) => {
+      if (held) { event.preventDefault(); event.stopPropagation(); held = false; return; }
+      void selectLogTemplate(template);
+    });
+  }
+  function drawLogTemplatePicker() {
+    const listBox = $("logTemplateList"), n = getNote(st.curNoteId);
+    if (!listBox || !n || n.type !== "log") return;
+    const builtIns = builtInLogTemplates(), builtInIds = new Set(builtIns.map((template) => template.id));
+    const customIds = new Set(readCustomLogTemplates().map((template) => template.id));
+    const all = allLogTemplates(n), custom = all.filter((template) => !builtInIds.has(template.id));
+    const favorites = readLogTemplateFavorites();
+    const counts = { builtin: builtIns.length, custom: custom.length, favorite: all.filter((template) => favorites.has(template.id)).length };
+    $("modalBox").querySelectorAll("[data-log-tab]").forEach((button) => {
+      const tab = button.dataset.logTab; button.classList.toggle("active", tab === logTemplateTab);
+      button.setAttribute("aria-selected", tab === logTemplateTab ? "true" : "false");
+      const count = button.querySelector("small"); if (count) count.textContent = counts[tab];
+    });
+    const source = logTemplateTab === "builtin" ? builtIns : logTemplateTab === "custom" ? custom : all.filter((template) => favorites.has(template.id));
+    const query = logTemplateQuery.trim().toLocaleLowerCase("ko");
+    const filtered = source.filter((template) => {
+      if (!query) return true;
+      const ruleText = (template.rules || []).map((rule) => `${rule.label || ""} ${rule.pattern || ""}`).join(" ");
+      return `${template.name} ${template.description || ""} ${template.author || ""} ${template.id} ${ruleText}`.toLocaleLowerCase("ko").includes(query);
+    }).sort((a, b) => {
+      const favoriteOrder = Number(favorites.has(b.id)) - Number(favorites.has(a.id));
+      if (favoriteOrder && logTemplateTab !== "favorite") return favoriteOrder;
+      const order = a.name.localeCompare(b.name, "ko", { sensitivity: "base" });
+      return logTemplateSortAsc ? order : -order;
+    });
+    const sortButton = $("logTemplateSort"); if (sortButton) sortButton.textContent = logTemplateSortAsc ? "이름순 ↑" : "이름순 ↓";
+    listBox.innerHTML = filtered.length ? filtered.map((template) => {
+      const favorite = favorites.has(template.id);
+      return `<div class="log-template-item${template.id === n.data.templateId ? " active" : ""}${favorite ? " favorite" : ""}"><button class="log-template-main" data-log-template="${esc(template.id)}"><span class="log-template-title"><b>${esc(template.name)}</b>${favorite ? '<span class="log-favorite-star" aria-label="즐겨찾기">★</span>' : ""}</span><small>${esc(template.description || template.author || template.id)}</small></button>${customIds.has(template.id) ? `<button class="log-template-del" data-log-delete="${esc(template.id)}" aria-label="사용자 템플릿 삭제">×</button>` : ""}</div>`;
+    }).join("") : `<div class="log-template-empty">${query ? "검색 결과가 없어요." : logTemplateTab === "favorite" ? "템플릿을 길게 눌러 즐겨찾기에 고정해 보세요." : "이 탭에 표시할 템플릿이 없어요."}</div>`;
+    listBox.querySelectorAll("[data-log-template]").forEach((button) => {
+      const template = filtered.find((item) => item.id === button.dataset.logTemplate); if (template) bindLogTemplatePress(button, template);
+    });
+    listBox.querySelectorAll("[data-log-delete]").forEach((button) => button.addEventListener("click", (event) => {
+      event.preventDefault(); event.stopPropagation(); const id = button.dataset.logDelete;
       confirmModal("사용자 템플릿 삭제", "이 템플릿을 목록에서 삭제할까요? 이미 적용된 메모에는 백업 사본이 유지됩니다.", "삭제", true, async () => {
         writeCustomLogTemplates(readCustomLogTemplates().filter((item) => item.id !== id));
+        const savedFavorites = readLogTemplateFavorites(); savedFavorites.delete(id); writeLogTemplateFavorites(savedFavorites);
         const current = getNote(st.curNoteId); if (current && current.data.templateId === id && !current.data.templateSnapshot) { current.data.templateId = "system-ink-frame"; await saveLog(current, true); }
-        showLogTemplatePicker();
+        logTemplateTab = "custom"; showLogTemplatePicker();
       });
     }));
+  }
+  function showLogTemplatePicker() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    if (!["builtin", "custom", "favorite"].includes(logTemplateTab)) logTemplateTab = "builtin";
+    openModal(`<div class="log-template-manager"><h3>로그 디자인 템플릿</h3><p class="m-sub">템플릿을 길게 누르면 즐겨찾기 상단에 고정됩니다.</p><div class="log-template-tabs" role="tablist" aria-label="템플릿 구분"><button data-log-tab="builtin" role="tab">기본 <small></small></button><button data-log-tab="custom" role="tab">사용자 <small></small></button><button data-log-tab="favorite" role="tab">즐겨찾기 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="logTemplateSearch" type="search" autocomplete="off" placeholder="템플릿 제목·내용 검색" value="${esc(logTemplateQuery)}"><button class="m-btn" id="logTemplateSort" type="button">이름순 ↑</button></div><div class="log-template-list" id="logTemplateList"></div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div></div>`);
+    $("modalBox").querySelectorAll("[data-log-tab]").forEach((button) => button.addEventListener("click", () => { logTemplateTab = button.dataset.logTab; drawLogTemplatePicker(); }));
+    $("logTemplateSearch").addEventListener("input", (event) => { logTemplateQuery = event.target.value; drawLogTemplatePicker(); });
+    $on("logTemplateSort", "click", () => { logTemplateSortAsc = !logTemplateSortAsc; drawLogTemplatePicker(); });
     $on("logTemplateUpload", "click", () => $("logTemplateInput").click()); $on("logTemplateClose", "click", closeModal);
+    drawLogTemplatePicker();
   }
   function importLogTemplateFile(file) {
     if (!file || file.size > 200 * 1024) { toast("템플릿은 200KB 이하 JSON만 사용할 수 있어요"); return; }

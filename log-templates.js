@@ -8,7 +8,10 @@
     "lumi-neon-terminal.json", "lumi-obsidian-sanctum.json", "lumi-pixel-console.json", "lumi-plain-mono.json",
     "lumi-pop-gag.json", "lumi-prism-heart.json", "lumi-quest-board.json", "lumi-rainfall-glass.json",
     "lumi-rewind-thread.json", "lumi-ribbon-candy.json", "lumi-rose-court.json", "lumi-royal-decree.json",
-    "lumi-smoke-whiskey.json", "lumi-starship-hud.json", "lumi-vellum-scroll.json"
+    "lumi-smoke-whiskey.json", "lumi-starship-hud.json", "lumi-vellum-scroll.json",
+    "lumi-amethyst-luxe.json", "lumi-concerto-stage.json", "lumi-maple-autumn.json", "lumi-mono-contrast.json",
+    "lumi-painter-canvas.json", "lumi-sakura-spring.json", "lumi-snowflake-winter.json", "lumi-storybook-gilt.json",
+    "lumi-verdant-summer.json", "lumi-wedding-march.json"
   ];
 
   window.__luminkLogBuiltins = [

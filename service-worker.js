@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v59-log30";
+const CACHE = "ink-memo-v59-log40";
 
 const ASSETS = [
   "./",
@@ -39,6 +39,16 @@ const ASSETS = [
   "./log-templates/lumi-smoke-whiskey.json",
   "./log-templates/lumi-starship-hud.json",
   "./log-templates/lumi-vellum-scroll.json",
+  "./log-templates/lumi-amethyst-luxe.json",
+  "./log-templates/lumi-concerto-stage.json",
+  "./log-templates/lumi-maple-autumn.json",
+  "./log-templates/lumi-mono-contrast.json",
+  "./log-templates/lumi-painter-canvas.json",
+  "./log-templates/lumi-sakura-spring.json",
+  "./log-templates/lumi-snowflake-winter.json",
+  "./log-templates/lumi-storybook-gilt.json",
+  "./log-templates/lumi-verdant-summer.json",
+  "./log-templates/lumi-wedding-march.json",
   "./tokenizer.js",
   "./manifest.json",
   "./manifest-ink.json",
