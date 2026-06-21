@@ -1,6 +1,16 @@
 (function () {
   "use strict";
 
+  window.__luminkLogTemplateFiles = [
+    "lumi-aoharu-sky.json", "lumi-ashfall-signal.json", "lumi-brass-cog.json", "lumi-campus-note.json",
+    "lumi-celestial-tablet.json", "lumi-cloudsea-jade.json", "lumi-derelict-whisper.json", "lumi-fae-spring.json",
+    "lumi-ink-bamboo.json", "lumi-leaf-cabin.json", "lumi-mauve-dialog.json", "lumi-midnight-typewriter.json",
+    "lumi-neon-terminal.json", "lumi-obsidian-sanctum.json", "lumi-pixel-console.json", "lumi-plain-mono.json",
+    "lumi-pop-gag.json", "lumi-prism-heart.json", "lumi-quest-board.json", "lumi-rainfall-glass.json",
+    "lumi-rewind-thread.json", "lumi-ribbon-candy.json", "lumi-rose-court.json", "lumi-royal-decree.json",
+    "lumi-smoke-whiskey.json", "lumi-starship-hud.json", "lumi-vellum-scroll.json"
+  ];
+
   window.__luminkLogBuiltins = [
     {
       kind: "lumink-log-template",

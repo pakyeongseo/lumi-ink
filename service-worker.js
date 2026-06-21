@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v59-log1";
+const CACHE = "ink-memo-v59-log30";
 
 const ASSETS = [
   "./",
@@ -12,6 +12,33 @@ const ASSETS = [
   "./assets-frames.js",
   "./log-templates.js",
   "./lumink-log-template-guide.md",
+  "./log-templates/lumi-aoharu-sky.json",
+  "./log-templates/lumi-ashfall-signal.json",
+  "./log-templates/lumi-brass-cog.json",
+  "./log-templates/lumi-campus-note.json",
+  "./log-templates/lumi-celestial-tablet.json",
+  "./log-templates/lumi-cloudsea-jade.json",
+  "./log-templates/lumi-derelict-whisper.json",
+  "./log-templates/lumi-fae-spring.json",
+  "./log-templates/lumi-ink-bamboo.json",
+  "./log-templates/lumi-leaf-cabin.json",
+  "./log-templates/lumi-mauve-dialog.json",
+  "./log-templates/lumi-midnight-typewriter.json",
+  "./log-templates/lumi-neon-terminal.json",
+  "./log-templates/lumi-obsidian-sanctum.json",
+  "./log-templates/lumi-pixel-console.json",
+  "./log-templates/lumi-plain-mono.json",
+  "./log-templates/lumi-pop-gag.json",
+  "./log-templates/lumi-prism-heart.json",
+  "./log-templates/lumi-quest-board.json",
+  "./log-templates/lumi-rainfall-glass.json",
+  "./log-templates/lumi-rewind-thread.json",
+  "./log-templates/lumi-ribbon-candy.json",
+  "./log-templates/lumi-rose-court.json",
+  "./log-templates/lumi-royal-decree.json",
+  "./log-templates/lumi-smoke-whiskey.json",
+  "./log-templates/lumi-starship-hud.json",
+  "./log-templates/lumi-vellum-scroll.json",
   "./tokenizer.js",
   "./manifest.json",
   "./manifest-ink.json",

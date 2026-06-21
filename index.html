@@ -2218,7 +2218,7 @@
   }
 
   /* ===== styled log memo ===== */
-  .memo-tag.t-log { background:#f0a44d; color:#24180c; }
+  .memo-tag.t-log { background:var(--accent); color:var(--bg); }
   .log-scroll { flex:1; min-height:0; overflow:auto; padding:14px 14px calc(92px + env(safe-area-inset-bottom)); }
   .log-control-card { max-width:900px; margin:0 auto 12px; padding:13px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 8px 24px rgba(0,0,0,.08); }
   .log-template-row { display:flex; align-items:center; gap:10px; }
@@ -2228,8 +2228,12 @@
   .log-template-pick b,.log-template-pick small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .log-template-pick b { font-size:13px; }
   .log-template-pick small { color:var(--muted); margin-top:2px; font-size:11px; }
-  .log-mask-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; gap:8px; margin-top:10px; }
-  .log-mask-grid .m-input { min-width:0; margin:0; }
+  .log-mask-grid { display:grid; gap:8px; margin-top:10px; }
+  .log-mask-list { display:grid; gap:7px; }
+  .log-mask-name-row { display:grid; grid-template-columns:minmax(0,1fr) 38px; gap:7px; }
+  .log-mask-name-row .m-input,.log-mask-actions .m-input { min-width:0; margin:0; }
+  .log-mask-remove { border:1px solid var(--line); border-radius:10px; background:var(--surface2); color:var(--muted); font:inherit; font-size:18px; cursor:pointer; }
+  .log-mask-actions { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; }
   .log-mini-btn { border:0; border-radius:11px; padding:0 14px; background:var(--accent); color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
   .log-mode-note { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-size:11px; margin-top:9px; }
   .log-editor-shell,.log-preview-shell { max-width:900px; min-height:calc(100vh - 245px); margin:0 auto; border:1px solid var(--line); border-radius:17px; background:var(--surface); overflow:hidden; }
@@ -2248,8 +2252,9 @@
   .log-template-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .log-template-actions .m-btn { margin:0; text-align:center; text-decoration:none; }
   @media (max-width:560px) {
-    .log-mask-grid { grid-template-columns:1fr 1fr; }
-    .log-mask-grid .log-mini-btn { grid-column:1/-1; min-height:40px; }
+    .log-mask-actions { grid-template-columns:1fr 1fr; }
+    .log-mask-actions .m-input { grid-column:1/-1; }
+    .log-mini-btn { min-height:40px; }
     .log-scroll { padding-left:10px; padding-right:10px; }
     .log-preview-shell { padding:8px; }
   }
@@ -2437,9 +2442,12 @@
           <button class="log-template-pick" id="logTemplateBtn"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg><span><b id="logTemplateName">템플릿</b><small id="logTemplateDesc">디자인 선택</small></span></button>
         </div>
         <div class="log-mask-grid">
-          <input class="m-input" id="logMaskName" maxlength="80" placeholder="가릴 페르소나명">
-          <input class="m-input" id="logMaskAlias" maxlength="80" placeholder="대체 표시 (선택)">
-          <button class="log-mini-btn" id="logMaskApply">이름 가림 적용</button>
+          <div class="log-mask-list" id="logMaskNames"></div>
+          <div class="log-mask-actions">
+            <input class="m-input" id="logMaskAlias" maxlength="80" placeholder="대체 표시 (선택)">
+            <button class="m-btn" id="logMaskAdd" type="button">+ 원본 이름</button>
+            <button class="log-mini-btn" id="logMaskApply" type="button">이름 가림 적용</button>
+          </div>
         </div>
         <div class="log-mode-note"><span id="logModeLabel">원본 텍스트 편집 중</span><span>원본은 유지되고 보기에서만 꾸며집니다.</span></div>
       </div>

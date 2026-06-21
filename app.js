@@ -104,7 +104,10 @@
   function loreDraftFromEditor(n) { const d = jsonCopy((n && n.data) || {}) || {}; d.content = $("loreEdit").value; return d; }
   function logDraftFromEditor(n) {
     const d = jsonCopy((n && n.data) || {}) || {};
-    d.content = $("logEdit").value; d.personaName = $("logMaskName").value; d.personaAlias = $("logMaskAlias").value;
+    d.content = $("logEdit").value;
+    d.personaNames = [...document.querySelectorAll("#logMaskNames .log-mask-name")].map((input) => input.value.trim()).filter(Boolean);
+    d.personaAlias = $("logMaskAlias").value;
+    delete d.personaName;
     return d;
   }
   function personaDraftFromEditor(n) {
@@ -1378,7 +1381,7 @@
   /* ---------- styled log memo ---------- */
   const LOG_TEMPLATE_STORAGE = "luminkLogTemplatesV1";
   const LOG_STYLE_PROPS = new Set(["background", "background-color", "color", "border", "border-left", "border-right", "border-top", "border-bottom", "border-radius", "padding", "padding-left", "padding-right", "padding-top", "padding-bottom", "margin", "margin-left", "margin-right", "margin-top", "margin-bottom", "box-shadow", "font-family", "font-size", "font-weight", "font-style", "text-decoration", "line-height", "letter-spacing", "text-align", "white-space", "word-break", "overflow-wrap", "display", "width", "max-width", "min-width", "height", "min-height"]);
-  let logEditMode = true, logTimer = null;
+  let logEditMode = true, logTimer = null, bundledLogTemplates = [], bundledLogTemplatesReady = null;
 
   function cleanLogStyle(raw) {
     const out = {};
@@ -1421,9 +1424,28 @@
     };
   }
   function builtInLogTemplates() {
-    return (Array.isArray(window.__luminkLogBuiltins) ? window.__luminkLogBuiltins : []).map((template) => {
+    return [...(Array.isArray(window.__luminkLogBuiltins) ? window.__luminkLogBuiltins : []), ...bundledLogTemplates].map((template) => {
       try { return normalizeLogTemplate(template); } catch (e) { return null; }
     }).filter(Boolean);
+  }
+  function loadBundledLogTemplates() {
+    if (bundledLogTemplatesReady) return bundledLogTemplatesReady;
+    const files = Array.isArray(window.__luminkLogTemplateFiles) ? window.__luminkLogTemplateFiles : [];
+    bundledLogTemplatesReady = Promise.all(files.map(async (file) => {
+      try {
+        const response = await fetch(`./log-templates/${encodeURIComponent(file)}`);
+        if (!response.ok) return null;
+        return normalizeLogTemplate(await response.json());
+      } catch (e) { console.warn("log template", file, e); return null; }
+    })).then((templates) => {
+      const seen = new Set((window.__luminkLogBuiltins || []).map((template) => template.id));
+      bundledLogTemplates = templates.filter((template) => {
+        if (!template || seen.has(template.id)) return false;
+        seen.add(template.id); return true;
+      });
+      return bundledLogTemplates;
+    });
+    return bundledLogTemplatesReady;
   }
   function readCustomLogTemplates() {
     try {
@@ -1449,10 +1471,12 @@
     const src = raw && typeof raw === "object" ? raw : {};
     let snapshot = null;
     if (src.templateSnapshot) { try { snapshot = normalizeLogTemplate(src.templateSnapshot); } catch (e) {} }
+    const rawNames = Array.isArray(src.personaNames) ? src.personaNames : (src.personaName ? [src.personaName] : []);
+    const personaNames = [...new Set(rawNames.map((name) => cleanImportedText(String(name), 80).trim()).filter(Boolean))].slice(0, 20);
     return {
       content: cleanImportedText(src.content, 500000),
       templateId: cleanImportedText(src.templateId, 80) || "system-ink-frame",
-      personaName: cleanImportedText(src.personaName, 80), personaAlias: cleanImportedText(src.personaAlias, 80),
+      personaNames, personaAlias: cleanImportedText(src.personaAlias, 80),
       templateSnapshot: snapshot
     };
   }
@@ -1490,10 +1514,11 @@
     if (!name) return segments;
     const out = [];
     segments.forEach((segment) => {
+      if (segment.masked) { out.push(segment); return; }
       let at = 0, index;
       while ((index = segment.text.indexOf(name, at)) >= 0) {
         if (index > at) out.push({ text: segment.text.slice(at, index), style: segment.style });
-        out.push({ text: alias, style: mergeLogStyle(segment.style, style) }); at = index + name.length;
+        out.push({ text: alias, style: mergeLogStyle(segment.style, style), masked: true }); at = index + name.length;
       }
       if (at < segment.text.length) out.push({ text: segment.text.slice(at), style: segment.style });
       else if (!segment.text.length) out.push(segment);
@@ -1504,7 +1529,7 @@
     let segments = [{ text: String(text || ""), style: {} }];
     template.rules.forEach((rule) => { segments = applyLogRule(segments, rule); });
     const alias = (data.personaAlias || template.persona.maskText || "•••").trim();
-    segments = applyPersonaMask(segments, (data.personaName || "").trim(), alias, template.persona.style);
+    [...(data.personaNames || [])].sort((a, b) => String(b).length - String(a).length).forEach((name) => { segments = applyPersonaMask(segments, String(name || "").trim(), alias, template.persona.style); });
     return segments.map((segment) => {
       const style = logStyleAttr(segment.style), textHtml = esc(segment.text);
       return style ? `<span style="${esc(style)}">${textHtml}</span>` : textHtml;
@@ -1533,11 +1558,26 @@
     if (!(n.data && n.data.content || "").trim()) { preview.innerHTML = '<div class="log-preview-empty">원본 텍스트를 입력하면 여기에 디자인이 적용됩니다.</div>'; return; }
     preview.innerHTML = renderLogInlineHtml(n);
   }
+  function currentLogMaskNames(includeEmpty) {
+    const names = [...document.querySelectorAll("#logMaskNames .log-mask-name")].map((input) => input.value.trim());
+    return includeEmpty ? names : names.filter(Boolean);
+  }
+  function renderLogMaskNames(names) {
+    const values = Array.isArray(names) && names.length ? names.slice(0, 20) : [""];
+    $("logMaskNames").innerHTML = values.map((name, index) => `<div class="log-mask-name-row"><input class="m-input log-mask-name" maxlength="80" value="${esc(name)}" placeholder="가릴 원본 이름${index ? ` ${index + 1}` : ""}"><button class="log-mask-remove" type="button" data-log-mask-remove="${index}" aria-label="원본 이름 삭제"${values.length === 1 ? " hidden" : ""}>×</button></div>`).join("");
+  }
+  function addLogMaskName() {
+    const names = currentLogMaskNames(true); if (names.length >= 20) { toast("원본 이름은 최대 20개까지 추가할 수 있어요"); return; }
+    names.push(""); renderLogMaskNames(names); const inputs = $("logMaskNames").querySelectorAll(".log-mask-name"); inputs[inputs.length - 1].focus(); scheduleLogSave();
+  }
+  function removeLogMaskName(index) {
+    const names = currentLogMaskNames(true); names.splice(index, 1); renderLogMaskNames(names.length ? names : [""]); scheduleLogSave();
+  }
   function renderLog() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") { back(); return; }
     n.data = normalizeLogData(n.data); const template = getLogTemplate(n);
     $("logTitle").textContent = n.title || "로그"; $("logEdit").value = n.data.content;
-    $("logMaskName").value = n.data.personaName; $("logMaskAlias").value = n.data.personaAlias;
+    renderLogMaskNames(n.data.personaNames); $("logMaskAlias").value = n.data.personaAlias;
     $("logTemplateName").textContent = template.name; $("logTemplateDesc").textContent = template.description || template.author || "로그 디자인";
     $("logEditView").hidden = !logEditMode; $("logPreviewView").hidden = logEditMode;
     $("logModeLabel").textContent = logEditMode ? "원본 텍스트 편집 중" : "정규식 디자인 보기 중";
@@ -1564,7 +1604,7 @@
   async function toggleLogView() { await flushLog(); logEditMode = !logEditMode; renderLog(); }
   async function applyLogMask() {
     await flushLog(); const n = getNote(st.curNoteId); if (!n) return;
-    logEditMode = false; renderLog(); toast(n.data.personaName ? "보기에서 페르소나명을 가렸어요" : "가릴 이름을 비웠어요");
+    logEditMode = false; renderLog(); toast(n.data.personaNames.length ? `${n.data.personaNames.length}개 이름을 보기에서 가렸어요` : "가릴 이름을 비웠어요");
   }
   async function selectLogTemplate(template) {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
@@ -2947,7 +2987,7 @@
   function getNoteSearchText(n) {
     if (!n) return "";
     if (n.type === "lorebook") { const d = n.data || {}; return ((d.content || "") + " " + ((d.keywords || []).join(" "))).toLowerCase(); }
-    if (n.type === "log") { const d = n.data || {}; return [d.content, d.personaName, d.personaAlias].filter(Boolean).join(" ").toLowerCase(); }
+    if (n.type === "log") { const d = normalizeLogData(n.data); return [d.content, ...(d.personaNames || []), d.personaAlias].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "character") { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
     return plainText(noteHtml(n)).toLowerCase();
@@ -4019,8 +4059,10 @@ ${gallery}
     // styled log
     $on("logEdit", "input", scheduleLogSave);
     $on("logEdit", "blur", () => flushLog());
-    $on("logMaskName", "input", scheduleLogSave);
+    $("logMaskNames").addEventListener("input", (e) => { if (e.target.classList.contains("log-mask-name")) scheduleLogSave(); });
+    $("logMaskNames").addEventListener("click", (e) => { const button = e.target.closest("[data-log-mask-remove]"); if (button) removeLogMaskName(Number(button.dataset.logMaskRemove)); });
     $on("logMaskAlias", "input", scheduleLogSave);
+    $on("logMaskAdd", "click", addLogMaskName);
     $on("logMaskApply", "click", applyLogMask);
     $on("logTemplateBtn", "click", showLogTemplatePicker);
     $on("logViewToggle", "click", toggleLogView);
@@ -4162,8 +4204,10 @@ ${gallery}
       });
     } catch (e) {}
     try { bind(); } catch (e) { console.warn("bind", e); }
+    const logTemplatesLoaded = loadBundledLogTemplates();
     try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
     catch (e) { console.warn("DB error", e); toast("저장소를 열 수 없어요"); }
+    try { await logTemplatesLoaded; } catch (e) { console.warn("log templates", e); }
     try { await migrate(); } catch (e) { console.warn("migrate", e); }
     history.replaceState({ d: 1 }, "");
     try { render(); } catch (e) { console.warn("render", e); }
