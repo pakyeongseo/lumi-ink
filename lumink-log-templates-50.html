@@ -23,6 +23,8 @@ button,input{font:inherit}
 .tools input::placeholder{color:#667088}
 .tools button{border:0;border-radius:10px;background:#23293a;color:#aeb9d6;padding:0 13px;font-size:12px;font-weight:750;cursor:pointer}
 .tools button:disabled{opacity:.38;cursor:default}
+.page-close{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:30;border:1px solid #343c52;border-radius:999px;background:rgba(24,28,40,.9);color:#dbe2f6;padding:8px 13px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:blur(12px)}
+.page-close:hover{background:#252c3e}.page-close:active{transform:scale(.96)}
 .result{grid-column:1/-1;color:#707a91;font-size:10.5px;padding:0 10px 2px;text-align:left}
 .section{margin-top:32px;scroll-margin-top:90px}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 2px 11px;padding-bottom:9px;border-bottom:1px solid #222838}
@@ -45,6 +47,7 @@ button,input{font:inherit}
 </style>
 </head>
 <body>
+<button class="page-close" id="pageClose" type="button" aria-label="소개 페이지 닫기">닫기</button>
 <main class="wrap">
   <header class="top">
     <div class="brand"><i></i>Lumi Ink Template Archive</div>
@@ -80,6 +83,7 @@ function renderPreview(template){const styles=template.styles,lines=SAMPLE.split
 function cardHtml(template,index){return '<article class="card" data-search="'+esc((template.name+" "+template.id+" "+(template.description||"")).toLocaleLowerCase("ko"))+'"><div class="meta"><span class="no">'+String(index+1).padStart(2,"0")+'</span><span class="nm">'+esc(template.name)+'</span></div><div class="id">'+esc(template.id)+'</div><p class="desc">'+esc(template.description||"설명 없음")+'</p><div class="preview">'+renderPreview(template)+'</div></article>';}
 document.getElementById("allGrid").innerHTML=SORTED.map(cardHtml).join("");
 const search=document.getElementById("search"),clear=document.getElementById("clear"),result=document.getElementById("result");
+document.getElementById("pageClose").addEventListener("click",function(){if(history.length>1)history.back();else window.close();});
 function filterCards(){const query=search.value.trim().toLocaleLowerCase("ko");let visible=0;document.querySelectorAll(".card").forEach(function(card){const show=!query||card.dataset.search.includes(query);card.hidden=!show;if(show)visible+=1;});document.getElementById("allSection").hidden=visible===0;document.getElementById("allCount").textContent=visible;document.getElementById("empty").style.display=visible?"none":"block";result.textContent=query?visible+"종 검색됨":"50종 모두 표시 중";clear.disabled=!query;}
 search.addEventListener("input",filterCards);
 clear.addEventListener("click",function(){search.value="";filterCards();search.focus();});
