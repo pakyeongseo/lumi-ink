@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-aoharu-sky",
   "name": "아오하루 스카이",
-  "description": "맑은 여름 하늘빛 청춘 로그. 청춘 노트와 달리 형광펜 없는 청량 블루 단색계.",
+  "description": "맑은 여름 하늘빛 청춘 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(170deg,#f3fbff,#e7f5fd 60%,#ddeffb)",
+      "background": "linear-gradient(170deg,#f0fbff,#e2f6ff 60%,#d6f0fb)",
       "color": "#3c4a57",
       "border": "1px solid #b8def0",
       "border-radius": "16px",
@@ -19,7 +19,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#2f9fd4",
+      "color": "#1f9fd4",
       "font-size": "12px",
       "font-weight": "800",
       "letter-spacing": ".24em",

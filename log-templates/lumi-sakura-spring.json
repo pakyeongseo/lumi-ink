@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "lumi-sakura-spring",
   "name": "사쿠라 스프링",
-  "description": "벚꽃 분홍과 새순 연두의 봄 로그. 다른 핑크 테마와 달리 연두 악센트로 봄 햇살을 담음.",
+  "description": "벚꽃 분홍과 새순 연두의 봄 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {

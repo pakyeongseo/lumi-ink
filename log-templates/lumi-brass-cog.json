@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "lumi-brass-cog",
   "name": "브라스 코그",
-  "description": "황동과 녹청, 증기의 빅토리안 스팀펑크 로그. 밝은 양피지와 달리 어두운 산업 기계 톤.",
+  "description": "황동과 녹청, 증기의 빅토리안 스팀펑크 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
@@ -19,7 +19,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#d6a44c",
+      "color": "#caa44c",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".34em",
@@ -60,7 +60,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#5aa39a",
+        "color": "#4fb0a6",
         "font-style": "italic"
       }
     },
@@ -72,8 +72,8 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#6fb3a8",
-        "border": "1px solid #3f7a72",
+        "color": "#5fc0b4",
+        "border": "1px solid #348078",
         "border-radius": "2px",
         "padding": "0 7px",
         "font-size": "13px",
@@ -88,7 +88,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#d6822f",
+        "color": "#d6a44c",
         "font-weight": "800"
       }
     },

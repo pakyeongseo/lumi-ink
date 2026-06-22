@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-ribbon-candy",
   "name": "리본 캔디",
-  "description": "보들보들 멀티 파스텔의 깜찍 로그. 비비드 마법소녀와 달리 채도 낮은 캔디 톤.",
+  "description": "보들보들 멀티 파스텔의 깜찍 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#fff6fb,#fdeef6 55%,#f6f0fb)",
+      "background": "linear-gradient(160deg,#fbf7fc,#f2f3fb 50%,#eef8f4)",
       "color": "#6b5660",
       "border": "2px dashed #f4c2dc",
       "border-radius": "26px",
@@ -19,12 +19,12 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#ec7ab0",
+      "color": "#c47ab0",
       "font-size": "12px",
       "font-weight": "800",
       "letter-spacing": ".2em",
       "text-align": "center",
-      "border-bottom": "2px dotted #f6cfe2",
+      "border-bottom": "2px dotted #d6cce8",
       "padding": "0 0 13px",
       "margin": "0 0 17px"
     },
@@ -48,8 +48,8 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#e85f9e",
-        "background-color": "rgba(248,190,220,.4)",
+        "color": "#c46a9e",
+        "background-color": "rgba(210,170,220,.32)",
         "border-radius": "14px",
         "padding": "2px 11px",
         "font-weight": "700"
@@ -91,7 +91,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#d63f86",
+        "color": "#a85ab0",
         "font-weight": "800"
       }
     },

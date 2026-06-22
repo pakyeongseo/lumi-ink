@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-snowflake-winter",
   "name": "스노우플레이크 윈터",
-  "description": "눈 화이트와 페일 아이스블루의 겨울 로그. 우주 SF나 따뜻한 여름 하늘과 달리 차갑고 정적인 눈 톤.",
+  "description": "눈 화이트와 페일 아이스블루의 겨울 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(165deg,#fafdff,#eef5fb 55%,#e6eef7)",
+      "background": "linear-gradient(165deg,#f8f9fd,#ecedf6 55%,#e6e6f2)",
       "color": "#4a5560",
       "border": "1px solid #cdddec",
       "border-radius": "16px",
@@ -19,7 +19,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#6f93b8",
+      "color": "#7a7ea8",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".3em",
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#3a6fa0",
+        "color": "#4a5288",
         "font-weight": "700"
       }
     },

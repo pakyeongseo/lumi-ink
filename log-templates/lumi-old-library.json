@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-old-library",
   "name": "올드 라이브러리",
-  "description": "마호가니 서가와 가죽 장정의 도서관 로그. 밝은 양피지나 황동 시계와 달리 어두운 우드·가죽 톤.",
+  "description": "마호가니 서가와 가죽 장정의 도서관 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#211410,#2a1a12 55%,#241612)",
+      "background": "linear-gradient(160deg,#22110c,#2c160e 55%,#24130d)",
       "color": "#c4ac8e",
       "border": "1px solid #5a4228",
       "border-left": "5px solid #2f4a32",
@@ -20,7 +20,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#c89a4e",
+      "color": "#a89150",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".3em",
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#e6d2aa",
+        "color": "#cfd0aa",
         "font-weight": "700"
       }
     },

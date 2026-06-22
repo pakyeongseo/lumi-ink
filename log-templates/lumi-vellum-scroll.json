@@ -7,7 +7,7 @@
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#ece0c2,#e4d3aa 55%,#dccba0)",
+      "background": "linear-gradient(160deg,#e0cfa6,#d6c192 55%,#cdb585)",
       "color": "#3f3320",
       "border": "3px double #9c7c44",
       "border-radius": "3px",

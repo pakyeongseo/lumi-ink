@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-cloudsea-jade",
   "name": "운해옥검",
-  "description": "옥빛 운무가 흐르는 청량한 선협 로그. 묵향 무협과 달리 청록·은백 선계 톤.",
+  "description": "옥빛 운무가 흐르는 청량한 선협 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#eef6f3,#e4eef0 55%,#ebe7f4)",
+      "background": "linear-gradient(160deg,#ecf6ef,#dfeee7 55%,#e7f0e6)",
       "color": "#3a4a4a",
       "border": "1px solid #b9d3cc",
       "border-radius": "14px",

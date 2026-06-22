@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-maple-autumn",
   "name": "메이플 오텀",
-  "description": "단풍 진홍과 황금빛의 가을 로그. 어두운 위스키나 산업 황동과 달리 밝고 따뜻한 자연 단풍 톤.",
+  "description": "단풍 진홍과 황금빛의 가을 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#fdf3e3,#f8e4c8 55%,#f3d8ba)",
+      "background": "linear-gradient(160deg,#fdf0e0,#f8dcc0 55%,#f3d0b0)",
       "color": "#5a4330",
       "border": "1px solid #d9a866",
       "border-radius": "14px",

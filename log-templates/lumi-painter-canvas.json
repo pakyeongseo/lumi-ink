@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "lumi-painter-canvas",
   "name": "페인터 캔버스",
-  "description": "아이보리 캔버스와 유화 물감색의 화가 로그. 만화 원색 팝과 달리 차분한 예술 팔레트 톤.",
+  "description": "아이보리 캔버스와 유화 물감색의 화가 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {

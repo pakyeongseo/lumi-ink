@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-storybook-gilt",
   "name": "스토리북 길트",
-  "description": "따뜻한 크림과 금별의 동화책 로그. 천계의 성스러움이나 요정숲과 달리 포근한 그림동화 톤.",
+  "description": "따뜻한 크림과 금별의 동화책 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#fdf6e6,#fbeede 55%,#f1edfa)",
+      "background": "linear-gradient(160deg,#fdf3df,#faecc8 55%,#f6e8d0)",
       "color": "#5a4d44",
       "border": "1px solid #e6cf9a",
       "border-radius": "18px",
@@ -19,7 +19,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#bf9544",
+      "color": "#b88a30",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".28em",
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#bf4f6a",
+        "color": "#c86a3e",
         "font-weight": "700"
       }
     },
@@ -89,7 +89,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#7a3a58",
+        "color": "#9a6a2e",
         "font-weight": "800"
       }
     },
@@ -101,7 +101,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#7a8a5e",
+        "color": "#8a8a4e",
         "font-style": "italic"
       }
     }
@@ -110,7 +110,7 @@
     "maskText": "그 아이",
     "style": {
       "color": "#fdf6e6",
-      "background-color": "#d6a445",
+      "background-color": "#d8a838",
       "border-radius": "999px",
       "padding": "1px 9px",
       "font-weight": "700"

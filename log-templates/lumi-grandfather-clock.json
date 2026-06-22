@@ -3,28 +3,28 @@
   "schemaVersion": 1,
   "id": "lumi-grandfather-clock",
   "name": "그랜드파더 클락",
-  "description": "월넛 가구와 황동 시계판의 앤틱 괘종시계 로그. 녹청 스팀펑크나 가죽 도서관과 달리 따뜻한 월넛·황동 톤.",
+  "description": "월넛 가구와 황동 시계판의 앤틱 괘종시계 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#241710,#2e1e14 55%,#26190f)",
-      "color": "#c8b292",
+      "background": "linear-gradient(160deg,#f0e6cc,#e8d9b4 55%,#e3d2a8)",
+      "color": "#4a3a20",
       "border": "2px solid #a8853e",
       "border-radius": "6px",
       "padding": "28px 26px",
-      "box-shadow": "0 18px 46px rgba(0,0,0,.5), inset 0 0 60px rgba(120,86,34,.18)",
+      "box-shadow": "0 14px 38px rgba(120,90,30,.18)",
       "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
       "line-height": "1.9",
       "max-width": "720px",
       "margin": "0 auto"
     },
     "header": {
-      "color": "#d6a850",
+      "color": "#8a6824",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".32em",
       "text-align": "center",
-      "border-bottom": "1px solid #6e5428",
+      "border-bottom": "1px solid #c9aa64",
       "padding": "0 0 15px",
       "margin": "0 0 20px"
     },
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#ecdcb8",
+        "color": "#5a4218",
         "font-weight": "700"
       }
     },
@@ -60,7 +60,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#a08a64",
+        "color": "#8a6a3c",
         "font-style": "italic"
       }
     },
@@ -72,8 +72,8 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#d6a850",
-        "border": "1px solid #856534",
+        "color": "#9a7426",
+        "border": "1px solid #c2a050",
         "border-radius": "3px",
         "padding": "1px 8px",
         "font-size": "13px",
@@ -88,7 +88,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#e6c47e",
+        "color": "#a8761c",
         "font-weight": "800"
       }
     },
@@ -100,7 +100,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#9a8460",
+        "color": "#8a6e4a",
         "font-style": "italic"
       }
     }
@@ -108,8 +108,8 @@
   "persona": {
     "maskText": "그 사람",
     "style": {
-      "color": "#241710",
-      "background-color": "#d6a850",
+      "color": "#f0e6cc",
+      "background-color": "#7a4a22",
       "border-radius": "2px",
       "padding": "1px 8px",
       "font-weight": "700"

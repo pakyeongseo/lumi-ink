@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-fae-spring",
   "name": "페이 스프링",
-  "description": "에메랄드 샘물과 요정의 반짝임이 흐르는 몽환 로그. 선협 옥빛과 달리 서양 요정숲 글로우.",
+  "description": "에메랄드 샘물과 요정의 반짝임이 흐르는 몽환 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#0f221f,#142a2c 50%,#191f33)",
+      "background": "linear-gradient(160deg,#0c211b,#0f2a22 50%,#0d231d)",
       "color": "#a8cdc6",
       "border": "1px solid #2c5a52",
       "border-radius": "16px",

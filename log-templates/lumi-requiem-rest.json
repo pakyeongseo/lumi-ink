@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-requiem-rest",
   "name": "레퀴엠",
-  "description": "창백한 차콜과 백합빛 세이지의 안식 로그. 핏빛 호러나 일상 우울과 달리 엄숙하고 평온한 추모 톤.",
+  "description": "창백한 차콜과 백합빛 세이지의 안식 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(165deg,#1a1c20,#202329 55%,#1c1f24)",
+      "background": "linear-gradient(165deg,#1b1e1c,#222624 55%,#1d211f)",
       "color": "#a8aab0",
       "border": "1px solid #3c4046",
       "border-radius": "8px",

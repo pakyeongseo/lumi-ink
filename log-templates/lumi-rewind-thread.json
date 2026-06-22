@@ -7,9 +7,9 @@
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#0e1a22,#13212e 55%,#101c28)",
+      "background": "linear-gradient(160deg,#0a1f23,#0f282d 55%,#0c2226)",
       "color": "#c4d3da",
-      "border": "1px solid #2c4a52",
+      "border": "1px solid #2a585e",
       "border-radius": "8px",
       "padding": "28px 26px",
       "box-shadow": "0 20px 48px rgba(4,12,18,.5), inset 0 0 0 1px rgba(196,168,96,.14)",
@@ -47,7 +47,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#7fd6dd",
+        "color": "#6fd2d8",
         "font-weight": "700"
       }
     },

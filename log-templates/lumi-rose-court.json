@@ -7,7 +7,7 @@
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#fffaf6,#fbeef0 60%,#f8e6e9)",
+      "background": "linear-gradient(160deg,#fff8f2,#fbece2 60%,#f8e4d8)",
       "color": "#5c4750",
       "border": "1px solid #e8c9b8",
       "border-radius": "16px",
@@ -19,7 +19,7 @@
       "margin": "0 auto"
     },
     "header": {
-      "color": "#bf7e7a",
+      "color": "#c26a72",
       "font-size": "12px",
       "font-weight": "700",
       "letter-spacing": ".3em",
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#b34a63",
+        "color": "#bc3a5e",
         "font-weight": "700"
       }
     },
@@ -88,7 +88,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#8a2f44",
+        "color": "#9a2f48",
         "font-weight": "800"
       }
     },

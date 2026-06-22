@@ -3,11 +3,11 @@
   "schemaVersion": 1,
   "id": "lumi-royal-crimson",
   "name": "로얄 크림슨",
-  "description": "선명한 크림슨과 리치 골드의 왕가 로그. 네이비 칙령·버건디 무대와 달리 강렬한 권위와 금장 휘장.",
+  "description": "선명한 크림슨과 리치 골드의 왕가 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
-      "background": "linear-gradient(160deg,#2c0e12,#3c141a 55%,#2e1014)",
+      "background": "linear-gradient(160deg,#300c0e,#400f14 55%,#330d10)",
       "color": "#e0c4c0",
       "border": "3px double #c2922f",
       "border-radius": "4px",
@@ -48,7 +48,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#f2e6cc",
+        "color": "#f4e8c8",
         "font-weight": "700"
       }
     },
@@ -88,7 +88,7 @@
       "capture": 1,
       "stripDelimiters": true,
       "style": {
-        "color": "#f0d27e",
+        "color": "#f2d27a",
         "font-weight": "800"
       }
     },

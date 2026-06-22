@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "id": "lumi-mono-contrast",
   "name": "모노 컨트라스트",
-  "description": "순백과 순흑의 강렬한 대비 로그. 플레인 모노의 건조한 회색과 달리 굵은 라인과 반전 박스.",
+  "description": "순백과 순흑의 강렬한 대비 로그.",
   "author": "Anamel",
   "styles": {
     "canvas": {
