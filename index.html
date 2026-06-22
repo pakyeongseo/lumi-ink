@@ -1912,9 +1912,9 @@
   .creator-open:active { transform: scale(.96); }
   .char-creator-preview { display: none; }
   .creator-modal-body { max-height: min(58vh, 560px); overflow: auto; padding: 14px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); line-height: 1.72; }
-  /* Home projects are a contained archive surface: a large collection scrolls here
-     instead of pushing the recent-memo section indefinitely downward. */
-  .home-project-box { margin: 0 16px; max-height: min(46vh, 520px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: transparent; box-shadow: none; }
+  /* A long project collection scrolls inside this box. At either boundary—or when
+     the list is too short to scroll—wheel and swipe movement continues on the home page. */
+  .home-project-box { margin: 0 16px; max-height: min(46vh, 520px); overflow-y: auto; overscroll-behavior-y: auto; border: 1px solid var(--line); border-radius: 16px; background: transparent; box-shadow: none; }
   .home-project-box .proj-grid { padding: 10px; }
   .home-project-box .grid-empty { min-height: 116px; display: grid; place-items: center; }
   .home-project-box::-webkit-scrollbar, .sb-list::-webkit-scrollbar { width: 7px; }
