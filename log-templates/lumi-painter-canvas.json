@@ -44,8 +44,8 @@
       "label": "큰따옴표(대사)",
       "pattern": "\"([^\"\\n]+)\"",
       "flags": "g",
-      "capture": 1,
-      "stripDelimiters": true,
+      "capture": 0,
+      "stripDelimiters": false,
       "style": {
         "color": "#2f5aa8",
         "font-weight": "700"
@@ -56,8 +56,8 @@
       "label": "작은따옴표(속마음)",
       "pattern": "'([^'\\n]+)'",
       "flags": "g",
-      "capture": 1,
-      "stripDelimiters": true,
+      "capture": 0,
+      "stripDelimiters": false,
       "style": {
         "color": "#b0623a",
         "font-style": "italic"
@@ -101,6 +101,28 @@
       "style": {
         "color": "#6e7a48",
         "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#92a6c6"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d3aa8f"
       }
     }
   ],

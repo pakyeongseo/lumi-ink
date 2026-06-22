@@ -44,8 +44,8 @@
       "label": "큰따옴표(대사창)",
       "pattern": "\"([^\"\\n]+)\"",
       "flags": "g",
-      "capture": 1,
-      "stripDelimiters": true,
+      "capture": 0,
+      "stripDelimiters": false,
       "style": {
         "color": "#ffe14d",
         "background-color": "rgba(255,225,77,.10)",
@@ -60,8 +60,8 @@
       "label": "작은따옴표(생각)",
       "pattern": "'([^'\\n]+)'",
       "flags": "g",
-      "capture": 1,
-      "stripDelimiters": true,
+      "capture": 0,
+      "stripDelimiters": false,
       "style": {
         "color": "#5fd9e8",
         "font-style": "italic"
@@ -106,6 +106,17 @@
       "style": {
         "color": "#8d82b8",
         "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3e778e"
       }
     }
   ],
