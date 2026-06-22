@@ -2929,6 +2929,7 @@
       { icon: IC.pin, label: p.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinProject(id) },
       { icon: IC.rename, label: "이름 · 설명 편집", fn: () => showProjectForm(id, () => { render(); renderSidebar(); }) },
       { icon: IC.color, label: "색상 지정", fn: () => showProjectColorPicker(id) },
+      { icon: IC.export, label: "프로젝트 파일로 내보내기", fn: () => void exportProjectPackage(id) },
       { icon: IC.copy, label: "복제", fn: () => duplicateProject(id).then(() => { render(); renderSidebar(); }) },
       { icon: IC.icon, label: "아이콘 변경", fn: () => showIconPicker(id) },
       { icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7.5" y="7.5" width="9" height="9" rx="1"/></svg>', label: "썸네일 프레임", fn: () => showFramePicker(id) }
@@ -3563,6 +3564,41 @@ ${html}
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     toast(".html로 저장했어요");
   }
+  async function exportProjectPackage(id) {
+    await flushPending();
+    const project = getProject(id); if (!project) { toast("프로젝트를 찾을 수 없어요"); return; }
+    try {
+      const notes = notesOf(id).map(jsonCopy).filter(Boolean);
+      const noteIds = new Set(notes.map((note) => note.id));
+      const sourceFiles = (await getAll("files")).filter((file) => noteIds.has(file.noteId));
+      const files = [];
+      for (const file of sourceFiles) {
+        try {
+          files.push({
+            id: file.id, noteId: file.noteId, name: file.name, type: file.type,
+            size: file.size, createdAt: file.createdAt, data: await blobToBase64(file.blob)
+          });
+        } catch (e) { console.warn("project export file", file && file.id, e); }
+      }
+      const payload = {
+        app: "lumink", kind: "project", version: 1, exportedAt: now(),
+        project: jsonCopy(project), notes, files
+      };
+      const json = JSON.stringify(payload).replace(/</g, "\\u003c");
+      const counts = notes.reduce((result, note) => {
+        const key = TYPE_LABEL[note.type] || note.type; result[key] = (result[key] || 0) + 1; return result;
+      }, {});
+      const countText = Object.entries(counts).map(([type, count]) => `${esc(type)} ${count}`).join(" · ") || "메모 없음";
+      const noteList = notes.length
+        ? `<ul>${notes.map((note) => `<li><span>${esc(note.title || "(제목 없음)")}</span><em>${esc(TYPE_LABEL[note.type] || note.type)}</em></li>`).join("")}</ul>`
+        : '<p class="empty">이 프로젝트에는 메모가 없습니다.</p>';
+      const doc = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="project"><title>${esc(project.name)} · 루미잉크 프로젝트</title>
+<style>body{font-family:-apple-system,"Noto Sans KR",sans-serif;max-width:720px;margin:0 auto;padding:36px 20px 64px;line-height:1.65;color:#1d2330;background:#f7f8fb}main{background:#fff;border:1px solid #dfe4ee;border-radius:18px;padding:24px;box-shadow:0 8px 28px rgba(38,56,92,.1)}h1{margin:0 0 6px;font-size:24px}.meta,.hint,.empty{color:#6d7687;font-size:13px}.tags{margin:15px 0;color:#49556a}.tags span{display:inline-block;margin:0 5px 5px 0;padding:4px 10px;border-radius:999px;background:#edf2ff;color:#405b95;font-size:12px}ul{list-style:none;padding:0;margin:20px 0 0}li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-top:1px solid #edf0f5}li span{min-width:0;overflow-wrap:anywhere}em{flex:0 0 auto;color:#7c8799;font-style:normal;font-size:12px}.hint{margin-top:24px;padding-top:16px;border-top:1px solid #edf0f5}</style></head><body><main><h1>${esc(project.name)}</h1><p class="meta">내보낸 시각 ${esc(new Date(payload.exportedAt).toLocaleString("ko"))} · 메모 ${notes.length}개 · 첨부 ${files.length}개</p>${project.description ? `<div class="tags">${String(project.description).split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}<p class="meta">${countText}</p>${noteList}<p class="hint">루미잉크의 사이드바 → 파일 열기에서 이 파일을 선택하면 새 프로젝트로 가져올 수 있습니다.</p></main><script type="application/json" id="lumink-project">${json}<\/script></body></html>`;
+      const safeName = (project.name || "project").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "project";
+      downloadDoc(doc, `${safeName}-lumink-project-${dateStamp()}.html`, "text/html");
+      toast(`프로젝트를 저장했어요 · 메모 ${notes.length}개`);
+    } catch (e) { console.warn("project export", e); toast("프로젝트 내보내기에 실패했어요"); }
+  }
   function personaExportPalette(theme) {
     const root = document.documentElement;
     const hadTheme = root.hasAttribute("data-theme");
@@ -3786,9 +3822,126 @@ ${gallery}
       toast(`로어북 ${cnt}개를 불러왔어요`); go({ s: "project" });
     });
   }
+  function projectPackagePreview(payload) {
+    if (!payload || payload.app !== "lumink" || payload.kind !== "project" || Number(payload.version) !== 1) return null;
+    const project = normalizeImportedProject(payload.project);
+    if (!project) return null;
+    const notes = (Array.isArray(payload.notes) ? payload.notes : [])
+      .map(normalizeImportedNote).filter((note) => note && note.projectId === project.id);
+    return {
+      project,
+      noteCount: new Set(notes.map((note) => note.id)).size,
+      fileCount: Array.isArray(payload.files) ? payload.files.length : 0
+    };
+  }
+  function uniqueImportedProjectName(value) {
+    const base = (cleanImportedText(value, 120).trim() || "불러온 프로젝트").slice(0, 120);
+    const used = new Set(st.projects.map((project) => String(project.name || "").trim().toLocaleLowerCase("ko-KR")));
+    if (!used.has(base.toLocaleLowerCase("ko-KR"))) return base;
+    for (let number = 1; number < 10000; number++) {
+      const suffix = number === 1 ? " (가져옴)" : ` (가져옴 ${number})`;
+      const candidate = base.slice(0, Math.max(1, 120 - suffix.length)) + suffix;
+      if (!used.has(candidate.toLocaleLowerCase("ko-KR"))) return candidate;
+    }
+    return `가져온 프로젝트 ${dateStamp()}`;
+  }
+  function buildProjectPackageCopy(payload, reservedFileIds) {
+    const preview = projectPackagePreview(payload);
+    if (!preview) throw new Error("invalid project package");
+    const sourceNotes = [], seenNoteIds = new Set();
+    for (const raw of (Array.isArray(payload.notes) ? payload.notes : [])) {
+      const note = normalizeImportedNote(raw);
+      if (!note || note.projectId !== preview.project.id || seenNoteIds.has(note.id)) continue;
+      seenNoteIds.add(note.id); sourceNotes.push(note);
+    }
+    const usedIds = new Set([
+      ...st.projects.map((project) => project.id),
+      ...st.notes.map((note) => note.id),
+      ...(reservedFileIds || [])
+    ]);
+    const freshId = () => {
+      let id;
+      do { id = uid(); } while (usedIds.has(id));
+      usedIds.add(id); return id;
+    };
+    const importedAt = now(), projectId = freshId();
+    const project = Object.assign({}, preview.project, {
+      id: projectId,
+      name: uniqueImportedProjectName(preview.project.name),
+      isDefault: false,
+      pinned: false,
+      updatedAt: importedAt
+    });
+    delete project.pinnedAt;
+
+    const noteIdMap = new Map();
+    sourceNotes.forEach((note) => noteIdMap.set(note.id, freshId()));
+    const notes = sourceNotes.map((source) => {
+      const note = jsonCopy(source) || source;
+      note.id = noteIdMap.get(source.id); note.projectId = projectId;
+      note.pinnedHome = false; note.pinnedSide = false;
+      delete note.pinnedHomeAt; delete note.pinnedSideAt;
+      return note;
+    });
+
+    const fileIdMap = new Map(), files = [];
+    for (const raw of (Array.isArray(payload.files) ? payload.files : [])) {
+      const source = normalizeImportedFile(raw);
+      if (!source || !noteIdMap.has(source.noteId) || fileIdMap.has(source.id)) continue;
+      const id = freshId(); fileIdMap.set(source.id, id);
+      files.push(Object.assign({}, source, { id, noteId: noteIdMap.get(source.noteId) }));
+    }
+    for (const note of notes) {
+      if (note.type !== "free" || !note.data || !Array.isArray(note.data.attachments)) continue;
+      note.data.attachments = note.data.attachments.map((attachment) => {
+        const id = fileIdMap.get(attachment.id);
+        return id ? Object.assign({}, attachment, { id }) : null;
+      }).filter(Boolean);
+    }
+    return { project, notes, files };
+  }
+  async function importProjectPackage(payload) {
+    await flushPending();
+    await doAutoBackup();
+    const existingFiles = await getAll("files");
+    const data = buildProjectPackageCopy(payload, existingFiles.map((file) => file.id));
+    await transact(["projects", "notes", "files"], "readwrite", (tx) => {
+      tx.objectStore("projects").put(data.project);
+      data.notes.forEach((note) => tx.objectStore("notes").put(note));
+      data.files.forEach((file) => tx.objectStore("files").put(file));
+    });
+    await reloadState();
+    closeModal(); st.curProjectId = data.project.id; st.curNoteId = null;
+    renderSidebar(); go({ s: "project" });
+    toast(`프로젝트를 가져왔어요 · 메모 ${data.notes.length}개 · 첨부 ${data.files.length}개`);
+  }
+  function showProjectPackageImport(payload) {
+    const preview = projectPackagePreview(payload);
+    if (!preview) { toast("올바른 루미잉크 프로젝트 파일이 아니에요"); return; }
+    openModal(`<h3>프로젝트 불러오기</h3><p class="m-sub"><b>${esc(preview.project.name)}</b><br>메모 ${preview.noteCount}개 · 첨부 ${preview.fileCount}개</p><p class="m-sub">현재 데이터를 변경하지 않고 새 프로젝트로 가져옵니다. 같은 이름의 프로젝트가 있으면 이름에 ‘가져옴’ 표시가 붙습니다.</p><div class="m-row"><button class="m-btn" id="projectImportCancel">취소</button><button class="m-btn primary" id="projectImportOk">새 프로젝트로 가져오기</button></div>`);
+    $on("projectImportCancel", "click", closeModal);
+    $on("projectImportOk", "click", async () => {
+      const button = $("projectImportOk"); if (button) { button.disabled = true; button.textContent = "가져오는 중…"; }
+      try { await importProjectPackage(payload); }
+      catch (e) {
+        console.warn("project import", e);
+        if (button) { button.disabled = false; button.textContent = "새 프로젝트로 가져오기"; }
+        toast("프로젝트를 가져오지 못했어요");
+      }
+    });
+  }
   function importHtmlPayload(raw, file) {
-    let pTag = null;
-    try { const doc = new DOMParser().parseFromString(raw, "text/html"); pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character") || doc.getElementById("lumink-log"); } catch (e) {}
+    let pTag = null, projectTag = null;
+    try {
+      const doc = new DOMParser().parseFromString(raw, "text/html");
+      projectTag = doc.getElementById("lumink-project");
+      pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character") || doc.getElementById("lumink-log");
+    } catch (e) {}
+    if (projectTag) {
+      try { showProjectPackageImport(JSON.parse(projectTag.textContent)); }
+      catch (e) { toast("올바른 루미잉크 프로젝트 파일이 아니에요"); }
+      return;
+    }
     pickTargetProject(st.curProjectId, async (pid) => {
       if (pTag) {
         try {
@@ -4014,6 +4167,10 @@ ${gallery}
     $on("setAccent", "click", openAccentPicker);
     $on("setToolbarMode", "click", openFormatbarModePicker);
     $on("setInstallIcon", "click", openInstallIconPicker);
+    $on("setManual", "click", async () => {
+      await flushPending();
+      window.location.href = "./Lumi_Ink_Manual_1.html?from=app";
+    });
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
