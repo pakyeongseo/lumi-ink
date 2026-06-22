@@ -1537,15 +1537,26 @@
     });
     return out;
   }
-  function renderLogLine(text, template, data) {
-    let segments = [{ text: String(text || ""), style: {} }];
-    template.rules.forEach((rule) => { segments = applyLogRule(segments, rule); });
+  function applyLogPersonaNames(segments, template, data) {
     const alias = (data.personaAlias || template.persona.maskText || "•••").trim();
-    [...(data.personaNames || [])].sort((a, b) => String(b).length - String(a).length).forEach((name) => { segments = applyPersonaMask(segments, String(name || "").trim(), alias, template.persona.style); });
+    [...(data.personaNames || [])].sort((a, b) => String(b).length - String(a).length).forEach((name) => {
+      segments = applyPersonaMask(segments, String(name || "").trim(), alias, template.persona.style);
+    });
+    return segments;
+  }
+  function renderLogSegments(segments) {
     return segments.map((segment) => {
       const style = logStyleAttr(segment.style), textHtml = esc(segment.text);
       return style ? `<span style="${esc(style)}">${textHtml}</span>` : textHtml;
     }).join("");
+  }
+  function renderLogMaskedText(text, template, data) {
+    return renderLogSegments(applyLogPersonaNames([{ text: String(text || ""), style: {} }], template, data));
+  }
+  function renderLogLine(text, template, data) {
+    let segments = [{ text: String(text || ""), style: {} }];
+    template.rules.forEach((rule) => { segments = applyLogRule(segments, rule); });
+    return renderLogSegments(applyLogPersonaNames(segments, template, data));
   }
   function renderLogInlineHtml(n) {
     const data = normalizeLogData(n && n.data), template = getLogTemplate(n), styles = template.styles;
@@ -1553,7 +1564,7 @@
     const body = lines.map((line) => line.length
       ? `<div style="${esc(logStyleAttr(styles.paragraph))}">${renderLogLine(line, template, data)}</div>`
       : `<div style="${esc(logStyleAttr(styles.empty))}"><br></div>`).join("");
-    const header = `<div style="${esc(logStyleAttr(styles.header))}">${esc((n && n.title) || "로그")}</div>`;
+    const header = `<div style="${esc(logStyleAttr(styles.header))}">${renderLogMaskedText((n && n.title) || "로그", template, data)}</div>`;
     return `<div data-lumink-log="1" style="${esc(logStyleAttr(styles.canvas))}">${header}<div style="${esc(logStyleAttr(styles.body))}">${body}</div></div>`;
   }
   function deriveLogTitle(content) {

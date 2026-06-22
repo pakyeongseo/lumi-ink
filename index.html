@@ -2278,7 +2278,7 @@
   html[data-theme="light"] .log-template-manager .log-template-del { color:var(--danger,#d94a62); }
   @media (max-width:560px) {
     .modal-scrim.log-template-open { padding:10px; }
-    .modal.log-template-modal { height:calc(100dvh - 20px); max-height:calc(100dvh - 20px); padding:16px 14px calc(14px + var(--safe-bottom)); border-radius:18px; }
+    .modal.log-template-modal { height:calc((100dvh / var(--fs-zoom, 1)) - 20px); max-height:calc((100dvh / var(--fs-zoom, 1)) - 20px); padding:16px 14px calc(14px + var(--safe-bottom)); border-radius:18px; }
     .log-mask-actions { grid-template-columns:1fr 1fr; }
     .log-mask-actions .m-input { grid-column:1/-1; }
     .log-mini-btn { min-height:40px; }
