@@ -5443,7 +5443,7 @@ ${gallery}
   function hexRgb(hex) { const value=String(hex||"").replace("#",""); if(!/^[0-9a-fA-F]{6}$/.test(value)) return [106,208,255]; return [parseInt(value.slice(0,2),16),parseInt(value.slice(2,4),16),parseInt(value.slice(4,6),16)]; }
   function mixHex(a,b,weight) { const aa=hexRgb(a),bb=hexRgb(b),t=Math.max(0,Math.min(1,Number(weight)||0)); return "#"+aa.map((v,i)=>Math.round(v*(1-t)+bb[i]*t).toString(16).padStart(2,"0")).join(""); }
   function rgbaHex(hex,alpha) { const [r,g,b]=hexRgb(hex); return `rgba(${r},${g},${b},${Math.max(0,Math.min(1,Number(alpha)||0))})`; }
-  function ideaNoteTextColorValue(key, baseColor) {
+  function ideaTextColorValue(key) {
     const normalized = isIdeaNoteTextColorKey(key) ? key : "auto";
     if (normalized === "auto") return "";
     if (IDEA_NOTE_TEXT_PRESETS[normalized]) return IDEA_NOTE_TEXT_PRESETS[normalized].value;
@@ -5451,28 +5451,40 @@ ${gallery}
   }
   function ideaColorVars(key, textColor) {
     const meta=ideaColorMeta(key), a=meta.ig[0], b=meta.ig[1], paper=mixHex(a,"#ffffff",.64), edge=mixHex(b,"#ffffff",.18);
-    const vars={"--idea-color-a":a,"--idea-color-b":b,"--idea-color-grad":meta.grad,"--idea-chip-fill":mixHex(a,"#ffffff",.84),"--idea-chip-edge":edge,"--idea-chip-ink":"#20242d","--stick-1":paper,"--stick-2":edge,"--stick-ink":"#27303a"};
-    const noteInk = ideaNoteTextColorValue(textColor, key);
-    if (noteInk) vars["--stick-ink"] = noteInk;
-    return vars;
+    const customInk = ideaTextColorValue(textColor);
+    return {"--idea-color-a":a,"--idea-color-b":b,"--idea-color-grad":meta.grad,"--idea-chip-fill":mixHex(a,"#ffffff",.84),"--idea-chip-edge":edge,"--idea-chip-ink":customInk || "#20242d","--stick-1":paper,"--stick-2":edge,"--stick-ink":customInk || "#27303a"};
   }
-  function applyIdeaColor(el,item) { if(!el||!item)return; el.dataset.color=item.color; const vars=ideaColorVars(item.color, item.kind==="note" ? item.textColor : null); Object.entries(vars).forEach(([name,value])=>el.style.setProperty(name,value)); }
+  function applyIdeaColor(el,item) { if(!el||!item)return; el.dataset.color=item.color; const vars=ideaColorVars(item.color, item.textColor); Object.entries(vars).forEach(([name,value])=>el.style.setProperty(name,value)); }
   function ideaColorStyleAttr(key, textColor) { return Object.entries(ideaColorVars(key, textColor)).map(([name,value])=>`${name}:${value}`).join(";"); }
-  function ideaColorChoicesMarkup(selected, attrName) { return Object.entries(IDEA_THEME_COLORS).map(([key,meta])=>`<button type="button" class="idea-color-choice theme ${selected===key?"active":""}" ${attrName}="${esc(key)}"><span style="background:${meta.grad}"></span>${esc(meta.name)}</button>`).join(""); }
-  function ideaNoteTextColorChoicesMarkup(selected, attrName) {
+  function ideaColorChoicesMarkup(selected, attrName, compact = false) {
+    return Object.entries(IDEA_THEME_COLORS).map(([key,meta])=>{
+      const cls=`idea-color-choice theme${compact ? " palette" : ""} ${selected===key?"active":""}`;
+      const aria=`aria-label="${esc(meta.name)}" title="${esc(meta.name)}"`;
+      return compact
+        ? `<button type="button" class="${cls}" ${attrName}="${esc(key)}" ${aria}><span style="background:${meta.grad}"></span></button>`
+        : `<button type="button" class="${cls}" ${attrName}="${esc(key)}" ${aria}><span style="background:${meta.grad}"></span>${esc(meta.name)}</button>`;
+    }).join("");
+  }
+  function ideaTextColorChoicesMarkup(selected, attrName, compact = false) {
     const normalized = isIdeaNoteTextColorKey(selected) ? selected : "auto";
     const presets = Object.entries(IDEA_NOTE_TEXT_PRESETS).map(([key, meta]) => {
       const swatch = key === "auto" ? "linear-gradient(135deg,#27303a 0 50%,#fffaf4 50% 100%)" : meta.value;
-      return `<button type="button" class="idea-color-choice text ${normalized===key?"active":""}" ${attrName}="${esc(key)}"><span style="background:${esc(swatch)}"></span>${esc(meta.name)}</button>`;
+      const cls=`idea-color-choice text${compact ? " palette" : ""} ${normalized===key?"active":""}`;
+      const aria=`aria-label="${esc(meta.name)}" title="${esc(meta.name)}"`;
+      return compact
+        ? `<button type="button" class="${cls}" ${attrName}="${esc(key)}" ${aria}><span style="background:${esc(swatch)}"></span></button>`
+        : `<button type="button" class="${cls}" ${attrName}="${esc(key)}" ${aria}><span style="background:${esc(swatch)}"></span>${esc(meta.name)}</button>`;
     }).join("");
-    const themes = Object.entries(IDEA_THEME_COLORS).map(([key, meta]) => `<button type="button" class="idea-color-choice text ${normalized===key?"active":""}" ${attrName}="${esc(key)}"><span style="background:${meta.grad}"></span>${esc(meta.name)}</button>`).join("");
+    const themes = ideaColorChoicesMarkup(normalized, attrName, compact);
     return presets + themes;
   }
+  // Legacy call site compatibility for extension CSS and older embedded scripts.
+  function ideaNoteTextColorChoicesMarkup(selected, attrName, compact = false) { return ideaTextColorChoicesMarkup(selected, attrName, compact); }
   let ideaTimer = null, ideaDirty = false, ideaViewMode = "board", ideaObjectUrls = new Map(), ideaPendingPos = null;
   let ideaActiveBoardId = null, ideaEditState = { itemId: null, mode: null }, ideaGesture = null;
   let ideaUndoStack = [], ideaRedoStack = [], ideaHistoryBoardId = null, ideaRemovedBlobIds = new Set();
   let ideaKeyMoveActive = false, ideaKeyMoveTimer = null;
-  const IDEA_HISTORY_MAX = 80;
+  const IDEA_HISTORY_MAX = 20;
   const IDEA_KIND_LABEL = { note:"메모", image:"이미지", audio:"음악", video:"영상", file:"파일", quote:"링크" };
   let ideaZoom = 1, ideaSnapOn = false, ideaPinch = null; const ideaPointers = new Map();
   const IDEA_ZOOM_MIN = 0.2, IDEA_ZOOM_MAX = 2.5;
@@ -5501,7 +5513,7 @@ ${gallery}
   function updateIdeaHistoryButtons() { const u = $("ideaUndo"), r = $("ideaRedo"); if (u) u.disabled = !ideaUndoStack.length; if (r) r.disabled = !ideaRedoStack.length; }
 
   function makeIdeaBoardData() {
-    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundImage: null }, items: [], attachments: [], viewMode: "board" };
+    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundMode: "template", backgroundImage: null }, items: [], attachments: [], viewMode: "board" };
   }
   function normalizeIdeaCanvasImage(raw) {
     if (!raw || typeof raw !== "object" || typeof raw.fileId !== "string" || !raw.fileId) return null;
@@ -5520,6 +5532,9 @@ ${gallery}
     d.canvas.zoom = Math.max(IDEA_ZOOM_MIN, Math.min(IDEA_ZOOM_MAX, Number(d.canvas.zoom) || 1));
     d.canvas.background = IDEA_BG_TEMPLATES[d.canvas.background] ? d.canvas.background : "blueprint";
     d.canvas.backgroundImage = normalizeIdeaCanvasImage(d.canvas.backgroundImage);
+    // Background source is exclusive: old image boards upgrade to image mode once,
+    // while later template choices can keep the uploaded image stored but inactive.
+    d.canvas.backgroundMode = d.canvas.backgroundImage && (d.canvas.backgroundMode === "image" || d.canvas.backgroundMode == null) ? "image" : "template";
     d.items = Array.isArray(d.items) ? d.items.filter((item) => item && typeof item === "object").map(normalizeIdeaItem) : [];
     d.attachments = Array.isArray(d.attachments) ? d.attachments.filter((a) => a && a.id) : [];
     d.viewMode = d.viewMode === "list" ? "list" : "board";
@@ -5627,7 +5642,9 @@ ${gallery}
     $("ideaTitle").textContent = n.title || "아이디어 보드"; if (!ideaDirty) setIdeaSaver("");
     const screen = $("screen-idea"); screen.classList.toggle("idea-board-mode", ideaViewMode === "board"); screen.classList.toggle("idea-list-mode", ideaViewMode === "list");
     $("ideaBoardMode").classList.toggle("active", ideaViewMode === "board"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list");
-    const canvas = $("ideaCanvas"); canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = ""; ideaZoom = ideaClampZoom(ideaZoom); applyIdeaZoom();
+    const canvas = $("ideaCanvas"), sizer = $("ideaCanvasSizer");
+    if (sizer) { sizer.style.width = d.canvas.width + "px"; sizer.style.height = d.canvas.height + "px"; }
+    canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = ""; ideaZoom = ideaClampZoom(ideaZoom); applyIdeaZoom();
     if (!d.items.length) canvas.innerHTML = '<div class="idea-canvas-empty"><div><b>아직 붙인 조각이 없어요</b>빈 공간을 길게 누르거나, 상단 + 버튼으로 첫 아이디어를 놓아보세요.</div></div>';
     d.items.slice().sort((a,b) => a.z - b.z).forEach((item) => canvas.appendChild(createIdeaItemElement(n, item)));
     if (ideaEditState.itemId) requestAnimationFrame(() => mountIdeaTransformControls(ideaEditState.itemId));
@@ -5655,14 +5672,16 @@ ${gallery}
   }
   function applyIdeaCanvasAppearance(canvas, data) {
     if (!canvas || !data || !data.canvas) return;
-    const config=data.canvas, plain=ideaPlainBackgroundMeta(config.background);
-    canvas.dataset.background=config.background;
+    const config=data.canvas, image=normalizeIdeaCanvasImage(config.backgroundImage);
+    const imageActive=!!image && config.backgroundMode === "image";
+    const activeBackground=imageActive ? "uploaded" : config.background;
+    const plain=ideaPlainBackgroundMeta(activeBackground);
+    canvas.dataset.background=activeBackground;
     if (plain) { canvas.style.setProperty("--idea-canvas-a", plain.ig[0]); canvas.style.setProperty("--idea-canvas-b", plain.ig[1]); }
     else { canvas.style.removeProperty("--idea-canvas-a"); canvas.style.removeProperty("--idea-canvas-b"); }
-    const image=normalizeIdeaCanvasImage(config.backgroundImage);
-    canvas.classList.toggle("has-canvas-image", !!image);
+    canvas.classList.toggle("has-canvas-image", imageActive);
     canvas.style.removeProperty("--idea-canvas-image");
-    if (!image) { canvas.dataset.canvasImageId=""; canvas.style.removeProperty("--idea-canvas-overlay"); return; }
+    if (!imageActive) { canvas.dataset.canvasImageId=""; canvas.style.removeProperty("--idea-canvas-overlay"); return; }
     const meta=ideaColorMeta(image.overlayColor);
     canvas.style.setProperty("--idea-canvas-overlay", rgbaHex(meta.ig[0], image.overlayOpacity));
     const fileId=image.fileId; canvas.dataset.canvasImageId=fileId;
@@ -5756,8 +5775,8 @@ ${gallery}
     const title = ideaItemTitle(item, n);
     let body = "";
     if (item.kind === "note") body = `<div class="idea-preview-note" data-color="${esc(item.color)}" data-note-style="${esc(item.noteStyle)}" style="${ideaColorStyleAttr(item.color, item.textColor)}">${esc(item.text || "내용 없는 포스트잇")}</div>`;
-    else if (item.kind === "quote") body = `<div class="idea-preview-quote idea-preview-chip" style="${ideaColorStyleAttr(item.color)}"><b>↗ ${esc(title)}</b><button class="m-btn primary" id="ideaPreviewOpenQuote">메모 열기</button></div>`;
-    else if (item.kind === "file") body = `<div class="idea-preview-file idea-preview-chip" style="${ideaColorStyleAttr(item.color)}"><div>${fileIconSvg((itemAttachment(n,item.fileId)||{}).type||"")}</div><b>${esc(title)}</b><button class="m-btn primary" id="ideaPreviewDownload">파일 다운로드</button></div>`;
+    else if (item.kind === "quote") body = `<div class="idea-preview-quote idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>↗ ${esc(title)}</b><button class="m-btn primary" id="ideaPreviewOpenQuote">메모 열기</button></div>`;
+    else if (item.kind === "file") body = `<div class="idea-preview-file idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><div>${fileIconSvg((itemAttachment(n,item.fileId)||{}).type||"")}</div><b>${esc(title)}</b><button class="m-btn primary" id="ideaPreviewDownload">파일 다운로드</button></div>`;
     else body = `<div class="idea-preview-media${item.kind === "audio" ? " idea-preview-audio" : ""}" id="ideaPreviewMedia" style="${item.kind === "audio" ? ideaColorStyleAttr(item.color) : ""}"><div class="idea-media-loading">불러오는 중…</div></div>`;
     openModal(`<h3>${esc(title)}</h3><div class="idea-preview-wrap">${body}</div><div class="m-row"><button class="m-btn" id="ideaPreviewClose">닫기</button></div>`);
     $on("ideaPreviewClose", "click", closeModal);
@@ -6105,7 +6124,7 @@ ${gallery}
     const item=getIdeaItem(id);if(!item)return;
     let cpPushed=false; const cpUndo=()=>{ if(!cpPushed){ pushIdeaUndo(); cpPushed=true; } };
     const sample=esc(item.text || "포스트잇 미리보기\\n컬러와 글자색을 고르면 바로 반영됩니다.");
-    openModal(`<h3>포스트잇 컬러</h3><p class="m-sub">${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)} 디자인에 적용할 색을 고릅니다.</p><div class="idea-preview-note idea-sticky" id="ideaNoteColorPreview" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${ideaColorStyleAttr(item.color,item.textColor)}">${sample}</div><div class="idea-options-label">포스트잇 컬러</div><div class="idea-color-grid theme-grid">${ideaColorChoicesMarkup(item.color,"data-idea-note-color")}</div><div class="idea-options-label">글자색</div><div class="idea-color-grid theme-grid">${ideaNoteTextColorChoicesMarkup(item.textColor,"data-idea-note-text-color")}</div><div class="m-row"><button class="m-btn" id="ideaNoteColorBack">디자인 다시 선택</button><button class="m-btn primary" id="ideaNoteColorDone">완료</button></div>`);
+    openModal(`<h3>포스트잇 컬러</h3><p class="m-sub">${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)} 디자인에 적용할 색을 고릅니다.</p><div class="idea-preview-note idea-sticky" id="ideaNoteColorPreview" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${ideaColorStyleAttr(item.color,item.textColor)}">${sample}</div><div class="idea-options-label">포스트잇 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(item.color,"data-idea-note-color",true)}</div><div class="idea-options-label">글자색</div><div class="idea-color-grid palette-grid">${ideaTextColorChoicesMarkup(item.textColor,"data-idea-note-text-color",true)}</div><div class="m-row"><button class="m-btn" id="ideaNoteColorBack">디자인 다시 선택</button><button class="m-btn primary" id="ideaNoteColorDone">완료</button></div>`);
     const update=()=>{const fresh=getIdeaItem(id), preview=$("ideaNoteColorPreview"), el=ideaItemElement(id);if(!fresh)return;if(preview){preview.dataset.color=fresh.color;preview.dataset.noteStyle=fresh.noteStyle;preview.setAttribute("style",ideaColorStyleAttr(fresh.color,fresh.textColor));}if(el)applyIdeaColor(el,fresh);};
     $("modalBox").querySelectorAll("[data-idea-note-color]").forEach((b)=>b.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;cpUndo();fresh.color=b.dataset.ideaNoteColor;scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-note-color]").forEach(x=>x.classList.toggle("active",x===b));update();}));
     $("modalBox").querySelectorAll("[data-idea-note-text-color]").forEach((b)=>b.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;cpUndo();fresh.textColor=b.dataset.ideaNoteTextColor;scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-note-text-color]").forEach(x=>x.classList.toggle("active",x===b));update();}));
@@ -6116,11 +6135,17 @@ ${gallery}
     const item=getIdeaItem(id); if(!item) return;
     let cpPushed=false;
     const label={audio:"음악 플레이어",quote:"메모 링크",file:"첨부파일",note:"포스트잇"}[item.kind] || "조각";
-    openModal(`<h3>${esc(label)} 컬러</h3><p class="m-sub">앱의 컬러 테마를 조각에 고정합니다. 앱 전체 테마를 바꿔도 이 조각의 색은 유지돼요.</p><div class="idea-color-grid theme-grid">${ideaColorChoicesMarkup(item.color,"data-idea-item-color")}</div><div class="m-row"><button class="m-btn" id="ideaItemColorDone">완료</button></div>`);
+    const supportsText=["quote","file"].includes(item.kind);
+    const textBlock=supportsText?`<div class="idea-options-label">글자색</div><div class="idea-color-grid palette-grid">${ideaTextColorChoicesMarkup(item.textColor,"data-idea-item-text-color",true)}</div>`:"";
+    openModal(`<h3>${esc(label)} 컬러</h3><p class="m-sub">색상은 이름 없이 스와치 그리드에서 고릅니다. 앱 전체 테마를 바꿔도 이 조각의 색은 유지돼요.</p><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(item.color,"data-idea-item-color",true)}</div>${textBlock}<div class="m-row"><button class="m-btn" id="ideaItemColorDone">완료</button></div>`);
+    const update=()=>{const fresh=getIdeaItem(id),el=ideaItemElement(id);if(el&&fresh)applyIdeaColor(el,fresh);};
     $("modalBox").querySelectorAll("[data-idea-item-color]").forEach((button)=>button.addEventListener("click",()=>{
       const fresh=getIdeaItem(id); if(!fresh) return; if(!cpPushed){pushIdeaUndo();cpPushed=true;} fresh.color=button.dataset.ideaItemColor; scheduleIdeaSave(0);
-      $("modalBox").querySelectorAll("[data-idea-item-color]").forEach((x)=>x.classList.toggle("active",x===button));
-      const el=ideaItemElement(id); if(el) applyIdeaColor(el,fresh);
+      $("modalBox").querySelectorAll("[data-idea-item-color]").forEach((x)=>x.classList.toggle("active",x===button)); update();
+    }));
+    $("modalBox").querySelectorAll("[data-idea-item-text-color]").forEach((button)=>button.addEventListener("click",()=>{
+      const fresh=getIdeaItem(id); if(!fresh) return; if(!cpPushed){pushIdeaUndo();cpPushed=true;} fresh.textColor=button.dataset.ideaItemTextColor; scheduleIdeaSave(0);
+      $("modalBox").querySelectorAll("[data-idea-item-text-color]").forEach((x)=>x.classList.toggle("active",x===button)); update();
     }));
     $on("ideaItemColorDone","click",closeModal);
   }
@@ -6175,7 +6200,7 @@ ${gallery}
     if(opacity) { opacity.disabled=!image; opacity.value=String(Math.round((image ? image.overlayOpacity : 0)*100)); }
     if(value) value.textContent=`${Math.round((image ? image.overlayOpacity : 0)*100)}%`;
     if(preview) {
-      applyIdeaCanvasAppearance(preview,d);
+      applyIdeaCanvasAppearance(preview,{canvas:{...d.canvas, backgroundMode:image ? "image" : d.canvas.backgroundMode}});
       const title=preview.querySelector(".idea-bg-upload-title"), sub=preview.querySelector(".idea-bg-upload-sub");
       if(title) title.textContent=image ? (image.name || "캔버스 이미지") : "미리보기를 눌러 파일 선택";
       if(sub) sub.textContent=image ? "새 파일을 고르면 보드 비율에 맞춰 다시 크롭합니다." : "일반 파일 선택기로 이미지를 고릅니다.";
@@ -6185,11 +6210,13 @@ ${gallery}
     const n=currentIdeaNote(); if(!n||!blob) return;
     if(blob.size>IDEA_MAX_MEDIA){toast("캔버스 이미지는 30MB 이하만 사용할 수 있어요");return;}
     const d=ensureIdeaBoardData(n), old=normalizeIdeaCanvasImage(d.canvas.backgroundImage), id=uid();
+    pushIdeaUndo();
     const fileName=String(name||"캔버스 이미지").slice(0,240) || "캔버스 이미지";
     try {
       await put("files",{id,noteId:n.id,name:fileName,type:blob.type||"image/jpeg",size:blob.size,blob,createdAt:now()});
       d.attachments.push({id,name:fileName,type:blob.type||"image/jpeg",size:blob.size});
       d.canvas.backgroundImage={fileId:id,name:fileName,overlayColor:old ? old.overlayColor : ideaPreferredColor(),overlayOpacity:old ? old.overlayOpacity : .24};
+      d.canvas.backgroundMode="image";
       if(old && old.fileId && !d.items.some((item)=>item.fileId===old.fileId)) { d.attachments=d.attachments.filter((a)=>a.id!==old.fileId); await del("files",old.fileId).catch(()=>{}); const url=ideaObjectUrls.get(old.fileId);if(url){try{URL.revokeObjectURL(url)}catch(e){}ideaObjectUrls.delete(old.fileId);} }
       const canvas=$("ideaCanvas"); if(canvas) applyIdeaCanvasAppearance(canvas,d); refreshIdeaCanvasImageControls(); scheduleIdeaSave(0); toast("캔버스 배경 이미지를 적용했어요");
     } catch(e) { toast("캔버스 이미지를 저장하지 못했어요"); }
@@ -6210,22 +6237,24 @@ ${gallery}
   }
   function removeIdeaCanvasBackgroundImage() {
     const n=currentIdeaNote(); if(!n) return; const d=ensureIdeaBoardData(n), image=normalizeIdeaCanvasImage(d.canvas.backgroundImage); if(!image)return;
-    d.canvas.backgroundImage=null; d.attachments=d.attachments.filter((a)=>a.id!==image.fileId); del("files",image.fileId).catch(()=>{});
+    pushIdeaUndo();
+    d.canvas.backgroundImage=null; d.canvas.backgroundMode="template"; d.attachments=d.attachments.filter((a)=>a.id!==image.fileId); del("files",image.fileId).catch(()=>{});
     const url=ideaObjectUrls.get(image.fileId);if(url){try{URL.revokeObjectURL(url)}catch(e){}ideaObjectUrls.delete(image.fileId);}
     const canvas=$("ideaCanvas");if(canvas)applyIdeaCanvasAppearance(canvas,d);refreshIdeaCanvasImageControls();scheduleIdeaSave(0);toast("캔버스 이미지를 제거했어요");
   }
   function openIdeaBoardBackgroundPicker(n) {
-    const d=ensureIdeaBoardData(n), image=normalizeIdeaCanvasImage(d.canvas.backgroundImage);
+    const d=ensureIdeaBoardData(n), image=normalizeIdeaCanvasImage(d.canvas.backgroundImage), imageActive=!!image && d.canvas.backgroundMode === "image";
     let bgPushed=false;
+    const commitTemplate=(key)=>{ if(!bgPushed){pushIdeaUndo();bgPushed=true;} d.canvas.background=key; d.canvas.backgroundMode="template"; scheduleIdeaSave(0); const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d); };
     const currentPlain=ideaPlainBackgroundMeta(d.canvas.background);
     const colorKey=currentPlain?d.canvas.background:`plain-${ideaPreferredColor()}`;
-    const colorCard=`<button type="button" class="idea-template-choice idea-template-card idea-bg-special${currentPlain?" active":""}" id="ideaBgOpenColors" aria-pressed="${currentPlain?"true":"false"}"><span class="idea-template-preview idea-template-preview-bg"><span class="idea-template-thumb idea-template-bg-thumb idea-canvas" data-background="${esc(colorKey)}" style="${ideaCanvasPlainStyle(colorKey)}" aria-hidden="true"><i>●</i></span></span><span class="idea-template-copy"><b>컬러 캔버스</b><small>기본 색상과 더 밝은 색상을 한 화면에서 선택</small></span><span class="idea-template-state">${currentPlain?"선택됨":"열기"}</span></button>`;
-    const rows=Object.entries(IDEA_BG_TEMPLATES).filter(([key])=>!ideaPlainBackgroundMeta(key)).map(([key,t])=>renderIdeaTemplateChoice("background",key,t,d.canvas.background===key)).join("");
-    const imageCard=`<button type="button" class="idea-template-choice idea-template-card idea-bg-special${image?" active":""}" id="ideaBgOpenImage" aria-pressed="${image?"true":"false"}"><span class="idea-template-preview idea-template-preview-bg"><span class="idea-template-thumb idea-template-bg-thumb idea-canvas" data-background="${esc(d.canvas.background)}" style="${ideaCanvasPlainStyle(d.canvas.background)}" aria-hidden="true"><i>▧</i></span></span><span class="idea-template-copy"><b>이미지 업로드</b><small>${esc(image?canvasBackgroundImageStatus(d):"파일 선택, 크롭, 오버레이 조절")}</small></span><span class="idea-template-state">${image?"설정됨":"설정"}</span></button>`;
-    openModal(`<h3>보드 배경</h3><p class="m-sub">컬러 캔버스는 별도 화면에 모으고, 이미지 배경은 업로드 화면에서 크롭·오버레이를 조절합니다.</p><div class="idea-template-grid">${colorCard}${rows}${imageCard}</div><div class="m-row"><button class="m-btn" id="ideaBgDone">완료</button></div>`);
-    $("modalBox").querySelectorAll("[data-idea-bg]").forEach((b)=>b.addEventListener("click",()=>{if(!bgPushed){pushIdeaUndo();bgPushed=true;}d.canvas.background=b.dataset.ideaBg;scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-bg]").forEach(x=>{const on=x===b;x.classList.toggle("active",on);x.setAttribute("aria-pressed",String(on));const state=x.querySelector(".idea-template-state");if(state)state.textContent=on?"선택됨":"선택";});const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);}));
+    const colorCard=`<button type="button" class="idea-template-choice idea-template-card idea-bg-special${!imageActive&&currentPlain?" active":""}" id="ideaBgOpenColors" aria-pressed="${!imageActive&&currentPlain?"true":"false"}"><span class="idea-template-preview idea-template-preview-bg"><span class="idea-template-thumb idea-template-bg-thumb idea-canvas" data-background="${esc(colorKey)}" style="${ideaCanvasPlainStyle(colorKey)}" aria-hidden="true"><i>●</i></span></span><span class="idea-template-copy"><b>컬러 캔버스</b><small>기본 색상과 더 밝은 색상을 한 화면에서 선택</small></span><span class="idea-template-state">${!imageActive&&currentPlain?"선택됨":"열기"}</span></button>`;
+    const rows=Object.entries(IDEA_BG_TEMPLATES).filter(([key])=>!ideaPlainBackgroundMeta(key)).map(([key,t])=>renderIdeaTemplateChoice("background",key,t,!imageActive&&d.canvas.background===key)).join("");
+    const imageCard=`<button type="button" class="idea-template-choice idea-template-card idea-bg-special${imageActive?" active":""}" id="ideaBgOpenImage" aria-pressed="${imageActive?"true":"false"}"><span class="idea-template-preview idea-template-preview-bg"><span class="idea-template-thumb idea-template-bg-thumb idea-canvas" data-background="${imageActive?"uploaded":esc(d.canvas.background)}" style="${ideaCanvasPlainStyle(d.canvas.background)}" aria-hidden="true"><i>▧</i></span></span><span class="idea-template-copy"><b>이미지 업로드</b><small>${esc(image?canvasBackgroundImageStatus(d):"파일 선택, 크롭, 오버레이 조절")}</small></span><span class="idea-template-state">${imageActive?"선택됨":image?"저장됨":"설정"}</span></button>`;
+    openModal(`<h3>보드 배경</h3><p class="m-sub">한 번에 하나의 배경만 활성화됩니다. 업로드 이미지는 다른 템플릿을 선택해도 저장해두었다가 다시 켤 수 있어요.</p><div class="idea-template-grid">${colorCard}${rows}${imageCard}</div><div class="m-row"><button class="m-btn" id="ideaBgDone">완료</button></div>`);
+    $("modalBox").querySelectorAll("[data-idea-bg]").forEach((b)=>b.addEventListener("click",()=>{commitTemplate(b.dataset.ideaBg); $("modalBox").querySelectorAll("[data-idea-bg]").forEach(x=>{const on=d.canvas.backgroundMode==="template"&&x===b;x.classList.toggle("active",on);x.setAttribute("aria-pressed",String(on));const state=x.querySelector(".idea-template-state");if(state)state.textContent=on?"선택됨":"선택";});}));
     $on("ideaBgOpenColors","click",()=>openIdeaColorCanvasPicker(n));
-    $on("ideaBgOpenImage","click",()=>openIdeaCanvasImagePicker(n));
+    $on("ideaBgOpenImage","click",()=>{ if(image && d.canvas.backgroundMode!=="image"){if(!bgPushed){pushIdeaUndo();bgPushed=true;}d.canvas.backgroundMode="image";scheduleIdeaSave(0);const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);} openIdeaCanvasImagePicker(n); });
     $on("ideaBgDone","click",closeModal);
   }
   function openIdeaColorCanvasPicker(n) {
@@ -6235,8 +6264,8 @@ ${gallery}
     const previewKey=ideaPlainBackgroundMeta(d.canvas.background)?d.canvas.background:`plain-${ideaPreferredColor()}`;
     const rows=entries.map(([key,t])=>renderIdeaTemplateChoice("background",key,t,d.canvas.background===key)).join("");
     openModal(`<h3>컬러 캔버스</h3><p class="m-sub">기존 컬러와 더 밝은 라이트 컬러를 고를 수 있어요. 선택 즉시 보드와 미리보기에 반영됩니다.</p><div class="idea-bg-live-preview idea-canvas" id="ideaBgColorPreview" data-background="${esc(previewKey)}" style="${ideaCanvasPlainStyle(previewKey)}"><span>컬러 캔버스 미리보기</span></div><div class="idea-template-grid idea-template-grid-compact">${rows}</div><div class="m-row"><button class="m-btn" id="ideaBgColorBack">배경 목록</button><button class="m-btn primary" id="ideaBgColorDone">완료</button></div>`);
-    const refresh=()=>{const key=ideaPlainBackgroundMeta(d.canvas.background)?d.canvas.background:previewKey, preview=$("ideaBgColorPreview"); if(preview){preview.dataset.background=key; preview.setAttribute("style",ideaCanvasPlainStyle(key));} $("modalBox").querySelectorAll("[data-idea-bg]").forEach(x=>{const on=x.dataset.ideaBg===d.canvas.background;x.classList.toggle("active",on);x.setAttribute("aria-pressed",String(on));const state=x.querySelector(".idea-template-state");if(state)state.textContent=on?"선택됨":"선택";}); const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);};
-    $("modalBox").querySelectorAll("[data-idea-bg]").forEach((b)=>b.addEventListener("click",()=>{if(!bgPushed){pushIdeaUndo();bgPushed=true;}d.canvas.background=b.dataset.ideaBg;scheduleIdeaSave(0);refresh();}));
+    const refresh=()=>{const key=ideaPlainBackgroundMeta(d.canvas.background)?d.canvas.background:previewKey, preview=$("ideaBgColorPreview"); if(preview){preview.dataset.background=key; preview.setAttribute("style",ideaCanvasPlainStyle(key));} $("modalBox").querySelectorAll("[data-idea-bg]").forEach(x=>{const on=d.canvas.backgroundMode==="template"&&x.dataset.ideaBg===d.canvas.background;x.classList.toggle("active",on);x.setAttribute("aria-pressed",String(on));const state=x.querySelector(".idea-template-state");if(state)state.textContent=on?"선택됨":"선택";}); const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);};
+    $("modalBox").querySelectorAll("[data-idea-bg]").forEach((b)=>b.addEventListener("click",()=>{if(!bgPushed){pushIdeaUndo();bgPushed=true;}d.canvas.background=b.dataset.ideaBg;d.canvas.backgroundMode="template";scheduleIdeaSave(0);refresh();}));
     $on("ideaBgColorBack","click",()=>openIdeaBoardBackgroundPicker(n));
     $on("ideaBgColorDone","click",closeModal);
   }
@@ -6249,8 +6278,8 @@ ${gallery}
     $on("ideaBgImagePreview","click",pick);
     $on("ideaBgImagePick","click",pick);
     $on("ideaBgImageRemove","click",removeIdeaCanvasBackgroundImage);
-    $("modalBox").querySelectorAll("[data-idea-bg-overlay-color]").forEach((b)=>b.addEventListener("click",()=>{const fresh=normalizeIdeaCanvasImage(d.canvas.backgroundImage);if(!fresh){toast("먼저 배경 이미지를 업로드해주세요");return;}fresh.overlayColor=b.dataset.ideaBgOverlayColor;d.canvas.backgroundImage=fresh;scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-bg-overlay-color]").forEach(x=>x.classList.toggle("active",x===b));const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);refreshIdeaCanvasImageControls();}));
-    $on("ideaBgOverlayOpacity","input",(e)=>{const fresh=normalizeIdeaCanvasImage(d.canvas.backgroundImage);if(!fresh){refreshIdeaCanvasImageControls();return;}fresh.overlayOpacity=Math.max(0,Math.min(.92,Number(e.target.value)/100));d.canvas.backgroundImage=fresh;const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);refreshIdeaCanvasImageControls();scheduleIdeaSave(180);});
+    $("modalBox").querySelectorAll("[data-idea-bg-overlay-color]").forEach((b)=>b.addEventListener("click",()=>{const fresh=normalizeIdeaCanvasImage(d.canvas.backgroundImage);if(!fresh){toast("먼저 배경 이미지를 업로드해주세요");return;}fresh.overlayColor=b.dataset.ideaBgOverlayColor;d.canvas.backgroundImage=fresh;d.canvas.backgroundMode="image";scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-bg-overlay-color]").forEach(x=>x.classList.toggle("active",x===b));const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);refreshIdeaCanvasImageControls();}));
+    $on("ideaBgOverlayOpacity","input",(e)=>{const fresh=normalizeIdeaCanvasImage(d.canvas.backgroundImage);if(!fresh){refreshIdeaCanvasImageControls();return;}fresh.overlayOpacity=Math.max(0,Math.min(.92,Number(e.target.value)/100));d.canvas.backgroundImage=fresh;d.canvas.backgroundMode="image";const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);refreshIdeaCanvasImageControls();scheduleIdeaSave(180);});
     $on("ideaBgImageBack","click",()=>openIdeaBoardBackgroundPicker(n));
     $on("ideaBgImageDone","click",closeModal);
   }
@@ -6324,7 +6353,7 @@ ${gallery}
     return {app:"lumink",kind:"idea",schemaVersion:1,exportedAt:now(),title:n.title || "아이디어 보드",data:d,files};
   }
   function renderIdeaExportItem(item,n,fileMap) {
-    const colorStyle=(["note","audio","quote","file"].includes(item.kind) ? ideaColorStyleAttr(item.color, item.kind==="note" ? item.textColor : null) : "");
+    const colorStyle=(["note","audio","quote","file"].includes(item.kind) ? ideaColorStyleAttr(item.color, item.textColor) : "");
     const base=`left:${Math.round(item.x)}px;top:${Math.round(item.y)}px;width:${Math.round(item.w)}px;height:${Math.round(item.h)}px;z-index:${Math.round(item.z)};--idea-rot:${Math.round(item.rotation || 0)}deg;${colorStyle}`;
     const cls=`idea-item idea-${esc(item.kind)}${item.kind==="note" ? " idea-sticky" : ""}${item.shadow===false ? " no-shadow" : ""}`;
     if(item.kind==="note") return `<article class="${cls}" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${esc(base)}"><div class="idea-note-text">${esc(item.text || "").replace(/\n/g,"<br>")}</div></article>`;
@@ -6341,13 +6370,14 @@ ${gallery}
     try {
       toast("꾸며진 보드 HTML을 준비하고 있어요…");
       const payload=await buildIdeaBoardExportPayload(n), d=normalizeImportedIdeaBoardData(payload.data), fileMap=new Map(payload.files.map((file)=>[file.id,file.dataUrl]));
-      const canvasStyle=`width:${d.canvas.width}px;min-height:${d.canvas.height}px;${ideaCanvasPlainStyle(d.canvas.background)}`;
-      const image=normalizeIdeaCanvasImage(d.canvas.backgroundImage); let imageStyle=canvasStyle, imageClass="";
-      if(image && fileMap.get(image.fileId)) { imageClass=" has-canvas-image"; imageStyle+=`--idea-canvas-image:${ideaCssUrl(fileMap.get(image.fileId))};--idea-canvas-overlay:${rgbaHex(ideaColorMeta(image.overlayColor).ig[0],image.overlayOpacity)};`; }
+      const image=normalizeIdeaCanvasImage(d.canvas.backgroundImage), imageActive=!!image && d.canvas.backgroundMode === "image";
+      const activeBackground=imageActive ? "uploaded" : d.canvas.background;
+      let imageStyle=`width:${d.canvas.width}px;min-height:${d.canvas.height}px;${ideaCanvasPlainStyle(activeBackground)}`, imageClass="";
+      if(imageActive && fileMap.get(image.fileId)) { imageClass=" has-canvas-image"; imageStyle+=`--idea-canvas-image:${ideaCssUrl(fileMap.get(image.fileId))};--idea-canvas-overlay:${rgbaHex(ideaColorMeta(image.overlayColor).ig[0],image.overlayOpacity)};`; }
       const items=d.items.slice().sort((a,b)=>a.z-b.z).map((item)=>renderIdeaExportItem(item,n,fileMap)).join("") || '<div class="idea-canvas-empty"><div><b>빈 아이디어 보드</b>아직 붙인 조각이 없습니다.</div></div>';
       const css=(ideaExportBaseCss()+"\n"+ideaExportTightCss()+"\n"+await collectIdeaExportStyles()).replace(/<\/style/gi,"");
       const json=JSON.stringify(payload).replace(/</g,"\\u003c");
-      const doc=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="idea"><title>${esc(n.title || "아이디어 보드")}</title><style>${css}</style></head><body><main class="idea-export"><header class="idea-export-head"><div><h1>${esc(n.title || "아이디어 보드")}</h1><p>루미잉크 아이디어 보드 · ${esc(new Date(payload.exportedAt).toLocaleString("ko"))}</p></div><p>조각 ${d.items.length}개 · 첨부 ${payload.files.length}개</p></header><div class="idea-export-stage"><section class="idea-canvas${imageClass}" data-background="${esc(d.canvas.background)}" style="${esc(imageStyle)}">${items}</section></div></main><script type="application/json" id="lumink-idea">${json}<\/script></body></html>`;
+      const doc=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="idea"><title>${esc(n.title || "아이디어 보드")}</title><style>${css}</style></head><body><main class="idea-export"><header class="idea-export-head"><div><h1>${esc(n.title || "아이디어 보드")}</h1><p>루미잉크 아이디어 보드 · ${esc(new Date(payload.exportedAt).toLocaleString("ko"))}</p></div><p>조각 ${d.items.length}개 · 첨부 ${payload.files.length}개</p></header><div class="idea-export-stage"><section class="idea-canvas${imageClass}" data-background="${esc(activeBackground)}" style="${esc(imageStyle)}">${items}</section></div></main><script type="application/json" id="lumink-idea">${json}<\/script></body></html>`;
       downloadDoc(doc,`${ideaExportSafeName(n.title)}.html`,"text/html"); toast("꾸며진 아이디어 보드 HTML을 저장했어요");
     } catch(e) { console.warn("idea export",e); toast("아이디어 보드 HTML 내보내기에 실패했어요"); }
   }

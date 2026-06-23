@@ -958,3 +958,13 @@
   filter:none !important;
   text-shadow:none !important;
 }
+
+
+/* v63.15 — uploaded image is an exclusive canvas source, never stacked with a selected template. */
+.idea-canvas[data-background="uploaded"] {
+  background-color:#131823;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.10),transparent 54%),linear-gradient(135deg,#1b2330,#111720);
+}
+.idea-canvas[data-background="uploaded"]::after { opacity:0; }
+/* Compact, label-free color grid. Names remain in aria-label/title for accessibility. */
+.idea-color-grid.palette-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
