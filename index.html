@@ -1593,7 +1593,6 @@
   body.code-mode #screen-editor .editor-wrap { display: none; }
   body.code-mode #screen-editor .code-area { display: block; }
 
-
   /* ============================================================
      HTML 작업실 — "코드 장인의 작업대" 리파인
      (구조/클래스/ID 변경 없음 · 전 테마 accent 자동 적응)
@@ -2328,7 +2327,6 @@
 
   .hidden-input { display: none; }
 
-
   /* ===== v52 exterior project-frame geometry =====
      Two-layer structure:
      - the outer surface stays open so the frame can extend beyond its edge;
@@ -2425,8 +2423,6 @@
      for the portion of the frame that sits outside the image. */
   .frame-opt .fr-prev.has-frame,
   .fr-bigprev .proj-icon.has-frame { overflow: visible; }
-
-
 
   /* ===== v58 light-theme chromatic hierarchy =====
      Keep navigation and archive titles visibly tied to the currently selected
@@ -2537,8 +2533,6 @@
     .log-template-manager > .m-row { margin-top:8px; }
   }
 
-
-
   /* ===== IDEA BOARD v63.1 ===== */
   #screen-idea { background:var(--bg); }
   .idea-workspace { height:calc(100vh - 57px - var(--safe-bottom)); display:flex; flex-direction:column; min-height:0; }
@@ -2547,169 +2541,55 @@
   .idea-view-btn { border:0; background:transparent; color:var(--muted); height:30px; padding:0 10px; border-radius:8px; font-size:11.5px; font-weight:750; cursor:pointer; }
   .idea-view-btn.active { color:#fff; background:var(--grad-blue); box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 28%,transparent); }
   .idea-hint { margin-left:auto; min-width:0; color:var(--faint); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .idea-tb-actions { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+  .idea-tb-btn.sm { width:32px; height:32px; }
+  .idea-tb-btn.on { background:var(--grad-blue); color:#fff; border-color:transparent; box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 30%,transparent); }
+  .idea-tb-sep { width:1px; height:22px; background:var(--line); flex:0 0 auto; margin:0 1px; }
+  .idea-zoom-range { width:82px; flex:0 0 auto; accent-color:var(--accent); cursor:pointer; }
+  .idea-tb-zoomlabel { min-width:48px; height:32px; padding:0 7px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--muted); font:800 11px system-ui; cursor:pointer; flex:0 0 auto; }
+  .idea-tb-zoomlabel:active { background:var(--surface-3); }
+  .idea-canvas-sizer { position:relative; width:1600px; height:1100px; }
+  .idea-snap-guide { position:absolute; z-index:9998 !important; pointer-events:none; background:color-mix(in srgb,var(--accent) 88%,white); box-shadow:0 0 7px color-mix(in srgb,var(--accent) 60%,transparent); }
+  .idea-snap-guide.gx { top:0; bottom:0; width:1.5px; }
+  .idea-snap-guide.gy { left:0; right:0; height:1.5px; }
+  .idea-tb-btn { width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink); cursor:pointer; transition:background .15s, opacity .15s, border-color .15s; }
+  .idea-tb-btn:hover { border-color:color-mix(in srgb,var(--accent) 40%,var(--line)); }
+  .idea-tb-btn:active { background:var(--surface-3); }
+  .idea-tb-btn:disabled { opacity:.32; cursor:default; }
+  .idea-tb-btn svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .idea-item:focus { outline:none; }
+  .idea-item:focus-visible { outline:2.5px solid var(--accent); outline-offset:4px; border-radius:5px; }
+  @media (prefers-reduced-motion: reduce) {
+    .idea-item, .idea-template-choice.idea-template-card, .idea-tb-btn { transition:none !important; }
+    .idea-item.move-mode { filter:none !important; }
+  }
   .idea-stage-wrap { flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain; background:var(--bg-2); touch-action:pan-x pan-y; }
-  .idea-canvas { position:relative; width:1600px; min-height:1100px; overflow:hidden; isolation:isolate; }
-  .idea-canvas[data-background="blueprint"] { background-color:#1c2733; background-image:linear-gradient(rgba(166,220,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(166,220,255,.08) 1px,transparent 1px),radial-gradient(circle at 82% 14%,rgba(111,170,255,.18),transparent 33%),radial-gradient(circle at 16% 88%,rgba(74,255,203,.09),transparent 34%); background-size:28px 28px,28px 28px,auto,auto; }
-  .idea-canvas[data-background="scrapbook"] { background-color:#d9d0bd; background-image:repeating-linear-gradient(0deg,rgba(99,74,45,.05) 0 1px,transparent 1px 5px),repeating-linear-gradient(90deg,rgba(255,255,255,.27) 0 1px,transparent 1px 7px),radial-gradient(ellipse at 18% 10%,rgba(255,255,255,.68),transparent 33%),radial-gradient(ellipse at 88% 86%,rgba(139,89,54,.15),transparent 34%); }
+  .idea-canvas { position:relative; width:1600px; min-height:1100px; overflow:visible; isolation:isolate; transform-origin:0 0; }
   .idea-canvas::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:0; opacity:.44; background:radial-gradient(circle at 25% 25%,rgba(255,255,255,.08) 0 1px,transparent 1px 5px); background-size:5px 5px; mix-blend-mode:soft-light; }
   .idea-canvas > * { z-index:1; }
   .idea-canvas-empty { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; color:rgba(238,246,255,.62); text-align:center; font-size:14px; line-height:1.7; }
-  .idea-canvas[data-background="scrapbook"] .idea-canvas-empty { color:rgba(71,52,35,.66); }
-  /* ============================================================
-     아이디어 보드 — 보드 배경 11종 추가
-     (background-* 만 · 4겹 이하 · position/overflow/transform/
-      z-index/pointer-events/size 미선언 · 라이트 배경은 빈보드 안내 색 보정)
-     ============================================================ */
-
-  /* 1. 코르크 보드 */
-  .idea-canvas[data-background="corkboard"] {
-    background-color:#c8a06a;
-    background-image:
-      radial-gradient(circle at 30% 28%, rgba(255,240,210,.18), transparent 30%),
-      radial-gradient(circle at 78% 76%, rgba(90,60,30,.22), transparent 34%),
-      radial-gradient(rgba(60,40,20,.16) 0 1px, transparent 1.4px),
-      radial-gradient(rgba(255,235,200,.10) 0 1px, transparent 1.4px);
-    background-size:auto,auto,7px 7px,11px 9px;
-    background-position:0 0,0 0,0 0,3px 4px;
-  }
-  .idea-canvas[data-background="corkboard"] .idea-canvas-empty{ color:rgba(74,52,28,.72); }
-
-  /* 2. 칠판 */
-  .idea-canvas[data-background="chalkboard"] {
-    background-color:#22302b;
-    background-image:
-      radial-gradient(circle at 50% 16%, rgba(220,235,225,.07), transparent 46%),
-      repeating-linear-gradient(0deg, rgba(255,255,255,.013) 0 24px, transparent 24px 48px),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.013) 0 24px, transparent 24px 48px),
-      radial-gradient(circle at 84% 88%, rgba(255,255,255,.05) 0 1px, transparent 2px);
-    background-size:auto,auto,auto,5px 5px;
-  }
-
-  /* 3. 모눈 노트 */
-  .idea-canvas[data-background="graphpaper"] {
-    background-color:#f3efe2;
-    background-image:
-      linear-gradient(rgba(90,130,170,.16) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(90,130,170,.16) 1px, transparent 1px),
-      linear-gradient(rgba(90,130,170,.30) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(90,130,170,.30) 1px, transparent 1px);
-    background-size:18px 18px,18px 18px,90px 90px,90px 90px;
-  }
-  .idea-canvas[data-background="graphpaper"] .idea-canvas-empty{ color:rgba(56,72,92,.72); }
-
-  /* 4. 별자리도 */
-  .idea-canvas[data-background="starchart"] {
-    background-color:#10162e;
-    background-image:
-      radial-gradient(ellipse at 25% 22%, rgba(110,90,200,.22), transparent 42%),
-      radial-gradient(ellipse at 80% 80%, rgba(60,120,180,.18), transparent 44%),
-      radial-gradient(rgba(255,255,255,.5) 0 1px, transparent 1.6px),
-      radial-gradient(rgba(180,200,255,.35) 0 1px, transparent 1.4px);
-    background-size:auto,auto,120px 120px,70px 90px;
-    background-position:0 0,0 0,0 0,30px 40px;
-  }
-
-  /* 5. 리넨 패브릭 */
-  .idea-canvas[data-background="linen"] {
-    background-color:#dcd8cf;
-    background-image:
-      repeating-linear-gradient(0deg, rgba(255,255,255,.5) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(90deg, rgba(120,110,95,.10) 0 1px, transparent 1px 3px),
-      radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.4), transparent 60%);
-    background-blend-mode:overlay,normal,normal;
-  }
-  .idea-canvas[data-background="linen"] .idea-canvas-empty{ color:rgba(70,64,52,.7); }
-
-  /* 6. 크라프트지 */
-  .idea-canvas[data-background="kraft"] {
-    background-color:#a9824f;
-    background-image:
-      radial-gradient(ellipse at 50% 8%, rgba(255,240,210,.20), transparent 55%),
-      radial-gradient(circle at 80% 85%, rgba(60,40,18,.18), transparent 40%),
-      repeating-linear-gradient(96deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px),
-      repeating-linear-gradient(8deg, rgba(50,32,12,.05) 0 2px, transparent 2px 6px);
-  }
-  .idea-canvas[data-background="kraft"] .idea-canvas-empty{ color:rgba(40,26,10,.72); }
-
-  /* 7. 다크 그리드 */
-  .idea-canvas[data-background="slateGrid"] {
-    background-color:#1a1c22;
-    background-image:
-      radial-gradient(circle at 20% 12%, rgba(120,140,180,.10), transparent 40%),
-      radial-gradient(circle at 86% 90%, rgba(150,120,190,.08), transparent 42%),
-      radial-gradient(rgba(255,255,255,.07) 0 1.4px, transparent 1.6px);
-    background-size:auto,auto,26px 26px;
-  }
-
-  /* 8. 기밀 문서판 */
-  .idea-canvas[data-background="dossier"] {
-    background-color:#2b2922;
-    background-image:
-      radial-gradient(ellipse at 15% 12%, rgba(190,170,120,.10), transparent 36%),
-      radial-gradient(ellipse at 88% 84%, rgba(40,30,20,.5), transparent 50%),
-      repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 9px),
-      radial-gradient(circle at 62% 38%, rgba(120,40,40,.10), transparent 24%);
-    background-blend-mode:normal,multiply,normal,normal;
-  }
-
-  /* 9. 벚꽃 보드 */
-  .idea-canvas[data-background="sakura"] {
-    background-color:#f6e4df;
-    background-image:
-      radial-gradient(ellipse at 18% 14%, rgba(255,255,255,.6), transparent 40%),
-      radial-gradient(ellipse at 86% 80%, rgba(255,190,205,.34), transparent 44%),
-      radial-gradient(rgba(232,150,170,.16) 0 2px, transparent 3px),
-      radial-gradient(rgba(255,205,180,.16) 0 1px, transparent 2px);
-    background-size:auto,auto,90px 80px,60px 70px;
-    background-position:0 0,0 0,0 0,30px 25px;
-  }
-  .idea-canvas[data-background="sakura"] .idea-canvas-empty{ color:rgba(120,70,80,.68); }
-
-  /* 10. 터미널 */
-  .idea-canvas[data-background="terminal"] {
-    background-color:#0c1110;
-    background-image:
-      radial-gradient(ellipse at 50% 0%, rgba(60,230,140,.08), transparent 55%),
-      repeating-linear-gradient(0deg, rgba(80,255,170,.035) 0 1px, transparent 1px 3px),
-      linear-gradient(90deg, rgba(40,200,120,.05) 1px, transparent 1px),
-      linear-gradient(rgba(40,200,120,.05) 1px, transparent 1px);
-    background-size:auto,auto,30px 30px,30px 30px;
-  }
-
-  /* 11. 벨벳 나이트 */
-  .idea-canvas[data-background="velvet"] {
-    background-color:#241430;
-    background-image:
-      radial-gradient(ellipse at 50% 30%, rgba(150,90,180,.22), transparent 58%),
-      radial-gradient(ellipse at 50% 120%, rgba(10,6,16,.7), transparent 60%),
-      repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 7px);
-    background-blend-mode:screen,multiply,overlay;
-  }
   .idea-canvas-empty b { display:block; color:inherit; font-size:15px; }
   .idea-item { position:absolute; min-width:110px; min-height:54px; user-select:none; touch-action:none; -webkit-touch-callout:none; cursor:grab; transform:rotate(var(--idea-rot,0deg)); transform-origin:center center; transition:filter .16s,box-shadow .16s; }
   .idea-item.selected { z-index:9990 !important; }
-  .idea-item.selected::before { content:""; position:absolute; inset:-8px; border:1.5px dashed color-mix(in srgb,var(--accent) 88%,white); border-radius:14px; pointer-events:none; }
+  .idea-item.selected { outline:2px dashed color-mix(in srgb,var(--accent) 90%,white); outline-offset:5px; }
   .idea-item.dragging { opacity:.94; filter:drop-shadow(0 18px 18px rgba(0,0,0,.28)); cursor:grabbing; transition:none; z-index:9999 !important; }
   .idea-item.move-mode { filter:drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 13px color-mix(in srgb,var(--accent) 75%,transparent)); }
-  /* 조절 UI는 포스트잇 내부가 아니라 캔버스 오버레이에 렌더합니다.
-     포스트잇의 종이결/데클 가장자리를 위해 필요한 overflow:hidden과 충돌하지 않아요. */
-  .idea-transform-tools { position:absolute; pointer-events:none; z-index:120; overflow:visible; transform-origin:center center; }
-  .idea-option-dot,.idea-rotate-handle,.idea-resize-handle { position:absolute; display:grid; place-items:center; width:30px; height:30px; padding:0; border:2px solid var(--surface); border-radius:50%; background:var(--accent); color:#fff; box-shadow:0 3px 12px rgba(0,0,0,.30); cursor:pointer; pointer-events:auto; font-weight:900; line-height:1; touch-action:none; }
-  .idea-option-dot { left:50%; top:-40px; transform:translateX(-50%); font-size:11px; letter-spacing:1px; }
-  .idea-rotate-handle { left:50%; top:-78px; transform:translateX(-50%); font-size:19px; }
-  .idea-rotate-handle::after { content:""; position:absolute; top:29px; height:17px; border-left:1.5px solid var(--accent); }
-  .idea-resize-handle { right:-14px; bottom:-14px; font-size:16px; }
-  /* 보드 경계 근처에서는 핸들을 반대쪽으로 뒤집어 잘림을 방지합니다. */
-  .idea-transform-tools.edge-top .idea-option-dot { top:auto; bottom:-40px; }
-  .idea-transform-tools.edge-top .idea-rotate-handle { top:auto; bottom:-78px; }
-  .idea-transform-tools.edge-top .idea-rotate-handle::after { top:auto; bottom:29px; }
-  .idea-transform-tools.edge-bottom .idea-resize-handle { top:-14px; bottom:auto; }
-  .idea-transform-tools.edge-right .idea-resize-handle { left:-14px; right:auto; }
-  .idea-sticky { border-radius:2px 3px 2px 3px; box-shadow:0 14px 24px rgba(35,30,12,.22),0 2px 3px rgba(35,30,12,.12); overflow:hidden; }
-  .idea-sticky[data-note-style="marker"] { background:linear-gradient(115deg,transparent 0 5%,rgba(255,255,255,.3) 5% 8%,transparent 8% 100%),linear-gradient(160deg,var(--stick-1),var(--stick-2)); }
-  .idea-sticky[data-note-style="marker"]::before { content:""; position:absolute; inset:10px 8px; opacity:.18; pointer-events:none; background:repeating-linear-gradient(0deg,rgba(85,68,23,.24) 0 1px,transparent 1px 28px); }
-  .idea-sticky[data-note-style="tape"] { background:linear-gradient(160deg,#fffef8,var(--stick-1)); box-shadow:0 16px 26px rgba(30,22,10,.22); }
-  .idea-sticky[data-note-style="tape"]::before { content:""; position:absolute; left:50%; top:-7px; width:56%; height:22px; transform:translateX(-50%) rotate(-1.2deg); background:var(--stick-2); opacity:.72; box-shadow:0 1px 3px rgba(40,30,10,.18); }
+  .idea-transform-tools { position:absolute; inset:0; overflow:visible; pointer-events:none; z-index:60; }
+  .idea-option-dot,.idea-rotate-handle,.idea-resize-handle { position:absolute; display:grid; place-items:center; width:28px; height:28px; padding:0; border:2px solid var(--surface); border-radius:50%; background:var(--accent); color:#fff; box-shadow:0 3px 10px rgba(0,0,0,.26); cursor:pointer; pointer-events:auto; font-weight:900; line-height:1; }
+  .idea-option-dot { left:50%; top:-38px; transform:translateX(-50%); font-size:11px; letter-spacing:1px; }
+  .idea-rotate-handle { left:50%; top:-74px; transform:translateX(-50%); font-size:18px; }
+  .idea-rotate-handle::after { content:""; position:absolute; top:27px; height:16px; border-left:1.5px solid var(--accent); }
+  .idea-resize-handle { right:-12px; bottom:-12px; }
+  .idea-option-dot svg, .idea-rotate-handle svg, .idea-resize-handle svg { width:16px; height:16px; display:block; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .idea-option-dot svg { width:18px; height:18px; } .idea-option-dot svg circle { fill:#fff; stroke:none; }
+  /* 포스트잇 장식이 아니라 편집 오버레이가 잘리지 않도록 별도 레이어로 둡니다. */
+  .idea-item.idea-tools-below .idea-option-dot { top:calc(100% + 10px); }
+  .idea-item.idea-tools-below .idea-rotate-handle { top:calc(100% + 46px); }
+  .idea-item.idea-tools-below .idea-rotate-handle::after { top:-16px; height:16px; }
+  .idea-item.idea-tools-inset .idea-resize-handle { right:6px; bottom:6px; }
+  .idea-sticky { border-radius:2px 3px 2px 3px; box-shadow:0 14px 24px rgba(35,30,12,.22),0 2px 3px rgba(35,30,12,.12); overflow:visible; isolation:isolate; }
+  .idea-sticky::before,.idea-sticky::after { z-index:0; }
+  .idea-sticky .idea-note-text { z-index:1; border-radius:inherit; overflow:auto; }
   .idea-sticky[data-color="yellow"] { --stick-1:#fff5a2; --stick-2:#ffd94d; --stick-ink:#5c4b15; }
   .idea-sticky[data-color="pink"] { --stick-1:#ffd2de; --stick-2:#ff8bb5; --stick-ink:#71364d; }
   .idea-sticky[data-color="lime"] { --stick-1:#e2ffa8; --stick-2:#9de66b; --stick-ink:#3e5923; }
@@ -2717,150 +2597,6 @@
   .idea-sticky[data-color="purple"] { --stick-1:#ead9ff; --stick-2:#b58bff; --stick-ink:#4d386d; }
   .idea-note-text { position:relative; display:block; width:100%; height:100%; min-height:54px; resize:none; border:0; outline:0; background:transparent; color:var(--stick-ink); font:650 14px/1.62 var(--user-font,inherit); padding:18px 15px 15px; user-select:text; cursor:text; }
   .idea-item.move-mode .idea-note-text,.idea-item.move-mode audio,.idea-item.move-mode video { user-select:none; cursor:grab; pointer-events:none; }
-  .idea-sticky[data-note-style="tape"] .idea-note-text { padding-top:28px; }
-  /* ============================================================
-     아이디어 보드 — 포스트잇 디자인 7종 추가
-     (--stick-1/2/ink 변수로 5색 자동 대응 · 장식 pointer-events:none
-      · position/size/transform 미선언 · 장식은 박스 안쪽)
-     ============================================================ */
-
-  /* 1. 영수증 — 감열지 + 상단 컬러 헤더 + 하단 바코드 */
-  .idea-sticky[data-note-style="receipt"] {
-    background:
-      repeating-linear-gradient(0deg, transparent 0 24px, color-mix(in srgb,var(--stick-2) 14%,transparent) 24px 25px),
-      linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 28%,#fffdf8), color-mix(in srgb,var(--stick-1) 44%,#fffdf8));
-    border-radius: 3px;
-    box-shadow: 0 12px 22px rgba(40,34,20,.20), inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 22%,transparent);
-  }
-  .idea-sticky[data-note-style="receipt"]::before {
-    content:""; position:absolute; left:0; right:0; top:0; height:7px; pointer-events:none;
-    background: var(--stick-2); opacity:.85;
-  }
-  .idea-sticky[data-note-style="receipt"]::after {
-    content:""; position:absolute; left:14px; right:14px; bottom:8px; height:13px; pointer-events:none; opacity:.45;
-    background: repeating-linear-gradient(90deg, var(--stick-ink) 0 1px, transparent 1px 2px, var(--stick-ink) 2px 4px, transparent 4px 7px);
-    -webkit-mask-image: linear-gradient(90deg,#000 72%,transparent); mask-image: linear-gradient(90deg,#000 72%,transparent);
-  }
-  .idea-sticky[data-note-style="receipt"] .idea-note-text { color: var(--stick-ink); padding: 16px 16px 30px; }
-
-  /* 2. 폴라로이드 — 상단 사진 틴트 + 넓은 하단 캡션 여백 */
-  .idea-sticky[data-note-style="polaroid"] {
-    background: linear-gradient(180deg,#fffffb,#fbfaf3);
-    border-radius: 4px;
-    box-shadow: 0 16px 28px rgba(30,26,18,.26), inset 0 0 0 1px rgba(0,0,0,.045);
-  }
-  .idea-sticky[data-note-style="polaroid"]::before {
-    content:""; position:absolute; left:9px; right:9px; top:9px; height:34%; min-height:24px; pointer-events:none; border-radius:2px;
-    background: linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 66%,#2a2f3a), color-mix(in srgb,var(--stick-2) 52%,#222732));
-    box-shadow: inset 0 0 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.20);
-  }
-  .idea-sticky[data-note-style="polaroid"]::after {
-    content:""; position:absolute; left:14px; width:42%; bottom:13px; height:2px; pointer-events:none; border-radius:2px;
-    background: color-mix(in srgb,var(--stick-2) 58%,#b9b3a4); opacity:.7;
-  }
-  .idea-sticky[data-note-style="polaroid"] .idea-note-text { color:#3a3630; padding: calc(34% + 16px) 16px 20px; }
-
-  /* 3. 라벨 스티커 — 두 겹 테두리 + 좌측 천공 + 우상단 탭 */
-  .idea-sticky[data-note-style="label"] {
-    background: linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 52%,white), color-mix(in srgb,var(--stick-1) 76%,white));
-    border-radius: 11px;
-    box-shadow: 0 10px 20px rgba(30,30,30,.16),
-                inset 0 0 0 1.5px color-mix(in srgb,var(--stick-2) 70%,white),
-                inset 0 0 0 4px color-mix(in srgb,var(--stick-1) 38%,white);
-  }
-  .idea-sticky[data-note-style="label"]::before {
-    content:""; position:absolute; left:5px; top:9px; bottom:9px; width:6px; pointer-events:none;
-    background: radial-gradient(circle, color-mix(in srgb,var(--stick-ink) 22%,transparent) 0 1.5px, transparent 2px);
-    background-size: 6px 11px;
-  }
-  .idea-sticky[data-note-style="label"]::after {
-    content:""; position:absolute; right:11px; top:11px; width:18px; height:6px; border-radius:3px; pointer-events:none;
-    background: var(--stick-2);
-  }
-  .idea-sticky[data-note-style="label"] .idea-note-text { color: var(--stick-ink); padding: 16px 16px 14px 21px; }
-
-  /* 4. 연구 노트 — 줄노트 + 좌측 여백선 + 하단 서명란 */
-  .idea-sticky[data-note-style="ledger"] {
-    background:
-      linear-gradient(90deg, transparent 0 26px, color-mix(in srgb,var(--stick-2) 48%,transparent) 26px 27px, transparent 27px 100%),
-      repeating-linear-gradient(0deg, transparent 0 25px, color-mix(in srgb,var(--stick-2) 24%,transparent) 25px 26px),
-      linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 34%,#fcfbf4), color-mix(in srgb,var(--stick-1) 48%,#fcfbf4));
-    border-radius: 3px;
-    box-shadow: 0 12px 22px rgba(40,38,22,.18), inset 0 0 0 1px rgba(0,0,0,.05);
-  }
-  .idea-sticky[data-note-style="ledger"]::before {
-    content:""; position:absolute; left:0; right:0; top:10px; height:2px; pointer-events:none;
-    background: color-mix(in srgb,var(--stick-2) 72%,var(--stick-ink)); opacity:.5;
-  }
-  .idea-sticky[data-note-style="ledger"]::after {
-    content:""; position:absolute; left:14px; width:46%; bottom:12px; height:1.5px; pointer-events:none;
-    background: color-mix(in srgb,var(--stick-ink) 42%,transparent);
-  }
-  .idea-sticky[data-note-style="ledger"] .idea-note-text { color: var(--stick-ink); padding: 16px 14px 22px 32px; }
-
-  /* 5. 클립 메모 — 종이결 + 좌상단 금속 클립 */
-  .idea-sticky[data-note-style="paperclip"] {
-    background:
-      radial-gradient(120% 80% at 100% 0%, color-mix(in srgb,var(--stick-1) 58%,white), transparent 55%),
-      linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 70%,white), var(--stick-1));
-    border-radius: 4px;
-    box-shadow: 0 13px 24px rgba(35,30,15,.20), inset 0 1px 0 rgba(255,255,255,.5);
-  }
-  .idea-sticky[data-note-style="paperclip"]::before {
-    content:""; position:absolute; inset:0; pointer-events:none; opacity:.55; border-radius:inherit;
-    background: repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 2px, transparent 2px 6px);
-  }
-  .idea-sticky[data-note-style="paperclip"]::after {
-    content:""; position:absolute; left:12px; top:-3px; width:12px; height:33px; pointer-events:none;
-    border:2.5px solid color-mix(in srgb,#9aa3b2 68%,var(--stick-ink));
-    border-radius:7px;
-    background: linear-gradient(120deg, rgba(255,255,255,.85), rgba(150,158,170,.22));
-    box-shadow: 1px 1px 2px rgba(0,0,0,.25);
-  }
-  .idea-sticky[data-note-style="paperclip"] .idea-note-text { color: var(--stick-ink); padding: 18px 15px 15px 24px; }
-
-  /* 6. 봉랍 편지 — 양피지 + 데클 엣지 + 봉랍 씰 */
-  .idea-sticky[data-note-style="waxSeal"] {
-    background:
-      radial-gradient(140% 120% at 0% 0%, color-mix(in srgb,var(--stick-1) 28%,#efe6cf), transparent 60%),
-      radial-gradient(120% 120% at 100% 100%, color-mix(in srgb,var(--stick-2) 24%,#e6dcc2), transparent 55%),
-      linear-gradient(160deg,#f1e7cf,#e3d7ba);
-    border-radius: 5px;
-    box-shadow: 0 14px 26px rgba(60,46,20,.24), inset 0 0 22px rgba(120,92,40,.14);
-  }
-  .idea-sticky[data-note-style="waxSeal"]::before {
-    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
-    box-shadow: inset 0 0 0 1px rgba(120,92,40,.25), inset 0 0 0 3px rgba(255,250,235,.35);
-  }
-  .idea-sticky[data-note-style="waxSeal"]::after {
-    content:""; position:absolute; right:11px; bottom:11px; width:25px; height:25px; border-radius:50%; pointer-events:none;
-    background: radial-gradient(circle at 36% 32%, color-mix(in srgb,var(--stick-2) 50%,#b53a3a), color-mix(in srgb,var(--stick-2) 68%,#7e1f1f) 70%);
-    box-shadow: 0 2px 5px rgba(60,10,10,.4), inset 0 1px 2px rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.3);
-  }
-  .idea-sticky[data-note-style="waxSeal"] .idea-note-text { color:#5a4426; padding: 16px 42px 16px 16px; }
-
-  /* 7. 네온 글래스 — 어두운 글래스 + 네온 테두리 + 코너 글린트 */
-  .idea-sticky[data-note-style="neonGlass"] {
-    background: linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 24%,rgba(16,20,30,.88)), color-mix(in srgb,var(--stick-2) 18%,rgba(12,15,24,.92)));
-    border-radius: 12px;
-    box-shadow:
-      0 16px 30px rgba(0,0,0,.42),
-      inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 58%,transparent),
-      inset 0 0 14px color-mix(in srgb,var(--stick-2) 24%,transparent),
-      0 0 16px color-mix(in srgb,var(--stick-2) 28%,transparent);
-  }
-  .idea-sticky[data-note-style="neonGlass"]::before {
-    content:""; position:absolute; left:0; right:0; top:0; height:42%; pointer-events:none; border-radius:12px 12px 42% 42%;
-    background: linear-gradient(180deg, rgba(255,255,255,.13), transparent);
-  }
-  .idea-sticky[data-note-style="neonGlass"]::after {
-    content:""; position:absolute; left:9px; top:9px; width:18px; height:18px; pointer-events:none;
-    border-top:2px solid color-mix(in srgb,var(--stick-2) 90%,white);
-    border-left:2px solid color-mix(in srgb,var(--stick-2) 90%,white);
-    border-radius:8px 0 0 0; opacity:.85;
-    filter: drop-shadow(0 0 4px color-mix(in srgb,var(--stick-2) 70%,transparent));
-  }
-  .idea-sticky[data-note-style="neonGlass"] .idea-note-text { color: color-mix(in srgb,var(--stick-1) 78%,white); padding: 16px 15px 15px; }
   .idea-image,.idea-video { overflow:visible; border-radius:0; box-shadow:none; background:transparent; }
   .idea-image .idea-media-content,.idea-video .idea-media-content { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:rgba(9,13,20,.72); box-shadow:0 14px 25px rgba(0,0,0,.26); }
   .idea-image img,.idea-video video { display:block; width:100%; height:100%; object-fit:contain; background:transparent; }
@@ -2879,8 +2615,8 @@
   .idea-add-menu{display:grid;gap:8px;}.idea-add-choice{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);color:var(--ink);cursor:pointer;}.idea-add-choice:active{background:var(--accent-soft);border-color:var(--accent);}.idea-add-choice b{display:block;font-size:14px;}.idea-add-choice small{display:block;font-size:11px;color:var(--muted);margin-top:2px;}.idea-add-choice .iac-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;background:var(--accent-soft);color:var(--accent);font-size:18px;}
   .idea-options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}.idea-options-action,.idea-options-row{border:1px solid var(--line);border-radius:13px;padding:12px;background:var(--surface-2);color:var(--ink);text-align:left;cursor:pointer;}.idea-options-action b,.idea-options-action small,.idea-options-row b,.idea-options-row small{display:block;}.idea-options-action b,.idea-options-row b{font-size:13px;}.idea-options-action small,.idea-options-row small{font-size:10.5px;color:var(--muted);margin-top:3px;}.idea-options-action.danger{color:var(--danger);}.idea-options-section{margin-top:14px;}.idea-options-label{font-size:11px;font-weight:850;color:var(--muted);margin:13px 0 7px;letter-spacing:.05em;}.idea-options-row{width:100%;display:flex;gap:10px;align-items:center;}.idea-options-row>span:first-child{font-size:20px;color:var(--accent);}
   .idea-template-grid{display:grid;gap:8px;}.idea-template-choice{border:1px solid var(--line);border-radius:13px;padding:12px;background:var(--surface-2);color:var(--ink);text-align:left;cursor:pointer;}.idea-template-choice b,.idea-template-choice small{display:block;}.idea-template-choice b{font-size:13px;}.idea-template-choice small{font-size:11px;color:var(--muted);margin-top:3px;}.idea-template-choice.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft);}.idea-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}.idea-color-choice{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--ink);font-size:12px;cursor:pointer;}.idea-color-choice.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}.idea-color-choice span{width:17px;height:17px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14);}.idea-color-choice span[data-color="yellow"]{background:#ffd94d;}.idea-color-choice span[data-color="pink"]{background:#ff8bb5;}.idea-color-choice span[data-color="lime"]{background:#9de66b;}.idea-color-choice span[data-color="blue"]{background:#7fc5ff;}.idea-color-choice span[data-color="purple"]{background:#b58bff;}
-  .idea-preview-wrap{margin:8px 0 14px;}.idea-preview-media{display:grid;place-items:center;min-height:120px;max-height:62dvh;border-radius:14px;overflow:hidden;background:#11141e;}.idea-preview-media img,.idea-preview-media video{display:block;width:100%;max-height:62dvh;object-fit:contain;}.idea-preview-media audio{width:calc(100% - 22px);}.idea-preview-caption{font-size:12px;color:var(--muted);margin-top:8px;word-break:break-all;}.idea-preview-note{min-height:180px;padding:24px 20px;white-space:pre-wrap;font:650 15px/1.65 var(--user-font,inherit);box-shadow:0 8px 18px rgba(0,0,0,.16);}.idea-preview-note[data-color="yellow"]{background:#fff5a2;color:#5c4b15;}.idea-preview-note[data-color="pink"]{background:#ffd2de;color:#71364d;}.idea-preview-note[data-color="lime"]{background:#e2ffa8;color:#3e5923;}.idea-preview-note[data-color="blue"]{background:#c9efff;color:#294d6a;}.idea-preview-note[data-color="purple"]{background:#ead9ff;color:#4d386d;}.idea-preview-note[data-note-style="tape"]{border-radius:3px;background-image:linear-gradient(160deg,#fffef8,transparent),linear-gradient(90deg,rgba(0,0,0,.03) 1px,transparent 1px);}.idea-preview-quote,.idea-preview-file{display:grid;gap:12px;padding:20px;border-radius:14px;background:var(--surface-2);}.idea-preview-file>div{width:36px;height:36px;color:var(--accent);}.idea-preview-file svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8;}
-  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
+  .idea-preview-wrap{margin:8px 0 14px;}.idea-preview-media{display:grid;place-items:center;min-height:120px;max-height:62dvh;border-radius:14px;overflow:hidden;background:#11141e;}.idea-preview-media img,.idea-preview-media video{display:block;width:100%;max-height:62dvh;object-fit:contain;}.idea-preview-media audio{width:calc(100% - 22px);}.idea-preview-caption{font-size:12px;color:var(--muted);margin-top:8px;word-break:break-all;}.idea-preview-note{min-height:180px;padding:24px 20px;white-space:pre-wrap;font:650 15px/1.65 var(--user-font,inherit);box-shadow:0 8px 18px rgba(0,0,0,.16);}.idea-preview-note[data-color="yellow"]{background:#fff5a2;color:#5c4b15;}.idea-preview-note[data-color="pink"]{background:#ffd2de;color:#71364d;}.idea-preview-note[data-color="lime"]{background:#e2ffa8;color:#3e5923;}.idea-preview-note[data-color="blue"]{background:#c9efff;color:#294d6a;}.idea-preview-note[data-color="purple"]{background:#ead9ff;color:#4d386d;}.idea-preview-quote,.idea-preview-file{display:grid;gap:12px;padding:20px;border-radius:14px;background:var(--surface-2);}.idea-preview-file>div{width:36px;height:36px;color:var(--accent);}.idea-preview-file svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8;}
+  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
@@ -3273,9 +3009,21 @@
     <div class="idea-workspace">
       <div class="idea-toolbar">
         <div class="idea-view-switch"><button class="idea-view-btn active" id="ideaBoardMode" type="button">보드</button><button class="idea-view-btn" id="ideaListMode" type="button">아티팩트</button></div>
-        <span class="idea-hint">빈 공간 길게 눌러 추가 · 조각 길게 눌러 이동 · 더블클릭/우클릭 옵션</span>
+        <span class="idea-hint">빈 공간 길게 눌러 추가 · 조각 길게 눌러 이동 · 방향키 이동 · Del 삭제 · Ctrl+Z 되돌리기</span>
+        <div class="idea-tb-actions">
+          <button class="idea-tb-btn" id="ideaSnapToggle" type="button" aria-label="스냅 정렬" aria-pressed="false" title="스냅 정렬: 드래그 시 정렬 가이드"><svg viewBox="0 0 24 24"><path d="M6 3v8a6 6 0 0 0 12 0V3"/><path d="M5 3h4M15 3h4"/></svg></button>
+          <span class="idea-tb-sep"></span>
+          <button class="idea-tb-btn sm" id="ideaZoomOut" type="button" aria-label="축소"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></button>
+          <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="30" max="250" step="1" value="100" aria-label="확대/축소 비율">
+          <button class="idea-tb-zoomlabel" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화"><span id="ideaZoomLabel">100%</span></button>
+          <button class="idea-tb-btn sm" id="ideaZoomIn" type="button" aria-label="확대"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></button>
+          <button class="idea-tb-btn sm" id="ideaZoomFit" type="button" aria-label="화면에 맞추기" title="화면에 맞추기"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+          <span class="idea-tb-sep"></span>
+          <button class="idea-tb-btn" id="ideaUndo" type="button" aria-label="되돌리기 (Ctrl+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-2"/></svg></button>
+          <button class="idea-tb-btn" id="ideaRedo" type="button" aria-label="다시 실행 (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24"><path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h2"/></svg></button>
+        </div>
       </div>
-      <div class="idea-stage-wrap" id="ideaStageWrap"><div class="idea-canvas" id="ideaCanvas"></div></div>
+      <div class="idea-stage-wrap" id="ideaStageWrap"><div class="idea-canvas-sizer" id="ideaCanvasSizer"><div class="idea-canvas" id="ideaCanvas"></div></div></div>
       <div class="idea-list" id="ideaList" hidden></div>
     </div>
   </section>

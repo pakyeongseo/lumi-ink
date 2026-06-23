@@ -39,7 +39,17 @@ window.LumiInkIdeaTemplates = {
     "plain-brown": { label: "브라운 빈 캔버스", desc: "질감 없이 컬러만 남긴 깨끗한 기본 바탕" },
     "plain-silver": { label: "메탈릭 실버 빈 캔버스", desc: "질감 없이 컬러만 남긴 깨끗한 기본 바탕" },
     "plain-mgold": { label: "메탈릭 골드 빈 캔버스", desc: "질감 없이 컬러만 남긴 깨끗한 기본 바탕" },
-    "plain-bw": { label: "블랙&화이트 빈 캔버스", desc: "질감 없이 컬러만 남긴 깨끗한 기본 바탕" }
+    "plain-bw": { label: "블랙&화이트 빈 캔버스", desc: "질감 없이 컬러만 남긴 깨끗한 기본 바탕" },
+    oceanDepth: { label: "심해", desc: "푸른 광선이 스미는 깊은 바닷속 보드" },
+    parchmentMap: { label: "고지도", desc: "나침반 자국과 커피 얼룩의 낡은 해도" },
+    circuitBoard: { label: "회로 기판", desc: "구리 배선과 납땜 점이 박힌 PCB" },
+    roseQuartz: { label: "로즈 쿼츠", desc: "분홍빛 결정면이 빛나는 크리스탈 보드" },
+    emeraldFelt: { label: "에메랄드 펠트", desc: "카드 테이블 같은 짙은 초록 펠트" },
+    auroraSky: { label: "오로라", desc: "초록·보라 오로라가 흐르는 밤하늘" },
+    concreteWall: { label: "콘크리트", desc: "얼룩과 결이 남은 도시 회색 벽" },
+    honeyComb: { label: "허니콤", desc: "벌집 무늬가 깔린 따뜻한 호박빛 보드" },
+    inkWash: { label: "수묵", desc: "화선지에 옅은 먹이 번진 차분한 보드" },
+    carbonFiber: { label: "카본 파이버", desc: "사선으로 짜인 어두운 탄소섬유" }
   },
   noteStyles: {
     marker: { label: "형광 마커", desc: "형광 잉크가 번진 듯한 러프 메모" },
@@ -50,6 +60,16 @@ window.LumiInkIdeaTemplates = {
     ledger: { label: "연구 노트", desc: "좌측 여백선과 서명란의 줄노트" },
     paperclip: { label: "클립 메모", desc: "좌상단 금속 클립을 끼운 종이" },
     waxSeal: { label: "봉랍 편지", desc: "데클 가장자리와 봉랍 씰의 양피지" },
-    neonGlass: { label: "네온 글래스", desc: "어두운 보드용 네온 테두리 글래스 카드" }
+    neonGlass: { label: "네온 글래스", desc: "어두운 보드용 네온 테두리 글래스 카드" },
+    torn: { label: "찢긴 노트", desc: "윗변을 거칠게 뜯어낸 종이 메모" },
+    gridCard: { label: "모눈 카드", desc: "잔격자와 상단 컬러 탭의 깔끔한 카드" },
+    pill: { label: "캡슐 태그", desc: "양끝이 둥근 캡슐형 광택 태그" },
+    denim: { label: "데님 패치", desc: "스티치 점선을 두른 청 패브릭 조각" },
+    holographic: { label: "홀로그램", desc: "무지갯빛 윤슬이 도는 반짝이 스티커" },
+    memoPin: { label: "압정 메모", desc: "상단 중앙에 압정을 꽂은 종이" },
+    folded: { label: "접힌 메모", desc: "오른쪽 아래가 살짝 말린 종이" },
+    doodle: { label: "낙서 메모", desc: "손그림 같은 삐뚤 이중 테두리 메모" },
+    vellum: { label: "트레이싱지", desc: "우윳빛으로 비치는 반투명 종이" },
+    woodTag: { label: "우드 태그", desc: "끈 구멍과 나뭇결이 살아있는 나무패" }
   }
 };
