@@ -4739,7 +4739,7 @@ ${gallery}
     try {
       const doc = new DOMParser().parseFromString(raw, "text/html");
       projectTag = doc.getElementById("lumink-project");
-      pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character") || doc.getElementById("lumink-log");
+      pTag = doc.getElementById("lumink-persona") || doc.getElementById("lumink-character") || doc.getElementById("lumink-log") || doc.getElementById("lumink-idea");
     } catch (e) {}
     if (projectTag) {
       try { showProjectPackageImport(JSON.parse(projectTag.textContent)); }
@@ -4772,6 +4772,9 @@ ${gallery}
             n.titleLocked = true; n.data = normalizeLogData(pl.data);
             await saveLog(n, true); st.curNoteId = n.id; st.curProjectId = pid; logEditMode = false;
             toast("로그를 불러왔어요"); go({ s: "log" }); return;
+          }
+          if (pl && pl.kind === "idea" && pl.data) {
+            await importIdeaHtmlPayload(pl, pid, file.name); return;
           }
         } catch (e) {}
       }
@@ -5511,9 +5514,21 @@ ${gallery}
     renderIdeaList(n);
   }
   function ideaItemElement(id) { return $("ideaCanvas") && $("ideaCanvas").querySelector(`[data-item-id="${CSS.escape(id)}"]`); }
+  function syncIdeaTransformTools(item) {
+    const canvas=$('ideaCanvas'); if(!canvas||!item)return;
+    const tools=canvas.querySelector(`.idea-transform-tools[data-item-id="${CSS.escape(item.id)}"]`); if(!tools)return;
+    tools.style.left=item.x+"px"; tools.style.top=item.y+"px"; tools.style.width=item.w+"px"; tools.style.height=item.h+"px";
+    tools.style.zIndex=String(Math.max(100000,Number(item.z||0)+100000));
+    tools.style.transform=`rotate(${Number(item.rotation)||0}deg)`;
+    const d=currentIdeaData(), cw=d&&d.canvas?d.canvas.width:1600, ch=d&&d.canvas?d.canvas.height:1100;
+    tools.classList.toggle('edge-top', Number(item.y)<84);
+    tools.classList.toggle('edge-bottom', Number(item.y)+Number(item.h)>ch-18);
+    tools.classList.toggle('edge-right', Number(item.x)+Number(item.w)>cw-18);
+  }
   function setIdeaItemGeometry(el, item) {
     el.style.left = item.x + "px"; el.style.top = item.y + "px"; el.style.width = item.w + "px"; el.style.height = item.h + "px"; el.style.zIndex = item.z;
     el.style.setProperty("--idea-rot", (item.rotation || 0) + "deg");
+    syncIdeaTransformTools(item);
   }
   function ideaPlainBackgroundMeta(key) { return /^plain-/.test(key || "") ? IDEA_THEME_COLORS[String(key).slice(6)] || null : null; }
   function applyIdeaCanvasAppearance(canvas, data) {
@@ -5675,13 +5690,15 @@ ${gallery}
   }
   function clearIdeaSelection() { ideaEditState={itemId:null,mode:null}; const c=$("ideaCanvas"); if(c)c.querySelectorAll(".idea-item.selected").forEach((x)=>x.classList.remove("selected","move-mode")); c&&c.querySelector(".idea-transform-tools")?.remove(); }
   function mountIdeaTransformControls(id) {
-    const item=getIdeaItem(id), el=ideaItemElement(id); if(!item||!el)return;
-    $("ideaCanvas").querySelectorAll(".idea-transform-tools").forEach((x)=>x.remove());
+    const item=getIdeaItem(id), el=ideaItemElement(id), canvas=$("ideaCanvas"); if(!item||!el||!canvas)return;
+    canvas.querySelectorAll(".idea-transform-tools").forEach((x)=>x.remove());
     el.classList.add("selected");
-    const tools=document.createElement("div"); tools.className="idea-transform-tools"; tools.innerHTML=`<button type="button" class="idea-option-dot" aria-label="조각 옵션">•••</button><button type="button" class="idea-rotate-handle" aria-label="회전">↻</button><button type="button" class="idea-resize-handle" aria-label="크기 조절">↘</button>`;
-    el.appendChild(tools);
-    tools.querySelector(".idea-option-dot").addEventListener("pointerdown",(e)=>e.stopPropagation());
-    tools.querySelector(".idea-option-dot").addEventListener("click",(e)=>{e.stopPropagation();openIdeaItemOptions(id);});
+    const tools=document.createElement("div"); tools.className="idea-transform-tools"; tools.dataset.itemId=id;
+    tools.innerHTML=`<button type="button" class="idea-option-dot" aria-label="조각 옵션">•••</button><button type="button" class="idea-rotate-handle" aria-label="회전">↻</button><button type="button" class="idea-resize-handle" aria-label="크기 조절">↘</button>`;
+    /* 포스트잇의 overflow:hidden과 분리한 캔버스 오버레이. */
+    canvas.appendChild(tools); syncIdeaTransformTools(item);
+    tools.querySelector(".idea-option-dot").addEventListener("pointerdown",(e)=>{e.preventDefault();e.stopPropagation();});
+    tools.querySelector(".idea-option-dot").addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();openIdeaItemOptions(id);});
     bindIdeaResizeHandle(tools.querySelector(".idea-resize-handle"),item,el);
     bindIdeaRotateHandle(tools.querySelector(".idea-rotate-handle"),item,el);
   }
@@ -5929,10 +5946,88 @@ ${gallery}
     $on("ideaBgOverlayOpacity","input",(e)=>{const fresh=normalizeIdeaCanvasImage(d.canvas.backgroundImage);if(!fresh)return;fresh.overlayOpacity=Math.max(0,Math.min(.92,Number(e.target.value)/100));d.canvas.backgroundImage=fresh;$("ideaBgOverlayValue").textContent=`${Math.round(fresh.overlayOpacity*100)}%`;const c=$("ideaCanvas");if(c)applyIdeaCanvasAppearance(c,d);scheduleIdeaSave(180);});
     $on("ideaBgDone","click",closeModal);
   }
+  function ideaExportInlineStyle(item) {
+    const color=["note","audio","quote","file"].includes(item.kind) ? ideaColorStyleAttr(item.color) : "";
+    return `left:${Math.round(item.x)}px;top:${Math.round(item.y)}px;width:${Math.round(item.w)}px;height:${Math.round(item.h)}px;z-index:${Math.round(item.z||1)};transform:rotate(${Math.round(item.rotation||0)}deg);${color}`;
+  }
+  function ideaExportNoteText(text) { return esc(String(text||"")).replace(/\n/g,"<br>"); }
+  async function collectIdeaExportAssets(n, data) {
+    const wanted=new Set((data.attachments||[]).map((a)=>a&&a.id).filter(Boolean));
+    (data.items||[]).forEach((item)=>{if(item&&item.fileId)wanted.add(item.fileId);});
+    const bg=normalizeIdeaCanvasImage(data.canvas&&data.canvas.backgroundImage); if(bg&&bg.fileId)wanted.add(bg.fileId);
+    const assets=new Map(), files=[];
+    for (const id of wanted) {
+      try {
+        const rec=await getOne("files",id); if(!rec||!rec.blob)continue;
+        const type=rec.type||rec.blob.type||"application/octet-stream", data64=await blobToBase64(rec.blob);
+        const asset={id,name:rec.name||"첨부파일",type,size:Number(rec.size)||rec.blob.size||0,createdAt:Number(rec.createdAt)||now(),data:data64,dataUrl:`data:${type};base64,${data64}`};
+        assets.set(id,asset); files.push({id:asset.id,name:asset.name,type:asset.type,size:asset.size,createdAt:asset.createdAt,data:asset.data});
+      } catch(e) { console.warn("idea export asset",id,e); }
+    }
+    return {assets,files};
+  }
+  async function ideaExportCustomCss() {
+    try { const r=await fetch("./idea-board-custom-templates.css"); return r.ok ? await r.text() : ""; }
+    catch(e) { return ""; }
+  }
+  function ideaBoardExportBaseCss() {
+    return `:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif}*{box-sizing:border-box}body{margin:0;background:#111722;color:#eef2fb}.idea-export-head{max-width:1240px;margin:0 auto;padding:28px 24px 16px}.idea-export-head h1{margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:-.04em}.idea-export-head p{margin:7px 0 0;color:#aeb8c9;font-size:13px}.idea-export-scroll{max-width:1288px;margin:0 auto;padding:16px 24px 42px;overflow:auto}.idea-canvas{position:relative;isolation:isolate;overflow:hidden;min-width:900px;min-height:700px;border-radius:20px;box-shadow:0 28px 70px rgba(0,0,0,.38);background-color:#152237;background-image:linear-gradient(rgba(145,190,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(145,190,255,.12) 1px,transparent 1px),radial-gradient(circle at 18% 12%,rgba(110,157,255,.17),transparent 39%);background-size:26px 26px,26px 26px,auto}.idea-canvas[data-background="scrapbook"]{background-color:#eadcc8;background-image:radial-gradient(circle at 14% 12%,rgba(255,255,255,.75),transparent 34%),repeating-linear-gradient(0deg,rgba(120,88,52,.06) 0 1px,transparent 1px 5px),linear-gradient(135deg,#f1e6d2,#d9c4a6)}.idea-canvas[data-background^="plain-"]{background:linear-gradient(135deg,var(--idea-canvas-a),var(--idea-canvas-b))}.idea-canvas.has-canvas-image::before{content:"";position:absolute;inset:0;z-index:0;background-image:linear-gradient(var(--idea-canvas-overlay),var(--idea-canvas-overlay)),var(--idea-canvas-image);background-size:cover;background-position:center;pointer-events:none}.idea-export-item{position:absolute;transform-origin:center center;min-width:110px;min-height:54px}.idea-sticky{position:absolute;border-radius:3px;overflow:hidden;box-shadow:0 14px 24px rgba(35,30,12,.22),0 2px 3px rgba(35,30,12,.12)}.idea-sticky[data-note-style="marker"]{background:linear-gradient(115deg,transparent 0 5%,rgba(255,255,255,.3) 5% 8%,transparent 8% 100%),linear-gradient(160deg,var(--stick-1),var(--stick-2))}.idea-sticky[data-note-style="marker"]::before{content:"";position:absolute;inset:10px 8px;opacity:.18;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(85,68,23,.24) 0 1px,transparent 1px 28px)}.idea-sticky[data-note-style="tape"]{background:linear-gradient(160deg,#fffef8,var(--stick-1));box-shadow:0 16px 26px rgba(30,22,10,.22)}.idea-sticky[data-note-style="tape"]::before{content:"";position:absolute;left:50%;top:-7px;width:56%;height:22px;transform:translateX(-50%) rotate(-1.2deg);background:var(--stick-2);opacity:.72}.idea-note-text{position:relative;z-index:2;display:block;width:100%;height:100%;padding:16px;color:var(--stick-ink);white-space:pre-wrap;overflow:auto;font:650 15px/1.62 var(--user-font,inherit)}.idea-sticky[data-note-style="tape"] .idea-note-text{padding-top:28px}.idea-media-content{width:100%;height:100%;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:transparent}.idea-image img,.idea-video video{display:block;width:100%;height:100%;object-fit:contain;background:transparent}.idea-audio-shell{width:100%;height:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:999px;background:var(--idea-chip-fill);border:1px solid var(--idea-chip-edge);box-shadow:0 12px 22px rgba(0,0,0,.18)}.idea-audio-icon{font-size:22px;color:var(--idea-color-a);font-weight:900}.idea-audio-shell audio{width:100%;height:36px}.idea-quote-body,.idea-file-body{display:flex;width:100%;height:100%;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--idea-chip-edge);border-radius:999px;background:var(--idea-chip-fill);box-shadow:0 10px 20px rgba(0,0,0,.16);color:var(--idea-chip-ink);text-decoration:none}.idea-quote-mark{font:900 24px/1 Georgia,serif;color:var(--idea-color-a)}.idea-quote-title,.idea-file-name{font-size:13px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idea-file-icon{width:22px;height:22px;display:grid;place-items:center;color:var(--idea-color-a);flex:0 0 auto}.idea-file-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8}.idea-missing{display:grid;place-items:center;width:100%;height:100%;border-radius:12px;background:rgba(17,22,31,.18);color:#667084;font-size:12px}.idea-canvas[data-background="graphpaper"]{background-color:#f3efe2;background-image:linear-gradient(rgba(90,130,170,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(90,130,170,.16) 1px,transparent 1px),linear-gradient(rgba(90,130,170,.30) 1px,transparent 1px),linear-gradient(90deg,rgba(90,130,170,.30) 1px,transparent 1px);background-size:18px 18px,18px 18px,90px 90px,90px 90px}.idea-canvas[data-background="chalkboard"]{background-color:#22302b;background-image:radial-gradient(circle at 50% 16%,rgba(220,235,225,.07),transparent 46%),repeating-linear-gradient(0deg,rgba(255,255,255,.013) 0 24px,transparent 24px 48px)}.idea-canvas[data-background="corkboard"]{background-color:#c8a06a;background-image:radial-gradient(circle at 30% 28%,rgba(255,240,210,.18),transparent 30%),radial-gradient(rgba(60,40,20,.16) 0 1px,transparent 1.4px);background-size:auto,7px 7px}.idea-canvas[data-background="starchart"]{background-color:#10162e;background-image:radial-gradient(ellipse at 25% 22%,rgba(110,90,200,.22),transparent 42%),radial-gradient(rgba(255,255,255,.5) 0 1px,transparent 1.6px);background-size:auto,120px 120px}.idea-canvas[data-background="linen"]{background-color:#dcd8cf;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.5) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(120,110,95,.1) 0 1px,transparent 1px 3px)}.idea-canvas[data-background="kraft"]{background-color:#a9824f;background-image:repeating-linear-gradient(96deg,rgba(255,255,255,.03) 0 2px,transparent 2px 5px),repeating-linear-gradient(8deg,rgba(50,32,12,.05) 0 2px,transparent 2px 6px)}.idea-canvas[data-background="slateGrid"]{background-color:#1a1c22;background-image:radial-gradient(rgba(255,255,255,.07) 0 1.4px,transparent 1.6px);background-size:26px 26px}.idea-canvas[data-background="dossier"]{background-color:#2b2922;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 9px)}.idea-canvas[data-background="sakura"]{background-color:#f6e4df;background-image:radial-gradient(rgba(232,150,170,.16) 0 2px,transparent 3px);background-size:90px 80px}.idea-canvas[data-background="terminal"]{background-color:#0c1110;background-image:repeating-linear-gradient(0deg,rgba(80,255,170,.035) 0 1px,transparent 1px 3px)}.idea-canvas[data-background="velvet"]{background-color:#241430;background-image:radial-gradient(ellipse at 50% 30%,rgba(150,90,180,.22),transparent 58%),repeating-linear-gradient(45deg,rgba(255,255,255,.018) 0 2px,transparent 2px 7px)}@media(max-width:700px){.idea-export-head{padding:22px 16px 8px}.idea-export-scroll{padding:12px 16px 32px}.idea-canvas{transform-origin:top left}}`;
+  }
+  function ideaExportItemMarkup(item,n,assets) {
+    const style=ideaExportInlineStyle(item), asset=assets.get(item.fileId), title=ideaItemTitle(item,n);
+    if(item.kind==="note") return `<article class="idea-export-item idea-sticky" data-note-style="${esc(item.noteStyle)}" style="${style}"><div class="idea-note-text">${ideaExportNoteText(item.text||"")}</div></article>`;
+    if(item.kind==="image") return `<article class="idea-export-item idea-image" style="${style}">${asset?`<div class="idea-media-content"><img src="${asset.dataUrl}" alt="${esc(title)}"></div>`:`<div class="idea-missing">이미지 파일을 찾을 수 없어요</div>`}</article>`;
+    if(item.kind==="video") return `<article class="idea-export-item idea-video" style="${style}">${asset?`<div class="idea-media-content"><video src="${asset.dataUrl}" controls preload="metadata" playsinline></video></div>`:`<div class="idea-missing">동영상 파일을 찾을 수 없어요</div>`}</article>`;
+    if(item.kind==="audio") return `<article class="idea-export-item idea-audio" style="${style}">${asset?`<div class="idea-audio-shell"><span class="idea-audio-icon">♫</span><audio src="${asset.dataUrl}" controls preload="metadata"></audio></div>`:`<div class="idea-missing">음악 파일을 찾을 수 없어요</div>`}</article>`;
+    if(item.kind==="file") return `<article class="idea-export-item idea-file" style="${style}">${asset?`<a class="idea-file-body" href="${asset.dataUrl}" download="${esc(asset.name)}"><span class="idea-file-icon">${fileIconSvg(asset.type||"")}</span><span class="idea-file-name">${esc(title)}</span></a>`:`<div class="idea-missing">첨부 파일을 찾을 수 없어요</div>`}</article>`;
+    return `<article class="idea-export-item idea-quote" style="${style}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-title">${esc(title)}</span></div></article>`;
+  }
+  async function exportIdeaHtml(id) {
+    if(st.curNoteId===id) await flushIdeaBoard(true);
+    const n=getNote(id); if(!n||n.type!=="idea")return;
+    try {
+      const d=ensureIdeaBoardData(n), packed=await collectIdeaExportAssets(n,d), exportData=jsonCopy(d)||d;
+      const bg=normalizeIdeaCanvasImage(d.canvas.backgroundImage), bgAsset=bg&&packed.assets.get(bg.fileId), plain=ideaPlainBackgroundMeta(d.canvas.background);
+      const canvasStyle=[plain?`--idea-canvas-a:${plain.ig[0]};--idea-canvas-b:${plain.ig[1]};`:"",bgAsset?`--idea-canvas-image:url(\"${bgAsset.dataUrl}\");--idea-canvas-overlay:${rgbaHex(ideaColorMeta(bg.overlayColor).ig[0],bg.overlayOpacity)};`:""].filter(Boolean).join("");
+      const items=d.items.slice().sort((a,b)=>a.z-b.z).map((item)=>ideaExportItemMarkup(item,n,packed.assets)).join("");
+      const payload=JSON.stringify({app:"lumink",kind:"idea",version:1,title:n.title,data:exportData,files:packed.files}).replace(/</g,"\\u003c");
+      const custom=await ideaExportCustomCss(), title=esc(n.title||"아이디어 보드");
+      const doc=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="idea"><title>${title}</title><style>${ideaBoardExportBaseCss()}\n${custom}</style></head><body><header class="idea-export-head"><h1>${title}</h1><p>Lumi Ink · 아이디어 보드 · 이 파일은 루미잉크에서 다시 열어 계속 편집할 수 있습니다.</p></header><main class="idea-export-scroll"><section class="idea-canvas${bgAsset?" has-canvas-image":""}" data-background="${esc(d.canvas.background)}" style="width:${Math.round(d.canvas.width)}px;height:${Math.round(d.canvas.height)}px;${canvasStyle}">${items||'<div class="idea-missing">아직 붙인 조각이 없어요</div>'}</section></main><script type="application/json" id="lumink-idea">${payload}<\/script></body></html>`;
+      const exportName=((n.title||"idea-board").replace(/[\/:*?"<>|]+/g,"_").slice(0,50)||"idea-board")+".html";
+      downloadDoc(doc,exportName,"text/html");
+      toast(`꾸며진 보드 HTML을 저장했어요 · 첨부 ${packed.files.length}개 포함`);
+    } catch(e) { console.warn("idea html export",e); toast("아이디어 보드 HTML 내보내기에 실패했어요"); }
+  }
+  async function importIdeaHtmlPayload(pl,pid,fileName) {
+    if(!pl||pl.kind!=="idea"||!pl.data)throw new Error("invalid idea payload");
+    const imported=normalizeImportedIdeaBoardData(jsonCopy(pl.data)||pl.data), wanted=new Set((imported.attachments||[]).map((a)=>a&&a.id).filter(Boolean));
+    (imported.items||[]).forEach((item)=>{if(item&&item.fileId)wanted.add(item.fileId);});
+    const bg=normalizeIdeaCanvasImage(imported.canvas&&imported.canvas.backgroundImage); if(bg&&bg.fileId)wanted.add(bg.fileId);
+    const n=await createNote("idea",pid), fileMap=new Map(), records=[];
+    n.title=cleanImportedText(pl.title,180)||fileName.replace(/\.(html?)$/i,"")||"불러온 아이디어 보드"; n.titleLocked=true;
+    try {
+      for(const raw of (Array.isArray(pl.files)?pl.files:[])) {
+        if(!raw||typeof raw.id!=="string"||!wanted.has(raw.id)||fileMap.has(raw.id))continue;
+        const blob=fileBlobFromImport(raw); if(!blob||blob.size>IDEA_MAX_MEDIA)continue;
+        const id=uid(), type=cleanImportedText(raw.type,180)||blob.type||"application/octet-stream";
+        fileMap.set(raw.id,id); records.push({id,noteId:n.id,name:cleanImportedText(raw.name,240)||"첨부파일",type,size:blob.size,createdAt:Number(raw.createdAt)||now(),blob});
+      }
+      imported.attachments=(imported.attachments||[]).map((a)=>{const id=fileMap.get(a.id);return id?Object.assign({},a,{id}):null;}).filter(Boolean);
+      (imported.items||[]).forEach((item)=>{if(item&&item.fileId)item.fileId=fileMap.get(item.fileId)||null;});
+      if(imported.canvas&&imported.canvas.backgroundImage){const source=imported.canvas.backgroundImage.fileId, id=fileMap.get(source);if(id)imported.canvas.backgroundImage=Object.assign({},imported.canvas.backgroundImage,{fileId:id});else imported.canvas.backgroundImage=null;}
+      n.data=ensureIdeaBoardData({data:imported});
+      await transact(["notes","files"],"readwrite",(tx)=>{tx.objectStore("notes").put(n);records.forEach((record)=>tx.objectStore("files").put(record));});
+      const project=getProject(pid);if(project)await saveProject(project);
+      st.curNoteId=n.id;st.curProjectId=pid;ideaViewMode=n.data.viewMode||"board";toast(`아이디어 보드를 불러왔어요 · 첨부 ${records.length}개 복원`);go({s:"idea"});
+    } catch(e) {
+      st.notes=st.notes.filter((note)=>note.id!==n.id); await del("notes",n.id).catch(()=>{}); await Promise.all(records.map((record)=>del("files",record.id).catch(()=>{}))); throw e;
+    }
+  }
   function openIdeaBoardSheet(n) {
     const items=[
       {icon:IC.select,label:"선택",fn:()=>enterSelMode("note",n.id)},
       {icon:IC.color,label:"보드 배경",fn:()=>openIdeaBoardBackgroundPicker(n)},
+      {icon:IC.save,label:"꾸며진 HTML로 저장",fn:()=>void exportIdeaHtml(n.id)},
       {icon:IC.rename,label:"보드 이름 바꾸기",fn:()=>renameModal("아이디어 보드 이름",n.title,async(v)=>{if(v){n.title=v;n.titleLocked=true;await saveNote(n);render();}})},
       {icon:IC.move,label:"다른 프로젝트로 이동",fn:()=>pickTargetProject(n.projectId,(pid)=>moveNote(n.id,pid).then(render))},
       {icon:IC.copy,label:"선택 위치로 복제",fn:()=>pickTargetProject(n.projectId,(pid)=>duplicateNote(n.id,pid).then(render))},
