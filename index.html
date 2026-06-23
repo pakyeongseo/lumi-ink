@@ -2535,7 +2535,7 @@
 
   /* ===== IDEA BOARD v63.1 ===== */
   #screen-idea { background:var(--bg); }
-  .idea-workspace { height:calc(100vh - 57px - var(--safe-bottom)); display:flex; flex-direction:column; min-height:0; }
+  .idea-workspace { height:calc(100vh - 57px - var(--safe-bottom)); height:calc(100dvh - 57px - var(--safe-bottom)); display:flex; flex-direction:column; min-height:0; }
   .idea-toolbar { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--bar-bg),var(--bar-bg-2)); }
   .idea-view-switch { display:flex; align-items:stretch; padding:3px; gap:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); min-width:0; }
   .idea-view-btn { border:0; background:transparent; color:var(--muted); min-height:30px; min-width:42px; max-width:66px; padding:4px 9px; border-radius:8px; font-size:11.5px; line-height:1.05; font-weight:750; cursor:pointer; white-space:normal; word-break:keep-all; display:grid; place-items:center; }
@@ -2646,7 +2646,7 @@
   .idea-preview-note.idea-sticky .idea-note-text { position:relative; z-index:1; display:block; width:100%; height:100%; min-height:180px; overflow:auto; white-space:pre-wrap; }
   @media(max-width:700px){ .idea-color-grid.palette-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; } .idea-color-choice.palette { min-height:32px; } .idea-color-choice.text-preset.palette span { width:23px; height:17px; } }
 
-  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
+  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));height:calc(100dvh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">

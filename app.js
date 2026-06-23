@@ -5131,12 +5131,23 @@ ${gallery}
       const endP = (e) => { if (ideaPointers.has(e.pointerId)) ideaPointers.delete(e.pointerId); if (ideaPointers.size < 2) { if (ideaPinch) { const d = currentIdeaData(); if (d) { d.canvas.zoom = ideaZoom; scheduleIdeaSave(700); } } ideaPinch = null; } };
       stage.addEventListener("pointerup", endP); stage.addEventListener("pointercancel", endP);
     })();
-    window.addEventListener("resize", () => {
+    const refreshIdeaViewportFit = () => {
       if (!$("screen-idea").classList.contains("active") || ideaViewMode !== "board") return;
+      const d = currentIdeaData(); if (!d) return;
+      if (d.canvas.fitMode) {
+        ideaZoom = ideaLongAxisFitZoom();
+        d.canvas.zoom = ideaZoom;
+        applyIdeaZoom();
+        const wrap = $("ideaStageWrap"); if (wrap) { wrap.scrollLeft = 0; wrap.scrollTop = 0; }
+        scheduleIdeaSave(700);
+        return;
+      }
       const before = ideaZoom; ideaZoom = ideaClampZoom(ideaZoom);
-      if (Math.abs(before - ideaZoom) < .001) { applyIdeaZoom(); return; }
-      applyIdeaZoom(); const d = currentIdeaData(); if (d) { d.canvas.zoom = ideaZoom; scheduleIdeaSave(700); }
-    });
+      applyIdeaZoom();
+      if (Math.abs(before - ideaZoom) >= .001) { d.canvas.zoom = ideaZoom; scheduleIdeaSave(700); }
+    };
+    window.addEventListener("resize", refreshIdeaViewportFit);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", refreshIdeaViewportFit, { passive:true });
     document.addEventListener("keydown", (e) => {
       if (!$("screen-idea").classList.contains("active")) return;
       const t = (e.target.tagName || "").toLowerCase(), typing = t === "textarea" || t === "input" || e.target.isContentEditable;
@@ -5513,7 +5524,7 @@ ${gallery}
   function updateIdeaHistoryButtons() { const u = $("ideaUndo"), r = $("ideaRedo"); if (u) u.disabled = !ideaUndoStack.length; if (r) r.disabled = !ideaRedoStack.length; }
 
   function makeIdeaBoardData() {
-    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundMode: "template", backgroundImage: null }, items: [], attachments: [], viewMode: "board" };
+    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundMode: "template", backgroundImage: null, fitMode: false }, items: [], attachments: [], viewMode: "board" };
   }
   function normalizeIdeaCanvasImage(raw) {
     if (!raw || typeof raw !== "object" || typeof raw.fileId !== "string" || !raw.fileId) return null;
@@ -5530,6 +5541,9 @@ ${gallery}
     d.canvas.width = Math.max(900, Math.min(6000, Number(d.canvas.width) || 1600));
     d.canvas.height = Math.max(700, Math.min(6000, Number(d.canvas.height) || 1100));
     d.canvas.zoom = Math.max(IDEA_ZOOM_MIN, Math.min(IDEA_ZOOM_MAX, Number(d.canvas.zoom) || 1));
+    // 화면 맞춤은 고정 배율이 아니라 현재 기기의 가용 스테이지 크기를 따라가는 모드입니다.
+    // 구형 보드는 false로 시작해, 사용자가 직접 맞춤을 눌렀을 때만 자동 재계산됩니다.
+    d.canvas.fitMode = d.canvas.fitMode === true;
     d.canvas.background = IDEA_BG_TEMPLATES[d.canvas.background] ? d.canvas.background : "blueprint";
     d.canvas.backgroundImage = normalizeIdeaCanvasImage(d.canvas.backgroundImage);
     // Background source is exclusive: old image boards upgrade to image mode once,
@@ -5644,7 +5658,11 @@ ${gallery}
     $("ideaBoardMode").classList.toggle("active", ideaViewMode === "board"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list");
     const canvas = $("ideaCanvas"), sizer = $("ideaCanvasSizer");
     if (sizer) { sizer.style.width = d.canvas.width + "px"; sizer.style.height = d.canvas.height + "px"; }
-    canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = ""; ideaZoom = ideaClampZoom(ideaZoom); applyIdeaZoom();
+    canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = "";
+    // 맞춤 모드로 저장된 보드는 새 기기·세로/가로 전환에서도 현재 스테이지에 다시 맞춥니다.
+    ideaZoom = d.canvas.fitMode ? ideaLongAxisFitZoom() : ideaClampZoom(ideaZoom);
+    if (d.canvas.fitMode) d.canvas.zoom = ideaZoom;
+    applyIdeaZoom();
     if (!d.items.length) canvas.innerHTML = '<div class="idea-canvas-empty"><div><b>아직 붙인 조각이 없어요</b>빈 공간을 길게 누르거나, 상단 + 버튼으로 첫 아이디어를 놓아보세요.</div></div>';
     d.items.slice().sort((a,b) => a.z - b.z).forEach((item) => canvas.appendChild(createIdeaItemElement(n, item)));
     if (ideaEditState.itemId) requestAnimationFrame(() => mountIdeaTransformControls(ideaEditState.itemId));
@@ -5801,11 +5819,29 @@ ${gallery}
     const n = currentIdeaNote(); if (!n) return; const d = ensureIdeaBoardData(n); d.viewMode = mode === "list" ? "list" : "board"; ideaViewMode = d.viewMode; renderIdeaBoard(); scheduleIdeaSave();
   }
   function ideaBoardDims() { const d = currentIdeaData(); return d ? { w:d.canvas.width, h:d.canvas.height } : { w:1600, h:1100 }; }
+  function ideaStageVisibleSize() {
+    const wrap = $("ideaStageWrap");
+    if (!wrap) return { w:1, h:1 };
+    const rect = wrap.getBoundingClientRect();
+    let w = Math.max(1, wrap.clientWidth || rect.width || 1);
+    let h = Math.max(1, wrap.clientHeight || rect.height || 1);
+    // 모바일 브라우저의 주소창·제스처 영역 변화까지 반영합니다. CSS의 100dvh를
+    // 지원하지 않는 환경에서도 실제 보이는 영역보다 크게 맞춰 아래에 빈 공간이
+    // 남는 일을 막습니다.
+    const vv = window.visualViewport;
+    if (vv && Number.isFinite(vv.height) && vv.height > 0) {
+      const visibleTop = Math.max(rect.top, vv.offsetTop || 0);
+      const visibleBottom = Math.min(rect.bottom, (vv.offsetTop || 0) + vv.height);
+      const visibleH = Math.max(0, visibleBottom - visibleTop);
+      if (visibleH > 0) h = Math.max(1, Math.min(h, visibleH));
+    }
+    return { w, h };
+  }
   function ideaLongAxisFitZoom() {
-    const wrap = $("ideaStageWrap"), dim = ideaBoardDims();
-    if (!wrap) return IDEA_ZOOM_MIN;
-    const pad = 28, availW = Math.max(1, wrap.clientWidth - pad), availH = Math.max(1, wrap.clientHeight - pad);
-    const z = availH >= availW ? availH / dim.h : availW / dim.w;
+    const dim = ideaBoardDims(), avail = ideaStageVisibleSize();
+    // 세로 화면은 보드의 세로축을, 가로 화면은 가로축을 정확히 스테이지 끝까지
+    // 맞춥니다. 고정 padding을 빼지 않아 하단의 불필요한 여백이 생기지 않습니다.
+    const z = avail.h >= avail.w ? avail.h / dim.h : avail.w / dim.w;
     return Math.max(IDEA_ZOOM_MIN, Math.min(IDEA_ZOOM_MAX, z));
   }
   function ideaMinAllowedZoom() { return Math.min(IDEA_ZOOM_MAX, ideaLongAxisFitZoom()); }
@@ -5832,13 +5868,22 @@ ${gallery}
     const cx = (wrap.scrollLeft + fx) / ideaZoom, cy = (wrap.scrollTop + fy) / ideaZoom;
     ideaZoom = nz; applyIdeaZoom();
     wrap.scrollLeft = Math.max(0, cx * ideaZoom - fx); wrap.scrollTop = Math.max(0, cy * ideaZoom - fy);
-    const d = currentIdeaData(); if (d) { d.canvas.zoom = ideaZoom; if (persist !== false) scheduleIdeaSave(700); }
+    const d = currentIdeaData(); if (d) {
+      // 수동 확대·축소 또는 핀치는 자동 화면 맞춤을 해제합니다.
+      d.canvas.fitMode = false;
+      d.canvas.zoom = ideaZoom;
+      if (persist !== false) scheduleIdeaSave(700);
+    }
   }
   function ideaZoomFit() {
     const wrap = $("ideaStageWrap"); if (!wrap) return;
-    ideaZoom = ideaMinAllowedZoom(); applyIdeaZoom();
+    ideaZoom = ideaLongAxisFitZoom(); applyIdeaZoom();
     wrap.scrollLeft = 0; wrap.scrollTop = 0;
-    const d = currentIdeaData(); if (d) { d.canvas.zoom = ideaZoom; scheduleIdeaSave(700); }
+    const d = currentIdeaData(); if (d) {
+      d.canvas.fitMode = true;
+      d.canvas.zoom = ideaZoom;
+      scheduleIdeaSave(700);
+    }
     const rng = $("ideaZoomRange"); if (rng) rng.value = String(Math.round(ideaZoom * 100));
     toast("화면에 맞췄어요 (" + Math.round(ideaZoom * 100) + "%)");
   }
