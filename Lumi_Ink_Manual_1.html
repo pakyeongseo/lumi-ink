@@ -1,10 +1,14 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>루미잉크 전체 기능 상세 매뉴얼</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2316223a'/%3E%3Cpath d='M12 3.5C8.5 3.5 5.8 6.3 5.8 9.8c0 4.4 4.9 8.7 6 9.9.15.18.45.18.6 0 1.1-1.2 6-5.5 6-9.9 0-3.5-2.7-6.3-6.2-6.3Z' fill='%23f4f6fb'/%3E%3Ccircle cx='12' cy='9.6' r='2.3' fill='%2316223a'/%3E%3Crect x='11.4' y='11.3' width='1.2' height='4.6' rx='0.5' fill='%2316223a'/%3E%3Ccircle cx='12' cy='16.4' r='1.5' fill='%237bb0f5'/%3E%3C/svg%3E">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>루미잉크 전체 기능 상세 매뉴얼 · v63.7</title>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2316223a'/%3E%3Cpath d='M12 3.5C8.5 3.5 5.8 6.3 5.8 9.8c0 4.4 4.9 8.7 6 9.9.15.18.45.18.6 0 1.1-1.2 6-5.5 6-9.9 0-3.5-2.7-6.3-6.2-6.3Z' fill='%23f4f6fb'/%3E%3Ccircle cx='12' cy='9.6' r='2.3' fill='%2316223a'/%3E%3Crect x='11.4' y='11.3' width='1.2' height='4.6' rx='0.5' fill='%2316223a'/%3E%3Ccircle cx='12' cy='16.4' r='1.5' fill='%237bb0f5'/%3E%3C/svg%3E" rel="icon" type="image/svg+xml"/>
 <style>
 /* ============================================================
    Lumi Ink Manual — Design Tokens
@@ -592,1379 +596,1317 @@ table code{ font-size:.82em; }
 @media (min-width: 921px){
   .theme-toggle-desktop-only{ display:flex; }
 }
+
+/* ---------- v63.5 manual additions ---------- */
+#sec-updates .nib-num{font-size:10px;letter-spacing:.04em;}
+#sec-html code,#sec-idea code{white-space:nowrap;}
 </style>
 </head>
 <body>
-
-<button class="manual-close-desktop" type="button" data-manual-close aria-label="매뉴얼을 닫고 앱으로 돌아가기">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<button aria-label="매뉴얼을 닫고 앱으로 돌아가기" class="manual-close-desktop" data-manual-close="" type="button">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
   앱으로 돌아가기
 </button>
-
 <!-- ===== Mobile top bar ===== -->
 <div class="topbar">
-  <div class="brand-lockup">
-    <svg class="nib" viewBox="0 0 24 24" fill="none"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"/><circle cx="12" cy="9.3" r="3.05" fill="#16223a"/><rect x="11.15" y="11.6" width="1.7" height="6.6" rx="0.6" fill="#16223a"/><circle cx="12" cy="17.6" r="2.05" fill="#7bb0f5"/></svg>
-    <span>루미잉크 매뉴얼</span>
-  </div>
-  <div class="topbar-actions">
-    <button class="icon-btn manual-close-mobile" type="button" data-manual-close aria-label="매뉴얼 닫기" title="닫기">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
-    <button class="icon-btn" id="topbarThemeBtn" aria-label="테마 전환">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
-    <button class="icon-btn" id="menuBtn" aria-label="메뉴 열기">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
+<div class="brand-lockup">
+<svg class="nib" fill="none" viewbox="0 0 24 24"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"></path><circle cx="12" cy="9.3" fill="#16223a" r="3.05"></circle><rect fill="#16223a" height="6.6" rx="0.6" width="1.7" x="11.15" y="11.6"></rect><circle cx="12" cy="17.6" fill="#7bb0f5" r="2.05"></circle></svg>
+<span>루미잉크 매뉴얼</span>
 </div>
-
+<div class="topbar-actions">
+<button aria-label="매뉴얼 닫기" class="icon-btn manual-close-mobile" data-manual-close="" title="닫기" type="button">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+</button>
+<button aria-label="테마 전환" class="icon-btn" id="topbarThemeBtn">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+</button>
+<button aria-label="메뉴 열기" class="icon-btn" id="menuBtn">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><line x1="3" x2="21" y1="6" y2="6"></line><line x1="3" x2="21" y1="12" y2="12"></line><line x1="3" x2="21" y1="18" y2="18"></line></svg>
+</button>
+</div>
+</div>
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
-
 <div class="shell">
-  <!-- ===== Sidebar ===== -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-head">
-      <div class="brand-lockup-main">
-        <svg class="nib" viewBox="0 0 24 24" fill="none"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"/><circle cx="12" cy="9.3" r="3.05" fill="#16223a"/><rect x="11.15" y="11.6" width="1.7" height="6.6" rx="0.6" fill="#16223a"/><circle cx="12" cy="17.6" r="2.05" fill="#7bb0f5"/></svg>
-        <span class="title">루미잉크</span>
-      </div>
-      <div class="sub">전체 기능 상세 매뉴얼 · v1.0</div>
-      <div class="theme-toggle-row">
-        <div class="theme-toggle" id="themeToggle" role="button" aria-label="다크모드 전환">
-          <div class="knob">
-            <svg viewBox="0 0 24 24" fill="currentColor" id="knobIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </div>
-        </div>
-        <span class="label" id="themeLabel">라이트 모드</span>
-      </div>
-    </div>
-
-    <div class="nav-search">
-      <input type="text" id="tocSearch" placeholder="목차에서 검색…">
-    </div>
-
-    <nav class="toc" id="tocNav">
-      <a href="#sec-1" class="toc-link"><span class="num">01</span><span>루미잉크란 무엇인가</span></a>
-      <a href="#sec-2" class="toc-link"><span class="num">02</span><span>기능 구성 한눈에 보기</span></a>
-      <a href="#sec-3" class="toc-link"><span class="num">03</span><span>설치와 실행</span></a>
-      <a href="#sec-4" class="toc-link"><span class="num">04</span><span>화면과 기본 조작</span></a>
-      <a href="#sec-5" class="toc-link"><span class="num">05</span><span>프로젝트 관리</span></a>
-      <a href="#sec-6" class="toc-link"><span class="num">06</span><span>메모 만들기와 공통 관리</span></a>
-      <a href="#sec-7" class="toc-link"><span class="num">07</span><span>자유 메모</span></a>
-      <a href="#sec-8" class="toc-link"><span class="num">08</span><span>로어북</span></a>
-      <a href="#sec-9" class="toc-link"><span class="num">09</span><span>로그 저장</span></a>
-      <a href="#sec-10" class="toc-link"><span class="num">10</span><span>페르소나</span></a>
-      <a href="#sec-11" class="toc-link"><span class="num">11</span><span>캐릭터 메모</span></a>
-      <a href="#sec-12" class="toc-link"><span class="num">12</span><span>통합 검색</span></a>
-      <a href="#sec-13" class="toc-link"><span class="num">13</span><span>다중 선택·이동·합치기</span></a>
-      <a href="#sec-14" class="toc-link"><span class="num">14</span><span>파일 열기와 형식 판별</span></a>
-      <a href="#sec-15" class="toc-link"><span class="num">15</span><span>설정</span></a>
-      <a href="#sec-16" class="toc-link"><span class="num">16</span><span>데이터 저장과 백업</span></a>
-      <a href="#sec-17" class="toc-link"><span class="num">17</span><span>삭제 복구와 데이터 정리</span></a>
-      <a href="#sec-18" class="toc-link"><span class="num">18</span><span>개인정보와 보안상 주의</span></a>
-      <a href="#sec-19" class="toc-link"><span class="num">19</span><span>키보드·터치 조작 요약</span></a>
-      <a href="#sec-20" class="toc-link"><span class="num">20</span><span>내보내기 형식 비교</span></a>
-      <a href="#sec-21" class="toc-link"><span class="num">21</span><span>권장 사용 순서</span></a>
-      <a href="#sec-22" class="toc-link"><span class="num">22</span><span>주요 입력 한도</span></a>
-      <div class="toc-divider"></div>
-      <div class="toc-label">부록</div>
-      <a href="#app-a" class="toc-link appendix"><span class="num">A</span><span>기본 로그 템플릿 50종</span></a>
-      <a href="#app-b" class="toc-link appendix"><span class="num">B</span><span>가장 중요한 백업 원칙</span></a>
-    </nav>
-  </aside>
-
-  <!-- ===== Main content ===== -->
-  <main class="content">
-
-    <div class="doc-header">
-      <div class="eyebrow">LUMI INK · USER MANUAL</div>
-      <h1>루미잉크 전체 기능 상세 매뉴얼</h1>
-      <p class="lede">창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱, 루미잉크의 모든 기능을 빠짐없이 담은 실사용 설명서입니다. 처음 쓰는 분도, 데이터를 옮기려는 분도, 로그 템플릿을 만드는 분도 이 한 문서로 충분합니다.</p>
-      <div class="meta-row">
-        <span class="meta-chip">기준 버전 Lumi Ink v1.0</span>
-        <span class="meta-chip">2026-06-23 수정본</span>
-        <span class="meta-chip">실사용 설명서 · 홍보문 아님</span>
-      </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- 1. 루미잉크란 무엇인가 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-1">
-      <div class="section-head">
-        <div class="nib-num">01</div>
-        <h2>루미잉크란 무엇인가</h2>
-      </div>
-
-      <p>루미잉크는 창작 자료를 프로젝트 단위로 정리하는 <strong>로컬 우선</strong> 메모 웹앱입니다. 일반 문서를 쓰는 자유 메모뿐 아니라, AI 롤플레이와 세계관 관리에 맞춘 로어북, 대화 로그를 게시용으로 꾸미는 로그 저장, 국문·영문 설정을 함께 기록하는 페르소나, 여러 인물을 한 문서에 묶는 캐릭터 메모를 제공합니다.</p>
-
-      <h3>앱의 기본 구조</h3>
-      <ol class="steps">
-        <li>가장 바깥에 <strong>프로젝트</strong>가 있습니다.</li>
-        <li>각 프로젝트 안에 <strong>다섯 종류의 메모</strong>를 만듭니다.</li>
-        <li>메모 유형에 따라 편집 화면과 내보내기 형식이 달라집니다.</li>
-        <li>작성 데이터는 계정 서버가 아니라 현재 브라우저의 로컬 저장공간에 보관됩니다.</li>
-        <li>다른 기기나 브라우저로 옮길 때는 전체 백업 파일을 사용합니다.</li>
-      </ol>
-
-      <div class="callout warn">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <p><strong>로그인·클라우드 동기화가 없습니다.</strong> 같은 기기라도 다른 브라우저, 다른 브라우저 프로필, 시크릿 모드, 다른 배포 주소는 서로 다른 저장공간으로 취급될 수 있습니다.</p>
-        <p>따라서 중요한 자료는 주기적으로 전체 백업해야 합니다.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 2. 기능 구성 한눈에 보기 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-2">
-      <div class="section-head">
-        <div class="nib-num">02</div>
-        <h2>기능 구성 한눈에 보기</h2>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>영역</th><th>주된 용도</th><th>대표 기능</th><th>주요 내보내기 형식</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><strong>프로젝트</strong></td><td>작품·세션·세계관별 자료 묶기</td><td>태그, 색상, 썸네일, 프레임, 고정, 복제</td><td>재가져오기 가능한 프로젝트 HTML</td></tr>
-            <tr><td><strong>자유 메모</strong></td><td>자유로운 문서 작성</td><td>리치 서식, 이미지, 링크, 코드 블록, 파일 첨부</td><td>일반 HTML</td></tr>
-            <tr><td><strong>로어북</strong></td><td>SillyTavern용 World Info 작성</td><td>키워드, constant, Depth, 토큰 계산, 경량 마크다운</td><td>World Info JSON</td></tr>
-            <tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림, 50종 템플릿, 사용자 템플릿</td><td>인라인 HTML, 재가져오기 가능한 HTML</td></tr>
-            <tr><td><strong>페르소나</strong></td><td>한 인물의 국문·영문 카드</td><td>포트레이트, 정사각 썸네일, 태그, 갤러리, 토큰</td><td>재가져오기 가능한 HTML</td></tr>
-            <tr><td><strong>캐릭터 메모</strong></td><td>여러 인물과 제작 메모 관리</td><td>복수 캐릭터 페이지, 크리에이터 메모, 대표 표지</td><td>재가져오기 가능한 HTML</td></tr>
-            <tr><td><strong>전체 데이터</strong></td><td>보존·기기 이전</td><td>수동 백업, 자동 백업 10개, 병합/교체 복원</td><td>전체 백업 HTML</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 3. 설치와 실행 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-3">
-      <div class="section-head">
-        <div class="nib-num">03</div>
-        <h2>설치와 실행</h2>
-      </div>
-
-      <h3>3.1 웹앱으로 사용하기</h3>
-      <p>배포된 루미잉크 주소를 브라우저에서 열면 별도 설치 없이 사용할 수 있습니다. 다만 브라우저 데이터 삭제, 사이트 데이터 삭제, 시크릿 모드 종료 등으로 로컬 데이터가 사라질 수 있으므로 장기 사용 전에는 설치형 PWA로 추가하고 백업 습관을 잡는 편이 좋습니다.</p>
-
-      <h3>3.2 Android</h3>
-      <ol class="steps">
-        <li>Chrome에서 루미잉크 주소를 엽니다.</li>
-        <li>브라우저의 점 세 개 메뉴를 엽니다.</li>
-        <li><code>앱 설치</code> 또는 <code>홈 화면에 추가</code>를 선택합니다.</li>
-        <li>설치된 루미잉크 아이콘으로 실행합니다.</li>
-      </ol>
-
-      <h3>3.3 iPhone·iPad</h3>
-      <ol class="steps">
-        <li>Safari에서 루미잉크 주소를 엽니다.</li>
-        <li>공유 버튼을 누릅니다.</li>
-        <li><code>홈 화면에 추가</code>를 선택합니다.</li>
-      </ol>
-
-      <h3>3.4 데스크톱</h3>
-      <p>Chrome 또는 Edge의 주소창 설치 아이콘을 누르거나, 브라우저 메뉴에서 앱 설치를 선택합니다. 설치 후에는 독립 창 형태로 실행할 수 있습니다.</p>
-
-      <h3>3.5 설치 아이콘 선택</h3>
-      <p><code>설정 → 앱 설치 아이콘</code>에서 다음 10종을 고를 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">잉크 블루</span><span class="chip">골드</span><span class="chip">바이올렛</span><span class="chip">로즈</span><span class="chip">포레스트</span><span class="chip">파스텔 블루</span><span class="chip">파스텔 핑크</span><span class="chip">파스텔 그린</span><span class="chip">파스텔 퍼플</span><span class="chip">파스텔 옐로우</span>
-      </div>
-      <p>아이콘을 선택하면 해당 아이콘이 연결된 설치 전용 페이지로 이동합니다. 이미 설치한 PWA의 아이콘은 선택만으로 즉시 교체되지 않을 수 있습니다. 이 경우 기존 설치본을 제거하고 원하는 아이콘 페이지에서 다시 설치해야 합니다.</p>
-
-      <h3>3.6 오프라인 사용과 업데이트</h3>
-      <p>핵심 앱 파일, 토크나이저, 아이콘, 로그 템플릿 등은 서비스 워커 캐시에 저장됩니다. 한 번 정상적으로 불러온 뒤에는 네트워크가 끊겨도 대부분의 작성·열람 기능을 사용할 수 있습니다.</p>
-      <p>앱의 HTML과 JavaScript는 온라인일 때 새 파일을 먼저 확인하고, 네트워크를 사용할 수 없을 때 캐시로 돌아갑니다. 업데이트가 배포되었는데 이전 화면이 남아 있다면 온라인 상태에서 앱을 다시 열거나 새로고침합니다.</p>
-
-      <div class="callout note">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>웹폰트를 외부 주소로 설정한 경우 해당 폰트의 최초 로드는 인터넷 연결이 필요할 수 있습니다. 폰트를 불러오지 못해도 작성 데이터가 사라지지는 않으며 대체 글꼴로 표시됩니다.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 4. 화면과 기본 조작 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-4">
-      <div class="section-head">
-        <div class="nib-num">04</div>
-        <h2>화면과 기본 조작</h2>
-      </div>
-
-      <h3>4.1 홈 화면</h3>
-      <p>홈 화면은 프로젝트와 최근 메모를 빠르게 여는 시작 화면입니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">메뉴 버튼</div><div class="v">왼쪽 상단 — 사이드바를 엽니다.</div></div>
-        <div class="kv-row"><div class="k">로고</div><div class="v">가운데 Lumi Ink 로고 — 홈 목록을 맨 위로 부드럽게 이동합니다.</div></div>
-        <div class="kv-row"><div class="k">설정 버튼</div><div class="v">오른쪽 상단 — 설정 화면을 엽니다.</div></div>
-        <div class="kv-row"><div class="k">검색창</div><div class="v">프로젝트와 메모를 통합 검색합니다.</div></div>
-        <div class="kv-row"><div class="k">새 메모</div><div class="v">메모 유형과 저장할 프로젝트를 순서대로 선택합니다.</div></div>
-        <div class="kv-row"><div class="k">새 프로젝트</div><div class="v">이름과 태그를 입력해 프로젝트를 만듭니다.</div></div>
-        <div class="kv-row"><div class="k">프로젝트 영역</div><div class="v">프로젝트 카드, 메모 수, 수정 시각을 표시합니다.</div></div>
-        <div class="kv-row"><div class="k">최근 수정 메모</div><div class="v">최대 10개의 최근 메모를 표시합니다.</div></div>
-        <div class="kv-row"><div class="k">하단 통계</div><div class="v">전체 프로젝트 수와 전체 메모 수를 표시합니다.</div></div>
-        <div class="kv-row"><div class="k"><code>+</code> 버튼</div><div class="v">우측 하단 — 새 메모 만들기를 엽니다.</div></div>
-      </div>
-      <p>프로젝트 수가 적어 프로젝트 영역 자체에 스크롤이 생기지 않더라도, 그 영역에서 위아래로 휠이나 스와이프하면 홈 전체 화면의 스크롤로 자연스럽게 이어집니다. 프로젝트 목록이 긴 경우에는 목록의 위·아래 경계에서 바깥 홈 스크롤로 연결됩니다.</p>
-
-      <h3>4.2 사이드바</h3>
-      <p>어느 주요 화면에서든 왼쪽 위 메뉴 버튼을 누르면 사이드바를 열 수 있습니다. 모바일에서는 화면 왼쪽 가장자리에서 오른쪽으로 스와이프해도 열립니다.</p>
-      <p>사이드바에는 다음 항목이 있습니다.</p>
-      <ul>
-        <li>전체 프로젝트와 각 프로젝트의 메모 수</li>
-        <li>최근 수정한 메모 최대 10개</li>
-        <li>새 메모 · 새 프로젝트</li>
-        <li><code>열기</code> — HTML 또는 JSON 파일 가져오기</li>
-        <li>설정</li>
-        <li>밝게/어둡게 빠른 전환</li>
-      </ul>
-      <p>사이드바의 Lumi Ink 로고를 누르면 홈으로 돌아갑니다.</p>
-
-      <h3>4.3 뒤로 가기와 겹친 창 닫기</h3>
-      <p>브라우저 또는 기기의 뒤로 가기는 먼저 현재 화면 위에 열린 요소를 닫습니다. <strong>선택 모드 → 이미지 자르기 → 이미지 확대 화면 → 팝업 → 하단 메뉴 → 사이드바</strong> 순으로 가장 위의 요소를 정리한 뒤 이전 화면으로 이동합니다.</p>
-      <p>작성 화면에서 뒤로 가거나 다른 메모를 열 때에는 현재 편집 내용을 먼저 저장한 뒤 화면을 전환합니다.</p>
-
-      <h3>4.4 길게 누르기와 우클릭</h3>
-      <p>프로젝트 카드나 메모 카드를 길게 누르면 해당 항목의 관리 메뉴가 열립니다. 데스크톱에서는 우클릭으로 같은 메뉴를 열 수 있습니다.</p>
-      <div class="callout note">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>로그 템플릿은 길게 누르기의 의미가 다릅니다. 템플릿 선택 창에서 길게 누르면 템플릿이 즐겨찾기에 추가되거나 해제됩니다.</p>
-      </div>
-
-      <h3>4.5 저장 상태 표시</h3>
-      <p>각 편집 화면의 상단에는 <code>기록 중</code>, <code>저장됨</code> 상태가 잠시 표시됩니다. 일반적인 텍스트 입력은 약 0.55초 동안 추가 입력이 없으면 자동 저장됩니다. 화면을 떠날 때에도 남아 있는 편집 내용을 저장합니다.</p>
-      <p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 저장할 수 있습니다. 이 단축키는 자유 메모, 로어북, 로그, 페르소나, 캐릭터 메모 편집 화면에서 동작합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 5. 프로젝트 관리 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-5">
-      <div class="section-head">
-        <div class="nib-num">05</div>
-        <h2>프로젝트 관리</h2>
-      </div>
-
-      <h3>5.1 프로젝트 만들기</h3>
-      <p>처음 실행하면 삭제할 수 없는 <code>기본 메모함</code>이 자동으로 준비됩니다. 프로젝트를 따로 나누고 싶지 않은 자료나 가져오기 과정에서 위치를 잃은 메모를 안전하게 모으는 기본 위치입니다.</p>
-      <ol class="steps">
-        <li>홈이나 사이드바에서 <code>새 프로젝트</code>를 누릅니다.</li>
-        <li>프로젝트 이름을 입력합니다. 이름은 필수이며 최대 60자입니다.</li>
-        <li>선택적으로 태그를 쉼표로 구분해 입력합니다. 입력란 전체는 최대 500자입니다.</li>
-        <li><code>만들기</code>를 누릅니다.</li>
-      </ol>
-      <p>프로젝트 편집 창에는 과거 호환을 위해 내부적으로 설명 필드가 남아 있지만, 현재 화면에서는 쉼표로 나눈 값을 프로젝트 태그 칩으로 표시합니다. 예를 들어 <code>판타지, 로맨스, 진행중</code>을 입력하면 프로젝트 상세 상단에 세 개의 태그가 나타납니다.</p>
-
-      <h3>5.2 프로젝트 상세 화면</h3>
-      <p>프로젝트를 열면 다음 정보가 보입니다.</p>
-      <ul>
-        <li>프로젝트 썸네일</li>
-        <li>프로젝트 이름</li>
-        <li>전체 메모 수</li>
-        <li>프로젝트 태그</li>
-        <li>유형별 메모 목록</li>
-      </ul>
-      <p>메모 섹션은 <strong>캐릭터 → 페르소나 → 로그 → 로어북 → 자유 메모</strong> 순서로 표시됩니다. 각 섹션 안에서는 먼저 고정된 메모가 나오고, 나머지 메모가 선택한 정렬 방식으로 배치됩니다.</p>
-
-      <h3>5.3 프로젝트 정렬</h3>
-      <p>홈의 정렬 버튼에서 다음 네 가지를 선택할 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">최신순</span><span class="chip">오래된순</span><span class="chip">이름순 ㄱ→ㅎ</span><span class="chip">이름순 ㅎ→ㄱ</span>
-      </div>
-      <p>프로젝트 상세 화면의 첫 메모 섹션에 있는 정렬 버튼은 모든 메모 섹션의 정렬 기준을 함께 바꿉니다. <strong>홈 프로젝트 정렬과 프로젝트 안 메모 정렬은 서로 별도로 저장됩니다.</strong></p>
-
-      <h3>5.4 프로젝트 관리 메뉴</h3>
-      <p>프로젝트 카드의 점 세 개 버튼을 누르거나 카드를 길게 누르면 다음 작업을 할 수 있습니다.</p>
-      <ul>
-        <li>새 메모 만들기</li>
-        <li>상단 고정 또는 고정 해제</li>
-        <li>이름·태그 편집</li>
-        <li>프로젝트 색상 지정</li>
-        <li>프로젝트 파일로 내보내기</li>
-        <li>프로젝트 전체 복제</li>
-        <li>프로젝트 아이콘 변경</li>
-        <li>썸네일 프레임 선택</li>
-        <li>소속 로어북을 World Info로 묶어 내보내기</li>
-        <li>프로젝트 삭제</li>
-      </ul>
-      <p>홈 화면에서는 <code>선택</code> 항목도 표시되어 여러 프로젝트를 한꺼번에 삭제할 수 있습니다.</p>
-
-      <h3>5.5 프로젝트 고정</h3>
-      <p>프로젝트는 최대 <strong>3개</strong>까지 상단에 고정할 수 있습니다. 고정된 프로젝트끼리는 고정한 순서를 기준으로 표시되고, 아래에 나머지 프로젝트가 이어집니다.</p>
-
-      <h3>5.6 프로젝트 색상</h3>
-      <p>프로젝트 카드의 경계와 상세 썸네일 강조에 사용할 색상을 지정할 수 있습니다. 제공되는 색상은 다음 10종입니다.</p>
-      <div class="chip-row">
-        <span class="chip">루미 핑크</span><span class="chip">코랄 잉크</span><span class="chip">선셋 오렌지</span><span class="chip">골드 글로우</span><span class="chip">포레스트 그린</span><span class="chip">아쿠아 민트</span><span class="chip">네온 시안</span><span class="chip">미드나잇 블루</span><span class="chip">라벤더 퍼플</span><span class="chip">미스티 그레이</span>
-      </div>
-      <p>색상 없음으로 되돌리는 항목도 있습니다.</p>
-
-      <h3>5.7 프로젝트 썸네일</h3>
-      <p>기본 제공 썸네일 16종 중 하나를 고르거나 사용자 이미지를 직접 업로드할 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">별 고래</span><span class="chip">분홍 창가</span><span class="chip">황금 옥좌</span><span class="chip">얼음 성</span><span class="chip">빛의 숲길</span><span class="chip">야경 도시</span><span class="chip">푸른 하늘성</span><span class="chip">분홍 공주방</span><span class="chip">깃펜과 편지</span><span class="chip">수정 첨탑</span><span class="chip">보라 수정</span><span class="chip">달빛 서재</span><span class="chip">이상한 나라</span><span class="chip">겨울 보름달</span><span class="chip">라벤더 정원</span><span class="chip">산호 바다</span>
-      </div>
-      <p>업로드 이미지는 정사각형 자르기 화면에서 위치와 확대 비율을 조절한 뒤 <strong>512×512</strong> 이미지로 저장합니다.</p>
-
-      <h3>5.8 썸네일 프레임</h3>
-      <p>프로젝트 썸네일 바깥에는 20종의 장식 프레임을 적용할 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">클래식</span><span class="chip">비드</span><span class="chip">바로크</span><span class="chip">아르데코</span><span class="chip">로프</span><span class="chip">고딕</span><span class="chip">보태니컬</span><span class="chip">스캘럽</span><span class="chip">스타라이트</span><span class="chip">로열</span><span class="chip">슬림 헤어라인</span><span class="chip">슬림 코너 브래킷</span><span class="chip">슬림 인셋 닷</span><span class="chip">슬림 파인 비드</span><span class="chip">슬림 다이아 코너</span><span class="chip">슬림 미니 노치</span><span class="chip">슬림 덩굴</span><span class="chip">슬림 물결</span><span class="chip">슬림 점선</span><span class="chip">슬림 스파클</span>
-      </div>
-      <p>프레임을 고른 뒤 23종의 고정 색상과 <code>테마와 연동</code>을 포함한 총 24가지 표현 중 하나를 선택합니다. 고정 색상에는 골드, 로즈골드, 실버, 브론즈, 화이트, 블랙, 네이비, 버건디, 에메랄드, 바이올렛, 스카이, 로즈, 여러 파스텔 계열, 투명 글래스, 글래시한 명암이 포함됩니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">테마와 연동</div><div class="v">앱의 컬러 테마를 바꾸면 프레임 색도 함께 바뀝니다.</div></div>
-        <div class="kv-row"><div class="k">투명 글래스</div><div class="v">반투명 흰색 유리 프레임처럼 표시됩니다.</div></div>
-        <div class="kv-row"><div class="k">글래시한 명암</div><div class="v">반투명 하이라이트와 그림자를 사용해 깊이를 표현합니다.</div></div>
-      </div>
-      <p>프레임은 홈 카드, 사이드바, 프로젝트 선택 창, 프로젝트 상세 헤더에서 같은 구성으로 표시됩니다.</p>
-
-      <h3>5.9 프로젝트 복제와 삭제</h3>
-      <p>프로젝트 복제는 프로젝트 정보뿐 아니라 내부의 모든 메모와 자유 메모 첨부파일을 새 ID로 복사합니다. 복제본 이름에는 <code>(사본)</code>이 붙습니다.</p>
-      <p>프로젝트를 삭제하면 소속 메모와 그 첨부파일도 함께 삭제됩니다. 삭제 직후 약 <strong>6초</strong> 동안 표시되는 <code>되돌리기</code>를 누르면 프로젝트, 메모, 첨부파일을 복원할 수 있습니다. 삭제 전에는 자동 백업도 한 번 실행합니다.</p>
-
-      <h3>5.10 프로젝트 단위 내보내기와 불러오기</h3>
-      <p>프로젝트 관리 메뉴의 <code>프로젝트 파일로 내보내기</code>는 프로젝트 정보, 소속 메모 전체, 본문 이미지와 자유 메모 첨부파일을 하나의 HTML 패키지로 저장합니다. 사용자 템플릿을 적용한 로그는 저장된 템플릿 스냅샷과 이름 가림 설정도 함께 포함합니다.</p>
-      <p>다른 루미잉크에서 사이드바의 <code>파일 열기</code>로 이 HTML을 선택하면 기존 데이터를 건드리지 않고 새 프로젝트로 가져옵니다. 프로젝트·메모·첨부파일에는 모두 새 ID가 발급되며, 같은 이름이 있으면 <code>(가져옴)</code>, <code>(가져옴 2)</code>처럼 자동으로 구분됩니다.</p>
-      <div class="callout info">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
-        <p>프로젝트 HTML은 한 프로젝트를 공유하거나 옮기는 용도입니다. 앱 전체를 보존하거나 기기를 이전할 때는 <code>설정 → 전체 백업</code>을 사용합니다.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 6. 메모 만들기와 공통 관리 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-6">
-      <div class="section-head">
-        <div class="nib-num">06</div>
-        <h2>메모 만들기와 공통 관리</h2>
-      </div>
-
-      <h3>6.1 새 메모 만들기</h3>
-      <ol class="steps">
-        <li>홈·사이드바·프로젝트 상세의 <code>새 메모</code> 또는 <code>+</code> 버튼을 누릅니다.</li>
-        <li>자유 메모, 로어북, 로그 저장, 페르소나, 캐릭터 메모 중 하나를 고릅니다.</li>
-        <li>프로젝트 안에서 시작했다면 그 프로젝트에 바로 생성됩니다.</li>
-        <li>홈이나 사이드바에서 시작했다면 저장할 프로젝트를 선택합니다.</li>
-        <li>프로젝트가 없다면 선택 과정에서 새 프로젝트를 만들 수 있습니다.</li>
-      </ol>
-
-      <h3>6.2 자동 제목과 수동 제목</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>메모 유형</th><th>자동 제목 규칙</th></tr></thead>
-          <tbody>
-            <tr><td>자유 메모</td><td>본문의 첫 번째 비어 있지 않은 줄을 최대 52자로 사용</td></tr>
-            <tr><td>로어북</td><td>기본값 <code>이름 없는 로어북</code>; 필요할 때 직접 변경</td></tr>
-            <tr><td>로그</td><td>원문 첫 줄에서 따옴표·대괄호·별표 등의 표식 일부를 제거해 최대 52자로 사용</td></tr>
-            <tr><td>페르소나</td><td>한국어 이름, 없으면 영어 이름 사용</td></tr>
-            <tr><td>캐릭터 메모</td><td>첫 캐릭터 이름을 사용하고 여러 페이지면 <code>이름 외 N명</code> 형식 사용</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>메모 관리 메뉴에서 이름을 직접 바꾸면 해당 제목은 <strong>잠금 상태</strong>가 되어 이후 본문이나 인물 이름이 바뀌어도 자동 제목으로 덮어쓰지 않습니다.</p>
-
-      <h3>6.3 메모별 색상</h3>
-      <p>각 메모에는 프로젝트 색상과 별개로 10종의 색상 표식을 지정할 수 있습니다. 자유 메모·로어북·로그는 목록의 점과 경계에 반영되고, 페르소나·캐릭터는 썸네일 카드 경계에 반영됩니다.</p>
-
-      <h3>6.4 메모 고정</h3>
-      <p>프로젝트 상세의 각 메모 유형 섹션마다 최대 3개를 고정할 수 있습니다. 예를 들어 자유 메모 3개와 로그 3개를 각각 고정할 수 있습니다.</p>
-      <p>홈의 최근 메모와 사이드바의 최근 메모에는 서로 독립적인 고정 상태가 있습니다. 각 위치에서 최대 3개까지 상단에 고정할 수 있습니다. <strong>홈 고정과 사이드바 고정은 프로젝트 상세의 메모 고정과 별개입니다.</strong></p>
-
-      <h3>6.5 메모 관리 메뉴의 공통 작업</h3>
-      <p>메모 유형에 따라 세부 항목은 다르지만 일반적으로 다음 기능을 제공합니다.</p>
-      <ul>
-        <li>선택 모드 진입</li>
-        <li>상단 고정 또는 해제</li>
-        <li>이름 바꾸기</li>
-        <li>색상 지정</li>
-        <li>해당 유형의 파일로 내보내기</li>
-        <li>다른 프로젝트로 이동</li>
-        <li>선택한 프로젝트에 복제</li>
-        <li>삭제</li>
-      </ul>
-      <p>복제할 때 자유 메모 첨부파일도 새 파일 레코드로 함께 복사됩니다. 삭제 직후에는 약 6초 동안 되돌릴 수 있습니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 7. 자유 메모 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-7">
-      <div class="section-head">
-        <div class="nib-num">07</div>
-        <h2>자유 메모</h2>
-      </div>
-
-      <h3>7.1 용도와 화면 구분</h3>
-      <p>자유 메모는 HTML 서식을 보존하는 일반 문서형 메모입니다. 처음 열면 읽기 화면이 나타나며, 상단 편집 버튼이나 본문 더블클릭으로 편집 화면에 들어갑니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">읽기 화면</div><div class="v">완성된 본문과 첨부파일을 열람합니다.</div></div>
-        <div class="kv-row"><div class="k">편집 화면</div><div class="v">리치 에디터 또는 HTML 소스로 내용을 수정합니다.</div></div>
-      </div>
-      <p>읽기 화면의 본문을 길게 누르면 서식을 제외한 본문 전체 텍스트를 클립보드에 복사합니다.</p>
-
-      <h3>7.2 서식 도구</h3>
-      <p>편집 툴바에서 다음 기능을 사용할 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">굵게</span><span class="chip">기울임</span><span class="chip">밑줄</span><span class="chip">취소선</span><span class="chip">글자 크기 줄이기·늘리기</span><span class="chip">글자 크기 목록 선택</span><span class="chip">글자 색</span><span class="chip">형광펜</span><span class="chip">왼쪽·가운데·오른쪽 정렬</span><span class="chip">글머리표 목록</span><span class="chip">번호 목록</span><span class="chip">이미지 삽입</span><span class="chip">일반 파일 첨부</span><span class="chip">하이퍼링크</span><span class="chip">코드 블록</span><span class="chip">서식·코드·링크 지우기</span><span class="chip">실행 취소</span><span class="chip">HTML 소스 보기·편집</span><span class="chip">툴바 접기·펼치기</span>
-      </div>
-
-      <h3>7.3 글자 크기</h3>
-      <p>텍스트를 선택한 뒤 크기 목록에서 다음 일곱 단계 중 하나를 고를 수 있습니다.</p>
-      <div class="chip-row">
-        <span class="chip">아주 작게 12px</span><span class="chip">작게 14px</span><span class="chip">보통 16px</span><span class="chip">크게 19px</span><span class="chip">더 크게 23px</span><span class="chip">제목 28px</span><span class="chip">대제목 34px</span>
-      </div>
-      <p><code>A−</code>, <code>A+</code>는 현재 크기를 한 단계씩 바꿉니다.</p>
-
-      <h3>7.4 글자 색</h3>
-      <p>기본 팔레트, 운영체제 색상 선택기, HEX 직접 입력을 지원합니다. 마음에 드는 색을 <code>내 색상</code>에 저장할 수 있으며 최대 24개까지 유지합니다. 마지막으로 적용한 색도 다음 편집 때 기억합니다.</p>
-
-      <h3>7.5 형광펜</h3>
-      <p>텍스트를 선택한 뒤 형광펜 버튼을 짧게 누르면 현재 형광펜 색을 적용하거나 이미 적용된 형광펜을 제거합니다. 버튼을 약 0.48초 동안 길게 누르면 다음 색상 선택 창이 열립니다.</p>
-      <div class="chip-row">
-        <span class="chip">하늘색</span><span class="chip">핑크색</span><span class="chip">연두색</span><span class="chip">연보라색</span><span class="chip">노란색</span>
-      </div>
-      <p>선택한 형광펜 색은 다음 사용에도 유지되며 캐릭터 크리에이터 메모의 형광펜과 공유됩니다.</p>
-
-      <h3>7.6 HTML 소스 편집</h3>
-      <p><code>&lt;&gt;</code> 형태의 코드 버튼을 누르면 현재 메모의 HTML 소스를 직접 볼 수 있습니다. 소스 모드에서 수정한 HTML은 일반 편집 모드와 같은 본문 데이터로 저장됩니다.</p>
-      <div class="callout warn">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <p>이 기능은 고급 사용자용입니다. 앱 안에서 직접 입력한 소스는 가져온 외부 HTML과 달리 별도의 전체 정화 과정을 거치지 않으므로, 출처를 알 수 없는 HTML·이벤트 속성·스크립트성 코드를 붙여넣지 않는 것이 안전합니다.</p>
-      </div>
-
-      <h3>7.7 이미지 삽입</h3>
-      <p>이미지는 문서 본문 안에 삽입됩니다. 긴 변을 최대 1280px로 줄이고 JPEG 데이터로 변환한 뒤 메모 HTML 안에 포함합니다.</p>
-      <ul>
-        <li>파일 크기 12MB 이하</li>
-        <li>전체 해상도 2,400만 픽셀 이하</li>
-        <li>일반 이미지 파일만 허용</li>
-        <li>SVG는 업로드 이미지로 허용하지 않음</li>
-      </ul>
-
-      <h3>7.8 파일 첨부</h3>
-      <p>본문 이미지와 별개로 일반 파일을 첨부할 수 있습니다.</p>
-      <ul>
-        <li>한 파일당 최대 15MB</li>
-        <li>이미지, 문서, 압축 파일, 오디오, 비디오 등 파일 유형에 맞춘 아이콘 표시</li>
-        <li>읽기·편집 화면에서 파일 다운로드 가능</li>
-        <li>편집 화면에서 첨부 삭제 가능</li>
-        <li>첨부 삭제는 확인 창을 거치지만 즉시 되돌리기 버튼은 제공하지 않음</li>
-      </ul>
-      <p>첨부파일은 메모 본문이 아니라 브라우저의 별도 파일 저장소에 보관됩니다. 프로젝트·메모 복제와 전체 백업에는 포함되지만, <strong>자유 메모 하나를 일반 HTML로 저장할 때에는 첨부파일이 포함되지 않습니다.</strong></p>
-
-      <h3>7.9 링크</h3>
-      <p>링크를 걸 텍스트를 먼저 선택한 뒤 링크 버튼을 누르고 주소를 입력합니다. <code>https://</code>를 생략하면 자동으로 붙입니다.</p>
-      <ul>
-        <li><code>http://</code> 또는 <code>https://</code> 주소를 입력한 뒤 공백이나 Enter를 누르면 자동 링크 변환</li>
-        <li>선택한 텍스트 위에 URL만 붙여넣으면 해당 텍스트에 링크 적용</li>
-        <li>선택 영역 없이 URL만 붙여넣으면 URL 자체를 링크로 삽입</li>
-        <li>읽기 화면의 링크는 새 창에서 열리고 <code>noopener noreferrer</code> 보호 속성을 사용</li>
-      </ul>
-
-      <h3>7.10 코드 블록</h3>
-      <p>코드 블록 버튼은 현재 문단을 <code>pre</code> 형식으로 바꿉니다. 읽기 화면에서는 각 코드 블록 오른쪽 위에 <code>복사</code> 버튼이 자동으로 붙습니다.</p>
-      <p>지우개 버튼은 선택 영역의 일반 서식, 링크, 코드 블록·코드 요소를 함께 제거합니다.</p>
-
-      <h3>7.11 자유 메모 HTML 저장과 다시 열기</h3>
-      <p>메모 관리 메뉴의 <code>.html로 저장</code>은 본문 서식과 본문 안 이미지가 포함된 일반 HTML 문서를 만듭니다. 이 파일은 브라우저에서 독립적으로 열 수 있습니다.</p>
-      <ul>
-        <li>별도 첨부파일은 포함되지 않습니다.</li>
-        <li>루미잉크 고유 메타데이터를 넣는 페르소나·캐릭터·로그 HTML과 달리, 자유 메모 HTML은 일반 문서 형식입니다.</li>
-        <li>루미잉크의 <code>열기</code>로 다시 가져오면 HTML 제목과 정화된 본문을 사용해 새 자유 메모를 만듭니다.</li>
-        <li>외부 HTML을 가져올 때 스크립트, 폼, iframe, 위험한 속성, 원격 이미지 등은 제거하거나 제한합니다.</li>
-      </ul>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 8. 로어북 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-8">
-      <div class="section-head">
-        <div class="nib-num">08</div>
-        <h2>로어북</h2>
-      </div>
-
-      <h3>8.1 용도</h3>
-      <p>로어북은 SillyTavern World Info 항목을 작성하고 관리하는 메모 유형입니다. 원문은 경량 마크다운으로 저장하며, 발동 키워드와 constant, 삽입 깊이를 함께 기록합니다.</p>
-
-      <h3>8.2 발동 키워드</h3>
-      <p>상단 <code>발동 키워드</code> 입력란에 값을 입력한 뒤 Enter 또는 쉼표를 누르면 키워드 칩이 생성됩니다.</p>
-      <ul>
-        <li>한 번에 쉼표로 여러 키워드 추가 가능</li>
-        <li>동일한 문자열의 중복 추가 방지</li>
-        <li>각 칩의 <code>×</code> 버튼으로 개별 삭제</li>
-        <li>World Info 내보내기 때 <code>key</code> 배열로 전달</li>
-      </ul>
-
-      <h3>8.3 항상 활성</h3>
-      <p><code>항상 활성 (constant)</code>을 켜면 키워드 일치 여부와 관계없이 항상 활성화되는 World Info 항목으로 내보냅니다. JSON에서는 <code>constant: true</code>가 됩니다.</p>
-
-      <h3>8.4 깊이</h3>
-      <p>깊이 스위치를 켜면 World Info의 Depth 위치를 사용합니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">입력 범위</div><div class="v">0 ~ 999</div></div>
-        <div class="kv-row"><div class="k">기본값</div><div class="v">4</div></div>
-        <div class="kv-row"><div class="k">켜짐</div><div class="v">내보내기 JSON의 <code>position</code>이 4가 되고 입력한 <code>depth</code>를 사용</div></div>
-        <div class="kv-row"><div class="k">꺼짐</div><div class="v">일반 위치 값으로 내보냄</div></div>
-      </div>
-
-      <h3>8.5 지원하는 경량 마크다운</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>입력</th><th>보기 결과</th></tr></thead>
-          <tbody>
-            <tr><td><code># 제목</code>, <code>## 제목</code>, <code>### 제목</code></td><td>1~3단계 제목</td></tr>
-            <tr><td><code>**굵게**</code></td><td>굵은 글자</td></tr>
-            <tr><td><code>*기울임*</code></td><td>기울임</td></tr>
-            <tr><td><code>`코드`</code></td><td>인라인 코드</td></tr>
-            <tr><td><code>[이름](https://주소)</code></td><td>외부 링크</td></tr>
-            <tr><td>줄 단독 <code>@@명령</code></td><td>명령 칩 행</td></tr>
-            <tr><td>문장 안 <code>@@명령</code></td><td>인라인 명령 칩</td></tr>
-            <tr><td><code>- 항목</code>, <code>* 항목</code>, <code>+ 항목</code></td><td>글머리표 목록</td></tr>
-            <tr><td><code>1. 항목</code></td><td>번호 목록</td></tr>
-            <tr><td><code>- 라벨: 값</code></td><td>라벨 미니 칩 행</td></tr>
-            <tr><td><code>&gt; 인용</code></td><td>인용문</td></tr>
-            <tr><td><code>---</code>, <code>***</code>, <code>___</code></td><td>구분선</td></tr>
-            <tr><td>삼중 백틱</td><td>여러 줄 코드 블록</td></tr>
-            <tr><td><code>&lt;태그&gt;</code>부터 <code>&lt;/태그&gt;</code></td><td>태그 이름이 붙은 박스</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>제목과 목록은 <code>#제목</code>, <code>-내용</code>처럼 표식 뒤 공백이 없어도 인식합니다.</p>
-
-      <h3>8.6 편집과 미리보기</h3>
-      <p>눈 모양 버튼으로 원문 편집과 렌더링된 미리보기를 전환합니다. 미리보기 화면을 길게 누르면 꾸며진 화면이 아니라 원본 마크다운 전체를 클립보드에 복사합니다.</p>
-
-      <h3>8.7 토큰 계산</h3>
-      <p>로어북 본문은 번들된 cl100k 계열 토크나이저로 토큰 수를 계산합니다. 토크나이저는 필요할 때 불러오며 오프라인 캐시 대상입니다. 계산할 수 없는 환경에서는 <code>토큰 계산 불가</code>로 표시합니다.</p>
-
-      <h3>8.8 World Info JSON 내보내기</h3>
-      <p>개별 로어북의 관리 메뉴에서 <code>World Info(.json)로 내보내기</code>를 선택할 수 있습니다. 프로젝트 관리 메뉴에서는 프로젝트 안의 여러 로어북을 선택해 하나의 JSON으로 묶을 수 있습니다.</p>
-      <p>여러 항목 내보내기 과정은 다음과 같습니다.</p>
-      <ol class="steps">
-        <li>포함할 로어북을 체크합니다.</li>
-        <li>선택된 항목 수와 합산 토큰을 확인합니다.</li>
-        <li>파일 이름을 지정합니다.</li>
-        <li>하나의 <code>entries</code> 객체를 가진 SillyTavern World Info JSON을 저장합니다.</li>
-      </ol>
-      <p>각 항목에는 제목, 키워드, 본문, constant, Depth, 기본 확률과 순서값 등이 들어갑니다.</p>
-
-      <h3>8.9 World Info JSON 가져오기</h3>
-      <p>사이드바의 <code>열기</code>에서 World Info JSON을 선택하면 <code>entries</code> 객체 또는 항목 배열을 읽습니다. 대상 프로젝트를 고르면 각 World Info 항목이 별도의 로어북 메모로 생성됩니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k"><code>comment</code></div><div class="v">→ 로어북 제목</div></div>
-        <div class="kv-row"><div class="k"><code>key</code> / <code>keys</code></div><div class="v">→ 발동 키워드</div></div>
-        <div class="kv-row"><div class="k"><code>content</code></div><div class="v">→ 본문</div></div>
-        <div class="kv-row"><div class="k"><code>constant</code></div><div class="v">→ 항상 활성</div></div>
-        <div class="kv-row"><div class="k"><code>position: 4</code></div><div class="v">→ 깊이 사용</div></div>
-        <div class="kv-row"><div class="k"><code>depth</code></div><div class="v">→ 깊이 값</div></div>
-      </div>
-
-      <h3>8.10 로어북 합치기</h3>
-      <p>같은 프로젝트에서 로어북을 두 개 이상 선택한 뒤 <code>합치기</code>를 누르면 원본을 삭제하지 않고 <code>합친 로어북</code>이라는 새 메모를 만듭니다. 본문은 빈 줄 두 개로 이어 붙입니다. <strong>키워드, constant, Depth는 자동 병합하지 않으므로</strong> 새 메모에서 다시 설정해야 합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 9. 로그 저장 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-9">
-      <div class="section-head">
-        <div class="nib-num">09</div>
-        <h2>로그 저장</h2>
-      </div>
-
-      <h3>9.1 기본 개념</h3>
-      <p>로그 저장은 원문과 꾸며진 보기를 분리하는 메모 유형입니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">편집 모드</div><div class="v">사용자가 입력한 원문을 그대로 수정합니다.</div></div>
-        <div class="kv-row"><div class="k">보기 모드</div><div class="v">선택한 템플릿의 정규식과 스타일을 적용한 결과만 보여줍니다.</div></div>
-      </div>
-      <ul>
-        <li>원문에는 꾸밈용 HTML을 직접 삽입하지 않습니다.</li>
-        <li>템플릿을 바꾸거나 이름 가림을 적용해도 원문은 유지됩니다.</li>
-      </ul>
-      <p>눈·연필 버튼으로 두 모드를 전환합니다.</p>
-
-      <h3>9.2 정규식 디자인</h3>
-      <p>템플릿은 일반적으로 다음 표식을 찾아 서로 다른 스타일을 적용합니다.</p>
-      <div class="chip-row">
-        <span class="chip gold"><code>"큰따옴표 안쪽"</code></span>
-        <span class="chip gold"><code>'작은따옴표 안쪽'</code></span>
-        <span class="chip gold"><code>[대괄호 안쪽]</code></span>
-        <span class="chip gold"><code>**굵게 형식**</code></span>
-        <span class="chip gold"><code>*기울임 형식*</code></span>
-      </div>
-      <p>실제 인식 표식, 구분자 제거 여부, 색상과 테두리는 템플릿마다 다릅니다. <strong>규칙은 템플릿 JSON의 배열 순서대로 적용됩니다.</strong></p>
-
-      <h3>9.3 이름 가림</h3>
-      <p>로그에 등장하는 페르소나명, 본명, 애칭, 호칭 등을 보기 결과에서 다른 표시로 치환할 수 있습니다.</p>
-      <ol class="steps">
-        <li><code>가릴 원본 이름</code>에 이름을 입력합니다.</li>
-        <li>추가 이름이 있으면 <code>+ 원본 이름</code>을 누릅니다.</li>
-        <li>필요하면 <code>대체 표시</code>를 입력합니다.</li>
-        <li><code>이름 가림 적용</code>을 누릅니다.</li>
-      </ol>
-      <p>세부 동작은 다음과 같습니다.</p>
-      <ul>
-        <li>원본 이름은 최대 20개입니다.</li>
-        <li>같은 이름은 데이터 저장 시 중복 제거됩니다.</li>
-        <li>여러 이름이 겹치면 긴 이름부터 처리합니다.</li>
-        <li>이름 비교는 대소문자를 구분하는 정확한 문자열 검색입니다.</li>
-        <li>단어 경계를 따로 보지 않으므로 다른 단어 안에 포함된 문자열도 치환될 수 있습니다.</li>
-        <li>대체 표시를 비워 두면 템플릿이 지정한 기본 가림 문자열을 사용합니다.</li>
-        <li>모든 이름은 같은 대체 문자열과 같은 템플릿 가림 스타일을 사용합니다.</li>
-        <li>이름 가림은 본문뿐 아니라 꾸며진 로그의 제목 영역에도 적용됩니다.</li>
-        <li>원문과 메모의 실제 제목 데이터는 바뀌지 않고 보기·복사·내보내기 결과에서만 가립니다.</li>
-      </ul>
-
-      <h3>9.4 기본 제공 템플릿 50종</h3>
-      <p>템플릿 선택 창의 <code>기본</code> 탭에는 50종이 들어 있습니다. 목록은 이름순으로 정렬할 수 있으며, 별도의 <code>50종 소개 보기</code> 페이지에서 샘플과 설명을 확인할 수 있습니다.</p>
-      <p>전체 이름은 <a href="#app-a">부록 A</a>에 정리되어 있습니다.</p>
-
-      <h3>9.5 템플릿 선택 창</h3>
-      <p>템플릿 창은 세 탭으로 구성됩니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">기본</div><div class="v">앱에 포함된 50종</div></div>
-        <div class="kv-row"><div class="k">사용자</div><div class="v">사용자가 올린 템플릿과 현재 메모에 보존된 사용자 템플릿</div></div>
-        <div class="kv-row"><div class="k">즐겨찾기</div><div class="v">길게 눌러 고정한 템플릿</div></div>
-      </div>
-      <p>창 안에서 할 수 있는 작업은 다음과 같습니다.</p>
-      <ul>
-        <li>템플릿 이름, 설명, 제작자, ID, 규칙 이름, 정규식 내용 검색</li>
-        <li>이름 오름차순·내림차순 정렬</li>
-        <li>템플릿을 길게 눌러 즐겨찾기 추가·해제</li>
-        <li>즐겨찾기된 템플릿을 일반 탭 상단에 우선 표시</li>
-        <li>사용자 템플릿 삭제</li>
-        <li>JSON 템플릿 업로드</li>
-        <li>제작 가이드 다운로드</li>
-        <li>50종 소개 페이지 열기</li>
-      </ul>
-      <p>창을 닫았다가 다시 열면 <code>기본 탭</code>, <code>빈 검색어</code>, <code>이름 오름차순</code>으로 초기화됩니다. 사용자 템플릿과 즐겨찾기 정보만 지속적으로 보존됩니다.</p>
-
-      <h3>9.6 사용자 템플릿</h3>
-      <p>템플릿 선택 창의 <code>JSON 템플릿 업로드</code>로 사용자 템플릿을 추가합니다.</p>
-      <p>주요 제한은 다음과 같습니다.</p>
-      <ul>
-        <li>UTF-8 JSON 파일</li>
-        <li>파일 크기 200KB 이하</li>
-        <li><code>kind: lumink-log-template</code></li>
-        <li><code>schemaVersion: 1</code></li>
-        <li>ID는 영문·숫자·하이픈으로 이루어진 3~64자</li>
-        <li>기본 템플릿과 ID 중복 불가</li>
-        <li>사용자 템플릿 최대 20개</li>
-        <li>정규식 규칙 최대 20개</li>
-        <li>허용된 CSS 속성만 사용</li>
-        <li>외부 URL, <code>@import</code>, <code>expression</code>, <code>javascript:</code> 등 위험한 스타일 차단</li>
-        <li>지나치게 복잡하거나 위험한 정규식 거부</li>
-      </ul>
-      <p>사용자 템플릿을 메모에 적용하면 해당 템플릿의 스냅샷이 메모 안에도 저장됩니다. 나중에 사용자 템플릿 목록에서 삭제해도 이미 적용된 메모는 보존된 스냅샷으로 계속 렌더링할 수 있습니다.</p>
-      <div class="callout note">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>전체 제작 규격은 로그 템플릿 제작 가이드 문서를 참고합니다.</p>
-      </div>
-
-      <h3>9.7 인라인 HTML 코드 복사</h3>
-      <p>메모 관리 메뉴의 <code>인라인 HTML 코드 복사</code>는 현재 템플릿 결과를 하나의 HTML 조각으로 만듭니다.</p>
-      <ul>
-        <li>배경, 테두리, 글자색, 문단 스타일을 모두 <code>style</code> 속성에 인라인 처리</li>
-        <li>외부 스타일시트 없이 게시글 HTML 영역에 붙여넣기 쉬운 형태</li>
-        <li>현재 제목과 본문에 이름 가림 적용</li>
-        <li>원본 로그 데이터나 편집 UI는 포함하지 않음</li>
-      </ul>
-      <p>게시판이 인라인 스타일을 제거하거나 허용 HTML을 제한하면 일부 디자인은 달라질 수 있습니다.</p>
-
-      <h3>9.8 꾸며진 HTML 파일 저장</h3>
-      <p><code>꾸며진 HTML 파일로 저장</code>은 브라우저에서 독립적으로 열 수 있는 완성 문서를 만듭니다. 화면에 보이는 인라인 디자인과 함께 루미잉크 재가져오기용 로그 데이터도 문서 안에 포함합니다.</p>
-      <p>이 파일을 사이드바의 <code>열기</code>로 가져오면 대상 프로젝트에 새 로그 메모가 만들어지고, 원문·템플릿·이름 가림 설정을 다시 편집할 수 있습니다.</p>
-
-      <h3>9.9 로그 합치기</h3>
-      <p>같은 프로젝트의 로그를 두 개 이상 선택해 합치면 원본은 그대로 두고 <code>합친 로그</code>를 새로 만듭니다.</p>
-      <ul>
-        <li>본문은 빈 줄 두 개로 연결합니다.</li>
-        <li>템플릿과 이름 가림 설정은 선택된 첫 번째 로그의 설정을 사용합니다.</li>
-        <li>새 로그의 제목은 <code>합친 로그</code>로 잠깁니다.</li>
-        <li>결과는 보기 모드로 열립니다.</li>
-      </ul>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 10. 페르소나 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-10">
-      <div class="section-head">
-        <div class="nib-num">10</div>
-        <h2>페르소나</h2>
-      </div>
-
-      <h3>10.1 편집 모드와 보기 모드</h3>
-      <p>페르소나는 한 인물의 이미지와 설정을 카드 형태로 관리합니다. 상단 눈·연필 버튼으로 편집과 보기를 전환합니다.</p>
-
-      <h3>10.2 한국어·영어 이중 양식</h3>
-      <p>한국어와 English 탭은 각각 다음 데이터를 따로 가집니다.</p>
-      <ul>
-        <li>이름</li>
-        <li>태그</li>
-        <li>상세 설명</li>
-        <li>상세 설명 토큰 수</li>
-      </ul>
-      <p>이미지와 갤러리는 두 언어 탭이 공유합니다. 한국어 이름이 비어 있으면 영어 이름이 메모 자동 제목에 사용됩니다.</p>
-
-      <h3>10.3 포트레이트와 정사각 썸네일</h3>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">포트레이트</div><div class="v">3:4 비율, 1200×1600으로 저장</div></div>
-        <div class="kv-row"><div class="k">정사각 썸네일</div><div class="v">1:1 비율, 1080×1080으로 저장</div></div>
-      </div>
-      <p>이미지를 선택하면 자르기 화면이 열립니다. 이미지를 드래그해 위치를 옮기고 확대 슬라이더로 배율을 조절한 뒤 적용합니다. 정사각 썸네일이 없으면 보기 화면과 목록에서 포트레이트를 대신 사용합니다.</p>
-      <p>이미지 제한은 자유 메모와 동일하게 12MB 이하, 2,400만 픽셀 이하입니다.</p>
-
-      <h3>10.4 태그</h3>
-      <p>쉼표 또는 Enter로 여러 태그를 추가할 수 있습니다. 중복 태그는 다시 추가하지 않으며 각 태그의 <code>×</code> 버튼으로 삭제합니다.</p>
-
-      <h3>10.5 상세 설명 문법</h3>
-      <p>페르소나와 캐릭터의 상세 설명은 전체 마크다운이 아니라 카드용 경량 구조 문법을 사용합니다.</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>입력</th><th>보기 결과</th></tr></thead>
-          <tbody>
-            <tr><td><code># 제목</code>부터 <code>###### 제목</code></td><td>제목 박스; 화면에서는 최대 3단계 크기로 정리</td></tr>
-            <tr><td><code>- 라벨: 값</code></td><td>라벨 미니 칩</td></tr>
-            <tr><td><code>- 항목</code></td><td>삼각형 글머리표</td></tr>
-            <tr><td>빈 줄</td><td>문단 간격</td></tr>
-            <tr><td>일반 줄</td><td>줄바꿈을 유지한 본문</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p><code>&lt;user name="{{user}}"&gt;</code>처럼 사용자 제어를 위해 넣은 <code>&lt;user ...&gt;</code>와 <code>&lt;/user&gt;</code> 표시는 보기 화면에서 숨깁니다. 태그 안쪽의 설정 내용은 유지됩니다.</p>
-
-      <h3>10.6 토큰 수</h3>
-      <p>한국어와 영어 상세 설명의 토큰을 각각 계산합니다. 보기 모드에서는 현재 선택한 언어의 토큰을 표시합니다.</p>
-
-      <h3>10.7 갤러리</h3>
-      <p>갤러리의 <code>+</code> 버튼에서 여러 이미지를 한 번에 선택할 수 있습니다. 각 이미지는 긴 변 최대 1600px로 줄여 저장합니다.</p>
-      <ul>
-        <li>이미지를 약 0.3초 누른 뒤 다른 위치로 끌어 순서 변경</li>
-        <li>삭제 후 약 6초 동안 되돌리기 가능</li>
-        <li>보기 모드에서 이미지를 눌러 확대</li>
-        <li>확대 화면의 이전·다음 버튼, 모바일 좌우 스와이프, 키보드 좌우 화살표 지원</li>
-        <li>확대 화면에서 인접 이미지를 미리 불러와 전환 지연 감소</li>
-      </ul>
-
-      <h3>10.8 빠른 복사</h3>
-      <p>보기 모드의 상세 설명을 길게 누르면 현재 언어의 원본 상세 설명을 클립보드에 복사합니다.</p>
-
-      <h3>10.9 페르소나 HTML 내보내기</h3>
-      <p>관리 메뉴에서 <code>HTML로 저장</code>을 누르면 밝게 또는 어둡게를 선택합니다. 앱의 현재 컬러 테마 기조를 유지하면서 카드 전체의 밝기만 결정합니다.</p>
-      <p>내보낸 HTML에는 다음이 포함됩니다.</p>
-      <ul>
-        <li>메모 제목</li>
-        <li>포트레이트와 정사각 썸네일</li>
-        <li>한국어·영어 이름, 태그, 상세 설명</li>
-        <li>갤러리</li>
-        <li>재가져오기용 페르소나 데이터</li>
-      </ul>
-      <p>사이드바의 <code>열기</code>로 이 HTML을 선택하면 편집 가능한 새 페르소나 메모로 복원됩니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 11. 캐릭터 메모 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-11">
-      <div class="section-head">
-        <div class="nib-num">11</div>
-        <h2>캐릭터 메모</h2>
-      </div>
-
-      <h3>11.1 페르소나와의 차이</h3>
-      <p>페르소나는 한 메모에 한 인물을 저장합니다. 캐릭터 메모는 한 메모 안에 여러 캐릭터 페이지를 만들고, 각 페이지마다 페르소나 수준의 국문·영문 설정과 이미지, 제작 메모를 보관합니다.</p>
-
-      <h3>11.2 캐릭터 페이지</h3>
-      <p>상단 캐릭터 네비게이션 옆 <code>+</code> 버튼으로 새 페이지를 추가합니다. 페이지마다 다음 데이터가 독립적입니다.</p>
-      <ul>
-        <li>포트레이트</li>
-        <li>정사각 썸네일</li>
-        <li>갤러리</li>
-        <li>한국어 이름·태그·상세 설명</li>
-        <li>영어 이름·태그·상세 설명</li>
-        <li>크리에이터 메모</li>
-      </ul>
-      <p>캐릭터 페이지가 두 개 이상이면 관리 메뉴에서 현재 페이지를 삭제할 수 있습니다. <strong>최소 한 페이지는 항상 남아 있어야 합니다.</strong> 페이지 삭제 직후 약 6초 동안 되돌릴 수 있습니다.</p>
-
-      <h3>11.3 페이지 이동</h3>
-      <ul>
-        <li>상단 썸네일 네비게이션에서 인물 선택</li>
-        <li>보기 모드 하단의 이전·다음 화살표</li>
-        <li>모바일 보기 모드에서 좌우 스와이프</li>
-      </ul>
-      <p>편집 중 페이지를 바꾸면 현재 페이지를 먼저 저장합니다.</p>
-
-      <h3>11.4 국문·영문 설정과 이미지</h3>
-      <p>각 페이지의 한국어·영어 필드, 태그, 토큰 계산, 상세 설명 문법은 페르소나와 같습니다. 포트레이트는 3:4, 정사각 썸네일은 1:1 자르기를 사용합니다.</p>
-      <p>갤러리에서는 여러 이미지를 한 번에 추가하고, 보기 모드에서 확대·이전·다음·스와이프를 사용할 수 있습니다. <strong>현재 캐릭터 갤러리는 페르소나 갤러리와 달리 드래그 순서 변경 기능을 제공하지 않습니다.</strong></p>
-
-      <h3>11.5 크리에이터 메모</h3>
-      <p>크리에이터 메모는 공개용 캐릭터 설명과 별도로 제작 메모, 연출 주의점, 관계성 설계 등을 기록하는 리치 텍스트 영역입니다.</p>
-      <p>지원 도구는 다음과 같습니다.</p>
-      <div class="chip-row">
-        <span class="chip">HTML 소스 보기·편집</span><span class="chip">굵게</span><span class="chip">기울임</span><span class="chip">밑줄</span><span class="chip">취소선</span><span class="chip">7단계 글자 크기</span><span class="chip">글자 색</span><span class="chip">5색 형광펜</span><span class="chip">정렬</span><span class="chip">글머리표·번호 목록</span><span class="chip">이미지 삽입</span><span class="chip">하이퍼링크</span><span class="chip">코드 블록</span><span class="chip">서식 지우기</span><span class="chip">실행 취소</span>
-      </div>
-      <p>보기 모드에서는 크리에이터 메모가 있을 때 <code>CREATOR NOTE</code> 영역이 나타나며 <code>크게 보기</code>를 눌러 팝업으로 열 수 있습니다. 팝업의 코드 블록에는 복사 버튼이 붙습니다.</p>
-
-      <h3>11.6 대표 썸네일</h3>
-      <p>프로젝트 목록의 캐릭터 메모 카드에 사용할 대표 이미지를 별도로 지정할 수 있습니다.</p>
-      <ul>
-        <li>자동 선택: 첫 캐릭터 페이지의 정사각 썸네일, 포트레이트, 첫 갤러리 이미지 순으로 사용</li>
-        <li>기존 캐릭터 페이지의 이미지 중 선택</li>
-        <li>캐릭터 페이지와 별개인 새 대표 이미지 직접 업로드</li>
-        <li>직접 업로드 이미지는 1:1로 잘라 1080×1080으로 저장</li>
-      </ul>
-      <p>대표 썸네일은 프로젝트 카드 안에서 이 캐릭터 메모를 식별하기 위한 표지이며, 개별 캐릭터 페이지 이미지와는 별도입니다.</p>
-
-      <h3>11.7 자동 제목</h3>
-      <p>수동으로 메모 이름을 바꾸지 않은 경우 첫 캐릭터의 이름을 사용합니다. 페이지가 여러 개면 <code>첫 캐릭터 이름 외 N명</code>으로 표시합니다.</p>
-
-      <h3>11.8 캐릭터 HTML 내보내기</h3>
-      <p>관리 메뉴의 <code>HTML로 저장</code>에서 다음을 선택합니다.</p>
-      <ul>
-        <li>밝게 또는 어둡게</li>
-        <li>크리에이터 메모 포함 또는 제외</li>
-      </ul>
-      <p>크리에이터 메모의 기본값은 <code>미포함</code>입니다. 공유용 카드에 비공개 제작 메모가 실수로 섞이는 것을 줄이기 위한 설정입니다.</p>
-      <p>내보낸 파일은 여러 캐릭터 페이지를 전환하는 네비게이션을 포함하며, 루미잉크 재가져오기용 데이터도 내장합니다. 크리에이터 메모를 제외했다면 재가져오기 데이터에서도 해당 메모가 비어 있는 상태로 저장됩니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 12. 통합 검색 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-12">
-      <div class="section-head">
-        <div class="nib-num">12</div>
-        <h2>통합 검색</h2>
-      </div>
-
-      <p>검색 화면은 <code>제목만</code>, <code>내용만</code>, <code>제목+내용</code> 세 범위를 지원합니다. 입력하는 즉시 결과를 갱신하며 프로젝트와 메모 결과를 따로 표시합니다.</p>
-
-      <h3>12.1 프로젝트 검색 범위</h3>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">제목</div><div class="v">프로젝트 이름</div></div>
-        <div class="kv-row"><div class="k">내용</div><div class="v">프로젝트 태그 입력란의 전체 문자열</div></div>
-      </div>
-
-      <h3>12.2 메모 유형별 내용 검색 범위</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>유형</th><th>검색되는 내용</th></tr></thead>
-          <tbody>
-            <tr><td>자유 메모</td><td>HTML 태그를 제외한 본문 텍스트</td></tr>
-            <tr><td>로어북</td><td>원문과 발동 키워드</td></tr>
-            <tr><td>로그</td><td>원문, 가릴 원본 이름들, 대체 표시</td></tr>
-            <tr><td>페르소나</td><td>국문·영문 이름, 태그, 상세 설명</td></tr>
-            <tr><td>캐릭터</td><td>모든 페이지의 국문·영문 이름, 태그, 상세 설명, 크리에이터 메모</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>메모 검색 결과는 최근 수정 순으로 표시됩니다. 검색 결과의 카드도 일반 목록과 마찬가지로 열거나 길게 눌러 관리할 수 있습니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 13. 다중 선택·이동·합치기 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-13">
-      <div class="section-head">
-        <div class="nib-num">13</div>
-        <h2>다중 선택·이동·합치기</h2>
-      </div>
-
-      <h3>13.1 선택 모드 진입</h3>
-      <ul>
-        <li>홈의 프로젝트 카드 관리 메뉴에서 <code>선택</code></li>
-        <li>프로젝트 상세 상단의 선택 버튼</li>
-        <li>메모 관리 메뉴의 <code>선택</code></li>
-      </ul>
-      <p>선택 모드 하단 바에서 선택 개수, 전체 선택, 합치기, 이동, 삭제를 사용할 수 있습니다.</p>
-
-      <h3>13.2 여러 메모 이동</h3>
-      <p>같은 프로젝트에서 선택한 메모들을 다른 프로젝트로 한꺼번에 이동합니다. 새 프로젝트를 만든 뒤 그 위치를 바로 선택할 수도 있습니다.</p>
-
-      <h3>13.3 합치기 조건</h3>
-      <ul>
-        <li>두 개 이상 선택해야 합니다.</li>
-        <li>같은 메모 유형끼리만 합칠 수 있습니다.</li>
-        <li>페르소나와 캐릭터 메모는 합칠 수 없습니다.</li>
-        <li>합치기는 원본을 삭제하지 않고 새 메모를 만듭니다.</li>
-      </ul>
-
-      <h3>13.4 유형별 합치기 결과</h3>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">자유 메모</div><div class="v">HTML 본문 사이에 빈 줄을 넣어 연결하고 첨부파일도 새 ID로 복제합니다.</div></div>
-        <div class="kv-row"><div class="k">로어북</div><div class="v">원문만 빈 줄 두 개로 연결합니다. 키워드와 활성·깊이 설정은 초기값입니다.</div></div>
-        <div class="kv-row"><div class="k">로그</div><div class="v">원문을 연결하고 첫 번째 선택 로그의 템플릿·이름 가림 설정을 사용합니다.</div></div>
-      </div>
-
-      <h3>13.5 일괄 삭제</h3>
-      <p>프로젝트 일괄 삭제는 각 프로젝트의 소속 메모와 첨부파일도 함께 삭제합니다. 메모 일괄 삭제는 선택한 메모와 연결 첨부파일을 삭제합니다. 삭제 후 약 6초 동안 한 번의 되돌리기 작업을 제공합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 14. 파일 열기와 형식 판별 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-14">
-      <div class="section-head">
-        <div class="nib-num">14</div>
-        <h2>파일 열기와 형식 판별</h2>
-      </div>
-
-      <p>사이드바 하단의 <code>파일 열기</code>는 <code>.html</code>, <code>.htm</code>, <code>.json</code> 파일을 받습니다. 파일 내용에 따라 다음처럼 처리합니다.</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>파일</th><th>처리 방식</th></tr></thead>
-          <tbody>
-            <tr><td>World Info JSON</td><td>항목별 로어북으로 가져오기</td></tr>
-            <tr><td>루미잉크 프로젝트 HTML</td><td>메모와 첨부파일을 포함한 새 프로젝트로 복원</td></tr>
-            <tr><td>루미잉크 페르소나 HTML</td><td>편집 가능한 페르소나로 복원</td></tr>
-            <tr><td>루미잉크 캐릭터 HTML</td><td>편집 가능한 캐릭터 메모로 복원</td></tr>
-            <tr><td>루미잉크 로그 HTML</td><td>원문과 설정이 있는 로그로 복원</td></tr>
-            <tr><td>그 밖의 HTML</td><td>위험 요소를 정리한 자유 메모로 가져오기</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>프로젝트 HTML은 대상 프로젝트를 묻지 않고 새 프로젝트로 추가합니다. 그 밖의 메모·World Info 파일은 저장할 프로젝트를 먼저 선택합니다. 가져온 데이터의 이미지, 텍스트 길이, ID, 메모 유형 등은 허용 범위로 정규화됩니다.</p>
-
-      <div class="callout warn">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <p>전체 백업 HTML은 일반 <code>열기</code>가 아니라 <code>설정 → 백업 복원</code>에서 가져와야 합니다.</p>
-      </div>
-
-      <p>설치형 PWA와 브라우저가 파일 핸들러 기능을 지원하는 환경에서는 운영체제의 <code>연결 프로그램</code> 또는 <code>다른 앱으로 열기</code>에서 루미잉크로 HTML 파일을 전달할 수도 있습니다. 전달받은 파일은 사이드바의 <code>열기</code>와 같은 형식 판별 절차를 거칩니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 15. 설정 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-15">
-      <div class="section-head">
-        <div class="nib-num">15</div>
-        <h2>설정</h2>
-      </div>
-
-      <h3>15.1 밝게·어둡게</h3>
-      <p><code>테마</code>에서 라이트 모드와 다크 모드를 전환합니다. 사이드바의 해·달 버튼으로도 즉시 바꿀 수 있습니다.</p>
-
-      <h3>15.2 컬러 테마</h3>
-      <p>앱 전체의 강조색, 버튼, 로고, 일부 배경과 로그 유형 표시색을 바꿉니다. 라이트·다크 모드와 조합됩니다.</p>
-      <p>제공되는 20종은 다음과 같습니다.</p>
-      <div class="chip-row">
-        <span class="chip">블루</span><span class="chip">핑크</span><span class="chip">그린</span><span class="chip">퍼플</span><span class="chip">골드</span><span class="chip">파스텔 블루</span><span class="chip">파스텔 핑크</span><span class="chip">파스텔 올리브</span><span class="chip">파스텔 퍼플</span><span class="chip">파스텔 골드</span><span class="chip">네이비</span><span class="chip">버건디</span><span class="chip">딥그린</span><span class="chip">딥바이올렛</span><span class="chip">럭셔리골드</span><span class="chip">무채색</span><span class="chip">브라운</span><span class="chip">메탈릭 실버</span><span class="chip">메탈릭 골드</span><span class="chip">블랙&amp;화이트</span>
-      </div>
-      <p><code>테마와 연동</code> 프레임과 로그 메모 유형의 구분 표시는 이 컬러 기조를 따라갑니다.</p>
-
-      <h3>15.3 웹폰트</h3>
-      <p>기본 글꼴 외에 다음 프리셋을 제공합니다.</p>
-      <div class="chip-row">
-        <span class="chip">프리텐다드</span><span class="chip">나눔명조</span><span class="chip">고운돋움</span><span class="chip">IBM Plex Sans KR</span><span class="chip">본명조·Noto Serif KR</span>
-      </div>
-      <p>폰트 CSS 주소와 <code>font-family</code> 이름을 직접 입력해 다른 웹폰트도 적용할 수 있습니다. 사용자 지정 URL은 외부 서버에 폰트 파일을 요청하므로 신뢰할 수 있는 HTTPS 주소를 사용합니다. <code>기본으로</code>를 누르면 시스템 기본 글꼴로 돌아갑니다.</p>
-
-      <h3>15.4 앱 전체 글자 크기</h3>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">작게</div><div class="v">0.9배</div></div>
-        <div class="kv-row"><div class="k">보통</div><div class="v">1배</div></div>
-        <div class="kv-row"><div class="k">크게</div><div class="v">1.12배</div></div>
-      </div>
-      <p>이 설정은 편집 문서 안의 개별 글자 크기가 아니라 앱 UI 전체의 확대 비율입니다. 모바일 팝업도 이 확대 비율을 고려해 화면 높이에 맞춥니다.</p>
-
-      <h3>15.5 자유 메모 툴바 기본 상태</h3>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k">항상 표시</div><div class="v">툴바를 펼쳐 둔 상태로 시작</div></div>
-        <div class="kv-row"><div class="k">접어두기</div><div class="v">툴바를 접은 상태로 시작</div></div>
-      </div>
-      <p>접어두기를 선택해도 편집 중 왼쪽 펼치기 버튼으로 임시로 열 수 있습니다.</p>
-
-      <h3>15.6 설치 아이콘</h3>
-      <p>10종의 설치 아이콘 중 하나가 연결된 설치 페이지로 이동합니다. 자세한 내용은 <a href="#sec-3">3.5절</a>을 참고합니다.</p>
-
-      <h3>15.7 상세 매뉴얼</h3>
-      <p><code>설정 → 상세 매뉴얼</code>은 현재 보고 있는 전체 기능 설명서를 엽니다. 상단의 닫기 또는 <code>앱으로 돌아가기</code> 버튼을 누르면 앱 화면으로 돌아갑니다. 앱에서 매뉴얼을 연 경우 모바일 기기의 뒤로가기 버튼도 같은 방식으로 동작합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 16. 데이터 저장과 백업 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-16">
-      <div class="section-head">
-        <div class="nib-num">16</div>
-        <h2>데이터 저장과 백업</h2>
-      </div>
-
-      <h3>16.1 어디에 저장되는가</h3>
-      <p>작업 데이터는 현재 사이트의 <strong>IndexedDB</strong>에 저장됩니다.</p>
-      <div class="kv-list">
-        <div class="kv-row"><div class="k"><code>projects</code></div><div class="v">프로젝트, 태그, 썸네일, 프레임, 고정 상태</div></div>
-        <div class="kv-row"><div class="k"><code>notes</code></div><div class="v">다섯 유형의 메모와 본문, 본문 이미지, 카드 이미지</div></div>
-        <div class="kv-row"><div class="k"><code>files</code></div><div class="v">자유 메모 첨부파일 Blob</div></div>
-        <div class="kv-row"><div class="k"><code>backups</code></div><div class="v">최근 자동 백업 스냅샷</div></div>
-      </div>
-      <p>다음과 같은 환경 설정은 <strong>localStorage</strong>에 저장됩니다.</p>
-      <ul>
-        <li>밝게·어둡게 / 컬러 테마 / 앱 글자 크기</li>
-        <li>웹폰트 설정 / 정렬 방식</li>
-        <li>자유 메모 툴바 상태</li>
-        <li>최근 사용 글자색과 저장한 색 / 형광펜 색</li>
-        <li>사용자 로그 템플릿과 즐겨찾기</li>
-        <li>저장되지 않은 임시 초안</li>
-      </ul>
-
-      <h3>16.2 전체 백업</h3>
-      <p><code>설정 → 전체 백업</code>은 다음 내용을 하나의 <code>lumink-backup-날짜-시각.html</code> 파일로 저장합니다.</p>
-      <ul>
-        <li>모든 프로젝트 · 모든 메모</li>
-        <li>프로젝트 장식과 메모 설정</li>
-        <li>본문에 포함된 이미지</li>
-        <li>자유 메모 첨부파일</li>
-      </ul>
-      <p>백업 HTML을 브라우저에서 열면 프로젝트와 메모 목록을 사람이 읽을 수 있는 요약이 보이고, 실제 복원 데이터는 문서 안의 JSON으로 포함됩니다.</p>
-      <div class="callout warn">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <p>전체 백업에는 앱 표시 설정, 사용자 로그 템플릿 목록, 템플릿 즐겨찾기가 별도 항목으로 포함되지 않습니다. 다만 사용자 템플릿을 적용한 로그 메모는 템플릿 스냅샷을 메모 안에 보관하므로 그 메모의 디자인은 백업에 포함됩니다.</p>
-      </div>
-
-      <h3>16.3 백업 복원 방식</h3>
-      <p><code>설정 → 백업 복원</code>에서 전체 백업 HTML을 선택하면 두 방식을 고릅니다.</p>
-
-      <h4>현재 데이터에 병합</h4>
-      <ul>
-        <li>현재 프로젝트와 메모를 유지합니다.</li>
-        <li>백업과 현재 데이터의 ID가 같으면 백업 내용으로 덮어씁니다.</li>
-        <li>백업에만 있는 항목을 추가합니다.</li>
-        <li>기본 메모함 중복은 기존 기본 메모함에 맞춰 정리합니다.</li>
-      </ul>
-
-      <h4>백업 시점으로 완전히 교체</h4>
-      <ul>
-        <li>현재 프로젝트, 메모, 첨부파일을 지웁니다.</li>
-        <li>선택한 백업 내용만 남깁니다.</li>
-        <li>설정과 사용자 템플릿처럼 localStorage에 있는 값은 이 교체 대상이 아닙니다.</li>
-      </ul>
-      <p>두 방식 모두 실제 복원 직전에 현재 작업 상태를 자동 백업으로 한 번 더 저장합니다. 프로젝트·메모·첨부파일 쓰기는 하나의 IndexedDB 트랜잭션으로 처리해 일부만 교체되는 상황을 줄입니다.</p>
-
-      <h3>16.4 자동 백업</h3>
-      <p>메모 저장을 계기로 자동 백업을 예약합니다. 저장이 매우 잦을 때에는 최소 약 18초 간격으로 묶어 실행하며 최근 10개만 유지합니다.</p>
-      <p>자동 백업에는 프로젝트, 메모, 첨부파일이 들어갑니다. <code>설정 → 자동 백업</code>에서 각 스냅샷의 날짜, 프로젝트 수, 메모 수, 첨부 수를 확인하고 병합 또는 완전 교체 방식으로 복원할 수 있습니다.</p>
-      <p>자동 백업은 같은 브라우저 저장공간 안에 있으므로 브라우저 사이트 데이터 자체를 삭제하면 함께 사라집니다. 기기 고장이나 브라우저 초기화에 대비하려면 외부 파일로 저장하는 전체 백업이 필요합니다.</p>
-
-      <h3>16.5 저장되지 않은 임시 초안</h3>
-      <p>자유 메모, 로어북, 로그, 페르소나, 캐릭터 메모의 텍스트 편집 중에는 localStorage에 별도의 임시 초안을 만듭니다.</p>
-      <ul>
-        <li>메모별로 분리 저장</li>
-        <li>최대 보관 기간 14일</li>
-        <li>JSON 문자열 기준 약 70만 자를 넘는 초안은 저장하지 않음</li>
-        <li>대용량 이미지 전체가 아닌 텍스트 중심 안전망</li>
-        <li>마지막 정상 저장보다 새롭고 실제 내용이 다를 때만 복구 여부 질문</li>
-        <li>사용자가 <code>복구</code> 또는 <code>버리기</code> 선택</li>
-      </ul>
-      <p>이 기능은 비정상 종료나 갑작스러운 새로고침을 보완하지만 정식 백업을 대체하지 않습니다.</p>
-
-      <h3>16.6 저장공간 확인</h3>
-      <p>설정의 <code>저장공간</code>은 브라우저가 제공하는 전체 사이트 사용량과 할당량, 자유 메모 첨부파일 수와 용량, 자동 백업 개수를 표시합니다. 브라우저가 전체 사용량 API를 제공하지 않으면 첨부파일과 백업 정보만 표시합니다.</p>
-      <p>이미지가 많으면 메모 데이터뿐 아니라 자동 백업도 커지므로 실제 사용량이 빠르게 증가할 수 있습니다.</p>
-
-      <h3>16.7 데이터 초기화</h3>
-      <p>데이터 초기화는 두 번의 확인을 거친 뒤 프로젝트, 메모, 첨부파일, 자동 백업을 모두 삭제합니다. <strong>이 작업은 되돌릴 수 없습니다.</strong></p>
-      <p>현재 구현에서 테마·폰트 같은 표시 설정과 사용자 로그 템플릿 등 localStorage 항목은 작업 데이터 초기화 대상에 포함되지 않습니다. 완전한 사이트 초기화가 필요하면 전체 백업 후 브라우저의 해당 사이트 데이터 삭제 기능을 사용해야 합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 17. 삭제 복구와 데이터 정리 기능 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-17">
-      <div class="section-head">
-        <div class="nib-num">17</div>
-        <h2>삭제 복구와 데이터 정리 기능</h2>
-      </div>
-
-      <h3>17.1 6초 되돌리기</h3>
-      <p>다음 삭제는 직후 약 6초 동안 되돌릴 수 있습니다.</p>
-      <ul>
-        <li>프로젝트 삭제</li>
-        <li>메모 삭제</li>
-        <li>여러 프로젝트·메모 일괄 삭제</li>
-        <li>페르소나 갤러리 이미지 삭제</li>
-        <li>캐릭터 갤러리 이미지 삭제</li>
-        <li>캐릭터 페이지 삭제</li>
-      </ul>
-      <div class="callout warn">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <p>새로운 되돌리기 작업이 시작되면 앞선 되돌리기 대기 상태가 교체될 수 있으므로, 실수했다면 바로 누르는 것이 좋습니다.</p>
-      </div>
-
-      <h3>17.2 시작 시 데이터 보정</h3>
-      <p>앱은 시작할 때 일부 오래된 데이터 구조를 현재 형식으로 보정합니다.</p>
-      <ul>
-        <li>중복 기본 프로젝트 통합</li>
-        <li>오래된 프레임 색상 키를 실제 색상 값으로 변환</li>
-        <li>잘못된 프레임 ID 제거</li>
-        <li>프로젝트를 잃은 메모를 기본 메모함으로 이동</li>
-        <li>오래된 자유 메모 구조를 현재 데이터 구조로 변환</li>
-        <li>14일이 지난 임시 초안 정리</li>
-      </ul>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 18. 개인정보와 보안상 주의 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-18">
-      <div class="section-head">
-        <div class="nib-num">18</div>
-        <h2>개인정보와 보안상 주의</h2>
-      </div>
-
-      <h3>18.1 로컬 우선</h3>
-      <p>프로젝트와 메모 본문을 루미잉크 자체 서버로 전송하는 동기화 기능은 없습니다. 자료는 현재 브라우저 저장소에 남습니다.</p>
-      <p>다만 웹폰트 프리셋이나 사용자가 지정한 외부 폰트 CSS를 불러올 때에는 해당 폰트 제공 서버에 일반적인 웹 요청이 발생할 수 있습니다. <strong>이 요청에 메모 본문을 담아 보내지는 않습니다.</strong></p>
-
-      <h3>18.2 가져오기 정화</h3>
-      <p>외부 HTML을 자유 메모로 가져올 때에는 허용된 태그와 스타일만 남깁니다. 스크립트, iframe, 폼, 임베드, 위험한 URL과 스타일은 제거합니다. 외부 원격 이미지는 가져오지 않고 루미잉크가 생성하는 안전한 base64 이미지 형식만 수용합니다.</p>
-      <p>로그 템플릿은 임의 HTML과 JavaScript를 허용하지 않고, 스타일 속성 허용 목록과 정규식 복잡도 검사를 사용합니다.</p>
-
-      <h3>18.3 직접 HTML 편집 주의</h3>
-      <p>자유 메모와 크리에이터 메모의 HTML 소스 편집은 사용자가 직접 작성한 신뢰할 수 있는 내용에 사용합니다. 인터넷에서 가져온 불명확한 코드를 그대로 붙여넣지 않습니다.</p>
-
-      <h3>18.4 브라우저 데이터 삭제 주의</h3>
-      <p>다음 작업은 데이터 손실로 이어질 수 있습니다.</p>
-      <ul>
-        <li>브라우저의 쿠키·사이트 데이터 전체 삭제</li>
-        <li>루미잉크 사이트 저장공간 삭제</li>
-        <li>시크릿 모드에서 작성 후 창 닫기</li>
-        <li>다른 도메인이나 다른 브라우저에서 기존 데이터가 자동으로 보일 것이라 기대하기</li>
-        <li>운영체제 또는 브라우저 프로필 초기화</li>
-      </ul>
-      <div class="callout note">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p>중요한 자료는 전체 백업 파일을 브라우저 밖의 안전한 위치에 보관합니다.</p>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 19. 키보드·터치 조작 요약 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-19">
-      <div class="section-head">
-        <div class="nib-num">19</div>
-        <h2>키보드·터치 조작 요약</h2>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>조작</th><th>결과</th></tr></thead>
-          <tbody>
-            <tr><td><code>Ctrl+S</code> / <code>⌘+S</code></td><td>현재 편집 메모 즉시 저장</td></tr>
-            <tr><td>자유 메모 읽기 본문 더블클릭</td><td>편집 모드 진입</td></tr>
-            <tr><td>자유 메모 읽기 본문 길게 누르기</td><td>본문 전체 일반 텍스트 복사</td></tr>
-            <tr><td>로어북 미리보기 길게 누르기</td><td>원본 마크다운 복사</td></tr>
-            <tr><td>페르소나 상세 길게 누르기</td><td>현재 언어의 원본 상세 설명 복사</td></tr>
-            <tr><td>프로젝트·메모 카드 길게 누르기</td><td>관리 메뉴 열기</td></tr>
-            <tr><td>로그 템플릿 길게 누르기</td><td>즐겨찾기 추가·해제</td></tr>
-            <tr><td>형광펜 버튼 길게 누르기</td><td>형광펜 색상 선택</td></tr>
-            <tr><td>페르소나 갤러리 이미지 길게 누른 뒤 이동</td><td>이미지 순서 변경</td></tr>
-            <tr><td>화면 왼쪽 가장자리에서 오른쪽 스와이프</td><td>사이드바 열기</td></tr>
-            <tr><td>캐릭터 보기 화면 좌우 스와이프</td><td>이전·다음 캐릭터</td></tr>
-            <tr><td>이미지 확대 화면 좌우 스와이프</td><td>이전·다음 이미지</td></tr>
-            <tr><td>이미지 확대 화면 <code>←</code> / <code>→</code></td><td>이전·다음 이미지</td></tr>
-            <tr><td>이미지 확대 화면 <code>Esc</code></td><td>확대 화면 닫기</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 20. 내보내기 형식과 포함 데이터 비교 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-20">
-      <div class="section-head">
-        <div class="nib-num">20</div>
-        <h2>내보내기 형식과 포함 데이터 비교</h2>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>기능</th><th>파일/출력</th><th>다시 편집 가능</th><th>이미지</th><th>자유 메모 첨부파일</th><th>용도</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>자유 메모 HTML</td><td><code>.html</code></td><td>일반 HTML로 다시 가져오기 가능</td><td>본문 이미지 포함</td><td>미포함</td><td>문서 공유·보관</td></tr>
-            <tr><td>로어북 World Info</td><td><code>.json</code></td><td>로어북으로 다시 가져오기 가능</td><td>해당 없음</td><td>해당 없음</td><td>SillyTavern 연동</td></tr>
-            <tr><td>로그 인라인 복사</td><td>HTML 조각</td><td>원문 복원 데이터 없음</td><td>템플릿은 외부 이미지 불허</td><td>해당 없음</td><td>게시글 붙여넣기</td></tr>
-            <tr><td>로그 HTML</td><td><code>.html</code></td><td>로그로 재가져오기 가능</td><td>스타일 내장</td><td>해당 없음</td><td>완성 로그 공유·보관</td></tr>
-            <tr><td>페르소나 HTML</td><td><code>.html</code></td><td>페르소나로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>카드 공유·이전</td></tr>
-            <tr><td>캐릭터 HTML</td><td><code>.html</code></td><td>캐릭터 메모로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>다중 카드 공유·이전</td></tr>
-            <tr><td>프로젝트 HTML</td><td><code>.html</code></td><td>새 프로젝트 사본으로 재가져오기 가능</td><td>모두 포함</td><td>포함</td><td>프로젝트 단위 공유·이전</td></tr>
-            <tr><td>전체 백업</td><td><code>.html</code></td><td>전체 구조 복원</td><td>모두 포함</td><td>포함</td><td>기기 이전·재해 복구</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 21. 권장 사용 순서 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-21">
-      <div class="section-head">
-        <div class="nib-num">21</div>
-        <h2>권장 사용 순서</h2>
-      </div>
-
-      <p>처음 사용하는 경우 다음 순서가 가장 이해하기 쉽습니다.</p>
-      <ol class="steps">
-        <li>작품 또는 세션 이름으로 프로젝트를 만듭니다.</li>
-        <li>프로젝트 태그, 색상, 썸네일을 지정합니다.</li>
-        <li>세계관은 로어북, 플레이어 설정은 페르소나, 여러 NPC는 캐릭터 메모에 기록합니다.</li>
-        <li>자유 메모에는 플롯·아이디어·자료 파일을 보관합니다.</li>
-        <li>대화 결과는 로그 저장에 원문 그대로 넣고 템플릿과 이름 가림을 적용합니다.</li>
-        <li>프로젝트와 메모를 고정해 자주 쓰는 항목을 위에 둡니다.</li>
-        <li>작업 중에는 자동 저장을 사용하되 큰 수정 뒤에는 <code>Ctrl/⌘+S</code>로 즉시 저장합니다.</li>
-        <li>작업이 끝난 날에는 전체 백업 HTML을 외부 폴더나 클라우드 드라이브에 저장합니다.</li>
-      </ol>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 22. 현재 구현의 주요 입력 한도 -->
-    <!-- ============================================================ -->
-    <section class="section" id="sec-22">
-      <div class="section-head">
-        <div class="nib-num">22</div>
-        <h2>현재 구현의 주요 입력 한도</h2>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>항목</th><th>한도 또는 처리 방식</th></tr></thead>
-          <tbody>
-            <tr><td>프로젝트 이름</td><td>최대 60자</td></tr>
-            <tr><td>프로젝트 태그 입력란</td><td>최대 500자</td></tr>
-            <tr><td>메모 이름 변경 입력란</td><td>최대 80자</td></tr>
-            <tr><td>로그 원문</td><td>저장 정규화 기준 최대 500,000자</td></tr>
-            <tr><td>로어북 원문</td><td>복원·가져오기 정규화 기준 최대 500,000자</td></tr>
-            <tr><td>로그 가림 원본 이름</td><td>최대 20개, 각 최대 80자</td></tr>
-            <tr><td>로그 대체 표시</td><td>최대 80자</td></tr>
-            <tr><td>사용자 로그 템플릿</td><td>최대 20개, 파일당 200KB 이하</td></tr>
-            <tr><td>템플릿 정규식 규칙</td><td>템플릿당 최대 20개</td></tr>
-            <tr><td>본문·카드 이미지 입력</td><td>파일당 12MB 이하, 2,400만 픽셀 이하</td></tr>
-            <tr><td>자유 메모 일반 첨부</td><td>파일당 15MB 이하</td></tr>
-            <tr><td>임시 초안</td><td>JSON 문자열 약 700,000자 이하, 최대 14일</td></tr>
-            <tr><td>자동 백업</td><td>최근 10개</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>표에 없는 본문·갤러리·캐릭터 페이지의 실질적인 최대치는 브라우저가 해당 사이트에 허용한 저장공간의 영향을 받습니다. 대량 이미지를 넣기 전에는 설정의 저장공간 표시를 확인하고 전체 백업을 만들어 두는 것이 안전합니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 부록 A. 기본 로그 템플릿 50종 -->
-    <!-- ============================================================ -->
-    <section class="section" id="app-a">
-      <div class="section-head">
-        <div class="nib-num">A</div>
-        <h2>부록 A · 기본 로그 템플릿 50종</h2>
-      </div>
-
-      <p>아래 목록은 템플릿 선택 창의 이름순 기준입니다.</p>
-
-      <div class="template-list">
-        <div class="template-item"><span class="tnum">01</span><div><span class="tname">그랜드파더 클락</span><span class="tdesc">월넛 가구와 황동 시계판의 앤틱 괘종시계 로그</span></div></div>
-        <div class="template-item"><span class="tnum">02</span><div><span class="tname">네온 터미널</span><span class="tdesc">시안·마젠타 네온 사이버펑크 터미널</span></div></div>
-        <div class="template-item"><span class="tnum">03</span><div><span class="tname">레인폴 글래스</span><span class="tdesc">비 내리는 창의 차분한 회청색 로그</span></div></div>
-        <div class="template-item"><span class="tnum">04</span><div><span class="tname">레퀴엠</span><span class="tdesc">창백한 차콜과 백합빛 세이지의 안식 로그</span></div></div>
-        <div class="template-item"><span class="tnum">05</span><div><span class="tname">로얄 크림슨</span><span class="tdesc">크림슨과 리치 골드의 왕가 로그</span></div></div>
-        <div class="template-item"><span class="tnum">06</span><div><span class="tname">로즈 코트</span><span class="tdesc">크림·로즈·골드의 공주풍 로그</span></div></div>
-        <div class="template-item"><span class="tnum">07</span><div><span class="tname">리본 캔디</span><span class="tdesc">여러 파스텔을 사용한 밝은 로그</span></div></div>
-        <div class="template-item"><span class="tnum">08</span><div><span class="tname">리와인드 스레드</span><span class="tdesc">청록·골드의 빙의·회귀물 로그</span></div></div>
-        <div class="template-item"><span class="tnum">09</span><div><span class="tname">리프 캐빈</span><span class="tdesc">잎사귀 그린과 크림 우드의 일상 로그</span></div></div>
-        <div class="template-item"><span class="tnum">10</span><div><span class="tname">메이플 오텀</span><span class="tdesc">단풍 진홍과 황금빛의 가을 로그</span></div></div>
-        <div class="template-item"><span class="tnum">11</span><div><span class="tname">모노 컨트라스트</span><span class="tdesc">순백과 순흑의 강한 대비 로그</span></div></div>
-        <div class="template-item"><span class="tnum">12</span><div><span class="tname">모브 다이얼로그</span><span class="tdesc">따뜻한 모브빛 일상·로맨스 로그</span></div></div>
-        <div class="template-item"><span class="tnum">13</span><div><span class="tname">묵향 죽간</span><span class="tdesc">한지, 먹, 주사 인장의 동양풍 로그</span></div></div>
-        <div class="template-item"><span class="tnum">14</span><div><span class="tname">버던트 서머</span><span class="tdesc">짙은 숲과 에메랄드의 여름 로그</span></div></div>
-        <div class="template-item"><span class="tnum">15</span><div><span class="tname">벨럼 스크롤</span><span class="tdesc">세피아 양피지와 봉랍의 고문서 로그</span></div></div>
-        <div class="template-item"><span class="tnum">16</span><div><span class="tname">보르도 빈티지</span><span class="tdesc">보르도와 더스티 로즈의 와인 셀러 로그</span></div></div>
-        <div class="template-item"><span class="tnum">17</span><div><span class="tname">브라스 코그</span><span class="tdesc">황동, 녹청, 증기의 스팀펑크 로그</span></div></div>
-        <div class="template-item"><span class="tnum">18</span><div><span class="tname">사쿠라 스프링</span><span class="tdesc">벚꽃 분홍과 새순 연두의 봄 로그</span></div></div>
-        <div class="template-item"><span class="tnum">19</span><div><span class="tname">스노우플레이크 윈터</span><span class="tdesc">화이트와 페일 아이스블루의 겨울 로그</span></div></div>
-        <div class="template-item"><span class="tnum">20</span><div><span class="tname">스모크 &amp; 위스키</span><span class="tdesc">연기와 호박색의 하드보일드 로그</span></div></div>
-        <div class="template-item"><span class="tnum">21</span><div><span class="tname">스타리 나이트</span><span class="tdesc">인디고 밤하늘과 금빛 별의 로그</span></div></div>
-        <div class="template-item"><span class="tnum">22</span><div><span class="tname">스타십 HUD</span><span class="tdesc">우주선 콘솔형 하드 SF 로그</span></div></div>
-        <div class="template-item"><span class="tnum">23</span><div><span class="tname">스토리북 길트</span><span class="tdesc">크림과 금별의 동화책 로그</span></div></div>
-        <div class="template-item"><span class="tnum">24</span><div><span class="tname">심야 타자기</span><span class="tdesc">빛바랜 종이와 검정 활자의 느와르 로그</span></div></div>
-        <div class="template-item"><span class="tnum">25</span><div><span class="tname">아오하루 스카이</span><span class="tdesc">맑은 여름 하늘빛 청춘 로그</span></div></div>
-        <div class="template-item"><span class="tnum">26</span><div><span class="tname">애시폴 시그널</span><span class="tdesc">콘크리트와 경고 앰버의 종말물 로그</span></div></div>
-        <div class="template-item"><span class="tnum">27</span><div><span class="tname">어메시스트 럭스</span><span class="tdesc">자수정과 샴페인 골드의 보석 로그</span></div></div>
-        <div class="template-item"><span class="tnum">28</span><div><span class="tname">올드 라이브러리</span><span class="tdesc">마호가니 서가와 가죽 장정의 로그</span></div></div>
-        <div class="template-item"><span class="tnum">29</span><div><span class="tname">운해옥검</span><span class="tdesc">옥빛 운무의 선협 로그</span></div></div>
-        <div class="template-item"><span class="tnum">30</span><div><span class="tname">웨딩 마치</span><span class="tdesc">순백, 샴페인 골드, 블러쉬의 웨딩 로그</span></div></div>
-        <div class="template-item"><span class="tnum">31</span><div><span class="tname">잉크 프레임</span><span class="tdesc">짙은 잉크색 바탕의 기본 로그</span></div></div>
-        <div class="template-item"><span class="tnum">32</span><div><span class="tname">천계의 서판</span><span class="tdesc">화이트·골드 발광의 신화·천상계 로그</span></div></div>
-        <div class="template-item"><span class="tnum">33</span><div><span class="tname">청춘 노트</span><span class="tdesc">공책 마진선과 형광펜의 학원물 로그</span></div></div>
-        <div class="template-item"><span class="tnum">34</span><div><span class="tname">캐롯 패치</span><span class="tdesc">당근 오렌지와 잎 그린의 발랄한 로그</span></div></div>
-        <div class="template-item"><span class="tnum">35</span><div><span class="tname">콘체르토 스테이지</span><span class="tdesc">버건디와 샴페인 골드의 연주 로그</span></div></div>
-        <div class="template-item"><span class="tnum">36</span><div><span class="tname">퀘스트 보드</span><span class="tdesc">RPG 인터페이스형 모던 게임 로그</span></div></div>
-        <div class="template-item"><span class="tnum">37</span><div><span class="tname">크림 기록지</span><span class="tdesc">밝고 편안한 게시용 기록지</span></div></div>
-        <div class="template-item"><span class="tnum">38</span><div><span class="tname">클린 라인</span><span class="tdesc">절제된 중립형 게시용 로그</span></div></div>
-        <div class="template-item"><span class="tnum">39</span><div><span class="tname">팝 개그</span><span class="tdesc">원색과 만화 테두리의 명랑개그 로그</span></div></div>
-        <div class="template-item"><span class="tnum">40</span><div><span class="tname">퍼스트 로즈</span><span class="tdesc">장미 레드와 잎 그린의 첫사랑 로그</span></div></div>
-        <div class="template-item"><span class="tnum">41</span><div><span class="tname">페이 스프링</span><span class="tdesc">에메랄드 샘물과 요정빛의 몽환 로그</span></div></div>
-        <div class="template-item"><span class="tnum">42</span><div><span class="tname">페인터 캔버스</span><span class="tdesc">아이보리 캔버스와 유화 물감의 로그</span></div></div>
-        <div class="template-item"><span class="tnum">43</span><div><span class="tname">폐옥의 속삭임</span><span class="tdesc">탁한 차콜과 핏빛의 호러 로그</span></div></div>
-        <div class="template-item"><span class="tnum">44</span><div><span class="tname">프리즘 하트</span><span class="tdesc">비비드 파스텔의 마법소녀 로그</span></div></div>
-        <div class="template-item"><span class="tnum">45</span><div><span class="tname">플레인 모노</span><span class="tdesc">색을 비운 무채색 미니멀 로그</span></div></div>
-        <div class="template-item"><span class="tnum">46</span><div><span class="tname">픽셀 콘솔</span><span class="tdesc">남보라 CRT와 라임 프레임의 레트로 게임 로그</span></div></div>
-        <div class="template-item"><span class="tnum">47</span><div><span class="tname">한가위 문</span><span class="tdesc">남색 밤하늘과 보름달빛의 추석 로그</span></div></div>
-        <div class="template-item"><span class="tnum">48</span><div><span class="tname">홀리 나이트</span><span class="tdesc">에버그린, 홀리 레드, 금빛 전구의 로그</span></div></div>
-        <div class="template-item"><span class="tnum">49</span><div><span class="tname">황금 칙령</span><span class="tdesc">네이비·골드의 왕실 하이 판타지 로그</span></div></div>
-        <div class="template-item"><span class="tnum">50</span><div><span class="tname">흑요석 성소</span><span class="tdesc">검보랏빛 고딕 다크 판타지 로그</span></div></div>
-      </div>
-
-      <p style="margin-top:20px;">더 자세한 시각 예시는 <code>50종 소개 페이지</code>에서 확인할 수 있습니다.</p>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- 부록 B. 가장 중요한 백업 원칙 -->
-    <!-- ============================================================ -->
-    <section class="section" id="app-b">
-      <div class="section-head">
-        <div class="nib-num">B</div>
-        <h2>부록 B · 가장 중요한 백업 원칙</h2>
-      </div>
-
-      <ol class="steps">
-        <li>자동 저장은 편집 실수를 줄이지만 기기 고장을 막아 주지는 않습니다.</li>
-        <li>임시 초안은 비정상 종료를 보완하지만 14일이 지나면 정리됩니다.</li>
-        <li>자동 백업은 같은 브라우저 안에 있으므로 사이트 데이터 삭제와 함께 사라질 수 있습니다.</li>
-        <li>다른 기기로 옮길 때에는 반드시 <code>설정 → 전체 백업</code> 파일을 사용합니다.</li>
-        <li>자유 메모 하나의 HTML에는 별도 첨부파일이 들어가지 않습니다.</li>
-        <li>사용자 로그 템플릿 목록과 즐겨찾기를 별도로 보관하려면 원본 JSON 템플릿 파일도 함께 보관합니다.</li>
-      </ol>
-    </section>
-
-    <footer class="doc-footer">
-      <svg class="nib" viewBox="0 0 24 24" fill="none"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"/><circle cx="12" cy="9.3" r="3.05" fill="#16223a"/><rect x="11.15" y="11.6" width="1.7" height="6.6" rx="0.6" fill="#16223a"/><circle cx="12" cy="17.6" r="2.05" fill="#7bb0f5"/></svg>
-      <div>루미잉크 전체 기능 상세 매뉴얼 · 기준 버전 v1.0 · 2026-06-23 수정본</div>
-    </footer>
-
-  </main>
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-head">
+<div class="brand-lockup-main">
+<svg class="nib" fill="none" viewbox="0 0 24 24"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"></path><circle cx="12" cy="9.3" fill="#16223a" r="3.05"></circle><rect fill="#16223a" height="6.6" rx="0.6" width="1.7" x="11.15" y="11.6"></rect><circle cx="12" cy="17.6" fill="#7bb0f5" r="2.05"></circle></svg>
+<span class="title">루미잉크</span>
 </div>
-
-<div class="to-top" id="toTop" role="button" aria-label="맨 위로">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+<div class="sub">전체 기능 상세 매뉴얼 · v1.0</div>
+<div class="theme-toggle-row">
+<div aria-label="다크모드 전환" class="theme-toggle" id="themeToggle" role="button">
+<div class="knob">
+<svg fill="currentColor" id="knobIcon" viewbox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
 </div>
-
+</div>
+<span class="label" id="themeLabel">라이트 모드</span>
+</div>
+</div>
+<div class="nav-search">
+<input id="tocSearch" placeholder="목차에서 검색…" type="text"/>
+</div>
+<nav class="toc" id="tocNav">
+<a class="toc-link" href="#sec-1"><span class="num">01</span><span>루미잉크란 무엇인가</span></a>
+<a class="toc-link" href="#sec-2"><span class="num">02</span><span>기능 구성 한눈에 보기</span></a>
+<a class="toc-link" href="#sec-3"><span class="num">03</span><span>설치와 실행</span></a>
+<a class="toc-link" href="#sec-4"><span class="num">04</span><span>화면과 기본 조작</span></a>
+<a class="toc-link" href="#sec-5"><span class="num">05</span><span>프로젝트 관리</span></a>
+<a class="toc-link" href="#sec-6"><span class="num">06</span><span>메모 만들기와 공통 관리</span></a>
+<a class="toc-link" href="#sec-7"><span class="num">07</span><span>자유 메모</span></a>
+<a class="toc-link" href="#sec-html"><span class="num">07+</span><span>HTML 작업실</span></a>
+<a class="toc-link" href="#sec-8"><span class="num">08</span><span>로어북</span></a>
+<a class="toc-link" href="#sec-9"><span class="num">09</span><span>로그 저장</span></a>
+<a class="toc-link" href="#sec-10"><span class="num">10</span><span>통합 인물 카드 · 페르소나</span></a>
+<a class="toc-link" href="#sec-11"><span class="num">11</span><span>통합 인물 카드 · 캐릭터 모음</span></a>
+<a class="toc-link" href="#sec-idea"><span class="num">11+</span><span>아이디어 보드</span></a>
+<a class="toc-link" href="#sec-12"><span class="num">12</span><span>통합 검색</span></a>
+<a class="toc-link" href="#sec-13"><span class="num">13</span><span>다중 선택·이동·합치기</span></a>
+<a class="toc-link" href="#sec-14"><span class="num">14</span><span>파일 열기와 형식 판별</span></a>
+<a class="toc-link" href="#sec-15"><span class="num">15</span><span>설정</span></a>
+<a class="toc-link" href="#sec-16"><span class="num">16</span><span>데이터 저장과 백업</span></a>
+<a class="toc-link" href="#sec-17"><span class="num">17</span><span>삭제 복구와 데이터 정리</span></a>
+<a class="toc-link" href="#sec-18"><span class="num">18</span><span>개인정보와 보안상 주의</span></a>
+<a class="toc-link" href="#sec-19"><span class="num">19</span><span>키보드·터치 조작 요약</span></a>
+<a class="toc-link" href="#sec-20"><span class="num">20</span><span>내보내기 형식 비교</span></a>
+<a class="toc-link" href="#sec-21"><span class="num">21</span><span>권장 사용 순서</span></a>
+<a class="toc-link" href="#sec-22"><span class="num">22</span><span>주요 입력 한도</span></a>
+<div class="toc-divider"></div>
+<div class="toc-label">업데이트</div>
+<a class="toc-link appendix" href="#sec-updates"><span class="num">NEW</span><span>v60–v63.7 변경 이력</span></a>
+<div class="toc-divider"></div>
+<div class="toc-label">부록</div>
+<a class="toc-link appendix" href="#app-a"><span class="num">A</span><span>기본 로그 템플릿 50종</span></a>
+<a class="toc-link appendix" href="#app-b"><span class="num">B</span><span>가장 중요한 백업 원칙</span></a>
+</nav>
+</aside>
+<!-- ===== Main content ===== -->
+<main class="content">
+<div class="doc-header">
+<div class="eyebrow">LUMI INK · USER MANUAL</div>
+<h1>루미잉크 전체 기능 상세 매뉴얼</h1>
+<p class="lede">창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱, 루미잉크의 v63.7 실사용 설명서입니다. 리치 문서·원본 HTML·AI 롤플레이 자료·통합 인물 카드·무한 아이디어 보드를 한 흐름으로 관리합니다.</p>
+<div class="meta-row">
+<span class="meta-chip">기준 버전 Lumi Ink v63.7</span>
+<span class="meta-chip">2026-06-23 · v63.7 기능 기준</span>
+<span class="meta-chip">실사용 설명서 · 홍보문 아님</span>
+</div>
+</div>
+<!-- ============================================================ -->
+<!-- 1. 루미잉크란 무엇인가 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-1">
+<div class="section-head">
+<div class="nib-num">01</div>
+<h2>루미잉크란 무엇인가</h2>
+</div>
+<p>루미잉크는 창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱입니다. 리치 문서형 자유 메모, 원본 코드 보존용 HTML 작업실, AI 롤플레이용 로어북·로그, 1인/다인 모드를 오가는 통합 인물 카드, 그리고 자유 배치형 아이디어 보드를 함께 제공합니다.</p>
+<h3>앱의 기본 구조</h3>
+<ol class="steps">
+<li>가장 바깥에 <strong>프로젝트</strong>가 있습니다.</li>
+<li>프로젝트 안에서 문서·코드·세계관·인물·아이디어를 목적에 맞는 메모 타입으로 관리합니다.</li>
+<li>인물 카드는 <strong>페르소나(1인)</strong>와 <strong>캐릭터 모음(다인)</strong>을 한 데이터 구조 안에서 전환합니다.</li>
+<li>아이디어 보드는 위치·크기·회전·색상·첨부 참조까지 보존하는 독립 캔버스입니다.</li>
+<li>작성 데이터는 계정 서버가 아니라 현재 브라우저의 로컬 저장공간에 보관됩니다.</li>
+<li>다른 기기나 브라우저로 옮길 때는 전체 백업 파일을 사용합니다.</li></ol>
+<div class="callout warn">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+<p><strong>로그인·클라우드 동기화가 없습니다.</strong> 같은 기기라도 다른 브라우저, 다른 브라우저 프로필, 시크릿 모드, 다른 배포 주소는 서로 다른 저장공간으로 취급될 수 있습니다.</p>
+<p>따라서 중요한 자료는 주기적으로 전체 백업해야 합니다.</p>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- 2. 기능 구성 한눈에 보기 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-2">
+<div class="section-head">
+<div class="nib-num">02</div>
+<h2>기능 구성 한눈에 보기</h2>
+</div>
+<div class="table-wrap"><table><thead><tr><th>영역</th><th>주된 용도</th><th>대표 기능</th><th>주요 내보내기·보존 방식</th></tr></thead><tbody>
+<tr><td><strong>프로젝트</strong></td><td>작품·세션·세계관별 자료 묶기</td><td>태그, 색상, 썸네일, 프레임, 고정, 복제</td><td>전체 백업·프로젝트 패키지</td></tr>
+<tr><td><strong>자유 메모</strong></td><td>문서·레퍼런스 작성</td><td>리치 서식, 이미지, 링크, 코드 블록, 첨부, 이미지 픽셀 리사이즈</td><td>일반 HTML · 안전 정화 후 재가져오기</td></tr>
+<tr><td><strong>HTML 작업실</strong></td><td>상태창·배너·홍보글 등 원본 HTML 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, 격리 미리보기</td><td>원본 <code>.html</code> 그대로 내보내기</td></tr>
+<tr><td><strong>로어북</strong></td><td>SillyTavern용 World Info 작성</td><td>키워드, constant, Depth, 토큰 계산, 경량 마크다운</td><td>World Info JSON</td></tr>
+<tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림, 50종 템플릿, 사용자 템플릿</td><td>인라인 HTML · 재가져오기 가능한 HTML</td></tr>
+<tr><td><strong>통합 인물 카드</strong></td><td>1인 페르소나·다인 캐릭터 자료 관리</td><td>국·영문 설정, 포트레이트, 갤러리, 크리에이터 노트, 단일/모음 전환</td><td>재가져오기 가능한 HTML</td></tr>
+<tr><td><strong>아이디어 보드</strong></td><td>러프 콜라주·자료 배치</td><td>포스트잇, 이미지·GIF, 음악, 영상, 첨부, 메모 링크, 리사이즈·회전·배경</td><td>전체 백업·프로젝트 패키지에 파일과 배치 포함</td></tr>
+<tr><td><strong>전체 데이터</strong></td><td>보존·기기 이전</td><td>수동 백업, 자동 백업, 병합/교체 복원</td><td>전체 백업 HTML</td></tr>
+</tbody></table></div>
+</section>
+<!-- ============================================================ -->
+<!-- 3. 설치와 실행 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-3">
+<div class="section-head">
+<div class="nib-num">03</div>
+<h2>설치와 실행</h2>
+</div>
+<h3>3.1 웹앱으로 사용하기</h3>
+<p>배포된 루미잉크 주소를 브라우저에서 열면 별도 설치 없이 사용할 수 있습니다. 다만 브라우저 데이터 삭제, 사이트 데이터 삭제, 시크릿 모드 종료 등으로 로컬 데이터가 사라질 수 있으므로 장기 사용 전에는 설치형 PWA로 추가하고 백업 습관을 잡는 편이 좋습니다.</p>
+<h3>3.2 Android</h3>
+<ol class="steps">
+<li>Chrome에서 루미잉크 주소를 엽니다.</li>
+<li>브라우저의 점 세 개 메뉴를 엽니다.</li>
+<li><code>앱 설치</code> 또는 <code>홈 화면에 추가</code>를 선택합니다.</li>
+<li>설치된 루미잉크 아이콘으로 실행합니다.</li>
+</ol>
+<h3>3.3 iPhone·iPad</h3>
+<ol class="steps">
+<li>Safari에서 루미잉크 주소를 엽니다.</li>
+<li>공유 버튼을 누릅니다.</li>
+<li><code>홈 화면에 추가</code>를 선택합니다.</li>
+</ol>
+<h3>3.4 데스크톱</h3>
+<p>Chrome 또는 Edge의 주소창 설치 아이콘을 누르거나, 브라우저 메뉴에서 앱 설치를 선택합니다. 설치 후에는 독립 창 형태로 실행할 수 있습니다.</p>
+<h3>3.5 설치 아이콘 선택</h3>
+<p><code>설정 → 앱 설치 아이콘</code>에서 다음 10종을 고를 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">잉크 블루</span><span class="chip">골드</span><span class="chip">바이올렛</span><span class="chip">로즈</span><span class="chip">포레스트</span><span class="chip">파스텔 블루</span><span class="chip">파스텔 핑크</span><span class="chip">파스텔 그린</span><span class="chip">파스텔 퍼플</span><span class="chip">파스텔 옐로우</span>
+</div>
+<p>아이콘을 선택하면 해당 아이콘이 연결된 설치 전용 페이지로 이동합니다. 이미 설치한 PWA의 아이콘은 선택만으로 즉시 교체되지 않을 수 있습니다. 이 경우 기존 설치본을 제거하고 원하는 아이콘 페이지에서 다시 설치해야 합니다.</p>
+<h3>3.6 오프라인 사용과 업데이트</h3>
+<p>핵심 앱 파일, 토크나이저, 아이콘, 로그 템플릿 등은 서비스 워커 캐시에 저장됩니다. 한 번 정상적으로 불러온 뒤에는 네트워크가 끊겨도 대부분의 작성·열람 기능을 사용할 수 있습니다.</p>
+<p>앱의 HTML과 JavaScript는 온라인일 때 새 파일을 먼저 확인하고, 네트워크를 사용할 수 없을 때 캐시로 돌아갑니다. 업데이트가 배포되었는데 이전 화면이 남아 있다면 온라인 상태에서 앱을 다시 열거나 새로고침합니다.</p>
+<div class="callout note">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
+<p>웹폰트를 외부 주소로 설정한 경우 해당 폰트의 최초 로드는 인터넷 연결이 필요할 수 있습니다. 폰트를 불러오지 못해도 작성 데이터가 사라지지는 않으며 대체 글꼴로 표시됩니다.</p>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- 4. 화면과 기본 조작 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-4">
+<div class="section-head">
+<div class="nib-num">04</div>
+<h2>화면과 기본 조작</h2>
+</div>
+<h3>4.1 홈 화면</h3>
+<p>홈 화면은 프로젝트와 최근 메모를 빠르게 여는 시작 화면입니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">메뉴 버튼</div><div class="v">왼쪽 상단 — 사이드바를 엽니다.</div></div>
+<div class="kv-row"><div class="k">로고</div><div class="v">가운데 Lumi Ink 로고 — 홈 목록을 맨 위로 부드럽게 이동합니다.</div></div>
+<div class="kv-row"><div class="k">설정 버튼</div><div class="v">오른쪽 상단 — 설정 화면을 엽니다.</div></div>
+<div class="kv-row"><div class="k">검색창</div><div class="v">프로젝트와 메모를 통합 검색합니다.</div></div>
+<div class="kv-row"><div class="k">새 메모</div><div class="v">메모 유형과 저장할 프로젝트를 순서대로 선택합니다.</div></div>
+<div class="kv-row"><div class="k">새 프로젝트</div><div class="v">이름과 태그를 입력해 프로젝트를 만듭니다.</div></div>
+<div class="kv-row"><div class="k">프로젝트 영역</div><div class="v">프로젝트 카드, 메모 수, 수정 시각을 표시합니다.</div></div>
+<div class="kv-row"><div class="k">최근 수정 메모</div><div class="v">최대 10개의 최근 메모를 표시합니다.</div></div>
+<div class="kv-row"><div class="k">하단 통계</div><div class="v">전체 프로젝트 수와 전체 메모 수를 표시합니다.</div></div>
+<div class="kv-row"><div class="k"><code>+</code> 버튼</div><div class="v">우측 하단 — 새 메모 만들기를 엽니다.</div></div>
+</div>
+<p>프로젝트 수가 적어 프로젝트 영역 자체에 스크롤이 생기지 않더라도, 그 영역에서 위아래로 휠이나 스와이프하면 홈 전체 화면의 스크롤로 자연스럽게 이어집니다. 프로젝트 목록이 긴 경우에는 목록의 위·아래 경계에서 바깥 홈 스크롤로 연결됩니다.</p>
+<h3>4.2 사이드바</h3>
+<p>어느 주요 화면에서든 왼쪽 위 메뉴 버튼을 누르면 사이드바를 열 수 있습니다. 모바일에서는 화면 왼쪽 가장자리에서 오른쪽으로 스와이프해도 열립니다.</p>
+<p>사이드바에는 다음 항목이 있습니다.</p>
+<ul>
+<li>전체 프로젝트와 각 프로젝트의 메모 수</li>
+<li>최근 수정한 메모 최대 10개</li>
+<li>새 메모 · 새 프로젝트</li>
+<li><code>열기</code> — HTML 또는 JSON 파일 가져오기</li>
+<li>설정</li>
+<li>밝게/어둡게 빠른 전환</li>
+</ul>
+<p>사이드바의 Lumi Ink 로고를 누르면 홈으로 돌아갑니다.</p>
+<h3>4.3 뒤로 가기와 겹친 창 닫기</h3>
+<p>브라우저 또는 기기의 뒤로 가기는 먼저 현재 화면 위에 열린 요소를 닫습니다. <strong>선택 모드 → 이미지 자르기 → 이미지 확대 화면 → 팝업 → 하단 메뉴 → 사이드바</strong> 순으로 가장 위의 요소를 정리한 뒤 이전 화면으로 이동합니다.</p>
+<p>작성 화면에서 뒤로 가거나 다른 메모를 열 때에는 현재 편집 내용을 먼저 저장한 뒤 화면을 전환합니다.</p>
+<h3>4.4 길게 누르기와 우클릭</h3>
+<p>프로젝트 카드나 메모 카드를 길게 누르면 해당 항목의 관리 메뉴가 열립니다. 데스크톱에서는 우클릭으로 같은 메뉴를 열 수 있습니다.</p>
+<div class="callout note">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
+<p>로그 템플릿은 길게 누르기의 의미가 다릅니다. 템플릿 선택 창에서 길게 누르면 템플릿이 즐겨찾기에 추가되거나 해제됩니다.</p>
+</div>
+<h3>4.5 저장 상태 표시</h3>
+<p>각 편집 화면의 상단에는 <code>기록 중</code>, <code>저장됨</code> 상태가 잠시 표시됩니다. 일반적인 텍스트 입력은 약 0.55초 동안 추가 입력이 없으면 자동 저장됩니다. 화면을 떠날 때에도 남아 있는 편집 내용을 저장합니다.</p>
+<p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 저장할 수 있습니다. 이 단축키는 자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 화면에서 동작합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 5. 프로젝트 관리 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-5">
+<div class="section-head">
+<div class="nib-num">05</div>
+<h2>프로젝트 관리</h2>
+</div>
+<h3>5.1 프로젝트 만들기</h3>
+<p>처음 실행하면 삭제할 수 없는 <code>기본 메모함</code>이 자동으로 준비됩니다. 프로젝트를 따로 나누고 싶지 않은 자료나 가져오기 과정에서 위치를 잃은 메모를 안전하게 모으는 기본 위치입니다.</p>
+<ol class="steps">
+<li>홈이나 사이드바에서 <code>새 프로젝트</code>를 누릅니다.</li>
+<li>프로젝트 이름을 입력합니다. 이름은 필수이며 최대 60자입니다.</li>
+<li>선택적으로 태그를 쉼표로 구분해 입력합니다. 입력란 전체는 최대 500자입니다.</li>
+<li><code>만들기</code>를 누릅니다.</li>
+</ol>
+<p>프로젝트 편집 창에는 과거 호환을 위해 내부적으로 설명 필드가 남아 있지만, 현재 화면에서는 쉼표로 나눈 값을 프로젝트 태그 칩으로 표시합니다. 예를 들어 <code>판타지, 로맨스, 진행중</code>을 입력하면 프로젝트 상세 상단에 세 개의 태그가 나타납니다.</p>
+<h3>5.2 프로젝트 상세 화면</h3>
+<p>프로젝트를 열면 다음 정보가 보입니다.</p>
+<ul>
+<li>프로젝트 썸네일</li>
+<li>프로젝트 이름</li>
+<li>전체 메모 수</li>
+<li>프로젝트 태그</li>
+<li>유형별 메모 목록</li>
+</ul>
+<p>메모 섹션은 <strong>아이디어 보드 → 캐릭터 모음 → 페르소나 → 로그 → 로어북 → HTML 작업실 → 자유 메모</strong> 순서로 표시됩니다. 각 섹션 안에서는 먼저 고정된 메모가 나오고, 나머지 메모가 선택한 정렬 방식으로 배치됩니다.</p>
+<h3>5.3 프로젝트 정렬</h3>
+<p>홈의 정렬 버튼에서 다음 네 가지를 선택할 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">최신순</span><span class="chip">오래된순</span><span class="chip">이름순 ㄱ→ㅎ</span><span class="chip">이름순 ㅎ→ㄱ</span>
+</div>
+<p>프로젝트 상세 화면의 첫 메모 섹션에 있는 정렬 버튼은 모든 메모 섹션의 정렬 기준을 함께 바꿉니다. <strong>홈 프로젝트 정렬과 프로젝트 안 메모 정렬은 서로 별도로 저장됩니다.</strong></p>
+<h3>5.4 프로젝트 관리 메뉴</h3>
+<p>프로젝트 카드의 점 세 개 버튼을 누르거나 카드를 길게 누르면 다음 작업을 할 수 있습니다.</p>
+<ul>
+<li>새 메모 만들기</li>
+<li>상단 고정 또는 고정 해제</li>
+<li>이름·태그 편집</li>
+<li>프로젝트 색상 지정</li>
+<li>프로젝트 파일로 내보내기</li>
+<li>프로젝트 전체 복제</li>
+<li>프로젝트 아이콘 변경</li>
+<li>썸네일 프레임 선택</li>
+<li>소속 로어북을 World Info로 묶어 내보내기</li>
+<li>프로젝트 삭제</li>
+</ul>
+<p>홈 화면에서는 <code>선택</code> 항목도 표시되어 여러 프로젝트를 한꺼번에 삭제할 수 있습니다.</p>
+<h3>5.5 프로젝트 고정</h3>
+<p>프로젝트는 최대 <strong>3개</strong>까지 상단에 고정할 수 있습니다. 고정된 프로젝트끼리는 고정한 순서를 기준으로 표시되고, 아래에 나머지 프로젝트가 이어집니다.</p>
+<h3>5.6 프로젝트 색상</h3>
+<p>프로젝트 카드의 경계와 상세 썸네일 강조에 사용할 색상을 지정할 수 있습니다. 제공되는 색상은 다음 10종입니다.</p>
+<div class="chip-row">
+<span class="chip">루미 핑크</span><span class="chip">코랄 잉크</span><span class="chip">선셋 오렌지</span><span class="chip">골드 글로우</span><span class="chip">포레스트 그린</span><span class="chip">아쿠아 민트</span><span class="chip">네온 시안</span><span class="chip">미드나잇 블루</span><span class="chip">라벤더 퍼플</span><span class="chip">미스티 그레이</span>
+</div>
+<p>색상 없음으로 되돌리는 항목도 있습니다.</p>
+<h3>5.7 프로젝트 썸네일</h3>
+<p>기본 제공 썸네일 16종 중 하나를 고르거나 사용자 이미지를 직접 업로드할 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">별 고래</span><span class="chip">분홍 창가</span><span class="chip">황금 옥좌</span><span class="chip">얼음 성</span><span class="chip">빛의 숲길</span><span class="chip">야경 도시</span><span class="chip">푸른 하늘성</span><span class="chip">분홍 공주방</span><span class="chip">깃펜과 편지</span><span class="chip">수정 첨탑</span><span class="chip">보라 수정</span><span class="chip">달빛 서재</span><span class="chip">이상한 나라</span><span class="chip">겨울 보름달</span><span class="chip">라벤더 정원</span><span class="chip">산호 바다</span>
+</div>
+<p>업로드 이미지는 정사각형 자르기 화면에서 위치와 확대 비율을 조절한 뒤 <strong>512×512</strong> 이미지로 저장합니다.</p>
+<h3>5.8 썸네일 프레임</h3>
+<p>프로젝트 썸네일 바깥에는 20종의 장식 프레임을 적용할 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">클래식</span><span class="chip">비드</span><span class="chip">바로크</span><span class="chip">아르데코</span><span class="chip">로프</span><span class="chip">고딕</span><span class="chip">보태니컬</span><span class="chip">스캘럽</span><span class="chip">스타라이트</span><span class="chip">로열</span><span class="chip">슬림 헤어라인</span><span class="chip">슬림 코너 브래킷</span><span class="chip">슬림 인셋 닷</span><span class="chip">슬림 파인 비드</span><span class="chip">슬림 다이아 코너</span><span class="chip">슬림 미니 노치</span><span class="chip">슬림 덩굴</span><span class="chip">슬림 물결</span><span class="chip">슬림 점선</span><span class="chip">슬림 스파클</span>
+</div>
+<p>프레임을 고른 뒤 23종의 고정 색상과 <code>테마와 연동</code>을 포함한 총 24가지 표현 중 하나를 선택합니다. 고정 색상에는 골드, 로즈골드, 실버, 브론즈, 화이트, 블랙, 네이비, 버건디, 에메랄드, 바이올렛, 스카이, 로즈, 여러 파스텔 계열, 투명 글래스, 글래시한 명암이 포함됩니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">테마와 연동</div><div class="v">앱의 컬러 테마를 바꾸면 프레임 색도 함께 바뀝니다.</div></div>
+<div class="kv-row"><div class="k">투명 글래스</div><div class="v">반투명 흰색 유리 프레임처럼 표시됩니다.</div></div>
+<div class="kv-row"><div class="k">글래시한 명암</div><div class="v">반투명 하이라이트와 그림자를 사용해 깊이를 표현합니다.</div></div>
+</div>
+<p>프레임은 홈 카드, 사이드바, 프로젝트 선택 창, 프로젝트 상세 헤더에서 같은 구성으로 표시됩니다.</p>
+<h3>5.9 프로젝트 복제와 삭제</h3>
+<p>프로젝트 복제는 프로젝트 정보뿐 아니라 내부의 모든 메모와 파일 참조를 새 ID로 복사합니다. 아이디어 보드의 이미지·음악·영상·첨부·캔버스 배경도 복제본 전용 파일 레코드로 다시 연결됩니다. 복제본 이름에는 <code>(사본)</code>이 붙습니다.</p>
+<p>프로젝트를 삭제하면 소속 메모와 그 첨부파일도 함께 삭제됩니다. 삭제 직후 약 <strong>6초</strong> 동안 표시되는 <code>되돌리기</code>를 누르면 프로젝트, 메모, 첨부파일을 복원할 수 있습니다. 삭제 전에는 자동 백업도 한 번 실행합니다.</p>
+<h3>5.10 프로젝트 단위 내보내기와 불러오기</h3>
+<p>프로젝트 관리 메뉴의 <code>프로젝트 파일로 내보내기</code>는 프로젝트 정보, 소속 메모 전체, 본문 이미지·첨부파일·아이디어 보드 파일·캔버스 배경을 하나의 HTML 패키지로 저장합니다. 사용자 템플릿을 적용한 로그는 저장된 템플릿 스냅샷과 이름 가림 설정도 함께 포함합니다.</p>
+<p>다른 루미잉크에서 사이드바의 <code>파일 열기</code>로 이 HTML을 선택하면 기존 데이터를 건드리지 않고 새 프로젝트로 가져옵니다. 프로젝트·메모·첨부파일에는 모두 새 ID가 발급되며, 같은 이름이 있으면 <code>(가져옴)</code>, <code>(가져옴 2)</code>처럼 자동으로 구분됩니다.</p>
+<div class="callout info">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+<p>프로젝트 HTML은 한 프로젝트를 공유하거나 옮기는 용도입니다. 앱 전체를 보존하거나 기기를 이전할 때는 <code>설정 → 전체 백업</code>을 사용합니다.</p>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- 6. 메모 만들기와 공통 관리 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-6">
+<div class="section-head">
+<div class="nib-num">06</div>
+<h2>메모 만들기와 공통 관리</h2>
+</div>
+<h3>6.1 새 메모 만들기</h3>
+<ol class="steps">
+<li>홈이나 사이드바에서 <code>새 메모</code>를 누릅니다.</li>
+<li><strong>자유 메모 · HTML 작업실 · 로어북 · 로그 저장 · 페르소나 · 캐릭터 모음 · 아이디어 보드</strong> 중 하나를 고릅니다.</li>
+<li>저장할 프로젝트를 선택합니다.</li>
+<li>각 타입의 제목·내용을 작성하면 자동 저장됩니다.</li></ol>
+<h3>6.2 자동 제목과 수동 제목</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>메모 유형</th><th>자동 제목 규칙</th></tr></thead>
+<tbody>
+<tr><td>자유 메모</td><td>본문의 첫 번째 비어 있지 않은 줄을 최대 52자로 사용</td></tr>
+<tr><td>로어북</td><td>기본값 <code>이름 없는 로어북</code>; 필요할 때 직접 변경</td></tr>
+<tr><td>로그</td><td>원문 첫 줄에서 따옴표·대괄호·별표 등의 표식 일부를 제거해 최대 52자로 사용</td></tr>
+<tr><td>페르소나</td><td>한국어 이름, 없으면 영어 이름 사용</td></tr>
+<tr><td>캐릭터 메모</td><td>통합 인물 카드의 첫 페이지 이름을 사용하고 캐릭터 모음이면 <code>이름 외 N명</code> 형식으로 사용</td></tr>
+</tbody>
+</table>
+</div>
+<p>메모 관리 메뉴에서 이름을 직접 바꾸면 해당 제목은 <strong>잠금 상태</strong>가 되어 이후 본문이나 인물 이름이 바뀌어도 자동 제목으로 덮어쓰지 않습니다.</p>
+<h3>6.3 메모별 색상</h3>
+<p>각 메모에는 프로젝트 색상과 별개로 색상 표식을 지정할 수 있습니다. 아이디어 보드 안의 포스트잇·음악·메모 인용·첨부파일·캔버스 오버레이는 이 표식과 별도로 앱의 20종 테마 컬러를 개별 선택할 수 있습니다.</p>
+<h3>6.4 메모 고정</h3>
+<p>프로젝트 상세의 각 메모 유형 섹션마다 최대 3개를 고정할 수 있습니다. 예를 들어 자유 메모 3개와 로그 3개를 각각 고정할 수 있습니다.</p>
+<p>홈의 최근 메모와 사이드바의 최근 메모에는 서로 독립적인 고정 상태가 있습니다. 각 위치에서 최대 3개까지 상단에 고정할 수 있습니다. <strong>홈 고정과 사이드바 고정은 프로젝트 상세의 메모 고정과 별개입니다.</strong></p>
+<h3>6.5 메모 관리 메뉴의 공통 작업</h3>
+<p>메모 유형에 따라 세부 항목은 다르지만 일반적으로 다음 기능을 제공합니다.</p>
+<ul>
+<li>선택 모드 진입</li>
+<li>상단 고정 또는 해제</li>
+<li>이름 바꾸기</li>
+<li>색상 지정</li>
+<li>해당 유형의 파일로 내보내기</li>
+<li>다른 프로젝트로 이동</li>
+<li>선택한 프로젝트에 복제</li>
+<li>삭제</li>
+</ul>
+<p>복제할 때 자유 메모 첨부파일도 새 파일 레코드로 함께 복사됩니다. 삭제 직후에는 약 6초 동안 되돌릴 수 있습니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 7. 자유 메모 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-7">
+<div class="section-head">
+<div class="nib-num">07</div>
+<h2>자유 메모</h2>
+</div>
+<h3>7.1 용도와 화면 구분</h3>
+<p>자유 메모는 일반 문서를 쓰는 리치 에디터입니다. 처음 열면 읽기 화면이 나타나며, 상단 편집 버튼이나 본문 더블클릭으로 편집 화면에 들어갑니다. 문서 안에 넣은 이미지는 저장된 HTML의 인라인 크기값으로 관리됩니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">읽기 화면</div><div class="v">완성된 본문과 첨부파일을 열람합니다.</div></div>
+<div class="kv-row"><div class="k">편집 화면</div><div class="v">리치 에디터 또는 HTML 소스로 내용을 수정합니다.</div></div>
+</div>
+<p>읽기 화면의 본문을 길게 누르면 서식을 제외한 본문 전체 텍스트를 클립보드에 복사합니다.</p>
+<h3>7.2 서식 도구</h3>
+<p>편집 툴바에서 다음 기능을 사용할 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">굵게</span><span class="chip">기울임</span><span class="chip">밑줄</span><span class="chip">취소선</span><span class="chip">글자 크기 줄이기·늘리기</span><span class="chip">글자 크기 목록 선택</span><span class="chip">글자 색</span><span class="chip">형광펜</span><span class="chip">왼쪽·가운데·오른쪽 정렬</span><span class="chip">글머리표 목록</span><span class="chip">번호 목록</span><span class="chip">이미지 삽입</span><span class="chip">일반 파일 첨부</span><span class="chip">하이퍼링크</span><span class="chip">코드 블록</span><span class="chip">서식·코드·링크 지우기</span><span class="chip">실행 취소</span><span class="chip">HTML 소스 보기·편집</span><span class="chip">툴바 접기·펼치기</span>
+</div>
+<h3>7.3 글자 크기</h3>
+<p>텍스트를 선택한 뒤 크기 목록에서 다음 일곱 단계 중 하나를 고를 수 있습니다.</p>
+<div class="chip-row">
+<span class="chip">아주 작게 12px</span><span class="chip">작게 14px</span><span class="chip">보통 16px</span><span class="chip">크게 19px</span><span class="chip">더 크게 23px</span><span class="chip">제목 28px</span><span class="chip">대제목 34px</span>
+</div>
+<p><code>A−</code>, <code>A+</code>는 현재 크기를 한 단계씩 바꿉니다.</p>
+<h3>7.4 글자 색</h3>
+<p>기본 팔레트, 운영체제 색상 선택기, HEX 직접 입력을 지원합니다. 마음에 드는 색을 <code>내 색상</code>에 저장할 수 있으며 최대 24개까지 유지합니다. 마지막으로 적용한 색도 다음 편집 때 기억합니다.</p>
+<h3>7.5 형광펜</h3>
+<p>텍스트를 선택한 뒤 형광펜 버튼을 짧게 누르면 현재 형광펜 색을 적용하거나 이미 적용된 형광펜을 제거합니다. 버튼을 약 0.48초 동안 길게 누르면 다음 색상 선택 창이 열립니다.</p>
+<div class="chip-row">
+<span class="chip">하늘색</span><span class="chip">핑크색</span><span class="chip">연두색</span><span class="chip">연보라색</span><span class="chip">노란색</span>
+</div>
+<p>선택한 형광펜 색은 다음 사용에도 유지되며 캐릭터 크리에이터 메모의 형광펜과 공유됩니다.</p>
+<h3>7.6 HTML 소스 편집</h3>
+<p><code>&lt;&gt;</code> 형태의 코드 버튼을 누르면 현재 메모의 HTML 소스를 직접 볼 수 있습니다. 소스 모드에서 수정한 HTML은 일반 편집 모드와 같은 본문 데이터로 저장됩니다.</p>
+<div class="callout warn">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+<p>이 기능은 고급 사용자용입니다. 앱 안에서 직접 입력한 소스는 가져온 외부 HTML과 달리 별도의 전체 정화 과정을 거치지 않으므로, 출처를 알 수 없는 HTML·이벤트 속성·스크립트성 코드를 붙여넣지 않는 것이 안전합니다.</p>
+</div>
+<h3>7.7 이미지 삽입</h3>
+<p>이미지는 문서 본문 안에 삽입됩니다. 긴 변을 최대 1280px로 줄이고 JPEG 데이터로 변환한 뒤 메모 HTML 안에 포함합니다.</p>
+<ul>
+<li>파일 크기 12MB 이하</li>
+<li>전체 해상도 2,400만 픽셀 이하</li>
+<li>일반 이미지 파일만 허용</li>
+<li>SVG는 업로드 이미지로 허용하지 않음</li>
+</ul>
+<h3>7.8 파일 첨부</h3>
+<p>본문 이미지와 별개로 일반 파일을 첨부할 수 있습니다.</p>
+<ul>
+<li>한 파일당 최대 15MB</li>
+<li>이미지, 문서, 압축 파일, 오디오, 비디오 등 파일 유형에 맞춘 아이콘 표시</li>
+<li>읽기·편집 화면에서 파일 다운로드 가능</li>
+<li>편집 화면에서 첨부 삭제 가능</li>
+<li>첨부 삭제는 확인 창을 거치지만 즉시 되돌리기 버튼은 제공하지 않음</li>
+</ul>
+<p>첨부파일은 메모 본문이 아니라 브라우저의 별도 파일 저장소에 보관됩니다. 프로젝트·메모 복제와 전체 백업에는 포함되지만, <strong>자유 메모 하나를 일반 HTML로 저장할 때에는 첨부파일이 포함되지 않습니다.</strong></p>
+<h3>7.9 링크</h3>
+<p>링크를 걸 텍스트를 먼저 선택한 뒤 링크 버튼을 누르고 주소를 입력합니다. <code>https://</code>를 생략하면 자동으로 붙입니다.</p>
+<ul>
+<li><code>http://</code> 또는 <code>https://</code> 주소를 입력한 뒤 공백이나 Enter를 누르면 자동 링크 변환</li>
+<li>선택한 텍스트 위에 URL만 붙여넣으면 해당 텍스트에 링크 적용</li>
+<li>선택 영역 없이 URL만 붙여넣으면 URL 자체를 링크로 삽입</li>
+<li>읽기 화면의 링크는 새 창에서 열리고 <code>noopener noreferrer</code> 보호 속성을 사용</li>
+</ul>
+<h3>7.10 코드 블록</h3>
+<p>코드 블록 버튼은 현재 문단을 <code>pre</code> 형식으로 바꿉니다. 읽기 화면에서는 각 코드 블록 오른쪽 위에 <code>복사</code> 버튼이 자동으로 붙습니다.</p>
+<p>지우개 버튼은 선택 영역의 일반 서식, 링크, 코드 블록·코드 요소를 함께 제거합니다.</p>
+<h3>7.11 자유 메모 HTML 저장과 다시 열기</h3>
+<p>메모 관리 메뉴의 <code>.html로 저장</code>은 본문 서식과 본문 안 이미지가 포함된 일반 HTML 문서를 만듭니다. 이 파일은 브라우저에서 독립적으로 열 수 있습니다.</p>
+<ul>
+<li>별도 첨부파일은 포함되지 않습니다.</li>
+<li>루미잉크 고유 메타데이터를 넣는 페르소나·캐릭터·로그 HTML과 달리, 자유 메모 HTML은 일반 문서 형식입니다.</li>
+<li>루미잉크의 <code>열기</code>로 다시 가져오면 HTML 제목과 정화된 본문을 사용해 새 자유 메모를 만듭니다.</li>
+<li>외부 HTML을 가져올 때 스크립트, 폼, iframe, 위험한 속성, 원격 이미지 등은 제거하거나 제한합니다.</li>
+</ul>
+<h3>7.12 에디터 이미지 크기 조절</h3>
+<p>편집 중 본문 이미지를 누르면 선택 테두리와 조절 패널이 나타납니다. 네 모서리 핸들을 드래그해 크기를 바꾸거나, 가로·세로 픽셀값을 직접 입력할 수 있습니다.</p>
+<ul>
+<li><strong>비율 고정</strong>: 기본값입니다. 한 변을 바꾸면 원본 비율을 유지해 다른 변도 같이 계산합니다.</li>
+<li><strong>비율 해제</strong>: 가로·세로를 독립적으로 입력하거나 조절합니다.</li>
+<li><strong>자동 크기</strong>: 직접 지정한 폭·높이를 지우고 문서 레이아웃에 맞는 기본 크기로 돌립니다.</li>
+</ul>
+<p>선택 테두리와 입력 패널은 저장되지 않습니다. 실제 문서에는 이미지의 <code>width</code>와 <code>height</code> 스타일만 남으므로, HTML 저장·백업·복원 뒤에도 조정한 크기가 유지됩니다.</p>
+<h3>7.13 HTML을 문서로 가져올 때</h3>
+<p>외부 HTML을 자유 메모로 열면 문서 안전성을 위해 구조·정적 스타일·정적 SVG를 폭넓게 허용하면서 위험 요소를 제거합니다. 인라인 레이아웃과 대부분의 정적 디자인은 유지되지만, 스크립트·폼·iframe·외부 스타일시트·원격 실행 요소는 보존 대상이 아닙니다. 코드 원본 자체를 편집·보관하려면 다음의 <strong>HTML 작업실</strong>을 사용합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 8. 로어북 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-html">
+<div class="section-head"><div class="nib-num">07+</div><h2>HTML 작업실</h2></div>
+<p>HTML 작업실은 상태창, 배너, 홍보글, 커스텀 카드처럼 <strong>소스 코드 자체가 작업물</strong>인 파일을 위한 전용 메모입니다. 자유 메모와 달리 원본을 리치 에디터의 <code>innerHTML</code>로 다시 직렬화하지 않으며, 가져온 문자열을 그대로 보관합니다.</p>
+<div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>원본 보존과 화면 안전성은 분리됩니다.</strong> 저장하는 소스는 손대지 않지만, 미리보기는 별도 샌드박스 안에서 위험 요소를 제거한 사본으로 렌더링합니다.</p></div>
+<h3>HTML 작업실로 가져오기</h3>
+<ol class="steps">
+<li>사이드바의 <code>열기</code>에서 HTML 파일을 선택합니다.</li>
+<li><code>HTML 작업실로 원본 가져오기</code>를 선택합니다.</li>
+<li>파일 내용이 정화되지 않은 원본 문자열로 저장됩니다.</li>
+</ol>
+<h3>소스 · 미리보기 · 분할 보기</h3>
+<p>상단의 <code>SOURCE</code>, <code>PREVIEW</code>, <code>SPLIT</code> 버튼으로 화면을 전환합니다. 소스 화면에서는 코드를 직접 편집하고, 미리보기에서는 현재 소스의 렌더 결과를 확인하며, 분할 보기에서는 둘을 나란히 볼 수 있습니다.</p>
+<p>미리보기는 <code>iframe sandbox</code> 안에서 동작합니다. 스크립트, 이벤트 속성, 프레임, 폼, 자동 새로고침과 위험한 URL은 미리보기 사본에서 제거되며, 네트워크 연결·앱 저장공간 접근·팝업 실행을 허용하지 않습니다. 외부 이미지·폰트·정적 스타일은 표시될 수 있으므로 디자인 확인에는 유용하지만, 최종 실행 환경의 동작을 완전히 대신하지는 않습니다.</p>
+<h3>저장·내보내기·제한</h3>
+<p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 더보기 메뉴에서 원본 코드 복사, 원본 <code>.html</code> 내보내기, 이동·복제를 사용할 수 있습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
+</section>
+<section class="section" id="sec-8">
+<div class="section-head">
+<div class="nib-num">08</div>
+<h2>로어북</h2>
+</div>
+<h3>8.1 용도</h3>
+<p>로어북은 SillyTavern World Info 항목을 작성하고 관리하는 메모 유형입니다. 원문은 경량 마크다운으로 저장하며, 발동 키워드와 constant, 삽입 깊이를 함께 기록합니다.</p>
+<h3>8.2 발동 키워드</h3>
+<p>상단 <code>발동 키워드</code> 입력란에 값을 입력한 뒤 Enter 또는 쉼표를 누르면 키워드 칩이 생성됩니다.</p>
+<ul>
+<li>한 번에 쉼표로 여러 키워드 추가 가능</li>
+<li>동일한 문자열의 중복 추가 방지</li>
+<li>각 칩의 <code>×</code> 버튼으로 개별 삭제</li>
+<li>World Info 내보내기 때 <code>key</code> 배열로 전달</li>
+</ul>
+<h3>8.3 항상 활성</h3>
+<p><code>항상 활성 (constant)</code>을 켜면 키워드 일치 여부와 관계없이 항상 활성화되는 World Info 항목으로 내보냅니다. JSON에서는 <code>constant: true</code>가 됩니다.</p>
+<h3>8.4 깊이</h3>
+<p>깊이 스위치를 켜면 World Info의 Depth 위치를 사용합니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">입력 범위</div><div class="v">0 ~ 999</div></div>
+<div class="kv-row"><div class="k">기본값</div><div class="v">4</div></div>
+<div class="kv-row"><div class="k">켜짐</div><div class="v">내보내기 JSON의 <code>position</code>이 4가 되고 입력한 <code>depth</code>를 사용</div></div>
+<div class="kv-row"><div class="k">꺼짐</div><div class="v">일반 위치 값으로 내보냄</div></div>
+</div>
+<h3>8.5 지원하는 경량 마크다운</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>입력</th><th>보기 결과</th></tr></thead>
+<tbody>
+<tr><td><code># 제목</code>, <code>## 제목</code>, <code>### 제목</code></td><td>1~3단계 제목</td></tr>
+<tr><td><code>**굵게**</code></td><td>굵은 글자</td></tr>
+<tr><td><code>*기울임*</code></td><td>기울임</td></tr>
+<tr><td><code>`코드`</code></td><td>인라인 코드</td></tr>
+<tr><td><code>[이름](https://주소)</code></td><td>외부 링크</td></tr>
+<tr><td>줄 단독 <code>@@명령</code></td><td>명령 칩 행</td></tr>
+<tr><td>문장 안 <code>@@명령</code></td><td>인라인 명령 칩</td></tr>
+<tr><td><code>- 항목</code>, <code>* 항목</code>, <code>+ 항목</code></td><td>글머리표 목록</td></tr>
+<tr><td><code>1. 항목</code></td><td>번호 목록</td></tr>
+<tr><td><code>- 라벨: 값</code></td><td>라벨 미니 칩 행</td></tr>
+<tr><td><code>&gt; 인용</code></td><td>인용문</td></tr>
+<tr><td><code>---</code>, <code>***</code>, <code>___</code></td><td>구분선</td></tr>
+<tr><td>삼중 백틱</td><td>여러 줄 코드 블록</td></tr>
+<tr><td><code>&lt;태그&gt;</code>부터 <code>&lt;/태그&gt;</code></td><td>태그 이름이 붙은 박스</td></tr>
+</tbody>
+</table>
+</div>
+<p>제목과 목록은 <code>#제목</code>, <code>-내용</code>처럼 표식 뒤 공백이 없어도 인식합니다.</p>
+<h3>8.6 편집과 미리보기</h3>
+<p>눈 모양 버튼으로 원문 편집과 렌더링된 미리보기를 전환합니다. 미리보기 화면을 길게 누르면 꾸며진 화면이 아니라 원본 마크다운 전체를 클립보드에 복사합니다.</p>
+<h3>8.7 토큰 계산</h3>
+<p>로어북 본문은 번들된 cl100k 계열 토크나이저로 토큰 수를 계산합니다. 토크나이저는 필요할 때 불러오며 오프라인 캐시 대상입니다. 계산할 수 없는 환경에서는 <code>토큰 계산 불가</code>로 표시합니다.</p>
+<h3>8.8 World Info JSON 내보내기</h3>
+<p>개별 로어북의 관리 메뉴에서 <code>World Info(.json)로 내보내기</code>를 선택할 수 있습니다. 프로젝트 관리 메뉴에서는 프로젝트 안의 여러 로어북을 선택해 하나의 JSON으로 묶을 수 있습니다.</p>
+<p>여러 항목 내보내기 과정은 다음과 같습니다.</p>
+<ol class="steps">
+<li>포함할 로어북을 체크합니다.</li>
+<li>선택된 항목 수와 합산 토큰을 확인합니다.</li>
+<li>파일 이름을 지정합니다.</li>
+<li>하나의 <code>entries</code> 객체를 가진 SillyTavern World Info JSON을 저장합니다.</li>
+</ol>
+<p>각 항목에는 제목, 키워드, 본문, constant, Depth, 기본 확률과 순서값 등이 들어갑니다.</p>
+<h3>8.9 World Info JSON 가져오기</h3>
+<p>사이드바의 <code>열기</code>에서 World Info JSON을 선택하면 <code>entries</code> 객체 또는 항목 배열을 읽습니다. 대상 프로젝트를 고르면 각 World Info 항목이 별도의 로어북 메모로 생성됩니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k"><code>comment</code></div><div class="v">→ 로어북 제목</div></div>
+<div class="kv-row"><div class="k"><code>key</code> / <code>keys</code></div><div class="v">→ 발동 키워드</div></div>
+<div class="kv-row"><div class="k"><code>content</code></div><div class="v">→ 본문</div></div>
+<div class="kv-row"><div class="k"><code>constant</code></div><div class="v">→ 항상 활성</div></div>
+<div class="kv-row"><div class="k"><code>position: 4</code></div><div class="v">→ 깊이 사용</div></div>
+<div class="kv-row"><div class="k"><code>depth</code></div><div class="v">→ 깊이 값</div></div>
+</div>
+<h3>8.10 로어북 합치기</h3>
+<p>같은 프로젝트에서 로어북을 두 개 이상 선택한 뒤 <code>합치기</code>를 누르면 원본을 삭제하지 않고 <code>합친 로어북</code>이라는 새 메모를 만듭니다. 본문은 빈 줄 두 개로 이어 붙입니다. <strong>키워드, constant, Depth는 자동 병합하지 않으므로</strong> 새 메모에서 다시 설정해야 합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 9. 로그 저장 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-9">
+<div class="section-head">
+<div class="nib-num">09</div>
+<h2>로그 저장</h2>
+</div>
+<h3>9.1 기본 개념</h3>
+<p>로그 저장은 원문과 꾸며진 보기를 분리하는 메모 유형입니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">편집 모드</div><div class="v">사용자가 입력한 원문을 그대로 수정합니다.</div></div>
+<div class="kv-row"><div class="k">보기 모드</div><div class="v">선택한 템플릿의 정규식과 스타일을 적용한 결과만 보여줍니다.</div></div>
+</div>
+<ul>
+<li>원문에는 꾸밈용 HTML을 직접 삽입하지 않습니다.</li>
+<li>템플릿을 바꾸거나 이름 가림을 적용해도 원문은 유지됩니다.</li>
+</ul>
+<p>눈·연필 버튼으로 두 모드를 전환합니다.</p>
+<h3>9.2 정규식 디자인</h3>
+<p>템플릿은 일반적으로 다음 표식을 찾아 서로 다른 스타일을 적용합니다.</p>
+<div class="chip-row">
+<span class="chip gold"><code>"큰따옴표 안쪽"</code></span>
+<span class="chip gold"><code>'작은따옴표 안쪽'</code></span>
+<span class="chip gold"><code>[대괄호 안쪽]</code></span>
+<span class="chip gold"><code>**굵게 형식**</code></span>
+<span class="chip gold"><code>*기울임 형식*</code></span>
+</div>
+<p>실제 인식 표식, 구분자 제거 여부, 색상과 테두리는 템플릿마다 다릅니다. <strong>규칙은 템플릿 JSON의 배열 순서대로 적용됩니다.</strong></p>
+<h3>9.3 이름 가림</h3>
+<p>로그에 등장하는 페르소나명, 본명, 애칭, 호칭 등을 보기 결과에서 다른 표시로 치환할 수 있습니다.</p>
+<ol class="steps">
+<li><code>가릴 원본 이름</code>에 이름을 입력합니다.</li>
+<li>추가 이름이 있으면 <code>+ 원본 이름</code>을 누릅니다.</li>
+<li>필요하면 <code>대체 표시</code>를 입력합니다.</li>
+<li><code>이름 가림 적용</code>을 누릅니다.</li>
+</ol>
+<p>세부 동작은 다음과 같습니다.</p>
+<ul>
+<li>원본 이름은 최대 20개입니다.</li>
+<li>같은 이름은 데이터 저장 시 중복 제거됩니다.</li>
+<li>여러 이름이 겹치면 긴 이름부터 처리합니다.</li>
+<li>이름 비교는 대소문자를 구분하는 정확한 문자열 검색입니다.</li>
+<li>단어 경계를 따로 보지 않으므로 다른 단어 안에 포함된 문자열도 치환될 수 있습니다.</li>
+<li>대체 표시를 비워 두면 템플릿이 지정한 기본 가림 문자열을 사용합니다.</li>
+<li>모든 이름은 같은 대체 문자열과 같은 템플릿 가림 스타일을 사용합니다.</li>
+<li>이름 가림은 본문뿐 아니라 꾸며진 로그의 제목 영역에도 적용됩니다.</li>
+<li>원문과 메모의 실제 제목 데이터는 바뀌지 않고 보기·복사·내보내기 결과에서만 가립니다.</li>
+</ul>
+<h3>9.4 기본 제공 템플릿 50종</h3>
+<p>템플릿 선택 창의 <code>기본</code> 탭에는 50종이 들어 있습니다. 목록은 이름순으로 정렬할 수 있으며, 별도의 <code>50종 소개 보기</code> 페이지에서 샘플과 설명을 확인할 수 있습니다.</p>
+<p>전체 이름은 <a href="#app-a">부록 A</a>에 정리되어 있습니다.</p>
+<h3>9.5 템플릿 선택 창</h3>
+<p>템플릿 창은 세 탭으로 구성됩니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k">기본</div><div class="v">앱에 포함된 50종</div></div>
+<div class="kv-row"><div class="k">사용자</div><div class="v">사용자가 올린 템플릿과 현재 메모에 보존된 사용자 템플릿</div></div>
+<div class="kv-row"><div class="k">즐겨찾기</div><div class="v">길게 눌러 고정한 템플릿</div></div>
+</div>
+<p>창 안에서 할 수 있는 작업은 다음과 같습니다.</p>
+<ul>
+<li>템플릿 이름, 설명, 제작자, ID, 규칙 이름, 정규식 내용 검색</li>
+<li>이름 오름차순·내림차순 정렬</li>
+<li>템플릿을 길게 눌러 즐겨찾기 추가·해제</li>
+<li>즐겨찾기된 템플릿을 일반 탭 상단에 우선 표시</li>
+<li>사용자 템플릿 삭제</li>
+<li>JSON 템플릿 업로드</li>
+<li>제작 가이드 다운로드</li>
+<li>50종 소개 페이지 열기</li>
+</ul>
+<p>창을 닫았다가 다시 열면 <code>기본 탭</code>, <code>빈 검색어</code>, <code>이름 오름차순</code>으로 초기화됩니다. 사용자 템플릿과 즐겨찾기 정보만 지속적으로 보존됩니다.</p>
+<h3>9.6 사용자 템플릿</h3>
+<p>템플릿 선택 창의 <code>JSON 템플릿 업로드</code>로 사용자 템플릿을 추가합니다.</p>
+<p>주요 제한은 다음과 같습니다.</p>
+<ul>
+<li>UTF-8 JSON 파일</li>
+<li>파일 크기 200KB 이하</li>
+<li><code>kind: lumink-log-template</code></li>
+<li><code>schemaVersion: 1</code></li>
+<li>ID는 영문·숫자·하이픈으로 이루어진 3~64자</li>
+<li>기본 템플릿과 ID 중복 불가</li>
+<li>사용자 템플릿 최대 20개</li>
+<li>정규식 규칙 최대 20개</li>
+<li>허용된 CSS 속성만 사용</li>
+<li>외부 URL, <code>@import</code>, <code>expression</code>, <code>javascript:</code> 등 위험한 스타일 차단</li>
+<li>지나치게 복잡하거나 위험한 정규식 거부</li>
+</ul>
+<p>사용자 템플릿을 메모에 적용하면 해당 템플릿의 스냅샷이 메모 안에도 저장됩니다. 나중에 사용자 템플릿 목록에서 삭제해도 이미 적용된 메모는 보존된 스냅샷으로 계속 렌더링할 수 있습니다.</p>
+<div class="callout note">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
+<p>전체 제작 규격은 로그 템플릿 제작 가이드 문서를 참고합니다.</p>
+</div>
+<h3>9.7 인라인 HTML 코드 복사</h3>
+<p>메모 관리 메뉴의 <code>인라인 HTML 코드 복사</code>는 현재 템플릿 결과를 하나의 HTML 조각으로 만듭니다.</p>
+<ul>
+<li>배경, 테두리, 글자색, 문단 스타일을 모두 <code>style</code> 속성에 인라인 처리</li>
+<li>외부 스타일시트 없이 게시글 HTML 영역에 붙여넣기 쉬운 형태</li>
+<li>현재 제목과 본문에 이름 가림 적용</li>
+<li>원본 로그 데이터나 편집 UI는 포함하지 않음</li>
+</ul>
+<p>게시판이 인라인 스타일을 제거하거나 허용 HTML을 제한하면 일부 디자인은 달라질 수 있습니다.</p>
+<h3>9.8 꾸며진 HTML 파일 저장</h3>
+<p><code>꾸며진 HTML 파일로 저장</code>은 브라우저에서 독립적으로 열 수 있는 완성 문서를 만듭니다. 화면에 보이는 인라인 디자인과 함께 루미잉크 재가져오기용 로그 데이터도 문서 안에 포함합니다.</p>
+<p>이 파일을 사이드바의 <code>열기</code>로 가져오면 대상 프로젝트에 새 로그 메모가 만들어지고, 원문·템플릿·이름 가림 설정을 다시 편집할 수 있습니다.</p>
+<h3>9.9 로그 합치기</h3>
+<p>같은 프로젝트의 로그를 두 개 이상 선택해 합치면 원본은 그대로 두고 <code>합친 로그</code>를 새로 만듭니다.</p>
+<ul>
+<li>본문은 빈 줄 두 개로 연결합니다.</li>
+<li>템플릿과 이름 가림 설정은 선택된 첫 번째 로그의 설정을 사용합니다.</li>
+<li>새 로그의 제목은 <code>합친 로그</code>로 잠깁니다.</li>
+<li>결과는 보기 모드로 열립니다.</li>
+</ul>
+</section>
+<!-- ============================================================ -->
+<!-- 10. 페르소나 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-10">
+<div class="section-head">
+<div class="nib-num">10</div>
+<h2>통합 인물 카드 · 페르소나 모드</h2>
+</div>
+<h3>10.1 편집 모드와 보기 모드</h3>
+<p>v62부터 페르소나는 통합 인물 카드의 <strong>페르소나 모드</strong>입니다. 한 인물을 집중 관리하는 화면이며, 필요해지면 같은 메모를 캐릭터 모음 모드로 확장할 수 있습니다. 기존 페르소나 데이터는 첫 실행 시 자동 백업을 남긴 뒤, 이미지·갤러리·국문·영문·태그·크리에이터 노트를 보존한 채 단일 모드로 승격됩니다.</p>
+<h3>10.2 한국어·영어 이중 양식</h3>
+<p>한국어와 English 탭은 각각 다음 데이터를 따로 가집니다.</p>
+<ul>
+<li>이름</li>
+<li>태그</li>
+<li>상세 설명</li>
+<li>상세 설명 토큰 수</li>
+</ul>
+<p>이미지와 갤러리는 두 언어 탭이 공유합니다. 한국어 이름이 비어 있으면 영어 이름이 메모 자동 제목에 사용됩니다.</p>
+<h3>10.3 포트레이트와 정사각 썸네일</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">포트레이트</div><div class="v">3:4 비율, 1200×1600으로 저장</div></div>
+<div class="kv-row"><div class="k">정사각 썸네일</div><div class="v">1:1 비율, 1080×1080으로 저장</div></div>
+</div>
+<p>이미지를 선택하면 자르기 화면이 열립니다. 이미지를 드래그해 위치를 옮기고 확대 슬라이더로 배율을 조절한 뒤 적용합니다. 정사각 썸네일이 없으면 보기 화면과 목록에서 포트레이트를 대신 사용합니다.</p>
+<p>이미지 제한은 자유 메모와 동일하게 12MB 이하, 2,400만 픽셀 이하입니다.</p>
+<h3>10.4 태그</h3>
+<p>쉼표 또는 Enter로 여러 태그를 추가할 수 있습니다. 중복 태그는 다시 추가하지 않으며 각 태그의 <code>×</code> 버튼으로 삭제합니다.</p>
+<h3>10.5 상세 설명 문법</h3>
+<p>페르소나와 캐릭터의 상세 설명은 전체 마크다운이 아니라 카드용 경량 구조 문법을 사용합니다.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>입력</th><th>보기 결과</th></tr></thead>
+<tbody>
+<tr><td><code># 제목</code>부터 <code>###### 제목</code></td><td>제목 박스; 화면에서는 최대 3단계 크기로 정리</td></tr>
+<tr><td><code>- 라벨: 값</code></td><td>라벨 미니 칩</td></tr>
+<tr><td><code>- 항목</code></td><td>삼각형 글머리표</td></tr>
+<tr><td>빈 줄</td><td>문단 간격</td></tr>
+<tr><td>일반 줄</td><td>줄바꿈을 유지한 본문</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>&lt;user name="{{user}}"&gt;</code>처럼 사용자 제어를 위해 넣은 <code>&lt;user ...&gt;</code>와 <code>&lt;/user&gt;</code> 표시는 보기 화면에서 숨깁니다. 태그 안쪽의 설정 내용은 유지됩니다.</p>
+<h3>10.6 토큰 수</h3>
+<p>한국어와 영어 상세 설명의 토큰을 각각 계산합니다. 보기 모드에서는 현재 선택한 언어의 토큰을 표시합니다.</p>
+<h3>10.7 갤러리</h3>
+<p>갤러리의 <code>+</code> 버튼에서 여러 이미지를 한 번에 선택할 수 있습니다. 각 이미지는 긴 변 최대 1600px로 줄여 저장합니다.</p>
+<ul>
+<li>이미지를 약 0.3초 누른 뒤 다른 위치로 끌어 순서 변경</li>
+<li>삭제 후 약 6초 동안 되돌리기 가능</li>
+<li>보기 모드에서 이미지를 눌러 확대</li>
+<li>확대 화면의 이전·다음 버튼, 모바일 좌우 스와이프, 키보드 좌우 화살표 지원</li>
+<li>확대 화면에서 인접 이미지를 미리 불러와 전환 지연 감소</li>
+</ul>
+<h3>10.8 빠른 복사</h3>
+<p>보기 모드의 상세 설명을 길게 누르면 현재 언어의 원본 상세 설명을 클립보드에 복사합니다.</p>
+<h3>10.10 페르소나 모드 HTML 내보내기</h3>
+<p>관리 메뉴에서 <code>HTML로 저장</code>을 누르면 밝게 또는 어둡게를 선택합니다. 앱의 현재 컬러 테마 기조를 유지하면서 카드 전체의 밝기만 결정합니다.</p>
+<p>내보낸 HTML에는 다음이 포함됩니다.</p>
+<ul>
+<li>메모 제목</li>
+<li>포트레이트와 정사각 썸네일</li>
+<li>한국어·영어 이름, 태그, 상세 설명</li>
+<li>갤러리</li>
+<li>재가져오기용 페르소나 데이터</li>
+</ul>
+<p>사이드바의 <code>열기</code>로 이 HTML을 선택하면 편집 가능한 새 페르소나 메모로 복원됩니다.</p>
+<h3>10.11 크리에이터 노트</h3>
+<p>페르소나 모드에도 인물 공개 설정과 분리된 <strong>크리에이터 노트</strong>가 있습니다. 제작 의도, 말투의 미세한 결, 관계성 설계, OOC 방지 메모처럼 공개 카드에 싣지 않을 작업 기록을 리치 텍스트로 정리합니다. 보기 화면의 크리에이터 노트 팝업에서는 닫기·코드 복사 등 조작을 안전하게 사용할 수 있습니다.</p>
+<h3>10.12 캐릭터 모음으로 확장</h3>
+<p>더보기 메뉴에서 <code>캐릭터 모음으로 확장</code>을 선택하면 현재 인물을 첫 페이지로 유지한 채 다인 모드로 전환합니다. 국문·영문 설정, 태그, 이미지, 갤러리, 크리에이터 노트, 표지 정보는 삭제되지 않습니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 11. 캐릭터 메모 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-11">
+<div class="section-head">
+<div class="nib-num">11</div>
+<h2>통합 인물 카드 · 캐릭터 모음 모드</h2>
+</div>
+<h3>11.1 페르소나 모드와의 관계</h3>
+<p>캐릭터 모음은 통합 인물 카드의 다인 모드입니다. 페이지마다 페르소나 수준의 국문·영문 설정, 이미지, 갤러리, 크리에이터 노트를 독립적으로 보관합니다. 페이지가 하나일 때는 더보기 메뉴에서 다시 페르소나 단일 모드로 정리할 수 있습니다.</p>
+<h3>11.2 캐릭터 페이지</h3>
+<p>상단 캐릭터 네비게이션 옆 <code>+</code> 버튼으로 새 페이지를 추가합니다. 페이지마다 다음 데이터가 독립적입니다.</p>
+<ul>
+<li>포트레이트</li>
+<li>정사각 썸네일</li>
+<li>갤러리</li>
+<li>한국어 이름·태그·상세 설명</li>
+<li>영어 이름·태그·상세 설명</li>
+<li>크리에이터 메모</li>
+</ul>
+<p>캐릭터 페이지가 두 개 이상이면 관리 메뉴에서 현재 페이지를 삭제할 수 있습니다. <strong>최소 한 페이지는 항상 남아 있어야 합니다.</strong> 페이지 삭제 직후 약 6초 동안 되돌릴 수 있습니다.</p>
+<h3>11.3 페이지 이동</h3>
+<ul>
+<li>상단 썸네일 네비게이션에서 인물 선택</li>
+<li>보기 모드 하단의 이전·다음 화살표</li>
+<li>모바일 보기 모드에서 좌우 스와이프</li>
+</ul>
+<p>편집 중 페이지를 바꾸면 현재 페이지를 먼저 저장합니다.</p>
+<h3>11.4 국문·영문 설정과 이미지</h3>
+<p>각 페이지의 한국어·영어 필드, 태그, 토큰 계산, 상세 설명 문법은 페르소나와 같습니다. 포트레이트는 3:4, 정사각 썸네일은 1:1 자르기를 사용합니다.</p>
+<p>갤러리에서는 여러 이미지를 한 번에 추가하고, 보기 모드에서 확대·이전·다음·스와이프를 사용할 수 있습니다. <strong>현재 캐릭터 갤러리는 페르소나 갤러리와 달리 드래그 순서 변경 기능을 제공하지 않습니다.</strong></p>
+<h3>11.5 크리에이터 메모</h3>
+<p>크리에이터 메모는 공개용 캐릭터 설명과 별도로 제작 메모, 연출 주의점, 관계성 설계 등을 기록하는 리치 텍스트 영역입니다.</p>
+<p>지원 도구는 다음과 같습니다.</p>
+<div class="chip-row">
+<span class="chip">HTML 소스 보기·편집</span><span class="chip">굵게</span><span class="chip">기울임</span><span class="chip">밑줄</span><span class="chip">취소선</span><span class="chip">7단계 글자 크기</span><span class="chip">글자 색</span><span class="chip">5색 형광펜</span><span class="chip">정렬</span><span class="chip">글머리표·번호 목록</span><span class="chip">이미지 삽입</span><span class="chip">하이퍼링크</span><span class="chip">코드 블록</span><span class="chip">서식 지우기</span><span class="chip">실행 취소</span>
+</div>
+<p>보기 모드에서는 크리에이터 메모가 있을 때 <code>CREATOR NOTE</code> 영역이 나타나며 <code>크게 보기</code>를 눌러 팝업으로 열 수 있습니다. 팝업의 코드 블록에는 복사 버튼이 붙습니다.</p>
+<h3>11.6 대표 썸네일</h3>
+<p>프로젝트 목록의 캐릭터 메모 카드에 사용할 대표 이미지를 별도로 지정할 수 있습니다.</p>
+<ul>
+<li>자동 선택: 첫 캐릭터 페이지의 정사각 썸네일, 포트레이트, 첫 갤러리 이미지 순으로 사용</li>
+<li>기존 캐릭터 페이지의 이미지 중 선택</li>
+<li>캐릭터 페이지와 별개인 새 대표 이미지 직접 업로드</li>
+<li>직접 업로드 이미지는 1:1로 잘라 1080×1080으로 저장</li>
+</ul>
+<p>대표 썸네일은 프로젝트 카드 안에서 이 캐릭터 메모를 식별하기 위한 표지이며, 개별 캐릭터 페이지 이미지와는 별도입니다.</p>
+<h3>11.7 자동 제목</h3>
+<p>수동으로 메모 이름을 바꾸지 않은 경우 첫 캐릭터의 이름을 사용합니다. 페이지가 여러 개면 <code>첫 캐릭터 이름 외 N명</code>으로 표시합니다.</p>
+<h3>11.8 캐릭터 HTML 내보내기</h3>
+<p>관리 메뉴의 <code>HTML로 저장</code>에서 다음을 선택합니다.</p>
+<ul>
+<li>밝게 또는 어둡게</li>
+<li>크리에이터 메모 포함 또는 제외</li>
+</ul>
+<p>크리에이터 메모의 기본값은 <code>미포함</code>입니다. 공유용 카드에 비공개 제작 메모가 실수로 섞이는 것을 줄이기 위한 설정입니다.</p>
+<p>내보낸 파일은 여러 캐릭터 페이지를 전환하는 네비게이션을 포함하며, 루미잉크 재가져오기용 데이터도 내장합니다. 크리에이터 메모를 제외했다면 재가져오기 데이터에서도 해당 메모가 비어 있는 상태로 저장됩니다.</p>
+<h3>11.9 전환과 데이터 보존</h3>
+<p>페르소나 → 캐릭터 모음 전환은 첫 페이지를 그대로 유지한 뒤 추가 페이지를 열 수 있게 하는 방식입니다. 반대로 캐릭터 모음 → 페르소나는 페이지가 정확히 하나일 때만 가능합니다. 전환 과정에서 이미지를 다시 압축하거나 텍스트를 재작성하지 않으며, 구형 데이터에서 앱이 알지 못하는 보조 필드도 호환 보관 영역에 남깁니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 12. 통합 검색 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-idea">
+<div class="section-head"><div class="nib-num">11+</div><h2>아이디어 보드</h2></div>
+<p>아이디어 보드는 한 장의 넓은 캔버스 위에 생각의 조각을 붙이는 러프 콜라주형 메모입니다. 포스트잇, 이미지·GIF, 음악, 최대 30MB 영상, 첨부파일, 기존 메모로 이동하는 인용 링크를 원하는 위치에 놓고, 크기·회전·색상까지 개별 조절합니다.</p>
+<h3>보드에 조각 추가하기</h3>
+<ol class="steps">
+<li>상단 <code>+</code> 버튼을 누르면 비어 있는 상단 여유 공간에 새 조각을 붙입니다.</li>
+<li>캔버스의 빈 공간을 길게 누르면 해당 위치를 기준으로 추가 메뉴가 열립니다.</li>
+<li>포스트잇 메모, 이미지·GIF, 음악, 영상, 첨부파일, 내 글 인용 중 원하는 종류를 고릅니다.</li>
+</ol>
+<p>이미지·GIF·음악·영상·첨부·캔버스 배경은 앱의 파일 저장소에 별도 보관됩니다. 이미지와 GIF는 투명 영역을 그대로 살린 스티커형 조각으로 붙고, 영상은 실제 비율을 읽어 잘리지 않게 표시됩니다.</p>
+<h3>이동 · 크기 · 회전 · 옵션</h3>
+<p>조각을 길게 누르면 이동 모드가 시작됩니다. 이동 중에는 옵션 팝업이 열리지 않으므로 파일·인용 링크처럼 버튼이 있는 조각도 안정적으로 옮길 수 있습니다. 더블클릭·더블탭 또는 우클릭으로 옵션을 열어 이동 모드, 리사이즈, 비율 고정, 회전, 삭제를 관리합니다.</p>
+<ul>
+<li><strong>리사이즈</strong>: 모든 조각의 크기를 조절합니다. 이미지·영상은 기본적으로 비율을 유지합니다.</li>
+<li><strong>회전</strong>: 회전 핸들로 각도를 바꾸며, 회전 버튼을 빠르게 두 번 탭하면 <code>0°</code>로 복원합니다.</li>
+<li><strong>저장</strong>: 이동 위치, 크기, 회전, z 순서, 색상, 포스트잇 내용이 조각 ID 기준으로 저장되어 보드/아티팩트 전환과 재진입 뒤에도 유지됩니다.</li>
+</ul>
+<h3>포스트잇과 컬러 테마</h3>
+<p>포스트잇은 형광 마커·테이프 노트·영수증·폴라로이드·라벨 스티커·연구 노트·클립 메모·봉랍 편지·네온 글래스 등 디자인을 고를 수 있습니다. 모든 디자인은 앱의 <strong>20종 테마 컬러</strong>를 공용 팔레트로 사용합니다.</p>
+<p>음악 조각은 제목 없이 통통한 캡슐형 플레이어로, 내 글 인용과 첨부파일은 아이콘·이름 중심의 버튼 칩으로 표시됩니다. 이 조각들도 포스트잇과 동일한 20종 컬러 중 하나를 개별 선택할 수 있습니다.</p>
+<h3>보드 배경과 캔버스 이미지</h3>
+<p>보드 배경에서는 청사진 그리드, 스크랩북, 코르크, 칠판, 모눈, 별자리도, 리넨, 크라프트, 다크 그리드, 기밀 문서판, 벚꽃, 터미널, 벨벳 등 템플릿과 20종 단색 빈 캔버스를 선택할 수 있습니다. 선택 화면은 실제 질감이 보이는 썸네일 라이브러리로 표시됩니다.</p>
+<p>이미지를 캔버스 배경으로 업로드할 수도 있습니다. 업로드 후에는 오버레이 컬러와 투명도(0–92%)를 조절합니다. 배경 이미지는 최대 30MB이며, 전체 백업·프로젝트 내보내기·복제·가져오기에서 함께 보존됩니다.</p>
+<h3>보드 / 아티팩트 보기</h3>
+<p>상단의 <code>보드</code>와 <code>아티팩트</code> 버튼으로 보기 방식을 전환합니다. 아티팩트 보기에서는 조각을 목록으로 정리해 종류·파일 정보·미리보기를 확인하고, <code>◉</code> 버튼으로 해당 조각만 팝업에서 크게 볼 수 있습니다. 캔버스에서의 위치 이동도 목록에서 관리할 수 있습니다.</p>
+<h3>템플릿을 직접 추가하기</h3>
+<p>추가 템플릿은 <code>idea-board-templates.js</code>에 키·이름·설명을 등록하고 <code>idea-board-custom-templates.css</code>에 같은 키의 CSS를 추가하는 방식으로 확장합니다. 선택 라이브러리의 카드와 썸네일은 자동으로 따라옵니다. 패키지에 포함된 <code>idea-board-template-registry-guide.md</code>와 <code>idea-board-design-guide.md</code>는 제작 규격과 AI 의뢰용 프롬프트를 제공합니다.</p>
+</section>
+<section class="section" id="sec-12">
+<div class="section-head">
+<div class="nib-num">12</div>
+<h2>통합 검색</h2>
+</div>
+<p>검색 화면은 <code>제목만</code>, <code>내용만</code>, <code>제목+내용</code> 세 범위를 지원합니다. 입력하는 즉시 결과를 갱신하며 프로젝트와 메모 결과를 따로 표시합니다.</p>
+<h3>12.1 프로젝트 검색 범위</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">제목</div><div class="v">프로젝트 이름</div></div>
+<div class="kv-row"><div class="k">내용</div><div class="v">프로젝트 태그 입력란의 전체 문자열</div></div>
+</div>
+<h3>12.2 메모 유형별 내용 검색 범위</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>유형</th><th>검색되는 내용</th></tr></thead>
+<tbody>
+<tr><td>자유 메모</td><td>HTML 태그를 제외한 본문 텍스트</td></tr>
+<tr><td>로어북</td><td>원문과 발동 키워드</td></tr>
+<tr><td>로그</td><td>원문, 가릴 원본 이름들, 대체 표시</td></tr>
+<tr><td>통합 인물 카드 · 페르소나</td><td>첫 페이지의 국문·영문 이름, 태그, 상세 설명, 크리에이터 노트</td></tr>
+<tr><td>통합 인물 카드 · 캐릭터 모음</td><td>모든 페이지의 국문·영문 이름, 태그, 상세 설명, 크리에이터 노트</td></tr>
+</tbody>
+</table>
+</div>
+<p>메모 검색 결과는 최근 수정 순으로 표시됩니다. 검색 결과의 카드도 일반 목록과 마찬가지로 열거나 길게 눌러 관리할 수 있습니다.</p>
+<p><strong>아이디어 보드</strong>는 보드 제목, 포스트잇 텍스트, 인용 대상 메모 제목, 첨부·미디어 파일명을 대상으로 검색합니다. 파일 내부의 바이너리 내용은 검색하지 않습니다.</p></section>
+<!-- ============================================================ -->
+<!-- 13. 다중 선택·이동·합치기 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-13">
+<div class="section-head">
+<div class="nib-num">13</div>
+<h2>다중 선택·이동·합치기</h2>
+</div>
+<h3>13.1 선택 모드 진입</h3>
+<ul>
+<li>홈의 프로젝트 카드 관리 메뉴에서 <code>선택</code></li>
+<li>프로젝트 상세 상단의 선택 버튼</li>
+<li>메모 관리 메뉴의 <code>선택</code></li>
+</ul>
+<p>선택 모드 하단 바에서 선택 개수, 전체 선택, 합치기, 이동, 삭제를 사용할 수 있습니다.</p>
+<h3>13.2 여러 메모 이동</h3>
+<p>같은 프로젝트에서 선택한 메모들을 다른 프로젝트로 한꺼번에 이동합니다. 새 프로젝트를 만든 뒤 그 위치를 바로 선택할 수도 있습니다.</p>
+<h3>13.3 합치기 조건</h3>
+<ul>
+<li>두 개 이상 선택해야 합니다.</li>
+<li>자유 메모·로어북·로그는 같은 메모 유형끼리만 합칠 수 있습니다.</li>
+<li><strong>통합 인물 카드</strong>는 페르소나 모드와 캐릭터 모음 모드를 섞어 선택할 수 있습니다. 결과는 항상 새 <strong>캐릭터 모음</strong>입니다.</li>
+<li>HTML 작업실과 아이디어 보드는 원본 코드·캔버스 배치 보존을 위해 합칠 수 없습니다.</li>
+<li>합치기는 원본을 삭제하지 않고 새 메모를 만듭니다.</li>
+</ul>
+<h3>13.4 유형별 합치기 결과</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">자유 메모</div><div class="v">HTML 본문 사이에 빈 줄을 넣어 연결하고 첨부파일도 새 ID로 복제합니다.</div></div>
+<div class="kv-row"><div class="k">로어북</div><div class="v">원문만 빈 줄 두 개로 연결합니다. 키워드와 활성·깊이 설정은 초기값입니다.</div></div>
+<div class="kv-row"><div class="k">로그</div><div class="v">원문을 연결하고 첫 번째 선택 로그의 템플릿·이름 가림 설정을 사용합니다.</div></div>
+<div class="kv-row"><div class="k">통합 인물 카드</div><div class="v">선택한 페르소나·캐릭터 모음의 모든 인물 페이지를 새 ID로 복제해 하나의 캐릭터 모음으로 만듭니다. 국문·영문 설정, 태그, 포트레이트, 정사각 썸네일, 갤러리, 크리에이터 노트와 페이지별 보조 필드를 유지하고, 원본 메모 수준의 호환 필드는 결과의 <code>mergedSources</code>에 출처와 함께 보관합니다. 병합 직전 자동 백업을 남기며 원본 메모는 삭제하지 않습니다.</div></div>
+</div>
+<h3>13.5 일괄 삭제</h3>
+<p>프로젝트 일괄 삭제는 각 프로젝트의 소속 메모와 첨부파일도 함께 삭제합니다. 메모 일괄 삭제는 선택한 메모와 연결 첨부파일을 삭제합니다. 삭제 후 약 6초 동안 한 번의 되돌리기 작업을 제공합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 14. 파일 열기와 형식 판별 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-14">
+<div class="section-head">
+<div class="nib-num">14</div>
+<h2>파일 열기와 형식 판별</h2>
+</div>
+<p>사이드바 하단의 <code>파일 열기</code>는 <code>.html</code>, <code>.htm</code>, <code>.json</code> 파일을 받습니다. 파일 내용에 따라 다음처럼 처리합니다.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>파일</th><th>처리 방식</th></tr></thead>
+<tbody>
+<tr><td>World Info JSON</td><td>항목별 로어북으로 가져오기</td></tr>
+<tr><td>루미잉크 프로젝트 HTML</td><td>메모와 첨부파일을 포함한 새 프로젝트로 복원</td></tr>
+<tr><td>루미잉크 페르소나 HTML</td><td>편집 가능한 페르소나로 복원</td></tr>
+<tr><td>루미잉크 캐릭터 HTML</td><td>편집 가능한 통합 인물 카드(캐릭터 모음 모드)로 복원</td></tr>
+<tr><td>루미잉크 로그 HTML</td><td>원문과 설정이 있는 로그로 복원</td></tr>
+<tr><td>일반 HTML</td><td>원본 보관용 <code>HTML 작업실</code> 또는 안전 정화된 자유 메모 중 선택</td></tr>
+</tbody>
+</table>
+</div>
+<p>프로젝트 HTML은 대상 프로젝트를 묻지 않고 새 프로젝트로 추가합니다. 그 밖의 메모·World Info 파일은 저장할 프로젝트를 먼저 선택합니다. 가져온 데이터의 이미지, 텍스트 길이, ID, 메모 유형 등은 허용 범위로 정규화됩니다.</p>
+<div class="callout warn">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+<p>전체 백업 HTML은 일반 <code>열기</code>가 아니라 <code>설정 → 백업 복원</code>에서 가져와야 합니다.</p>
+</div>
+<p>설치형 PWA와 브라우저가 파일 핸들러 기능을 지원하는 환경에서는 운영체제의 <code>연결 프로그램</code> 또는 <code>다른 앱으로 열기</code>에서 루미잉크로 HTML 파일을 전달할 수도 있습니다. 전달받은 파일은 사이드바의 <code>열기</code>와 같은 형식 판별 절차를 거칩니다.</p>
+<div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>HTML 선택 기준:</strong> 소스·속성·외부 리소스 구조까지 보존해야 하면 HTML 작업실을 고릅니다. 내용을 안전한 문서로 읽고 수정하는 목적이면 자유 메모 문서로 가져옵니다.</p></div></section>
+<!-- ============================================================ -->
+<!-- 15. 설정 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-15">
+<div class="section-head">
+<div class="nib-num">15</div>
+<h2>설정</h2>
+</div>
+<h3>15.1 밝게·어둡게</h3>
+<p><code>테마</code>에서 라이트 모드와 다크 모드를 전환합니다. 사이드바의 해·달 버튼으로도 즉시 바꿀 수 있습니다.</p>
+<h3>15.2 컬러 테마</h3>
+<p>앱 전체의 강조색, 버튼, 로고, 일부 배경과 로그 유형 표시색을 바꿉니다. 라이트·다크 모드와 조합됩니다.</p>
+<p>제공되는 20종은 다음과 같습니다.</p>
+<div class="chip-row">
+<span class="chip">블루</span><span class="chip">핑크</span><span class="chip">그린</span><span class="chip">퍼플</span><span class="chip">골드</span><span class="chip">파스텔 블루</span><span class="chip">파스텔 핑크</span><span class="chip">파스텔 올리브</span><span class="chip">파스텔 퍼플</span><span class="chip">파스텔 골드</span><span class="chip">네이비</span><span class="chip">버건디</span><span class="chip">딥그린</span><span class="chip">딥바이올렛</span><span class="chip">럭셔리골드</span><span class="chip">무채색</span><span class="chip">브라운</span><span class="chip">메탈릭 실버</span><span class="chip">메탈릭 골드</span><span class="chip">블랙&amp;화이트</span>
+</div>
+<p><code>테마와 연동</code> 프레임과 로그 메모 유형의 구분 표시는 이 컬러 기조를 따라갑니다.</p>
+<h3>15.3 웹폰트</h3>
+<p>기본 글꼴 외에 다음 프리셋을 제공합니다.</p>
+<div class="chip-row">
+<span class="chip">프리텐다드</span><span class="chip">나눔명조</span><span class="chip">고운돋움</span><span class="chip">IBM Plex Sans KR</span><span class="chip">본명조·Noto Serif KR</span>
+</div>
+<p>폰트 CSS 주소와 <code>font-family</code> 이름을 직접 입력해 다른 웹폰트도 적용할 수 있습니다. 사용자 지정 URL은 외부 서버에 폰트 파일을 요청하므로 신뢰할 수 있는 HTTPS 주소를 사용합니다. <code>기본으로</code>를 누르면 시스템 기본 글꼴로 돌아갑니다.</p>
+<h3>15.4 앱 전체 글자 크기</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">작게</div><div class="v">0.9배</div></div>
+<div class="kv-row"><div class="k">보통</div><div class="v">1배</div></div>
+<div class="kv-row"><div class="k">크게</div><div class="v">1.12배</div></div>
+</div>
+<p>이 설정은 편집 문서 안의 개별 글자 크기가 아니라 앱 UI 전체의 확대 비율입니다. 모바일 팝업도 이 확대 비율을 고려해 화면 높이에 맞춥니다.</p>
+<h3>15.5 자유 메모 툴바 기본 상태</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">항상 표시</div><div class="v">툴바를 펼쳐 둔 상태로 시작</div></div>
+<div class="kv-row"><div class="k">접어두기</div><div class="v">툴바를 접은 상태로 시작</div></div>
+</div>
+<p>접어두기를 선택해도 편집 중 왼쪽 펼치기 버튼으로 임시로 열 수 있습니다.</p>
+<h3>15.6 설치 아이콘</h3>
+<p>10종의 설치 아이콘 중 하나가 연결된 설치 페이지로 이동합니다. 자세한 내용은 <a href="#sec-3">3.5절</a>을 참고합니다.</p>
+<h3>15.7 상세 매뉴얼</h3>
+<p><code>설정 → 상세 매뉴얼</code>은 현재 보고 있는 전체 기능 설명서를 엽니다. 상단의 닫기 또는 <code>앱으로 돌아가기</code> 버튼을 누르면 앱 화면으로 돌아갑니다. 앱에서 매뉴얼을 연 경우 모바일 기기의 뒤로가기 버튼도 같은 방식으로 동작합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 16. 데이터 저장과 백업 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-16">
+<div class="section-head">
+<div class="nib-num">16</div>
+<h2>데이터 저장과 백업</h2>
+</div>
+<h3>16.1 어디에 저장되는가</h3>
+<p>작업 데이터는 현재 사이트의 <strong>IndexedDB</strong>에 저장됩니다.</p>
+<div class="kv-list">
+<div class="kv-row"><div class="k"><code>projects</code></div><div class="v">프로젝트, 태그, 썸네일, 프레임, 고정 상태</div></div>
+<div class="kv-row"><div class="k"><code>notes</code></div><div class="v">자유 메모·HTML 작업실·로어북·로그·통합 인물 카드·아이디어 보드의 데이터와 본문·카드 이미지</div></div>
+<div class="kv-row"><div class="k"><code>files</code></div><div class="v">자유 메모 첨부·아이디어 보드 이미지/GIF/음악/영상/파일/캔버스 배경 Blob</div></div>
+<div class="kv-row"><div class="k"><code>backups</code></div><div class="v">최근 자동 백업 스냅샷</div></div>
+</div>
+<p>다음과 같은 환경 설정은 <strong>localStorage</strong>에 저장됩니다.</p>
+<ul>
+<li>밝게·어둡게 / 컬러 테마 / 앱 글자 크기</li>
+<li>웹폰트 설정 / 정렬 방식</li>
+<li>자유 메모 툴바 상태</li>
+<li>최근 사용 글자색과 저장한 색 / 형광펜 색</li>
+<li>사용자 로그 템플릿과 즐겨찾기</li>
+<li>저장되지 않은 임시 초안</li>
+</ul>
+<h3>16.2 전체 백업</h3>
+<p><code>설정 → 전체 백업</code>은 다음 내용을 하나의 <code>lumink-backup-날짜-시각.html</code> 파일로 저장합니다.</p>
+<ul>
+<li>모든 프로젝트 · 모든 메모</li>
+<li>프로젝트 장식과 메모 설정</li>
+<li>본문에 포함된 이미지</li>
+<li>자유 메모 첨부파일</li>
+</ul>
+<p>백업 HTML을 브라우저에서 열면 프로젝트와 메모 목록을 사람이 읽을 수 있는 요약이 보이고, 실제 복원 데이터는 문서 안의 JSON으로 포함됩니다.</p>
+<div class="callout warn">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+<p>전체 백업에는 앱 표시 설정, 사용자 로그 템플릿 목록, 템플릿 즐겨찾기가 별도 항목으로 포함되지 않습니다. 다만 사용자 템플릿을 적용한 로그 메모는 템플릿 스냅샷을 메모 안에 보관하므로 그 메모의 디자인은 백업에 포함됩니다.</p>
+</div>
+<h3>16.3 백업 복원 방식</h3>
+<p><code>설정 → 백업 복원</code>에서 전체 백업 HTML을 선택하면 두 방식을 고릅니다.</p>
+<h4>현재 데이터에 병합</h4>
+<ul>
+<li>현재 프로젝트와 메모를 유지합니다.</li>
+<li>백업과 현재 데이터의 ID가 같으면 백업 내용으로 덮어씁니다.</li>
+<li>백업에만 있는 항목을 추가합니다.</li>
+<li>기본 메모함 중복은 기존 기본 메모함에 맞춰 정리합니다.</li>
+</ul>
+<h4>백업 시점으로 완전히 교체</h4>
+<ul>
+<li>현재 프로젝트, 메모, 첨부파일을 지웁니다.</li>
+<li>선택한 백업 내용만 남깁니다.</li>
+<li>설정과 사용자 템플릿처럼 localStorage에 있는 값은 이 교체 대상이 아닙니다.</li>
+</ul>
+<p>두 방식 모두 실제 복원 직전에 현재 작업 상태를 자동 백업으로 한 번 더 저장합니다. 프로젝트·메모·첨부파일 쓰기는 하나의 IndexedDB 트랜잭션으로 처리해 일부만 교체되는 상황을 줄입니다.</p>
+<h3>16.4 자동 백업</h3>
+<p>메모 저장을 계기로 자동 백업을 예약합니다. 저장이 매우 잦을 때에는 최소 약 18초 간격으로 묶어 실행하며 최근 10개만 유지합니다.</p>
+<p>자동 백업에는 프로젝트, 메모, 첨부파일이 들어갑니다. <code>설정 → 자동 백업</code>에서 각 스냅샷의 날짜, 프로젝트 수, 메모 수, 첨부 수를 확인하고 병합 또는 완전 교체 방식으로 복원할 수 있습니다.</p>
+<p>자동 백업은 같은 브라우저 저장공간 안에 있으므로 브라우저 사이트 데이터 자체를 삭제하면 함께 사라집니다. 기기 고장이나 브라우저 초기화에 대비하려면 외부 파일로 저장하는 전체 백업이 필요합니다.</p>
+<h3>16.5 저장되지 않은 임시 초안</h3>
+<p>자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 중에는 localStorage에 별도의 임시 초안을 만듭니다.</p>
+<ul>
+<li>메모별로 분리 저장</li>
+<li>최대 보관 기간 14일</li>
+<li>JSON 문자열 기준 약 70만 자를 넘는 초안은 저장하지 않음</li>
+<li>대용량 이미지 전체가 아닌 텍스트 중심 안전망</li>
+<li>마지막 정상 저장보다 새롭고 실제 내용이 다를 때만 복구 여부 질문</li>
+<li>사용자가 <code>복구</code> 또는 <code>버리기</code> 선택</li>
+</ul>
+<p>이 기능은 비정상 종료나 갑작스러운 새로고침을 보완하지만 정식 백업을 대체하지 않습니다.</p>
+<h3>16.6 저장공간 확인</h3>
+<p>설정의 <code>저장공간</code>은 브라우저가 제공하는 전체 사이트 사용량과 할당량, 자유 메모 첨부파일 수와 용량, 자동 백업 개수를 표시합니다. 브라우저가 전체 사용량 API를 제공하지 않으면 첨부파일과 백업 정보만 표시합니다.</p>
+<p>이미지가 많으면 메모 데이터뿐 아니라 자동 백업도 커지므로 실제 사용량이 빠르게 증가할 수 있습니다.</p>
+<h3>16.7 데이터 초기화</h3>
+<p>데이터 초기화는 두 번의 확인을 거친 뒤 프로젝트, 메모, 첨부파일, 자동 백업을 모두 삭제합니다. <strong>이 작업은 되돌릴 수 없습니다.</strong></p>
+<p>현재 구현에서 테마·폰트 같은 표시 설정과 사용자 로그 템플릿 등 localStorage 항목은 작업 데이터 초기화 대상에 포함되지 않습니다. 완전한 사이트 초기화가 필요하면 전체 백업 후 브라우저의 해당 사이트 데이터 삭제 기능을 사용해야 합니다.</p>
+<h3>16.8 새 타입의 백업 범위</h3>
+<ul>
+<li><strong>HTML 작업실</strong>: 원본 소스 문자열과 제목·표식이 전체 백업 및 프로젝트 패키지에 포함됩니다.</li>
+<li><strong>통합 인물 카드</strong>: 단일/모음 모드, 페이지, 이미지, 갤러리, 크리에이터 노트, 호환 보관 필드가 포함됩니다.</li>
+<li><strong>아이디어 보드</strong>: 조각 위치·크기·회전·색상·포스트잇 내용·캔버스 설정과 연결된 파일 Blob이 모두 포함됩니다.</li>
+</ul>
+</section>
+<!-- ============================================================ -->
+<!-- 17. 삭제 복구와 데이터 정리 기능 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-17">
+<div class="section-head">
+<div class="nib-num">17</div>
+<h2>삭제 복구와 데이터 정리 기능</h2>
+</div>
+<h3>17.1 6초 되돌리기</h3>
+<p>다음 삭제는 직후 약 6초 동안 되돌릴 수 있습니다.</p>
+<ul>
+<li>프로젝트 삭제</li>
+<li>메모 삭제</li>
+<li>여러 프로젝트·메모 일괄 삭제</li>
+<li>페르소나 갤러리 이미지 삭제</li>
+<li>캐릭터 갤러리 이미지 삭제</li>
+<li>캐릭터 페이지 삭제</li>
+</ul>
+<div class="callout warn">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+<p>새로운 되돌리기 작업이 시작되면 앞선 되돌리기 대기 상태가 교체될 수 있으므로, 실수했다면 바로 누르는 것이 좋습니다.</p>
+</div>
+<h3>17.2 시작 시 데이터 보정</h3>
+<p>앱은 시작할 때 일부 오래된 데이터 구조를 현재 형식으로 보정합니다.</p>
+<ul>
+<li>중복 기본 프로젝트 통합</li>
+<li>오래된 프레임 색상 키를 실제 색상 값으로 변환</li>
+<li>잘못된 프레임 ID 제거</li>
+<li>프로젝트를 잃은 메모를 기본 메모함으로 이동</li>
+<li>오래된 자유 메모 구조를 현재 데이터 구조로 변환</li>
+<li>14일이 지난 임시 초안 정리</li>
+</ul>
+</section>
+<!-- ============================================================ -->
+<!-- 18. 개인정보와 보안상 주의 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-18">
+<div class="section-head">
+<div class="nib-num">18</div>
+<h2>개인정보와 보안상 주의</h2>
+</div>
+<h3>18.1 로컬 우선</h3>
+<p>프로젝트와 메모 본문을 루미잉크 자체 서버로 전송하는 동기화 기능은 없습니다. 자료는 현재 브라우저 저장소에 남습니다.</p>
+<p>다만 웹폰트 프리셋이나 사용자가 지정한 외부 폰트 CSS를 불러올 때에는 해당 폰트 제공 서버에 일반적인 웹 요청이 발생할 수 있습니다. <strong>이 요청에 메모 본문을 담아 보내지는 않습니다.</strong></p>
+<h3>18.2 가져오기 정화</h3>
+<p>외부 HTML을 자유 메모로 가져올 때에는 허용된 태그와 스타일만 남깁니다. 스크립트, iframe, 폼, 임베드, 위험한 URL과 스타일은 제거합니다. 외부 원격 이미지는 가져오지 않고 루미잉크가 생성하는 안전한 base64 이미지 형식만 수용합니다.</p>
+<p>로그 템플릿은 임의 HTML과 JavaScript를 허용하지 않고, 스타일 속성 허용 목록과 정규식 복잡도 검사를 사용합니다.</p>
+<h3>18.3 직접 HTML 편집 주의</h3>
+<p>자유 메모와 크리에이터 메모의 HTML 소스 편집은 사용자가 직접 작성한 신뢰할 수 있는 내용에 사용합니다. 인터넷에서 가져온 불명확한 코드를 그대로 붙여넣지 않습니다.</p>
+<h3>18.4 브라우저 데이터 삭제 주의</h3>
+<p>다음 작업은 데이터 손실로 이어질 수 있습니다.</p>
+<ul>
+<li>브라우저의 쿠키·사이트 데이터 전체 삭제</li>
+<li>루미잉크 사이트 저장공간 삭제</li>
+<li>시크릿 모드에서 작성 후 창 닫기</li>
+<li>다른 도메인이나 다른 브라우저에서 기존 데이터가 자동으로 보일 것이라 기대하기</li>
+<li>운영체제 또는 브라우저 프로필 초기화</li>
+</ul>
+<div class="callout note">
+<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
+<p>중요한 자료는 전체 백업 파일을 브라우저 밖의 안전한 위치에 보관합니다.</p>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- 19. 키보드·터치 조작 요약 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-19">
+<div class="section-head">
+<div class="nib-num">19</div>
+<h2>키보드·터치 조작 요약</h2>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>조작</th><th>결과</th></tr></thead>
+<tbody>
+<tr><td><code>Ctrl+S</code> / <code>⌘+S</code></td><td>현재 편집 메모 즉시 저장</td></tr>
+<tr><td>자유 메모 읽기 본문 더블클릭</td><td>편집 모드 진입</td></tr>
+<tr><td>자유 메모 읽기 본문 길게 누르기</td><td>본문 전체 일반 텍스트 복사</td></tr>
+<tr><td>로어북 미리보기 길게 누르기</td><td>원본 마크다운 복사</td></tr>
+<tr><td>페르소나 상세 길게 누르기</td><td>현재 언어의 원본 상세 설명 복사</td></tr>
+<tr><td>프로젝트·메모 카드 길게 누르기</td><td>관리 메뉴 열기</td></tr>
+<tr><td>로그 템플릿 길게 누르기</td><td>즐겨찾기 추가·해제</td></tr>
+<tr><td>형광펜 버튼 길게 누르기</td><td>형광펜 색상 선택</td></tr>
+<tr><td>페르소나 갤러리 이미지 길게 누른 뒤 이동</td><td>이미지 순서 변경</td></tr>
+<tr><td>화면 왼쪽 가장자리에서 오른쪽 스와이프</td><td>사이드바 열기</td></tr>
+<tr><td>캐릭터 보기 화면 좌우 스와이프</td><td>이전·다음 캐릭터</td></tr>
+<tr><td>이미지 확대 화면 좌우 스와이프</td><td>이전·다음 이미지</td></tr>
+<tr><td>이미지 확대 화면 <code>←</code> / <code>→</code></td><td>이전·다음 이미지</td></tr>
+<tr><td>이미지 확대 화면 <code>Esc</code></td><td>확대 화면 닫기</td></tr>
+</tbody>
+</table>
+</div>
+<h3>19.3 아이디어 보드 제스처</h3>
+<div class="table-wrap"><table><thead><tr><th>조작</th><th>동작</th></tr></thead><tbody>
+<tr><td>빈 캔버스 길게 누르기</td><td>해당 위치에 조각 추가 메뉴 열기</td></tr>
+<tr><td>조각 길게 누르기</td><td>이동 모드 시작</td></tr>
+<tr><td>조각 더블클릭·더블탭 / 우클릭</td><td>옵션 열기: 이동, 크기, 회전, 색상, 디자인, 삭제</td></tr>
+<tr><td>회전 핸들 빠른 두 번 탭</td><td>회전을 0°로 복원</td></tr>
+<tr><td>아티팩트 목록의 ◉</td><td>조각 단독 팝업 미리보기</td></tr>
+</tbody></table></div>
+</section>
+<!-- ============================================================ -->
+<!-- 20. 내보내기 형식과 포함 데이터 비교 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-20">
+<div class="section-head">
+<div class="nib-num">20</div>
+<h2>내보내기 형식과 포함 데이터 비교</h2>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>기능</th><th>파일/출력</th><th>다시 편집 가능</th><th>이미지</th><th>자유 메모 첨부파일</th><th>용도</th></tr>
+</thead>
+<tbody>
+<tr><td>자유 메모 HTML</td><td><code>.html</code></td><td>일반 HTML로 다시 가져오기 가능</td><td>본문 이미지 포함</td><td>미포함</td><td>문서 공유·보관</td></tr>
+<tr><td>로어북 World Info</td><td><code>.json</code></td><td>로어북으로 다시 가져오기 가능</td><td>해당 없음</td><td>해당 없음</td><td>SillyTavern 연동</td></tr>
+<tr><td>로그 인라인 복사</td><td>HTML 조각</td><td>원문 복원 데이터 없음</td><td>템플릿은 외부 이미지 불허</td><td>해당 없음</td><td>게시글 붙여넣기</td></tr>
+<tr><td>로그 HTML</td><td><code>.html</code></td><td>로그로 재가져오기 가능</td><td>스타일 내장</td><td>해당 없음</td><td>완성 로그 공유·보관</td></tr>
+<tr><td>페르소나 HTML</td><td><code>.html</code></td><td>페르소나로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>카드 공유·이전</td></tr>
+<tr><td>캐릭터 HTML</td><td><code>.html</code></td><td>통합 인물 카드(캐릭터 모음)로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>다중 카드 공유·이전</td></tr>
+<tr><td>프로젝트 HTML</td><td><code>.html</code></td><td>새 프로젝트 사본으로 재가져오기 가능</td><td>모두 포함</td><td>포함</td><td>프로젝트 단위 공유·이전</td></tr>
+<tr><td>전체 백업</td><td><code>.html</code></td><td>전체 구조 복원</td><td>모두 포함</td><td>포함</td><td>기기 이전·재해 복구</td></tr>
+<tr><td>HTML 작업실 원본</td><td><code>.html</code></td><td>원본 문자열로 다시 열기 가능</td><td>코드에 포함된 방식 그대로</td><td>해당 없음</td><td>상태창·배너·디자인 HTML 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
+</table>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- 21. 권장 사용 순서 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-21">
+<div class="section-head">
+<div class="nib-num">21</div>
+<h2>권장 사용 순서</h2>
+</div>
+<p>처음 사용하는 경우 다음 순서가 가장 이해하기 쉽습니다.</p>
+<ol class="steps">
+<li>작품 또는 세션 이름으로 프로젝트를 만듭니다.</li>
+<li>프로젝트 태그, 색상, 썸네일을 지정합니다.</li>
+<li>세계관은 로어북, 플레이어·단일 인물은 페르소나 모드, 여러 NPC·집단은 캐릭터 모음 모드에 기록합니다.</li>
+<li>자유 메모에는 플롯·긴 문서·참고를, 원본 HTML은 HTML 작업실에, 흩어진 이미지·음악·링크·러프 아이디어는 아이디어 보드에 보관합니다.</li>
+<li>대화 결과는 로그 저장에 원문 그대로 넣고 템플릿과 이름 가림을 적용합니다.</li>
+<li>프로젝트와 메모를 고정해 자주 쓰는 항목을 위에 둡니다.</li>
+<li>작업 중에는 자동 저장을 사용하되 큰 수정 뒤에는 <code>Ctrl/⌘+S</code>로 즉시 저장합니다.</li>
+<li>작업이 끝난 날에는 전체 백업 HTML을 외부 폴더나 클라우드 드라이브에 저장합니다.</li>
+</ol>
+</section>
+<!-- ============================================================ -->
+<!-- 22. 현재 구현의 주요 입력 한도 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-22">
+<div class="section-head">
+<div class="nib-num">22</div>
+<h2>현재 구현의 주요 입력 한도</h2>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>항목</th><th>한도 또는 처리 방식</th></tr></thead>
+<tbody>
+<tr><td>프로젝트 이름</td><td>최대 60자</td></tr>
+<tr><td>프로젝트 태그 입력란</td><td>최대 500자</td></tr>
+<tr><td>메모 이름 변경 입력란</td><td>최대 80자</td></tr>
+<tr><td>로그 원문</td><td>저장 정규화 기준 최대 500,000자</td></tr>
+<tr><td>로어북 원문</td><td>복원·가져오기 정규화 기준 최대 500,000자</td></tr>
+<tr><td>로그 가림 원본 이름</td><td>최대 20개, 각 최대 80자</td></tr>
+<tr><td>로그 대체 표시</td><td>최대 80자</td></tr>
+<tr><td>사용자 로그 템플릿</td><td>최대 20개, 파일당 200KB 이하</td></tr>
+<tr><td>템플릿 정규식 규칙</td><td>템플릿당 최대 20개</td></tr>
+<tr><td>본문·카드 이미지 입력</td><td>파일당 12MB 이하, 2,400만 픽셀 이하</td></tr>
+<tr><td>자유 메모 일반 첨부</td><td>파일당 15MB 이하</td></tr>
+<tr><td>임시 초안</td><td>JSON 문자열 약 700,000자 이하, 최대 14일</td></tr>
+<tr><td>자동 백업</td><td>최근 10개</td></tr>
+<tr><td>HTML 작업실 원본</td><td>5MiB 이하</td></tr><tr><td>아이디어 보드 이미지·GIF·음악·영상·첨부</td><td>파일당 30MB 이하</td></tr><tr><td>아이디어 보드 캔버스 배경 이미지</td><td>30MB 이하 · 이미지 파일만</td></tr></tbody>
+</table>
+</div>
+<p>표에 없는 본문·갤러리·캐릭터 페이지의 실질적인 최대치는 브라우저가 해당 사이트에 허용한 저장공간의 영향을 받습니다. 대량 이미지를 넣기 전에는 설정의 저장공간 표시를 확인하고 전체 백업을 만들어 두는 것이 안전합니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 부록 A. 기본 로그 템플릿 50종 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-updates">
+<div class="section-head"><div class="nib-num">NEW</div><h2>v60–v63.5 주요 변경 이력</h2></div>
+<p>아래 이력은 현재 매뉴얼의 기능 기준을 빠르게 확인하기 위한 요약입니다. 이전 버전에서 작성한 데이터는 호환 경로를 통해 유지하는 것을 원칙으로 합니다.</p>
+<h3>v60 · HTML 보존 개선</h3>
+<ul><li>자유 메모의 HTML 정화 허용 범위를 넓혀 인라인 CSS, 구조 태그, 정적 SVG, 범위 제한 스타일을 더 폭넓게 유지합니다.</li><li>다만 자유 메모는 안전한 문서 편집기이므로 원본 코드 완전 보존용으로는 HTML 작업실을 사용합니다.</li></ul>
+<h3>v61.1 · 크리에이터 노트 안정화</h3>
+<ul><li>크리에이터 노트 팝업의 닫기 동작을 보강하고, 부가 기능 오류가 닫기 조작을 막지 않도록 이벤트 흐름을 정리했습니다.</li></ul>
+<h3>v62 · 통합 인물 카드</h3>
+<ul><li>기존 페르소나는 단일 모드로, 기존 캐릭터 메모는 캐릭터 모음 모드로 통합했습니다.</li><li>전환 전 자동 백업, 기존 필드·임시 초안·호환 보관 필드 유지, 크리에이터 노트 공통 지원을 추가했습니다.</li></ul>
+<h3>v62.1 · 자유 메모 이미지 리사이즈</h3>
+<ul><li>에디터 이미지의 드래그 리사이즈, 픽셀 직접 입력, 비율 고정·해제, 자동 크기 복귀를 추가했습니다.</li></ul>
+<h3>v63–v63.5 · 아이디어 보드</h3>
+<ul><li>무한 캔버스, 포스트잇·이미지/GIF·음악·영상·첨부·메모 인용 조각, 보드/아티팩트 전환을 추가했습니다.</li><li>조각 위치·내용·크기·회전의 영속 저장, 길게 누르기 이동과 더블클릭·우클릭 옵션의 제스처 분리, 회전 0° 빠른 복원을 적용했습니다.</li><li>다양한 배경·포스트잇 템플릿, 20종 공용 컬러, 투명 PNG 스티커 표시, 캔버스 이미지와 오버레이 설정, 템플릿 레지스트리 확장 구조를 추가했습니다.</li></ul>
+<h3>v63.7 · 통합 인물 카드 병합</h3>
+<ul><li>다중 선택에서 페르소나 모드와 캐릭터 모음 모드를 함께 선택해 새 캐릭터 모음으로 합칠 수 있게 했습니다.</li><li>모든 인물 페이지와 크리에이터 노트·이미지·갤러리·태그를 새 ID로 복제하며, 원본은 삭제하지 않고 병합 직전 자동 백업을 남깁니다.</li></ul>
+</section>
+<section class="section" id="app-a">
+<div class="section-head">
+<div class="nib-num">A</div>
+<h2>부록 A · 기본 로그 템플릿 50종</h2>
+</div>
+<p>아래 목록은 템플릿 선택 창의 이름순 기준입니다.</p>
+<div class="template-list">
+<div class="template-item"><span class="tnum">01</span><div><span class="tname">그랜드파더 클락</span><span class="tdesc">월넛 가구와 황동 시계판의 앤틱 괘종시계 로그</span></div></div>
+<div class="template-item"><span class="tnum">02</span><div><span class="tname">네온 터미널</span><span class="tdesc">시안·마젠타 네온 사이버펑크 터미널</span></div></div>
+<div class="template-item"><span class="tnum">03</span><div><span class="tname">레인폴 글래스</span><span class="tdesc">비 내리는 창의 차분한 회청색 로그</span></div></div>
+<div class="template-item"><span class="tnum">04</span><div><span class="tname">레퀴엠</span><span class="tdesc">창백한 차콜과 백합빛 세이지의 안식 로그</span></div></div>
+<div class="template-item"><span class="tnum">05</span><div><span class="tname">로얄 크림슨</span><span class="tdesc">크림슨과 리치 골드의 왕가 로그</span></div></div>
+<div class="template-item"><span class="tnum">06</span><div><span class="tname">로즈 코트</span><span class="tdesc">크림·로즈·골드의 공주풍 로그</span></div></div>
+<div class="template-item"><span class="tnum">07</span><div><span class="tname">리본 캔디</span><span class="tdesc">여러 파스텔을 사용한 밝은 로그</span></div></div>
+<div class="template-item"><span class="tnum">08</span><div><span class="tname">리와인드 스레드</span><span class="tdesc">청록·골드의 빙의·회귀물 로그</span></div></div>
+<div class="template-item"><span class="tnum">09</span><div><span class="tname">리프 캐빈</span><span class="tdesc">잎사귀 그린과 크림 우드의 일상 로그</span></div></div>
+<div class="template-item"><span class="tnum">10</span><div><span class="tname">메이플 오텀</span><span class="tdesc">단풍 진홍과 황금빛의 가을 로그</span></div></div>
+<div class="template-item"><span class="tnum">11</span><div><span class="tname">모노 컨트라스트</span><span class="tdesc">순백과 순흑의 강한 대비 로그</span></div></div>
+<div class="template-item"><span class="tnum">12</span><div><span class="tname">모브 다이얼로그</span><span class="tdesc">따뜻한 모브빛 일상·로맨스 로그</span></div></div>
+<div class="template-item"><span class="tnum">13</span><div><span class="tname">묵향 죽간</span><span class="tdesc">한지, 먹, 주사 인장의 동양풍 로그</span></div></div>
+<div class="template-item"><span class="tnum">14</span><div><span class="tname">버던트 서머</span><span class="tdesc">짙은 숲과 에메랄드의 여름 로그</span></div></div>
+<div class="template-item"><span class="tnum">15</span><div><span class="tname">벨럼 스크롤</span><span class="tdesc">세피아 양피지와 봉랍의 고문서 로그</span></div></div>
+<div class="template-item"><span class="tnum">16</span><div><span class="tname">보르도 빈티지</span><span class="tdesc">보르도와 더스티 로즈의 와인 셀러 로그</span></div></div>
+<div class="template-item"><span class="tnum">17</span><div><span class="tname">브라스 코그</span><span class="tdesc">황동, 녹청, 증기의 스팀펑크 로그</span></div></div>
+<div class="template-item"><span class="tnum">18</span><div><span class="tname">사쿠라 스프링</span><span class="tdesc">벚꽃 분홍과 새순 연두의 봄 로그</span></div></div>
+<div class="template-item"><span class="tnum">19</span><div><span class="tname">스노우플레이크 윈터</span><span class="tdesc">화이트와 페일 아이스블루의 겨울 로그</span></div></div>
+<div class="template-item"><span class="tnum">20</span><div><span class="tname">스모크 &amp; 위스키</span><span class="tdesc">연기와 호박색의 하드보일드 로그</span></div></div>
+<div class="template-item"><span class="tnum">21</span><div><span class="tname">스타리 나이트</span><span class="tdesc">인디고 밤하늘과 금빛 별의 로그</span></div></div>
+<div class="template-item"><span class="tnum">22</span><div><span class="tname">스타십 HUD</span><span class="tdesc">우주선 콘솔형 하드 SF 로그</span></div></div>
+<div class="template-item"><span class="tnum">23</span><div><span class="tname">스토리북 길트</span><span class="tdesc">크림과 금별의 동화책 로그</span></div></div>
+<div class="template-item"><span class="tnum">24</span><div><span class="tname">심야 타자기</span><span class="tdesc">빛바랜 종이와 검정 활자의 느와르 로그</span></div></div>
+<div class="template-item"><span class="tnum">25</span><div><span class="tname">아오하루 스카이</span><span class="tdesc">맑은 여름 하늘빛 청춘 로그</span></div></div>
+<div class="template-item"><span class="tnum">26</span><div><span class="tname">애시폴 시그널</span><span class="tdesc">콘크리트와 경고 앰버의 종말물 로그</span></div></div>
+<div class="template-item"><span class="tnum">27</span><div><span class="tname">어메시스트 럭스</span><span class="tdesc">자수정과 샴페인 골드의 보석 로그</span></div></div>
+<div class="template-item"><span class="tnum">28</span><div><span class="tname">올드 라이브러리</span><span class="tdesc">마호가니 서가와 가죽 장정의 로그</span></div></div>
+<div class="template-item"><span class="tnum">29</span><div><span class="tname">운해옥검</span><span class="tdesc">옥빛 운무의 선협 로그</span></div></div>
+<div class="template-item"><span class="tnum">30</span><div><span class="tname">웨딩 마치</span><span class="tdesc">순백, 샴페인 골드, 블러쉬의 웨딩 로그</span></div></div>
+<div class="template-item"><span class="tnum">31</span><div><span class="tname">잉크 프레임</span><span class="tdesc">짙은 잉크색 바탕의 기본 로그</span></div></div>
+<div class="template-item"><span class="tnum">32</span><div><span class="tname">천계의 서판</span><span class="tdesc">화이트·골드 발광의 신화·천상계 로그</span></div></div>
+<div class="template-item"><span class="tnum">33</span><div><span class="tname">청춘 노트</span><span class="tdesc">공책 마진선과 형광펜의 학원물 로그</span></div></div>
+<div class="template-item"><span class="tnum">34</span><div><span class="tname">캐롯 패치</span><span class="tdesc">당근 오렌지와 잎 그린의 발랄한 로그</span></div></div>
+<div class="template-item"><span class="tnum">35</span><div><span class="tname">콘체르토 스테이지</span><span class="tdesc">버건디와 샴페인 골드의 연주 로그</span></div></div>
+<div class="template-item"><span class="tnum">36</span><div><span class="tname">퀘스트 보드</span><span class="tdesc">RPG 인터페이스형 모던 게임 로그</span></div></div>
+<div class="template-item"><span class="tnum">37</span><div><span class="tname">크림 기록지</span><span class="tdesc">밝고 편안한 게시용 기록지</span></div></div>
+<div class="template-item"><span class="tnum">38</span><div><span class="tname">클린 라인</span><span class="tdesc">절제된 중립형 게시용 로그</span></div></div>
+<div class="template-item"><span class="tnum">39</span><div><span class="tname">팝 개그</span><span class="tdesc">원색과 만화 테두리의 명랑개그 로그</span></div></div>
+<div class="template-item"><span class="tnum">40</span><div><span class="tname">퍼스트 로즈</span><span class="tdesc">장미 레드와 잎 그린의 첫사랑 로그</span></div></div>
+<div class="template-item"><span class="tnum">41</span><div><span class="tname">페이 스프링</span><span class="tdesc">에메랄드 샘물과 요정빛의 몽환 로그</span></div></div>
+<div class="template-item"><span class="tnum">42</span><div><span class="tname">페인터 캔버스</span><span class="tdesc">아이보리 캔버스와 유화 물감의 로그</span></div></div>
+<div class="template-item"><span class="tnum">43</span><div><span class="tname">폐옥의 속삭임</span><span class="tdesc">탁한 차콜과 핏빛의 호러 로그</span></div></div>
+<div class="template-item"><span class="tnum">44</span><div><span class="tname">프리즘 하트</span><span class="tdesc">비비드 파스텔의 마법소녀 로그</span></div></div>
+<div class="template-item"><span class="tnum">45</span><div><span class="tname">플레인 모노</span><span class="tdesc">색을 비운 무채색 미니멀 로그</span></div></div>
+<div class="template-item"><span class="tnum">46</span><div><span class="tname">픽셀 콘솔</span><span class="tdesc">남보라 CRT와 라임 프레임의 레트로 게임 로그</span></div></div>
+<div class="template-item"><span class="tnum">47</span><div><span class="tname">한가위 문</span><span class="tdesc">남색 밤하늘과 보름달빛의 추석 로그</span></div></div>
+<div class="template-item"><span class="tnum">48</span><div><span class="tname">홀리 나이트</span><span class="tdesc">에버그린, 홀리 레드, 금빛 전구의 로그</span></div></div>
+<div class="template-item"><span class="tnum">49</span><div><span class="tname">황금 칙령</span><span class="tdesc">네이비·골드의 왕실 하이 판타지 로그</span></div></div>
+<div class="template-item"><span class="tnum">50</span><div><span class="tname">흑요석 성소</span><span class="tdesc">검보랏빛 고딕 다크 판타지 로그</span></div></div>
+</div>
+<p style="margin-top:20px;">더 자세한 시각 예시는 <code>50종 소개 페이지</code>에서 확인할 수 있습니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 부록 B. 가장 중요한 백업 원칙 -->
+<!-- ============================================================ -->
+<section class="section" id="app-b">
+<div class="section-head">
+<div class="nib-num">B</div>
+<h2>부록 B · 가장 중요한 백업 원칙</h2>
+</div>
+<ol class="steps">
+<li>자동 저장은 편집 실수를 줄이지만 기기 고장을 막아 주지는 않습니다.</li>
+<li>임시 초안은 비정상 종료를 보완하지만 14일이 지나면 정리됩니다.</li>
+<li>자동 백업은 같은 브라우저 안에 있으므로 사이트 데이터 삭제와 함께 사라질 수 있습니다.</li>
+<li>다른 기기로 옮길 때에는 반드시 <code>설정 → 전체 백업</code> 파일을 사용합니다.</li>
+<li>자유 메모 하나의 HTML에는 별도 첨부파일이 들어가지 않습니다.</li>
+<li>사용자 로그 템플릿 목록과 즐겨찾기를 별도로 보관하려면 원본 JSON 템플릿 파일도 함께 보관합니다.</li>
+</ol>
+</section>
+<footer class="doc-footer">
+<svg class="nib" fill="none" viewbox="0 0 24 24"><path d="M12 1.5C7.5 1.5 4 5.1 4 9.6c0 5.6 6.2 11.1 7.6 12.7.2.25.6.25.8 0C13.8 20.7 20 15.2 20 9.6 20 5.1 16.5 1.5 12 1.5Z" fill="#f4f6fb"></path><circle cx="12" cy="9.3" fill="#16223a" r="3.05"></circle><rect fill="#16223a" height="6.6" rx="0.6" width="1.7" x="11.15" y="11.6"></rect><circle cx="12" cy="17.6" fill="#7bb0f5" r="2.05"></circle></svg>
+<div>루미잉크 전체 기능 상세 매뉴얼 · 기준 버전 v63.7 · 2026-06-23 수정본</div>
+</footer>
+</main>
+</div>
+<div aria-label="맨 위로" class="to-top" id="toTop" role="button">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><line x1="12" x2="12" y1="19" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+</div>
 <script>
 (function(){
   // ---------- Return to Lumi Ink ----------
@@ -2077,6 +2019,5 @@ table code{ font-size:.82em; }
   });
 })();
 </script>
-
 </body>
 </html>

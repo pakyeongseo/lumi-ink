@@ -3998,26 +3998,113 @@
     updateSelBar();
     document.querySelectorAll(`[data-selid="${id}"]`).forEach((el) => el.classList.toggle("selected", st.selIds.has(id)));
   }
+  function isPersonCardNote(n) { return !!n && (n.type === "persona" || n.type === "character"); }
+  function personCardMergeSnapshot(note, sourceIndex) {
+    // 병합 결과는 원본을 참조하지 않습니다. 각 페이지와 보조 필드를 복제해
+    // 원본 메모를 삭제해도 새 캐릭터 모음이 독립적으로 남도록 합니다.
+    const raw = jsonCopy(note && note.data) || {};
+    const source = note && note.type === "persona"
+      ? legacyPersonaDataToCharacterData(raw, true)
+      : ensureCharacterData({ data: raw });
+    const coreKeys = new Set(["mode", "activeId", "pages", "coverImage"]);
+    const dataExtras = {};
+    Object.keys(source).forEach((key) => {
+      if (!coreKeys.has(key)) dataExtras[key] = jsonCopy(source[key]) ?? source[key];
+    });
+    const sourceMeta = {
+      noteId: note.id,
+      title: String(note.title || ""),
+      sourceType: note.type,
+      sourceMode: source.mode,
+      coverImage: source.coverImage || null,
+      chipColor: note.chipColor || null,
+      createdAt: note.createdAt || null,
+      updatedAt: note.updatedAt || null,
+      dataExtras
+    };
+    const pages = source.pages.map((page, pageIndex) => {
+      const copy = jsonCopy(page) || makeCharacterPage();
+      // ID 충돌을 막고, 원본 메모·페이지의 출처도 보관합니다.
+      copy.id = uid();
+      copy.mergeSource = {
+        noteId: note.id,
+        noteTitle: String(note.title || ""),
+        sourceType: note.type,
+        sourceMode: source.mode,
+        sourceIndex,
+        pageIndex
+      };
+      return ensureCharacterPage(copy);
+    });
+    return { pages, sourceMeta };
+  }
+  async function mergePersonCards(notes) {
+    const pid = notes[0] && notes[0].projectId;
+    if (!pid || !notes.every((n) => n.projectId === pid)) { toast("같은 프로젝트의 인물 카드만 합칠 수 있어요"); return; }
+    let mergedNote = null;
+    try {
+      // 원본은 삭제하지 않지만, 병합 전 시점도 자동 백업에 남겨 둡니다.
+      try { await doAutoBackup(); } catch (e) { console.warn("character merge pre-backup", e); }
+      const snapshots = notes.map(personCardMergeSnapshot);
+      const pages = snapshots.flatMap((entry) => entry.pages);
+      if (!pages.length) { toast("병합할 인물 페이지를 찾지 못했어요"); return; }
+      mergedNote = await createNote("character", pid, { characterMode: "collection" });
+      const firstCover = snapshots.map((entry) => entry.sourceMeta.coverImage).find(Boolean) || null;
+      mergedNote.data = {
+        mode: "collection",
+        activeId: pages[0].id,
+        coverImage: firstCover,
+        pages,
+        // 각 원본의 노트 수준 호환 필드와 출처를 보관합니다.
+        mergedSources: snapshots.map((entry) => entry.sourceMeta),
+        mergedAt: now()
+      };
+      mergedNote.chipColor = notes.find((n) => n.chipColor)?.chipColor || null;
+      mergedNote.titleLocked = false;
+      ensureCharacterData(mergedNote);
+      syncCharacterTitle(mergedNote);
+      await saveCharacter(mergedNote, true);
+      exitSelMode();
+      st.curNoteId = mergedNote.id;
+      st.charEdit = false;
+      toast(`${notes.length}개 인물 카드를 캐릭터 모음으로 합쳤어요`);
+      go({ s: "character" });
+    } catch (e) {
+      console.warn("character card merge", e);
+      if (mergedNote) {
+        st.notes = st.notes.filter((n) => n.id !== mergedNote.id);
+        await del("notes", mergedNote.id).catch(() => {});
+      }
+      toast("인물 카드 병합에 실패했어요. 원본 메모는 그대로 유지됩니다.");
+    }
+  }
   function updateSelBar() {
     const ids = [...(st.selIds || [])];
     $("selCount").textContent = `${ids.length}개 선택`;
     const mb = $("selMerge");
     if (mb) {
-      let ok = false;
+      let ok = false, personCards = false;
       if (st.selType === "note" && ids.length >= 2) {
         const notes = ids.map(getNote).filter(Boolean);
         const t = notes[0] && notes[0].type;
-        ok = !!t && t !== "persona" && t !== "character" && notes.every((n) => n.type === t);
+        personCards = notes.length === ids.length && notes.every(isPersonCardNote);
+        ok = personCards || (!!t && t !== "html" && t !== "idea" && notes.every((n) => n.type === t));
       }
       mb.hidden = !ok;
+      mb.textContent = personCards ? "모음으로 합치기" : "합치기";
     }
   }
   async function mergeSelected() {
     const ids = [...(st.selIds || [])];
     if (ids.length < 2) { toast("2개 이상 선택해 주세요"); return; }
     const notes = ids.map(getNote).filter(Boolean);
+    if (notes.length !== ids.length) { toast("선택한 메모를 찾지 못했어요"); return; }
+    if (notes.every(isPersonCardNote)) {
+      confirmModal("캐릭터 모음으로 합치기", `선택한 ${notes.length}개 인물 카드의 모든 페이지를 새 캐릭터 모음에 복제합니다. 원본 메모는 삭제하지 않아요.`, "캐릭터 모음 만들기", false, () => { void mergePersonCards(notes); });
+      return;
+    }
     const type = notes[0].type;
-    if (type === "persona" || type === "character" || type === "html" || type === "idea") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : type === "idea" ? "아이디어 보드는 캔버스 배치를 보존하기 위해 합치지 않아요" : "페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
+    if (type === "html" || type === "idea") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : "아이디어 보드는 캔버스 배치를 보존하기 위해 합치지 않아요"); return; }
     if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
     const pid = notes[0].projectId;
     if (type === "lorebook") {
