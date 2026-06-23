@@ -193,7 +193,12 @@
   background-repeat:no-repeat;
 }
 .idea-canvas.has-canvas-image::after { opacity:0; }
-.idea-canvas.has-canvas-image > * { position:relative; z-index:1; }
+.idea-canvas.has-canvas-image > * { z-index:1; }
+/* Keep every canvas child in its original positioning scheme. In particular, board pieces
+   stay position:absolute; an uploaded background must never reset their saved x/y geometry. */
+.idea-canvas.has-canvas-image > .idea-item,
+.idea-canvas.has-canvas-image > .idea-canvas-empty,
+.idea-canvas.has-canvas-image > .idea-snap-guide { position:absolute; }
 
 /* Transparent PNG/GIF: image itself becomes the object. No dark matte or frame. */
 .idea-image .idea-media-content {
@@ -264,7 +269,8 @@
 
 .idea-color-grid.theme-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:324px; overflow:auto; padding-right:2px; }
 .idea-color-choice.theme { min-width:0; }
-.idea-color-choice.theme span { width:25px; height:18px; border-radius:999px; flex:0 0 auto; }
+.idea-color-choice.theme span,
+.idea-color-choice.text-preset span { width:25px; height:18px; border-radius:999px; flex:0 0 auto; }
 .idea-template-grid-compact { max-height:min(48dvh, 460px); }
 .idea-bg-special .idea-template-state { background:color-mix(in srgb,var(--accent) 18%,var(--surface)); color:var(--accent); }
 .idea-bg-live-preview.idea-canvas,
@@ -968,3 +974,8 @@
 .idea-canvas[data-background="uploaded"]::after { opacity:0; }
 /* Compact, label-free color grid. Names remain in aria-label/title for accessibility. */
 .idea-color-grid.palette-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+
+
+/* v63.16 — post-it color preview uses the same surface + text DOM as a real board item. */
+.idea-preview-note.idea-sticky { position:relative; isolation:isolate; overflow:visible; }
+.idea-preview-note.idea-sticky .idea-note-text { position:relative; z-index:1; display:block; width:100%; height:100%; min-height:180px; white-space:pre-wrap; overflow:auto; }
