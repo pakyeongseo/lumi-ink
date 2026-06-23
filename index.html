@@ -1463,6 +1463,55 @@
   body.code-mode #screen-editor .editor-wrap { display: none; }
   body.code-mode #screen-editor .code-area { display: block; }
 
+
+  /* ===== HTML workshop — raw source is never mounted in the app DOM ===== */
+  .html-workshop { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--paper); }
+  .html-workbar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 8px 10px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bar-bg) 92%, #07111c), var(--bar-bg));
+    border-bottom: 1px solid var(--bar-line);
+  }
+  .html-workbar .html-mode {
+    min-height: 33px; padding: 0 11px; border-radius: 10px; border: 1px solid var(--line);
+    background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; font-weight: 750;
+    letter-spacing: .035em;
+  }
+  .html-workbar .html-mode.active { color: #07121f; border-color: var(--accent); background: var(--accent); box-shadow: 0 0 13px color-mix(in srgb, var(--accent) 32%, transparent); }
+  .html-workbar .html-work-label { min-width: 0; margin-left: 3px; color: var(--faint); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .html-workbar .html-work-label b { color: var(--accent); font-weight: 750; }
+  .html-workbar .html-work-spacer { flex: 1; }
+  .html-mini-btn {
+    flex: 0 0 auto; width: 33px; height: 33px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--accent); display: grid; place-items: center; cursor: pointer;
+  }
+  .html-mini-btn:active { transform: scale(.94); background: var(--surface-2); }
+  .html-mini-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .html-stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; }
+  .html-pane { min-height: 0; flex: 1 1 auto; display: flex; flex-direction: column; }
+  .html-pane-head {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px 8px; border-bottom: 1px solid var(--line-soft); background: var(--paper);
+  }
+  .html-pane-kicker { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+  .html-pane-note { color: var(--faint); font-size: 10.5px; text-align: right; }
+  .html-source-area {
+    flex: 1 1 auto; min-height: 0; width: 100%; resize: none; border: 0; outline: 0; margin: 0;
+    padding: 15px 15px calc(34px + var(--safe-bottom)); background: #0d131d; color: #dbeaff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px; line-height: 1.68; tab-size: 2; white-space: pre; overflow: auto;
+  }
+  html[data-theme="light"] .html-source-area { background: #182232; color: #edf5ff; }
+  .html-source-area::placeholder { color: #8190a8; }
+  .html-preview-shell { flex: 1 1 auto; min-height: 0; padding: 10px; background: var(--surface-2); overflow: hidden; }
+  .html-preview-frame { display: block; width: 100%; height: 100%; min-height: 280px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 7px 24px rgba(0,0,0,.16); }
+  #screen-html[data-html-view="source"] .html-preview-pane { display: none; }
+  #screen-html[data-html-view="preview"] .html-source-pane { display: none; }
+  @media (min-width: 900px) {
+    #screen-html[data-html-view="split"] .html-stage { flex-direction: row; }
+    #screen-html[data-html-view="split"] .html-pane { width: 50%; }
+    #screen-html[data-html-view="split"] .html-source-pane { border-right: 1px solid var(--line); }
+  }
+
   .saver { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 6px; user-select: none; }
   .saver .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .3s; }
   .saver.dirty .dot { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
@@ -2425,6 +2474,41 @@
     <textarea class="code-area" id="codeArea" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="<!-- 이 메모의 HTML 소스 -->"></textarea>
   </section>
 
+  <!-- ============ HTML WORKSHOP ============ -->
+  <section class="screen" id="screen-html" data-html-view="source">
+    <div class="topbar">
+      <button class="iconbtn nav-menu" aria-label="메뉴"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tb-title" id="htmlTitle">HTML 작업실</div>
+      <div class="saver" id="htmlSaver"><span class="dot"></span><span id="htmlSaverText"></span></div>
+      <button class="iconbtn" id="htmlSave" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
+      <button class="iconbtn" id="htmlMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
+    </div>
+    <div class="html-workshop">
+      <div class="html-workbar">
+        <button class="html-mode active" id="htmlModeSource" type="button">SOURCE</button>
+        <button class="html-mode" id="htmlModePreview" type="button">PREVIEW</button>
+        <button class="html-mode" id="htmlModeSplit" type="button">SPLIT</button>
+        <span class="html-work-label"><b>RAW</b> · 정화하지 않고 원본 문자열 그대로 저장</span>
+        <span class="html-work-spacer"></span>
+        <button class="html-mini-btn" id="htmlCopy" type="button" aria-label="원본 복사" title="원본 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+        <button class="html-mini-btn" id="htmlReload" type="button" aria-label="미리보기 새로고침" title="미리보기 새로고침"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 2 5"/><path d="M20 4v7h-7"/></svg></button>
+      </div>
+      <div class="html-stage">
+        <div class="html-pane html-source-pane">
+          <div class="html-pane-head"><span class="html-pane-kicker">Source file</span><span class="html-pane-note" id="htmlSourceMeta">0자 · 0줄</span></div>
+          <textarea class="html-source-area" id="htmlSource" maxlength="5242880" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="<!doctype html>
+<html lang=&quot;ko&quot;>
+…"></textarea>
+        </div>
+        <div class="html-pane html-preview-pane">
+          <div class="html-pane-head"><span class="html-pane-kicker">Sandbox preview</span><span class="html-pane-note">JavaScript · 폼 · 앱 접근 차단</span></div>
+          <div class="html-preview-shell"><iframe class="html-preview-frame" id="htmlPreview" title="HTML 작업실 미리보기" sandbox="" referrerpolicy="no-referrer"></iframe></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ LOREBOOK ============ -->
   <section class="screen" id="screen-lore">
     <div class="topbar">
@@ -2827,7 +2911,7 @@
     purple: { name: "라벤더 퍼플",  c: "#c79bff" },
     grey:   { name: "미스티 그레이",c: "#b8bdcc" }
   };
-  const TYPE_LABEL = { free: "자유", lorebook: "로어북", log: "로그", persona: "페르소나", character: "캐릭터" };
+  const TYPE_LABEL = { free: "자유", html: "HTML 작업실", lorebook: "로어북", log: "로그", persona: "페르소나", character: "캐릭터" };
 
   /* ---------- IndexedDB ---------- */
   const DB_NAME = "inkMemoDB", DB_VER = 4;

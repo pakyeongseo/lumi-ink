@@ -27,6 +27,7 @@
   ];
   const FRAME_THEME_TOKEN = "theme";
   const FRAME_PUNCH_TOKEN = "punch";
+  const HTML_SOURCE_MAX = 5 * 1024 * 1024; // raw HTML 작업실: 원본 보존용 5 MiB 상한
   const FRAME_COLOR_BY_KEY = new Map(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([key, , color]) => [key, color.toLowerCase()]));
   const FRAME_COLOR_SET = new Set(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([, , color]) => color.toLowerCase()));
   function frameById(id) { return FRAMES.find((f) => f.id === id) || null; }
@@ -101,6 +102,7 @@
     if (d && d.type === type && jsonSame(d.data, data)) discardDraft(n);
   }
   function freeDraftFromEditor() { return { html: st.codeMode ? $("codeArea").value : $("editor").innerHTML }; }
+  function htmlDraftFromEditor() { return { source: $("htmlSource").value }; }
   function loreDraftFromEditor(n) { const d = jsonCopy((n && n.data) || {}) || {}; d.content = $("loreEdit").value; return d; }
   function logDraftFromEditor(n) {
     const d = jsonCopy((n && n.data) || {}) || {};
@@ -119,6 +121,7 @@
   function draftDiffers(n, d) {
     if (!n || !d || !d.data) return false;
     if (d.type === "free") return !jsonSame({ html: noteHtml(n) }, d.data);
+    if (d.type === "html") return !jsonSame({ source: htmlSourceOf(n) }, d.data);
     if (d.type === "lorebook") return !jsonSame((n.data || {}).content || "", d.data.content || "");
     if (d.type === "log") return !jsonSame(n.data || {}, d.data);
     if (d.type === "persona") {
@@ -133,6 +136,10 @@
     if (d.type === "free") {
       n.data = n.data || {}; n.data.html = String((d.data && d.data.html) || "");
       if (!n.titleLocked) n.title = deriveTitle(n.data.html);
+      await saveNote(n);
+    } else if (d.type === "html") {
+      n.data = n.data || {}; n.data.source = String((d.data && d.data.source) || "").slice(0, HTML_SOURCE_MAX);
+      n.data.previewPolicy = "sandbox-web";
       await saveNote(n);
     } else if (d.type === "lorebook") {
       n.data = Object.assign({}, n.data || {}, jsonCopy(d.data) || {});
@@ -184,7 +191,7 @@
   }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "lore", "log", "persona", "character", "settings", "search"];
+  const SCREENS = ["home", "project", "read", "editor", "html", "lore", "log", "persona", "character", "settings", "search"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -194,6 +201,7 @@
     else if (v.s === "project") renderProjectDetail();
     else if (v.s === "read") renderRead();
     else if (v.s === "editor") renderEditorMeta();
+    else if (v.s === "html") renderHtmlWorkshop();
     else if (v.s === "lore") renderLore();
     else if (v.s === "log") renderLog();
     else if (v.s === "persona") renderPersona();
@@ -213,6 +221,12 @@
       void (async () => { try { await leaveFreeEditor(); commitGo(view); } finally { navTransition = false; } })();
       return;
     }
+    if (cur && cur.s === "html" && view && view.s !== "html") {
+      if (navTransition) return;
+      navTransition = true;
+      void (async () => { try { await leaveHtmlWorkshop(); commitGo(view); } finally { navTransition = false; } })();
+      return;
+    }
     if (cur && cur.s === "log" && view && view.s !== "log") {
       if (navTransition) return;
       navTransition = true;
@@ -223,6 +237,7 @@
   }
   async function flushCurrentView(cur) {
     if (cur === "editor") await leaveFreeEditor();
+    else if (cur === "html") await leaveHtmlWorkshop();
     else if (cur === "lore") await flushLore();
     else if (cur === "log") await flushLog();
     else if (cur === "persona") await flushPersona();
@@ -324,8 +339,8 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
-  const TYPE_COLOR = { free: "#7b9bff", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb" };
-  const TYPE_TAG = { free: "F", lorebook: "R", log: "L", persona: "P", character: "C" };
+  const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb" };
+  const TYPE_TAG = { free: "F", html: "H", lorebook: "R", log: "L", persona: "P", character: "C" };
   function memoTagHTML(n) { return `<span class="memo-tag t-${n.type}">${TYPE_TAG[n.type] || "?"}</span>`; }
   function recentMemos(limit, scope) {
     limit = limit || 10;
@@ -510,7 +525,7 @@
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
-      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : (preview(noteHtml(n)) || "빈 메모");
+      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 HTML 소스") : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
@@ -542,7 +557,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["character", "캐릭터"], ["persona", "페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["free", "자유 메모"]];
+    const SECTIONS = [["character", "캐릭터"], ["persona", "페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => n.type === t);
@@ -565,7 +580,9 @@
     const n = getNote(st.curNoteId);
     if (!n) { back(); return; }
     $("readTitle").textContent = n.title || "메모";
-    $("readBody").innerHTML = noteHtml(n);
+    // 가져온 스타일시트는 이 래퍼를 기준으로 범위를 제한합니다.
+    // 메모 디자인은 유지하면서 앱 전체 UI를 덮어쓰지 않게 해요.
+    $("readBody").innerHTML = `<div class="lumink-user-html">${noteHtml(n)}</div>`;
     normalizeLinks($("readBody"));
     addCodeCopyButtons($("readBody"));
     renderAttachments("readAttach", n, false);
@@ -604,12 +621,14 @@
     navTransition = true;
     try {
       if (curView().s === "editor") await leaveFreeEditor();
+      else if (curView().s === "html") await leaveHtmlWorkshop();
       else if (curView().s === "log") await flushLog();
       st.curProjectId = id; commitGo({ s: "project" }); renderSidebar();
     } finally { navTransition = false; }
   }
   async function flushPending() {
     if (curView().s === "editor") await leaveFreeEditor();
+    else if (curView().s === "html") await leaveHtmlWorkshop();
     else if (st.saveTimer || (freeEditorSession && freeEditorSession.active)) await flushSave(true);
     if (loreTimer) await flushLore();
     if (logTimer) await flushLog();
@@ -624,6 +643,7 @@
       // flush가 끝난 뒤에만 선택 noteId를 교체합니다. 이전 에디터의 DOM이 새 메모에 쓰일 여지를 차단합니다.
       st.curNoteId = id;
       if (n.type === "free") commitGo({ s: "read" });
+      else if (n.type === "html") commitGo({ s: "html" });
       else if (n.type === "lorebook") commitGo({ s: "lore" });
       else if (n.type === "log") { logEditMode = false; commitGo({ s: "log" }); }
       else if (n.type === "persona") { st.perEdit = false; commitGo({ s: "persona" }); }
@@ -636,7 +656,7 @@
     if (navTransition) return;
     navTransition = true;
     try {
-      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "log") await flushLog();
+      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "html") await leaveHtmlWorkshop(); else if (curView().s === "log") await flushLog();
       st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render();
     } finally { navTransition = false; }
   }
@@ -785,10 +805,11 @@
   async function createNote(type, projectId) {
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
+          : type === "html" ? { source: "", previewPolicy: "sandbox-web" }
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
@@ -820,6 +841,165 @@
     toast("이동했어요");
   }
 
+
+
+  /* ---------- HTML workshop: source stays a string, preview stays in an opaque sandbox ---------- */
+  function htmlSourceOf(n) { return (n && n.data && typeof n.data.source === "string") ? n.data.source : ""; }
+  function htmlSourceSummary(n) {
+    const source = htmlSourceOf(n);
+    if (!source.trim()) return "";
+    const title = source.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+    if (title) return String(title[1]).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 60) || "HTML 문서";
+    const first = source.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || "";
+    return first.slice(0, 60);
+  }
+  let htmlWorkshopSession = null, htmlPreviewTimer = null, htmlViewMode = "source";
+  function setHtmlSaver(mode) {
+    const s = $("htmlSaver"); s.className = "saver " + mode;
+    $("htmlSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("htmlSaverText").textContent = ""; } }, 1500);
+  }
+  function updateHtmlSourceMeta(source) {
+    const text = String(source || "");
+    const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
+    $("htmlSourceMeta").textContent = `${text.length.toLocaleString("ko-KR")}자 · ${lines.toLocaleString("ko-KR")}줄`;
+  }
+  function buildSandboxPreview(source) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(String(source || ""), "text/html");
+    // 원본은 절대 손대지 않습니다. 이 처리는 iframe에 넣을 미리보기 사본에만 적용됩니다.
+    doc.querySelectorAll("script, noscript, iframe, frame, frameset, object, embed, applet, portal, base, form, meta[http-equiv='refresh']").forEach((node) => node.remove());
+    doc.querySelectorAll("*").forEach((node) => {
+      [...node.attributes].forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        const value = String(attr.value || "").trim();
+        if (name.startsWith("on")) { node.removeAttribute(attr.name); return; }
+        if (["href", "src", "xlink:href", "action", "formaction"].includes(name) && /^(?:javascript|vbscript|data:text\/html)/i.test(value)) node.removeAttribute(attr.name);
+      });
+    });
+    const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body || null);
+    const csp = doc.createElement("meta");
+    csp.httpEquiv = "Content-Security-Policy";
+    csp.content = "default-src 'none'; img-src https: http: data: blob:; style-src 'unsafe-inline' https: http:; font-src https: http: data:; media-src https: http: data:; connect-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'";
+    head.insertBefore(csp, head.firstChild);
+    const guard = doc.createElement("style");
+    guard.textContent = "html,body{min-height:100%;margin:0}*{box-sizing:border-box}";
+    head.insertBefore(guard, csp.nextSibling);
+    return "<!doctype html>\n" + doc.documentElement.outerHTML;
+  }
+  function refreshHtmlPreview(source) {
+    const frame = $("htmlPreview"); if (!frame) return;
+    try { frame.srcdoc = buildSandboxPreview(source); } catch (e) { frame.srcdoc = "<!doctype html><meta charset='utf-8'><pre>미리보기를 만들지 못했어요.</pre>"; }
+  }
+  function queueHtmlPreview(source) {
+    clearTimeout(htmlPreviewTimer);
+    htmlPreviewTimer = setTimeout(() => refreshHtmlPreview(source), 280);
+  }
+  function setHtmlView(mode) {
+    const screen = $("screen-html");
+    const allowed = (mode === "preview" || mode === "split") ? mode : "source";
+    htmlViewMode = allowed; screen.dataset.htmlView = allowed;
+    $("htmlModeSource").classList.toggle("active", allowed === "source");
+    $("htmlModePreview").classList.toggle("active", allowed === "preview");
+    $("htmlModeSplit").classList.toggle("active", allowed === "split");
+    if (allowed === "preview") refreshHtmlPreview($("htmlSource").value);
+  }
+  function beginHtmlWorkshopSession(n) {
+    const source = htmlSourceOf(n), area = $("htmlSource");
+    const same = htmlWorkshopSession && htmlWorkshopSession.active && htmlWorkshopSession.noteId === n.id;
+    if (!same) {
+      clearTimeout(st.saveTimer); st.saveTimer = null;
+      htmlWorkshopSession = { noteId: n.id, active: true, dirty: false, revision: 0, lastQueuedRevision: -1, inFlight: Promise.resolve() };
+      area.value = source;
+      updateHtmlSourceMeta(source);
+      refreshHtmlPreview(source);
+      setHtmlView(htmlViewMode);
+    } else if (!htmlWorkshopSession.dirty && area.value !== source) {
+      area.value = source; updateHtmlSourceMeta(source); refreshHtmlPreview(source);
+    }
+  }
+  function activeHtmlSession(expectedId) {
+    const session = htmlWorkshopSession;
+    if (!session || !session.active || !session.noteId) return null;
+    if (expectedId && session.noteId !== expectedId) return null;
+    if (st.curNoteId !== session.noteId) return null;
+    return session;
+  }
+  function scheduleHtmlSave() {
+    const session = activeHtmlSession();
+    if (!session || curView().s !== "html") return;
+    const n = getNote(session.noteId); if (!n || n.type !== "html") return;
+    session.dirty = true; session.revision += 1;
+    const draft = htmlDraftFromEditor();
+    writeDraft(n, "html", draft); updateHtmlSourceMeta(draft.source); queueHtmlPreview(draft.source);
+    setHtmlSaver("dirty"); clearTimeout(st.saveTimer);
+    const id = session.noteId, revision = session.revision;
+    st.saveTimer = setTimeout(() => {
+      if (activeHtmlSession(id) === session && session.revision >= revision) void flushHtmlSave(false, id);
+    }, 550);
+  }
+  function flushHtmlSave(silent, expectedId) {
+    clearTimeout(st.saveTimer); st.saveTimer = null;
+    const session = activeHtmlSession(expectedId);
+    if (!session || !session.dirty) return session && session.inFlight ? session.inFlight : Promise.resolve();
+    const noteId = session.noteId, n = getNote(noteId);
+    if (!n || n.type !== "html") return Promise.resolve();
+    const draft = htmlDraftFromEditor(), source = draft.source, revision = session.revision;
+    if (source.length > HTML_SOURCE_MAX) { toast("HTML 원본은 5MB 이하로 저장할 수 있어요"); return Promise.resolve(); }
+    if (session.lastQueuedRevision === revision) return session.inFlight || Promise.resolve();
+    session.lastQueuedRevision = revision;
+    const write = async () => {
+      const note = getNote(noteId); if (!note || note.type !== "html") return;
+      if (source === htmlSourceOf(note)) {
+        if (htmlWorkshopSession === session && session.revision === revision) { session.dirty = false; clearDraftIfSynced(note, "html", draft); }
+        return;
+      }
+      note.data = note.data || {}; note.data.source = source; note.data.previewPolicy = "sandbox-web";
+      await saveNote(note);
+      if (htmlWorkshopSession === session && session.revision === revision) {
+        session.dirty = false; clearDraftIfSynced(note, "html", draft); if (!silent) setHtmlSaver("saved");
+      }
+    };
+    session.inFlight = (session.inFlight || Promise.resolve()).then(write, write);
+    return session.inFlight;
+  }
+  async function leaveHtmlWorkshop() {
+    const session = htmlWorkshopSession;
+    if (!session || !session.active) return;
+    await flushHtmlSave(true, session.noteId);
+    if (htmlWorkshopSession === session) {
+      session.active = false; session.noteId = null; session.dirty = false;
+      clearTimeout(st.saveTimer); st.saveTimer = null; clearTimeout(htmlPreviewTimer);
+    }
+  }
+  function renderHtmlWorkshop() {
+    const n = getNote(st.curNoteId);
+    if (!n || n.type !== "html") { back(); return; }
+    beginHtmlWorkshopSession(n);
+    $("htmlTitle").textContent = n.title || "HTML 작업실";
+    setHtmlSaver(""); queueDraftRecovery(n, "html");
+  }
+  function exportHtmlSource(id) {
+    const n = getNote(id); if (!n || n.type !== "html") return;
+    const safeName = (n.title || "html-workshop").replace(/[\\/:*?\"<>|]+/g, "_").slice(0, 80) || "html-workshop";
+    // 원본 문자열을 문서 래퍼 없이 바로 Blob으로 내보내므로, 앱이 태그·속성·서식을 덧붙이지 않습니다.
+    downloadDoc(htmlSourceOf(n), `${safeName}.html`, "text/html");
+    toast("원본 HTML을 저장했어요");
+  }
+  function openHtmlSheet(n) {
+    openSheet(n.title, [
+      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
+      { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("HTML 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.copy, label: "원본 코드 복사", fn: () => clipboardCopy(htmlSourceOf(n)).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")) },
+      { icon: IC.save, label: "원본 .html로 내보내기", fn: () => exportHtmlSource(n.id) },
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("HTML 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    ]);
+  }
+
   /* ---------- free-memo editor ---------- */
   // 에디터 DOM은 한 개만 재사용됩니다. noteId를 세션으로 묶지 않으면 뒤늦은 blur·timer가
   // 다음에 연 빈 메모에 이전 DOM 내용을 덮어쓰는 경쟁 상태가 생길 수 있어요.
@@ -835,6 +1015,7 @@
     if (!same) {
       clearTimeout(st.saveTimer); st.saveTimer = null;
       freeEditorSession = { noteId: n.id, active: true, dirty: false, revision: 0, lastQueuedRevision: -1, inFlight: Promise.resolve() };
+      editor.classList.add("lumink-user-html");
       editor.innerHTML = html; code.value = html;
     } else if (!freeEditorSession.dirty) {
       if (editor.innerHTML !== html) editor.innerHTML = html;
@@ -2419,13 +2600,15 @@
     const html = normalizeCreatorMemo(activeCharacterPage(n).creatorMemo); if (!html) return;
     openModal(`<h3>크리에이터 메모</h3><div class="creator-modal-body read-body">${html}</div><div class="m-row"><button class="m-btn primary" type="button" data-creator-modal-close>닫기</button></div>`);
     const box = $("modalBox");
-    attachReadCodeCopy(box);
-    // 모달 안에서 생성되는 버튼은 전역 ID 바인딩 대신 해당 모달 인스턴스에 직접 묶습니다.
-    // 리치 본문에 같은 ID가 섞여도 닫기 동작이 흔들리지 않게 합니다.
+    // 닫기는 부가 기능보다 먼저 연결합니다. 코드 블록 복사 버튼 생성이 실패해도
+    // 팝업이 갇히지 않도록 이 핸들러는 독립적으로 유지합니다.
     const closeButton = box && box.querySelector("[data-creator-modal-close]");
     if (closeButton) closeButton.addEventListener("click", (event) => {
       event.preventDefault(); event.stopPropagation(); closeModal();
     });
+    // 기존 호출명은 존재하지 않는 함수여서 ReferenceError가 발생했고, 그 결과 위 닫기
+    // 핸들러까지 등록되지 않았습니다. 실제 공용 헬퍼를 사용하고, 보조 기능 오류는 격리합니다.
+    try { addCodeCopyButtons(box); } catch (error) { console.warn("creator note code-copy", error); }
   }
 
   function renderCharacterEdit(n) {
@@ -2757,6 +2940,10 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
         <div><div class="tc-name">자유 메모</div><div class="tc-desc">서식 보존 · 코드 보기 지원</div></div>
       </div>
+      <div class="type-card" data-t="html">
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div>
+        <div><div class="tc-name">HTML 작업실</div><div class="tc-desc">원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기</div></div>
+      </div>
       <div class="type-card" data-t="lorebook">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></div>
         <div><div class="tc-name">로어북</div><div class="tc-desc">마크다운 · 키워드 · 토큰 · World Info 내보내기</div></div>
@@ -2779,7 +2966,7 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; if (t === "character") st.charEdit = true; if (t === "log") logEditMode = true; go({ s: t === "lorebook" ? "lore" : t === "log" ? "log" : t === "persona" ? "persona" : t === "character" ? "character" : "editor" }); }); }
+        if (presetPid) { createNote(t, presetPid).then(() => { closeModal(); if (t === "persona") st.perEdit = true; if (t === "character") st.charEdit = true; if (t === "log") logEditMode = true; go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : t === "persona" ? "persona" : t === "character" ? "character" : "editor" }); }); }
         else showProjectPicker(t);
       });
     });
@@ -2801,7 +2988,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type); }));
     $on("pickCancel", "click", closeModal);
-    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; if (type === "character") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "lorebook" ? "lore" : type === "log" ? "log" : type === "persona" ? "persona" : type === "character" ? "character" : "editor" }); }); });
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid).then(() => { closeModal(); if (type === "persona") st.perEdit = true; if (type === "character") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "html" ? "html" : type === "lorebook" ? "lore" : type === "log" ? "log" : type === "persona" ? "persona" : type === "character" ? "character" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -2911,6 +3098,7 @@
     if (n.type === "log") { openLogSheet(n); return; }
     if (n.type === "persona") { openPersonaSheet(n); return; }
     if (n.type === "character") { openCharacterSheet(n); return; }
+    if (n.type === "html") { openHtmlSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.select, label: "선택", fn: () => enterSelMode("note", id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(id) },
@@ -3081,6 +3269,7 @@
     if (n.type === "log") { const d = normalizeLogData(n.data); return [d.content, ...(d.personaNames || []), d.personaAlias].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "character") { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
+    if (n.type === "html") return plainText(htmlSourceOf(n)).toLowerCase();
     return plainText(noteHtml(n)).toLowerCase();
   }
   function doSearch(q) {
@@ -3290,11 +3479,11 @@
   }
   function normalizeImportedNote(raw) {
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
-    const type = ["free", "lorebook", "log", "persona", "character"].includes(raw.type) ? raw.type : null;
+    const type = ["free", "html", "lorebook", "log", "persona", "character"].includes(raw.type) ? raw.type : null;
     if (!type) return null;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
-      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
+      title: cleanImportedText(raw.title, 180) || (type === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 메모" : type === "html" ? "제목 없는 HTML 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
       titleLocked: !!raw.titleLocked,
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
       createdAt: Number(raw.createdAt) || now(),
@@ -3312,6 +3501,9 @@
       note.data.html = sanitize(cleanImportedText(data.html, 1000000)).html;
       const attachments = normalizeImportedAttachments(data.attachments);
       if (attachments.length) note.data.attachments = attachments;
+    } else if (type === "html") {
+      // 백업·프로젝트 가져오기에서도 raw source를 sanitize/DOM serialization 없이 문자열 그대로 되살립니다.
+      note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web" };
     } else if (type === "lorebook") {
       note.data = {
         content: cleanImportedText(data.content, 500000),
@@ -3488,7 +3680,7 @@
     if (ids.length < 2) { toast("2개 이상 선택해 주세요"); return; }
     const notes = ids.map(getNote).filter(Boolean);
     const type = notes[0].type;
-    if (type === "persona" || type === "character") { toast("페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
+    if (type === "persona" || type === "character" || type === "html") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : "페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
     if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
     const pid = notes[0].projectId;
     if (type === "lorebook") {
@@ -3735,25 +3927,181 @@ ${gallery}
     setTimeout(() => URL.revokeObjectURL(url), 1500); toast("캐릭터 HTML로 저장했어요");
   }
 
-  const SAFE_HTML_TAGS = new Set(["a", "abbr", "b", "blockquote", "br", "code", "del", "div", "em", "font", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li", "ol", "p", "pre", "s", "span", "strike", "strong", "u", "ul"]);
-  const DROP_HTML_TAGS = new Set(["script", "style", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "video", "audio", "svg", "math", "template"]);
-  const SAFE_STYLE_PROPS = new Set(["color", "background-color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "white-space", "max-width", "border-radius", "vertical-align"]);
+  // 자유 메모는 인라인 디자인 HTML을 보관하는 용도도 겸합니다.
+  // 실행 코드만 막고, 정적인 구조·SVG·인라인 CSS는 최대한 손실 없이 보존합니다.
+  const SAFE_HTML_TAGS = new Set([
+    "a", "abbr", "address", "article", "aside", "b", "bdi", "bdo", "blockquote", "br", "caption", "cite", "code", "col", "colgroup",
+    "data", "dd", "del", "details", "dfn", "div", "dl", "dt", "em", "figcaption", "figure", "font", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
+    "header", "hr", "i", "img", "ins", "kbd", "li", "main", "mark", "menu", "nav", "ol", "p", "picture", "pre", "q", "s", "samp", "section",
+    "small", "source", "span", "strike", "strong", "sub", "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "wbr"
+  ]);
+  const SAFE_SVG_TAGS = new Set([
+    "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "defs", "lineargradient", "radialgradient", "stop",
+    "clippath", "mask", "pattern", "symbol", "use", "marker", "filter", "fegaussianblur", "feoffset", "fecolormatrix", "feblend", "femerge",
+    "femergenode", "fedropshadow", "text", "tspan", "title", "desc"
+  ]);
+  const DROP_HTML_TAGS = new Set(["script", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "video", "audio", "math", "template", "foreignobject"]);
+  const SAFE_SVG_ATTRS = new Set([
+    "alignment-baseline", "baseline-shift", "clip-path", "clip-rule", "color", "cx", "cy", "d", "dominant-baseline", "dx", "dy", "fill", "fill-opacity", "fill-rule",
+    "filter", "font-family", "font-size", "font-style", "font-weight", "gradienttransform", "gradientunits", "height", "letter-spacing", "marker-end", "marker-height",
+    "marker-mid", "marker-start", "marker-width", "mask", "offset", "opacity", "orient", "overflow", "pathlength", "patterncontentunits", "patterntransform", "patternunits",
+    "points", "preserveaspectratio", "r", "refx", "refy", "rotate", "rx", "ry", "shape-rendering", "spreadmethod", "stop-color", "stop-opacity", "stroke", "stroke-dasharray",
+    "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "text-anchor", "transform", "transform-origin", "vector-effect", "viewbox",
+    "visibility", "width", "x", "x1", "x2", "y", "y1", "y2"
+  ]);
+  const BLOCKED_CSS = /(?:expression\s*\(|javascript\s*:|vbscript\s*:|@import\b|behavior\s*:|-moz-binding\b)/i;
+  const SVG_ATTR_CANON = {
+    viewbox: "viewBox", preserveaspectratio: "preserveAspectRatio", gradienttransform: "gradientTransform", gradientunits: "gradientUnits",
+    markerheight: "markerHeight", markerwidth: "markerWidth", refx: "refX", refy: "refY", patterncontentunits: "patternContentUnits",
+    patterntransform: "patternTransform", patternunits: "patternUnits", pathlength: "pathLength"
+  };
+
+  function splitCssTopLevel(value, delimiter) {
+    const out = [], src = String(value || "");
+    let buf = "", quote = "", depth = 0, escaped = false;
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i];
+      if (quote) {
+        buf += ch;
+        if (escaped) { escaped = false; continue; }
+        if (ch === "\\") { escaped = true; continue; }
+        if (ch === quote) quote = "";
+        continue;
+      }
+      if (ch === '"' || ch === "'") { quote = ch; buf += ch; continue; }
+      if (ch === "(" || ch === "[") { depth++; buf += ch; continue; }
+      if (ch === ")" || ch === "]") { depth = Math.max(0, depth - 1); buf += ch; continue; }
+      if (ch === delimiter && depth === 0) { out.push(buf); buf = ""; continue; }
+      buf += ch;
+    }
+    out.push(buf);
+    return out;
+  }
+  function splitCssDecl(part) {
+    const bits = splitCssTopLevel(part, ":");
+    if (bits.length < 2) return null;
+    const prop = bits.shift().trim().toLowerCase();
+    const value = bits.join(":").trim();
+    return { prop, value };
+  }
+  function safeCssUrl(raw) {
+    const value = String(raw || "").trim().replace(/^['"]|['"]$/g, "");
+    // 배경 이미지는 앱이 자체 보관한 data:image과 내부 SVG 참조만 허용합니다.
+    if (/^#[-a-zA-Z0-9_:.]+$/.test(value)) return `url("${value}")`;
+    return /^data:image\/(?:png|jpe?g|gif|webp|avif);base64,/i.test(value) ? `url("${value}")` : "";
+  }
+  function safeCssValue(value) {
+    if (!value || value.length > 12000 || BLOCKED_CSS.test(value)) return "";
+    let safe = value.replace(/url\(\s*([^)]*?)\s*\)/gi, (_all, raw) => safeCssUrl(raw));
+    if (BLOCKED_CSS.test(safe)) return "";
+    return safe.trim();
+  }
   function safeCss(style) {
     if (typeof style !== "string") return "";
-    return style.split(";").map((part) => {
-      const idx = part.indexOf(":"); if (idx < 1) return "";
-      const prop = part.slice(0, idx).trim().toLowerCase();
-      const value = part.slice(idx + 1).trim();
-      if (!SAFE_STYLE_PROPS.has(prop) || !value || value.length > 180) return "";
-      if (/url\s*\(|expression\s*\(|@import|javascript:|behavior\s*:|-moz-binding/i.test(value)) return "";
+    return splitCssTopLevel(style, ";").map((part) => {
+      const decl = splitCssDecl(part); if (!decl) return "";
+      const { prop } = decl;
+      if (!/^(?:--[a-z0-9_-]+|-(?:webkit|moz|ms|o)-[a-z][a-z0-9-]*|[a-z][a-z0-9-]*)$/i.test(prop)) return "";
+      if (prop === "behavior" || prop === "-moz-binding") return "";
+      const value = safeCssValue(decl.value); if (!value) return "";
       return `${prop}:${value}`;
     }).filter(Boolean).join(";");
+  }
+  function cssBlockEnd(src, openIndex) {
+    let depth = 0, quote = "", escaped = false;
+    for (let i = openIndex; i < src.length; i++) {
+      const ch = src[i];
+      if (quote) {
+        if (escaped) { escaped = false; continue; }
+        if (ch === "\\") { escaped = true; continue; }
+        if (ch === quote) quote = "";
+        continue;
+      }
+      if (ch === '"' || ch === "'") { quote = ch; continue; }
+      if (ch === "{") depth++;
+      else if (ch === "}" && --depth === 0) return i;
+    }
+    return -1;
+  }
+  function cssNextBrace(src, from) {
+    let quote = "", escaped = false, paren = 0;
+    for (let i = from; i < src.length; i++) {
+      const ch = src[i];
+      if (quote) {
+        if (escaped) { escaped = false; continue; }
+        if (ch === "\\") { escaped = true; continue; }
+        if (ch === quote) quote = "";
+        continue;
+      }
+      if (ch === '"' || ch === "'") { quote = ch; continue; }
+      if (ch === "(") { paren++; continue; }
+      if (ch === ")") { paren = Math.max(0, paren - 1); continue; }
+      if (ch === "{" && paren === 0) return i;
+    }
+    return -1;
+  }
+  function scopeCssSelector(selector) {
+    let s = String(selector || "").trim();
+    if (!s) return "";
+    // 문서 전역 선택자는 메모 미리보기 래퍼로 한정합니다.
+    s = s.replace(/(^|[\s>+~])(?:html|body|:root)(?=\b|[.#[:])/gi, "$1.lumink-user-html");
+    if (s === "*" || s === ":scope") return ".lumink-user-html" + (s === "*" ? " *" : "");
+    if (s.startsWith(".lumink-user-html")) return s;
+    return `.lumink-user-html ${s}`;
+  }
+  function scopeCssSelectors(prelude) {
+    return splitCssTopLevel(prelude, ",").map(scopeCssSelector).filter(Boolean).join(",");
+  }
+  function sanitizeKeyframes(css) {
+    const src = String(css || ""); let out = "", at = 0;
+    while (at < src.length) {
+      const open = cssNextBrace(src, at); if (open < 0) break;
+      const close = cssBlockEnd(src, open); if (close < 0) break;
+      const label = src.slice(at, open).trim();
+      const decl = safeCss(src.slice(open + 1, close));
+      if (label && decl) out += `${label}{${decl}}`;
+      at = close + 1;
+    }
+    return out;
+  }
+  function scopeUserCss(css) {
+    const src = String(css || "").replace(/\/\*[\s\S]*?\*\//g, "");
+    if (!src || src.length > 350000 || BLOCKED_CSS.test(src)) return "";
+    let out = "", at = 0;
+    while (at < src.length) {
+      const open = cssNextBrace(src, at); if (open < 0) break;
+      const close = cssBlockEnd(src, open); if (close < 0) break;
+      const prelude = src.slice(at, open).trim();
+      const inner = src.slice(open + 1, close);
+      if (/^@(media|supports|container|layer)\b/i.test(prelude)) {
+        const nested = scopeUserCss(inner); if (nested) out += `${prelude}{${nested}}`;
+      } else if (/^@(?:-webkit-)?keyframes\b/i.test(prelude)) {
+        const frames = sanitizeKeyframes(inner); if (frames) out += `${prelude}{${frames}}`;
+      } else if (!/^@/i.test(prelude)) {
+        const selectors = scopeCssSelectors(prelude), decl = safeCss(inner);
+        if (selectors && decl) out += `${selectors}{${decl}}`;
+      }
+      at = close + 1;
+    }
+    return out;
   }
   function safeLinkHref(value) {
     const href = typeof value === "string" ? value.trim() : "";
     if (!href) return "";
     if (/^(https?:|mailto:|tel:|#)/i.test(href)) return href;
     return "";
+  }
+  function safeSvgHref(value) {
+    const href = typeof value === "string" ? value.trim() : "";
+    if (/^#[-a-zA-Z0-9_:.]+$/.test(href)) return href;
+    return safeImageSource(href) || "";
+  }
+  function safeAttrText(value, max) {
+    const str = cleanImportedText(value, max || 1000);
+    return /(?:javascript:|vbscript:|<\/?script)/i.test(str) ? "" : str;
+  }
+  function safeClassName(value) {
+    return safeAttrText(value, 1800).split(/\s+/).filter((name) => /^[a-zA-Z_][\w:-]*$/.test(name)).join(" ");
   }
   function unwrapHtmlElement(el) {
     const parent = el.parentNode; if (!parent) return;
@@ -3763,32 +4111,53 @@ ${gallery}
   function sanitize(html) {
     const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
     const titleEl = doc.querySelector("title");
+    // <head>와 본문에 있던 static CSS는 보관하되, 메모 래퍼 내부로만 범위를 좁힙니다.
+    const styles = [...doc.querySelectorAll("style")].map((style) => style.textContent || "");
+    doc.querySelectorAll("style").forEach((style) => style.remove());
     [...doc.body.querySelectorAll("*")].forEach((el) => {
       const tag = el.tagName.toLowerCase();
+      const isSvg = SAFE_SVG_TAGS.has(tag);
       if (DROP_HTML_TAGS.has(tag)) { el.remove(); return; }
-      if (!SAFE_HTML_TAGS.has(tag)) { unwrapHtmlElement(el); return; }
+      if (!SAFE_HTML_TAGS.has(tag) && !isSvg) { unwrapHtmlElement(el); return; }
       const attrs = [...el.attributes].map((a) => [a.name.toLowerCase(), a.value]);
       [...el.attributes].forEach((a) => el.removeAttribute(a.name));
-      const attr = (name) => { const found = attrs.find(([key]) => key === name); return found ? found[1] : ""; };
-      const style = safeCss(attr("style")); if (style) el.setAttribute("style", style);
-      const title = cleanImportedText(attr("title"), 240); if (title) el.setAttribute("title", title);
+      const find = (name) => { const found = attrs.find(([key]) => key === name); return found ? found[1] : ""; };
+      const set = (name, value) => { if (value) el.setAttribute(name, value); };
+      const style = safeCss(find("style")); if (style) set("style", style);
+      const title = safeAttrText(find("title"), 500); if (title) set("title", title);
+      const cls = safeClassName(find("class")); if (cls) set("class", cls);
+      const id = safeAttrText(find("id"), 240); if (/^[a-zA-Z_][\w:.-]*$/.test(id)) set("id", id);
+      const role = safeAttrText(find("role"), 80); if (/^[a-zA-Z-]+$/.test(role)) set("role", role);
+      attrs.forEach(([name, value]) => {
+        if (/^(?:data|aria)-[a-z0-9_.:-]+$/i.test(name)) { const safe = safeAttrText(value, 1000); if (safe) set(name, safe); }
+      });
       if (tag === "a") {
-        const href = safeLinkHref(attr("href"));
-        if (href) el.setAttribute("href", href);
-        else unwrapHtmlElement(el);
-        if (href && attr("target") === "_blank") { el.setAttribute("target", "_blank"); el.setAttribute("rel", "noopener noreferrer"); }
+        const href = safeLinkHref(find("href"));
+        if (!href) { unwrapHtmlElement(el); return; }
+        set("href", href);
+        if (find("target") === "_blank") { set("target", "_blank"); set("rel", "noopener noreferrer"); }
       } else if (tag === "img") {
-        const src = safeImageSource(attr("src"));
+        const src = safeImageSource(find("src"));
         if (!src) { el.remove(); return; }
-        el.setAttribute("src", src);
-        const alt = cleanImportedText(attr("alt"), 240); if (alt) el.setAttribute("alt", alt);
+        set("src", src);
+        const alt = safeAttrText(find("alt"), 500); if (alt) set("alt", alt);
+        const width = safeAttrText(find("width"), 12); if (/^\d{1,5}$/.test(width)) set("width", width);
+        const height = safeAttrText(find("height"), 12); if (/^\d{1,5}$/.test(height)) set("height", height);
       } else if (tag === "font") {
-        const color = cleanImportedText(attr("color"), 80); if (color && !/url\s*\(|expression|javascript:/i.test(color)) el.setAttribute("color", color);
-        const face = cleanImportedText(attr("face"), 120); if (face) el.setAttribute("face", face);
-        const size = cleanImportedText(attr("size"), 12); if (/^[1-7]|[+-][1-7]$/.test(size)) el.setAttribute("size", size);
+        const color = safeAttrText(find("color"), 120); if (color) set("color", color);
+        const face = safeAttrText(find("face"), 200); if (face) set("face", face);
+        const size = safeAttrText(find("size"), 12); if (/^[1-7]|[+-][1-7]$/.test(size)) set("size", size);
+      } else if (isSvg) {
+        attrs.forEach(([name, value]) => {
+          if (SAFE_SVG_ATTRS.has(name)) { const safe = safeAttrText(value, 4000); if (safe) set(SVG_ATTR_CANON[name] || name, safe); }
+        });
+        const href = safeSvgHref(find("href") || find("xlink:href"));
+        if (href) set("href", href);
       }
     });
-    return { html: doc.body ? doc.body.innerHTML.trim() : "", title: titleEl ? cleanImportedText(titleEl.textContent, 180).trim() : "" };
+    const scopedCss = scopeUserCss(styles.join("\n"));
+    const styleTag = scopedCss ? `<style data-lumink-user-style="1">${scopedCss.replace(/<\/style/gi, "")}</style>` : "";
+    return { html: `${styleTag}${doc.body ? doc.body.innerHTML.trim() : ""}`.trim(), title: titleEl ? cleanImportedText(titleEl.textContent, 180).trim() : "" };
   }
   function importHtmlFile(file) {
     const fr = new FileReader();
@@ -3971,12 +4340,32 @@ ${gallery}
           }
         } catch (e) {}
       }
+      showHtmlImportChoice(raw, file, pid);
+    });
+  }
+  function showHtmlImportChoice(raw, file, pid) {
+    const name = file.name.replace(/\.(html?|HTML?)$/i, "") || "불러온 HTML";
+    openModal(`<h3>HTML 가져오기 방식</h3><p class="m-sub"><b>${esc(name)}</b><br>문서로 정리할지, 원본 코드를 그대로 보관할지 선택하세요.</p>
+      <div class="type-card" id="importAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">HTML 작업실로 원본 가져오기</div><div class="tc-desc">정화하지 않음 · 원본 문자열 그대로 저장 · 샌드박스 미리보기</div></div></div>
+      <div class="type-card" id="importAsFreeMemo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/></svg></div><div><div class="tc-name">자유 메모 문서로 가져오기</div><div class="tc-desc">리치 에디터 정화 규칙 적용 · 문서형으로 편집</div></div></div>
+      <div class="m-row"><button class="m-btn" id="htmlImportCancel">취소</button></div>`);
+    $on("htmlImportCancel", "click", closeModal);
+    $on("importAsHtmlSource", "click", async () => {
+      closeModal();
+      if (raw.length > HTML_SOURCE_MAX) { toast("HTML 원본은 5MB 이하만 가져올 수 있어요"); return; }
+      const n = await createNote("html", pid);
+      n.title = cleanImportedText(name, 180) || "불러온 HTML"; n.titleLocked = true;
+      n.data = { source: raw, previewPolicy: "sandbox-web" };
+      await saveNote(n); st.curNoteId = n.id; st.curProjectId = pid;
+      toast("원본 HTML을 작업실로 가져왔어요"); go({ s: "html" });
+    });
+    $on("importAsFreeMemo", "click", async () => {
+      closeModal();
       const parsed = sanitize(raw);
       const n = await createNote("free", pid);
-      n.title = parsed.title || file.name.replace(/\.(html?|HTML?)$/i, "") || "불러온 메모"; n.data.html = parsed.html;
-      await saveNote(n);
-      st.curNoteId = n.id; st.curProjectId = pid;
-      toast("불러왔어요"); go({ s: "editor" });
+      n.title = parsed.title || name || "불러온 메모"; n.data.html = parsed.html;
+      await saveNote(n); st.curNoteId = n.id; st.curProjectId = pid;
+      toast("문서 메모로 가져왔어요"); go({ s: "editor" });
     });
   }
   $on("fileInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) importHtmlFile(f); e.target.value = ""; closeSidebar(); });
@@ -4201,9 +4590,9 @@ ${gallery}
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         const s = curView().s;
-        if (s === "editor" || s === "lore" || s === "log" || s === "persona" || s === "character") {
+        if (s === "editor" || s === "html" || s === "lore" || s === "log" || s === "persona" || s === "character") {
           e.preventDefault();
-          if (s === "editor") flushSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else flushCharacter();
+          if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else flushCharacter();
           toast("저장했어요");
         }
       }
@@ -4258,6 +4647,17 @@ ${gallery}
       if (t.clientX - edgeX > 55 && Math.abs(t.clientY - edgeY) < 45) { openSidebar(); edgeX = null; }
     }, { passive: true });
     document.addEventListener("touchend", () => { edgeX = null; });
+
+    // HTML workshop
+    $on("htmlSource", "input", scheduleHtmlSave);
+    $on("htmlSource", "blur", () => { const s = htmlWorkshopSession; if (s && s.active) void flushHtmlSave(false, s.noteId); });
+    $on("htmlSave", "click", () => { const s = htmlWorkshopSession; if (s && s.active) void flushHtmlSave(false, s.noteId); });
+    $on("htmlMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("htmlCopy", "click", () => clipboardCopy($("htmlSource").value).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")));
+    $on("htmlReload", "click", () => { refreshHtmlPreview($("htmlSource").value); toast("미리보기를 새로고침했어요"); });
+    $on("htmlModeSource", "click", () => setHtmlView("source"));
+    $on("htmlModePreview", "click", () => setHtmlView("preview"));
+    $on("htmlModeSplit", "click", () => setHtmlView("split"));
 
     // editor
     $on("editor", "input", scheduleSave);
