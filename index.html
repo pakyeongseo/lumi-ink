@@ -1990,6 +1990,10 @@
   .char-page-switch .char-hint { flex: 1; min-width: 0; text-align: center; color: var(--faint); font-size: 11.5px; font-weight: 650; }
   body.char-view-on #charEditView { display: none; }
   body.char-view-on #charSave { display: none; }
+  /* v62: 단일 인물은 페르소나로 보이며, 다인 전용 탐색·추가 컨트롤을 숨깁니다. */
+  body.char-single-mode #screen-character .char-roster,
+  body.char-single-mode #screen-character .char-page-count,
+  body.char-single-mode #screen-character .char-page-switch { display: none !important; }
   #charGallery .pg-item { touch-action: none; }
   /* lightbox */
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(6,8,14,.93); display: flex; align-items: center; justify-content: center; padding: 20px; isolation: isolate; }
