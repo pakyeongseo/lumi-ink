@@ -191,7 +191,7 @@
   }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "html", "lore", "log", "persona", "character", "settings", "search"];
+  const SCREENS = ["home", "project", "read", "editor", "html", "lore", "log", "persona", "character", "idea", "settings", "search"];
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function render() {
@@ -206,6 +206,7 @@
     else if (v.s === "log") renderLog();
     else if (v.s === "persona") renderPersona();
     else if (v.s === "character") renderCharacter();
+    else if (v.s === "idea") renderIdeaBoard();
     else if (v.s === "settings") renderSettings();
     else if (v.s === "search") renderSearch();
   }
@@ -227,6 +228,12 @@
       void (async () => { try { await leaveHtmlWorkshop(); commitGo(view); } finally { navTransition = false; } })();
       return;
     }
+    if (cur && cur.s === "idea" && view && view.s !== "idea") {
+      if (navTransition) return;
+      navTransition = true;
+      void (async () => { try { await flushIdeaBoard(); commitGo(view); } finally { navTransition = false; } })();
+      return;
+    }
     if (cur && cur.s === "log" && view && view.s !== "log") {
       if (navTransition) return;
       navTransition = true;
@@ -242,6 +249,7 @@
     else if (cur === "log") await flushLog();
     else if (cur === "persona") await flushPersona();
     else if (cur === "character") await flushCharacter();
+    else if (cur === "idea") await flushIdeaBoard();
   }
   async function back() {
     if (st.selMode) { exitSelMode(); return; }
@@ -352,8 +360,8 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
-  const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb" };
-  const TYPE_TAG = { free: "F", html: "H", lorebook: "R", log: "L", persona: "P", character: "C" };
+  const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb", idea: "#f0c967" };
+  const TYPE_TAG = { free: "F", html: "H", lorebook: "R", log: "L", persona: "P", character: "C", idea: "I" };
   // v62: 페르소나와 캐릭터 메모는 하나의 character 저장 모델을 공유합니다.
   // 카드·목록에서는 mode에 따라 각각 페르소나 / 캐릭터 모음으로 보이게 합니다.
   function characterMode(n) {
@@ -551,7 +559,7 @@
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
-      meta = n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 HTML 소스") : (preview(noteHtml(n)) || "빈 메모");
+      meta = n.type === "idea" ? ideaBoardSummary(n) : n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 HTML 소스") : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
@@ -583,7 +591,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["character-single", "페르소나"], ["character-collection", "캐릭터 모음"], ["persona", "이전 페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
+    const SECTIONS = [["idea", "아이디어 보드"], ["character-single", "페르소나"], ["character-collection", "캐릭터 모음"], ["persona", "이전 페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => noteSectionKey(n) === t);
@@ -649,6 +657,7 @@
       if (curView().s === "editor") await leaveFreeEditor();
       else if (curView().s === "html") await leaveHtmlWorkshop();
       else if (curView().s === "log") await flushLog();
+      else if (curView().s === "idea") await flushIdeaBoard();
       st.curProjectId = id; commitGo({ s: "project" }); renderSidebar();
     } finally { navTransition = false; }
   }
@@ -660,6 +669,7 @@
     if (logTimer) await flushLog();
     if (perTimer) await flushPersona();
     if (charTimer) await flushCharacter();
+    if (ideaTimer) await flushIdeaBoard();
   }
   async function openNote(id) {
     const n = getNote(id); if (!n || navTransition) return;
@@ -674,6 +684,7 @@
       else if (n.type === "log") { logEditMode = false; commitGo({ s: "log" }); }
       else if (n.type === "persona") { st.perEdit = false; commitGo({ s: "persona" }); }
       else if (n.type === "character") { st.charEdit = false; commitGo({ s: "character" }); }
+      else if (n.type === "idea") { commitGo({ s: "idea" }); }
       else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
     } finally { navTransition = false; }
   }
@@ -682,7 +693,7 @@
     if (navTransition) return;
     navTransition = true;
     try {
-      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "html") await leaveHtmlWorkshop(); else if (curView().s === "log") await flushLog();
+      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "html") await leaveHtmlWorkshop(); else if (curView().s === "log") await flushLog(); else if (curView().s === "idea") await flushIdeaBoard();
       st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render();
     } finally { navTransition = false; }
   }
@@ -760,6 +771,7 @@
     const attachments = (src.data && Array.isArray(src.data.attachments)) ? src.data.attachments : [];
     const createdFileIds = [];
     const copiedAttachments = [];
+    const copiedFileIdMap = new Map();
     try {
       for (const attachment of attachments) {
         const sourceFile = await getOne("files", attachment.id);
@@ -775,6 +787,7 @@
           blob, createdAt: now()
         });
         createdFileIds.push(newId);
+        copiedFileIdMap.set(attachment.id, newId);
         copiedAttachments.push({
           id: newId,
           name: sourceFile.name || attachment.name || "첨부파일",
@@ -785,6 +798,10 @@
       if (attachments.length) {
         if (copiedAttachments.length) copy.data.attachments = copiedAttachments;
         else delete copy.data.attachments;
+      }
+      if (src.type === "idea" && copy.data && Array.isArray(copy.data.items)) {
+        copy.data.items = copy.data.items.filter((item) => !item || !item.fileId || copiedFileIdMap.has(item.fileId));
+        copy.data.items.forEach((item) => { if (item && item.fileId) item.fileId = copiedFileIdMap.get(item.fileId); });
       }
       return copy;
     } catch (err) {
@@ -833,7 +850,7 @@
     const characterTitle = characterModeOption === "single" ? "이름 없는 페르소나" : "이름 없는 캐릭터 모음";
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? characterTitle : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? characterTitle : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
@@ -842,6 +859,7 @@
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
           : type === "character" ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()] }
+          : type === "idea" ? makeIdeaBoardData()
           : {}
     };
     st.notes.push(n); await put("notes", n);
@@ -3247,6 +3265,10 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/></svg></div>
         <div><div class="tc-name">로그 저장</div><div class="tc-desc">정규식 디자인 · 이름 가림 · 게시용 HTML 내보내기</div></div>
       </div>
+      <div class="type-card" data-t="idea">
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h3M8 12h6M8 16h4"/><path d="M16.5 8.5h.01M15 15l1.8-2 2.2 3"/></svg></div>
+        <div><div class="tc-name">아이디어 보드</div><div class="tc-desc">무한 캔버스 · 포스트잇 · 이미지 · 음악 · 영상 · 인용 링크</div></div>
+      </div>
       <div class="type-card" data-t="character" data-character-mode="single">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
         <div><div class="tc-name">페르소나</div><div class="tc-desc">한 인물 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
@@ -3266,7 +3288,7 @@
           closeModal();
           if (t === "character") st.charEdit = true;
           if (t === "log") logEditMode = true;
-          go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : t === "character" ? "character" : "editor" });
+          go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : t === "character" ? "character" : t === "idea" ? "idea" : "editor" });
         };
         if (presetPid) createNote(t, presetPid, options).then(openCreated);
         else showProjectPicker(t, options);
@@ -3400,6 +3422,7 @@
     if (n.type === "log") { openLogSheet(n); return; }
     if (n.type === "persona") { openPersonaSheet(n); return; }
     if (n.type === "character") { openCharacterSheet(n); return; }
+    if (n.type === "idea") { openIdeaBoardSheet(n); return; }
     if (n.type === "html") { openHtmlSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.select, label: "선택", fn: () => enterSelMode("note", id) },
@@ -3781,7 +3804,7 @@
   }
   function normalizeImportedNote(raw) {
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
-    const sourceType = ["free", "html", "lorebook", "log", "persona", "character"].includes(raw.type) ? raw.type : null;
+    const sourceType = ["free", "html", "lorebook", "log", "persona", "character", "idea"].includes(raw.type) ? raw.type : null;
     if (!sourceType) return null;
     const type = sourceType === "persona" ? "character" : sourceType;
     const note = {
@@ -3817,6 +3840,8 @@
       };
     } else if (type === "log") {
       note.data = normalizeLogData(data);
+    } else if (type === "idea") {
+      note.data = normalizeImportedIdeaBoardData(data);
     } else if (sourceType === "persona") {
       note.data = legacyPersonaDataToCharacterData(data);
     } else {
@@ -3876,8 +3901,9 @@
     const filesToWrite = (files || []).map(normalizeImportedFile).filter((file) => file && availableNoteIds.has(file.noteId));
     const availableFileIds = new Set([...(replace ? [] : (existingFiles || [])).map((file) => file.id), ...filesToWrite.map((file) => file.id)]);
     for (const note of notesToWrite) {
-      if (note.type === "free" && note.data && Array.isArray(note.data.attachments)) {
+      if (note.data && Array.isArray(note.data.attachments)) {
         note.data.attachments = note.data.attachments.filter((attachment) => availableFileIds.has(attachment.id));
+        if (note.type === "idea" && Array.isArray(note.data.items)) note.data.items = note.data.items.filter((item) => !item.fileId || availableFileIds.has(item.fileId));
       }
     }
     return { projects: projectsToWrite, notes: notesToWrite, files: filesToWrite };
@@ -3983,7 +4009,7 @@
     if (ids.length < 2) { toast("2개 이상 선택해 주세요"); return; }
     const notes = ids.map(getNote).filter(Boolean);
     const type = notes[0].type;
-    if (type === "persona" || type === "character" || type === "html") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : "페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
+    if (type === "persona" || type === "character" || type === "html" || type === "idea") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : type === "idea" ? "아이디어 보드는 캔버스 배치를 보존하기 위해 합치지 않아요" : "페르소나·캐릭터 메모는 합칠 수 없어요"); return; }
     if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
     const pid = notes[0].projectId;
     if (type === "lorebook") {
@@ -4566,11 +4592,15 @@ ${gallery}
       files.push(Object.assign({}, source, { id, noteId: noteIdMap.get(source.noteId) }));
     }
     for (const note of notes) {
-      if (note.type !== "free" || !note.data || !Array.isArray(note.data.attachments)) continue;
+      if (!note.data || !Array.isArray(note.data.attachments)) continue;
       note.data.attachments = note.data.attachments.map((attachment) => {
         const id = fileIdMap.get(attachment.id);
         return id ? Object.assign({}, attachment, { id }) : null;
       }).filter(Boolean);
+      if (note.type === "idea" && Array.isArray(note.data.items)) {
+        note.data.items = note.data.items.filter((item) => !item || !item.fileId || fileIdMap.has(item.fileId));
+        note.data.items.forEach((item) => { if (item && item.fileId) item.fileId = fileIdMap.get(item.fileId); });
+      }
     }
     return { project, notes, files };
   }
@@ -4895,9 +4925,9 @@ ${gallery}
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         const s = curView().s;
-        if (s === "editor" || s === "html" || s === "lore" || s === "log" || s === "persona" || s === "character") {
+        if (s === "editor" || s === "html" || s === "lore" || s === "log" || s === "persona" || s === "character" || s === "idea") {
           e.preventDefault();
-          if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else flushCharacter();
+          if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else if (s === "idea") flushIdeaBoard(); else flushCharacter();
           toast("저장했어요");
         }
       }
@@ -4963,6 +4993,20 @@ ${gallery}
     $on("htmlModeSource", "click", () => setHtmlView("source"));
     $on("htmlModePreview", "click", () => setHtmlView("preview"));
     $on("htmlModeSplit", "click", () => setHtmlView("split"));
+
+
+
+    // idea board
+    $on("ideaBack", "click", () => { void back(); });
+    $on("ideaAdd", "click", () => openIdeaAddMenu(null, false));
+    $on("ideaMore", "click", () => { const n=getNote(st.curNoteId); if(n&&n.type==="idea") openIdeaBoardSheet(n); });
+    $on("ideaSave", "click", async () => { await flushIdeaBoard(); toast("저장했어요"); });
+    $on("ideaViewToggle", "click", () => setIdeaView(ideaViewMode === "board" ? "list" : "board"));
+    $on("ideaBoardMode", "click", () => setIdeaView("board"));
+    $on("ideaListMode", "click", () => setIdeaView("list"));
+    $on("ideaMediaInput", "change", (e) => { const f=e.target.files&&e.target.files[0],kind=e.target.dataset.ideaKind||"image"; e.target.value="";delete e.target.dataset.ideaKind;if(f)void addIdeaMediaFile(f,kind); });
+    $on("ideaFileInput", "change", (e) => { const f=e.target.files&&e.target.files[0];e.target.value="";if(f)void addIdeaMediaFile(f,"file"); });
+    bindIdeaCanvasLongPress();
 
     // editor
     $on("editor", "input", scheduleSave);
@@ -5138,8 +5182,212 @@ ${gallery}
       stage.addEventListener("pointercancel", () => { dragging = false; });
     })();
 
-    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); } });
+    window.addEventListener("beforeunload", () => { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); flushIdeaBoard(true); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) { flushSave(true); flushLore(); flushLog(); flushPersona(); flushCharacter(); flushIdeaBoard(true); } });
+  }
+
+
+
+  /* ---------- idea board ---------- */
+  const IDEA_MAX_VIDEO = 30 * 1024 * 1024;
+  const IDEA_MAX_MEDIA = 30 * 1024 * 1024;
+  let ideaTimer = null, ideaDirty = false, ideaViewMode = "board", ideaObjectUrls = new Map(), ideaPendingPos = null, ideaDragState = null;
+  function makeIdeaBoardData() { return { canvas: { width: 1600, height: 1100 }, items: [], attachments: [], viewMode: "board" }; }
+  function ensureIdeaBoardData(n) {
+    const d = n.data = n.data && typeof n.data === "object" ? n.data : makeIdeaBoardData();
+    d.canvas = d.canvas && typeof d.canvas === "object" ? d.canvas : {};
+    d.canvas.width = Math.max(900, Math.min(6000, Number(d.canvas.width) || 1600));
+    d.canvas.height = Math.max(700, Math.min(6000, Number(d.canvas.height) || 1100));
+    d.items = Array.isArray(d.items) ? d.items.filter((item) => item && typeof item === "object").map(normalizeIdeaItem) : [];
+    d.attachments = Array.isArray(d.attachments) ? d.attachments.filter((a) => a && a.id) : [];
+    d.viewMode = d.viewMode === "list" ? "list" : "board";
+    return d;
+  }
+  function normalizeIdeaItem(raw) {
+    const kind = ["note", "image", "audio", "video", "file", "quote"].includes(raw.kind) ? raw.kind : "note";
+    const defaults = ideaItemDefaults(kind);
+    return {
+      id: typeof raw.id === "string" ? raw.id : uid(), kind,
+      x: Math.max(0, Math.min(5900, Number(raw.x) || defaults.w / 2)), y: Math.max(0, Math.min(5900, Number(raw.y) || defaults.h / 2)),
+      w: Math.max(110, Math.min(1400, Number(raw.w) || defaults.w)), h: Math.max(65, Math.min(1000, Number(raw.h) || defaults.h)),
+      z: Math.max(1, Math.min(99999, Number(raw.z) || 1)),
+      text: typeof raw.text === "string" ? raw.text.slice(0, 12000) : "", color: ["yellow","pink","blue","mint"].includes(raw.color) ? raw.color : "yellow",
+      fileId: typeof raw.fileId === "string" ? raw.fileId : null, noteId: typeof raw.noteId === "string" ? raw.noteId : null,
+      title: typeof raw.title === "string" ? raw.title.slice(0, 240) : ""
+    };
+  }
+  function ideaItemDefaults(kind) {
+    return kind === "note" ? { w: 270, h: 190 } : kind === "image" ? { w: 300, h: 230 } : kind === "audio" ? { w: 340, h: 118 } : kind === "video" ? { w: 360, h: 248 } : kind === "quote" ? { w: 310, h: 170 } : { w: 330, h: 106 };
+  }
+  function normalizeImportedIdeaBoardData(raw) {
+    const d = raw && typeof raw === "object" ? raw : {};
+    const temp = { type: "idea", data: { canvas: d.canvas, items: d.items, attachments: normalizeImportedAttachments(d.attachments), viewMode: d.viewMode } };
+    return ensureIdeaBoardData(temp);
+  }
+  function ideaBoardSummary(n) {
+    const d = ensureIdeaBoardData(n); const counts = {};
+    d.items.forEach((item) => { counts[item.kind] = (counts[item.kind] || 0) + 1; });
+    const labels = { note: "메모", image: "이미지", audio: "음악", video: "영상", file: "파일", quote: "링크" };
+    const summary = Object.keys(counts).slice(0, 3).map((k) => `${labels[k]} ${counts[k]}`).join(" · ");
+    return summary || "빈 캔버스";
+  }
+  function setIdeaSaver(mode) {
+    const s = $("ideaSaver"); if (!s) return; s.className = "saver " + mode;
+    $("ideaSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("ideaSaverText").textContent = ""; } }, 1500);
+  }
+  function scheduleIdeaSave() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "idea") return;
+    ideaDirty = true; setIdeaSaver("dirty"); clearTimeout(ideaTimer);
+    ideaTimer = setTimeout(() => { void flushIdeaBoard(false); }, 500);
+  }
+  async function flushIdeaBoard(silent) {
+    clearTimeout(ideaTimer); ideaTimer = null;
+    const n = getNote(st.curNoteId); if (!n || n.type !== "idea" || !ideaDirty) return;
+    ensureIdeaBoardData(n); await saveNote(n); ideaDirty = false; if (!silent) setIdeaSaver("saved");
+  }
+  function revokeIdeaObjectUrls() { ideaObjectUrls.forEach((url) => { try { URL.revokeObjectURL(url); } catch (e) {} }); ideaObjectUrls.clear(); }
+  async function ideaFileUrl(fileId) {
+    if (!fileId) return null;
+    if (ideaObjectUrls.has(fileId)) return ideaObjectUrls.get(fileId);
+    try { const rec = await getOne("files", fileId); if (!rec || !rec.blob) return null; const url = URL.createObjectURL(rec.blob); ideaObjectUrls.set(fileId, url); return url; } catch (e) { return null; }
+  }
+  function ideaItemTitle(item, n) {
+    if (item.kind === "note") return (item.text || "새 포스트잇").replace(/\s+/g, " ").trim().slice(0, 46) || "새 포스트잇";
+    if (item.kind === "quote") { const ref = getNote(item.noteId); return ref ? (ref.title || "제목 없는 메모") : (item.title || "연결된 메모"); }
+    const a = ((n.data && n.data.attachments) || []).find((x) => x.id === item.fileId); return item.title || (a && a.name) || "첨부 조각";
+  }
+  function itemAttachment(n, fileId) { return ((n.data && n.data.attachments) || []).find((x) => x && x.id === fileId) || null; }
+  function renderIdeaBoard() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "idea") { back(); return; }
+    const d = ensureIdeaBoardData(n); revokeIdeaObjectUrls(); ideaViewMode = d.viewMode || "board"; ideaDirty = false;
+    $("ideaTitle").textContent = n.title || "아이디어 보드"; setIdeaSaver("");
+    const screen = $("screen-idea"); screen.classList.toggle("idea-board-mode", ideaViewMode === "board"); screen.classList.toggle("idea-list-mode", ideaViewMode === "list");
+    $("ideaBoardMode").classList.toggle("active", ideaViewMode === "board"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list");
+    const canvas = $("ideaCanvas"); canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; canvas.innerHTML = "";
+    if (!d.items.length) canvas.innerHTML = '<div class="idea-canvas-empty"><div><b>아직 붙인 조각이 없어요</b>빈 공간을 길게 누르거나, 상단 + 버튼으로 첫 아이디어를 놓아보세요.</div></div>';
+    d.items.slice().sort((a,b) => a.z - b.z).forEach((item) => canvas.appendChild(createIdeaItemElement(n, item)));
+    renderIdeaList(n);
+  }
+  function createIdeaItemElement(n, item) {
+    const el = document.createElement("article"); el.className = `idea-item idea-${item.kind}` + (item.kind === "note" ? " idea-sticky" : ""); el.dataset.itemId = item.id;
+    el.style.left = item.x + "px"; el.style.top = item.y + "px"; el.style.width = item.w + "px"; el.style.height = item.h + "px"; el.style.zIndex = item.z;
+    if (item.kind === "note") {
+      el.dataset.color = item.color;
+      el.innerHTML = `<div class="idea-item-grip">note<button class="idea-item-delete" type="button" aria-label="조각 삭제">×</button></div><textarea class="idea-note-text" placeholder="아이디어를 적어보세요…">${esc(item.text || "")}</textarea>`;
+      const input = el.querySelector("textarea"); input.addEventListener("input", () => { item.text = input.value.slice(0, 12000); scheduleIdeaSave(); });
+      input.addEventListener("pointerdown", (e) => e.stopPropagation());
+    } else if (item.kind === "quote") {
+      const ref = getNote(item.noteId); const detail = ref ? (ref.type === "free" ? preview(noteHtml(ref)) : ref.type === "idea" ? ideaBoardSummary(ref) : noteTypeLabel(ref)) : "원본 메모가 삭제되었거나 이동되었습니다.";
+      el.innerHTML = `<div class="idea-item-grip">quote<button class="idea-item-delete" type="button" aria-label="조각 삭제">×</button></div><div class="idea-quote-body"><div class="idea-quote-eyebrow">↗ MEMO REFERENCE</div><div class="idea-quote-title">${esc(ref ? ref.title : (item.title || "연결된 메모"))}</div><div class="idea-quote-preview">${esc(detail || "메모를 열어 내용을 확인하세요.")}</div><button class="idea-quote-open" type="button">메모 열기</button></div>`;
+      el.querySelector(".idea-quote-open").addEventListener("click", (e) => { e.stopPropagation(); if (item.noteId && getNote(item.noteId)) openNote(item.noteId); else toast("연결된 메모를 찾을 수 없어요"); });
+    } else {
+      const att = itemAttachment(n, item.fileId); const name = item.title || (att && att.name) || "미디어 파일";
+      const kind = item.kind;
+      const content = kind === "file"
+        ? `<div class="idea-file-body"><div class="idea-file-icon">${fileIconSvg((att && att.type) || "")}</div><div class="idea-file-info"><div class="idea-file-name">${esc(name)}</div><div class="idea-file-meta">${att ? fmtSize(att.size) : "파일을 찾을 수 없음"}</div></div><button class="idea-file-download" type="button" aria-label="다운로드">${DL_SVG}</button></div>`
+        : `<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div><div class="idea-media-name">${esc(name)}</div>`;
+      el.innerHTML = `<div class="idea-item-grip">${kind}<button class="idea-item-delete" type="button" aria-label="조각 삭제">×</button></div>${content}`;
+      if (kind === "file") el.querySelector(".idea-file-download").addEventListener("click", (e) => { e.stopPropagation(); if (item.fileId) downloadAttachment(item.fileId); });
+      else hydrateIdeaMedia(el, item, att);
+    }
+    el.querySelector(".idea-item-delete").addEventListener("click", (e) => { e.stopPropagation(); confirmModal("조각 삭제", `'${ideaItemTitle(item, n)}' 조각을 보드에서 지울까요?`, "삭제", true, () => removeIdeaItem(item.id)); });
+    bindIdeaItemDrag(el, item);
+    return el;
+  }
+  async function hydrateIdeaMedia(el, item, att) {
+    const content = el.querySelector(".idea-media-content"); if (!content) return;
+    const url = await ideaFileUrl(item.fileId); if (!url || !el.isConnected) { content.textContent = "파일을 찾을 수 없어요"; return; }
+    if (item.kind === "image") { const img = document.createElement("img"); img.src = url; img.alt = item.title || "보드 이미지"; content.replaceChildren(img); }
+    else if (item.kind === "audio") { const audio = document.createElement("audio"); audio.src = url; audio.controls = true; audio.preload = "metadata"; content.replaceChildren(audio); audio.addEventListener("pointerdown", (e) => e.stopPropagation()); }
+    else if (item.kind === "video") { const video = document.createElement("video"); video.src = url; video.controls = true; video.preload = "metadata"; video.playsInline = true; content.replaceChildren(video); video.addEventListener("pointerdown", (e) => e.stopPropagation()); }
+  }
+  function renderIdeaList(n) {
+    const d = ensureIdeaBoardData(n), list = $("ideaList"); list.innerHTML = ""; list.hidden = ideaViewMode !== "list";
+    if (!d.items.length) { list.innerHTML = '<div class="idea-list-empty">아직 관리할 조각이 없어요.<br>캔버스로 돌아가 + 버튼을 눌러 추가해 보세요.</div>'; return; }
+    d.items.slice().sort((a,b) => b.z-a.z).forEach((item) => {
+      const card = document.createElement("div"); card.className = "idea-list-card"; const att = itemAttachment(n,item.fileId);
+      let icon = item.kind === "note" ? "✦" : item.kind === "image" ? "▧" : item.kind === "audio" ? "♫" : item.kind === "video" ? "▶" : item.kind === "quote" ? "↗" : "⌁";
+      card.innerHTML = `<div class="idea-list-thumb">${icon}</div><div class="idea-list-copy"><div class="idea-list-kind">${esc({note:"POST-IT",image:"IMAGE",audio:"AUDIO",video:"VIDEO",file:"FILE",quote:"MEMO LINK"}[item.kind])}</div><div class="idea-list-title">${esc(ideaItemTitle(item,n))}</div><div class="idea-list-sub">${esc(item.kind === "note" ? (item.text || "내용 없음").replace(/\s+/g," ").slice(0,70) : item.kind === "quote" ? "연결된 메모 열기" : (att ? `${att.type || "file"} · ${fmtSize(att.size)}` : "파일 없음"))}</div></div><button class="idea-list-act" type="button" title="캔버스에서 보기">⌖</button><button class="idea-list-act danger" type="button" title="삭제">×</button>`;
+      const actions = card.querySelectorAll("button"); actions[0].addEventListener("click", () => focusIdeaItem(item.id)); actions[1].addEventListener("click", () => confirmModal("조각 삭제", `'${ideaItemTitle(item,n)}' 조각을 보드에서 지울까요?`, "삭제", true, () => removeIdeaItem(item.id)));
+      if (item.kind === "image" && item.fileId) hydrateIdeaListThumb(card.querySelector(".idea-list-thumb"), item.fileId, item.title);
+      list.appendChild(card);
+    });
+  }
+  async function hydrateIdeaListThumb(wrap, fileId, alt) {
+    if (!wrap) return; const url = await ideaFileUrl(fileId); if (!url || !wrap.isConnected) return;
+    const img = document.createElement("img"); img.src = url; img.alt = alt || "이미지"; wrap.replaceChildren(img);
+  }
+  function focusIdeaItem(id) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "idea") return; const d = ensureIdeaBoardData(n); d.viewMode = "board"; ideaViewMode = "board"; renderIdeaBoard();
+    requestAnimationFrame(() => { const el = $("ideaCanvas").querySelector(`[data-item-id="${CSS.escape(id)}"]`); if (!el) return; el.classList.add("selected"); const wrap = $("ideaStageWrap"); wrap.scrollTo({ left:Math.max(0,el.offsetLeft-wrap.clientWidth/2+el.offsetWidth/2), top:Math.max(0,el.offsetTop-wrap.clientHeight/2+el.offsetHeight/2), behavior:"smooth" }); setTimeout(() => el.classList.remove("selected"),1200); });
+    scheduleIdeaSave();
+  }
+  function setIdeaView(mode) { const n=getNote(st.curNoteId); if (!n || n.type !== "idea") return; const d=ensureIdeaBoardData(n); d.viewMode=mode === "list" ? "list" : "board"; ideaViewMode=d.viewMode; renderIdeaBoard(); scheduleIdeaSave(); }
+  function boardPointFromEvent(e) { const canvas=$("ideaCanvas"), rect=canvas.getBoundingClientRect(); return { x: Math.max(0,Math.round((e.clientX-rect.left)*canvas.offsetWidth/rect.width)), y: Math.max(0,Math.round((e.clientY-rect.top)*canvas.offsetHeight/rect.height)) }; }
+  function nextIdeaZ(d) { return Math.max(0,...d.items.map((item)=>Number(item.z)||0))+1; }
+  function findIdeaDropPosition(d, size) {
+    const w=size.w,h=size.h, candidates=[]; for(let y=42;y<d.canvas.height-h;y+=66) for(let x=42;x<d.canvas.width-w;x+=74) candidates.push({x,y});
+    const intersects=(p)=>d.items.some((it)=>p.x < it.x+it.w+26 && p.x+w+26 > it.x && p.y < it.y+it.h+26 && p.y+h+26 > it.y);
+    return candidates.find((p)=>!intersects(p)) || {x:42+(d.items.length%5)*56,y:42+(d.items.length%7)*48};
+  }
+  function addIdeaItem(kind, pos, extra) {
+    const n=getNote(st.curNoteId); if (!n || n.type!=="idea") return null; const d=ensureIdeaBoardData(n); const def=ideaItemDefaults(kind); const p=pos || findIdeaDropPosition(d,def);
+    const item=Object.assign({id:uid(),kind,x:Math.max(0,Math.min(d.canvas.width-def.w,p.x)),y:Math.max(0,Math.min(d.canvas.height-def.h,p.y)),w:def.w,h:def.h,z:nextIdeaZ(d),text:"",color:"yellow",fileId:null,noteId:null,title:""},extra||{});
+    d.items.push(item); renderIdeaBoard(); scheduleIdeaSave(); return item;
+  }
+  function removeIdeaItem(id) {
+    const n=getNote(st.curNoteId); if (!n || n.type!=="idea") return; const d=ensureIdeaBoardData(n); const item=d.items.find((x)=>x.id===id); if (!item) return;
+    d.items=d.items.filter((x)=>x.id!==id);
+    if (item.fileId) { d.attachments=d.attachments.filter((a)=>a.id!==item.fileId); del("files",item.fileId).catch(()=>{}); const url=ideaObjectUrls.get(item.fileId); if(url){try{URL.revokeObjectURL(url)}catch(e){};ideaObjectUrls.delete(item.fileId);} }
+    renderIdeaBoard(); scheduleIdeaSave();
+  }
+  function bindIdeaItemDrag(el,item) {
+    let timer=null,start=null,dragging=false;
+    const clear=()=>{clearTimeout(timer);timer=null;};
+    el.addEventListener("pointerdown",(e)=>{
+      if(e.target.closest("textarea,button,audio,video")) return; if(e.button!=null && e.button!==0) return;
+      start={x:e.clientX,y:e.clientY,left:item.x,top:item.y}; clear(); timer=setTimeout(()=>{dragging=true; ideaDragState={el,item}; item.z=nextIdeaZ(ensureIdeaBoardData(getNote(st.curNoteId))); el.style.zIndex=item.z;el.classList.add("dragging");try{el.setPointerCapture(e.pointerId)}catch(x){}; navigator.vibrate&&navigator.vibrate(10);},280);
+    });
+    el.addEventListener("pointermove",(e)=>{ if(!start)return; const dx=e.clientX-start.x,dy=e.clientY-start.y; if(!dragging && (Math.abs(dx)>8||Math.abs(dy)>8)){clear();start=null;return;} if(!dragging)return; const d=ensureIdeaBoardData(getNote(st.curNoteId)); item.x=Math.max(0,Math.min(d.canvas.width-item.w,start.left+dx)); item.y=Math.max(0,Math.min(d.canvas.height-item.h,start.top+dy)); el.style.left=item.x+"px";el.style.top=item.y+"px";e.preventDefault(); });
+    const end=()=>{clear();if(dragging){dragging=false;ideaDragState=null;el.classList.remove("dragging");scheduleIdeaSave();}start=null;}; el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
+  }
+  function bindIdeaCanvasLongPress() {
+    const canvas=$("ideaCanvas"); let timer=null,start=null;
+    canvas.addEventListener("pointerdown",(e)=>{ if(e.target!==canvas && !e.target.closest(".idea-canvas-empty")) return; if(e.button!=null&&e.button!==0)return; start=boardPointFromEvent(e); clearTimeout(timer);timer=setTimeout(()=>{ideaPendingPos=start;openIdeaAddMenu(start,true);navigator.vibrate&&navigator.vibrate(10);},520); });
+    canvas.addEventListener("pointermove",(e)=>{ if(!start)return; const p=boardPointFromEvent(e);if(Math.abs(p.x-start.x)>10||Math.abs(p.y-start.y)>10){clearTimeout(timer);timer=null;} });
+    ["pointerup","pointercancel"].forEach((name)=>canvas.addEventListener(name,()=>{clearTimeout(timer);timer=null;start=null;}));
+    canvas.addEventListener("contextmenu",(e)=>{e.preventDefault();const p=boardPointFromEvent(e);ideaPendingPos=p;openIdeaAddMenu(p,true);});
+  }
+  function openIdeaAddMenu(pos, anchored) {
+    const target=pos || (()=>{const n=getNote(st.curNoteId);return n&&n.type==="idea"?findIdeaDropPosition(ensureIdeaBoardData(n),ideaItemDefaults("note")):{x:42,y:42};})(); ideaPendingPos=target;
+    openModal(`<h3>${anchored?"여기에 추가하기":"아이디어 추가"}</h3><p class="m-sub">원하는 조각을 캔버스에 붙여보세요.</p><div class="idea-add-menu">
+      <button class="idea-add-choice" data-idea-add="note"><span class="iac-ico">✦</span><span><b>포스트잇 메모</b><small>짧은 문장과 러프 아이디어</small></span></button>
+      <button class="idea-add-choice" data-idea-add="image"><span class="iac-ico">▧</span><span><b>이미지 · GIF</b><small>원본 이미지와 애니메이션 GIF</small></span></button>
+      <button class="idea-add-choice" data-idea-add="audio"><span class="iac-ico">♫</span><span><b>음악 · 오디오</b><small>보드에서 바로 재생</small></span></button>
+      <button class="idea-add-choice" data-idea-add="video"><span class="iac-ico">▶</span><span><b>동영상</b><small>30MB 이하 · 보드에서 재생</small></span></button>
+      <button class="idea-add-choice" data-idea-add="quote"><span class="iac-ico">↗</span><span><b>메모 인용 링크</b><small>작성한 다른 메모로 바로 이동</small></span></button>
+      <button class="idea-add-choice" data-idea-add="file"><span class="iac-ico">⌁</span><span><b>첨부파일</b><small>파일 조각을 자유 위치에 배치</small></span></button>
+    </div><div class="m-row"><button class="m-btn" id="ideaAddCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll("[data-idea-add]").forEach((button)=>button.addEventListener("click",()=>{const kind=button.dataset.ideaAdd;closeModal();if(kind==="note"){const item=addIdeaItem("note",ideaPendingPos);setTimeout(()=>{const el=$("ideaCanvas").querySelector(`[data-item-id="${item.id}"] textarea`);if(el)el.focus();},50);}else if(kind==="quote")openIdeaQuotePicker(ideaPendingPos);else {const inp=$(kind==="file"?"ideaFileInput":"ideaMediaInput");inp.dataset.ideaKind=kind;inp.click();}}));
+    $on("ideaAddCancel","click",closeModal);
+  }
+  function openIdeaQuotePicker(pos) {
+    const cur=getNote(st.curNoteId); const candidates=st.notes.filter((n)=>n.id!==cur.id && (n.type==="free"||n.type==="html"||n.type==="lorebook"||n.type==="log"||n.type==="idea"||n.type==="character"));
+    const rows=candidates.length?candidates.map((n)=>`<button class="pick-item" type="button" data-idea-quote="${esc(n.id)}"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><div class="pk-name">${esc(n.title||"제목 없는 메모")}</div></button>`).join(""):'<div class="m-sub">연결할 다른 메모가 없어요.</div>';
+    openModal(`<h3>메모 인용 링크</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="proj-pick">${rows}</div><div class="m-row"><button class="m-btn" id="ideaQuoteCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll("[data-idea-quote]").forEach((button)=>button.addEventListener("click",()=>{const ref=getNote(button.dataset.ideaQuote);closeModal();if(ref)addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});}));$on("ideaQuoteCancel","click",closeModal);
+  }
+  async function addIdeaMediaFile(file, kind) {
+    const n=getNote(st.curNoteId);if(!n||n.type!=="idea"||!file)return;
+    const wanted=kind==="image"?/^image\//:kind==="audio"?/^audio\//:kind==="video"?/^video\//:true;
+    if(!wanted){toast(kind==="image"?"이미지 파일을 선택해 주세요":kind==="audio"?"오디오 파일을 선택해 주세요":"동영상 파일을 선택해 주세요");return;}
+    if(kind==="video"&&file.size>IDEA_MAX_VIDEO){toast("동영상은 30MB 이하만 붙일 수 있어요");return;}
+    if(file.size>IDEA_MAX_MEDIA){toast("보드 미디어는 30MB 이하만 붙일 수 있어요");return;}
+    const id=uid();try{await put("files",{id,noteId:n.id,name:file.name||"미디어",type:file.type||"application/octet-stream",size:file.size,blob:file,createdAt:now()});const d=ensureIdeaBoardData(n);d.attachments.push({id,name:file.name||"미디어",type:file.type||"",size:file.size});addIdeaItem(kind,ideaPendingPos,{fileId:id,title:file.name||"미디어"});toast(kind==="image"?"이미지를 붙였어요":kind==="audio"?"오디오를 붙였어요":kind==="video"?"동영상을 붙였어요":"파일을 붙였어요");}catch(e){toast("파일을 보드에 저장하지 못했어요");}
+  }
+  function openIdeaBoardSheet(n) {
+    const items=[{icon:IC.select,label:"선택",fn:()=>enterSelMode("note",n.id)},{icon:IC.rename,label:"보드 이름 바꾸기",fn:()=>renameModal("아이디어 보드 이름",n.title,async(v)=>{if(v){n.title=v;n.titleLocked=true;await saveNote(n);render();}})},{icon:IC.color,label:"색상 지정",fn:()=>showChipPicker(n.id)},{icon:IC.move,label:"다른 프로젝트로 이동",fn:()=>pickTargetProject(n.projectId,(pid)=>moveNote(n.id,pid).then(render))},{icon:IC.copy,label:"선택 위치로 복제",fn:()=>pickTargetProject(n.projectId,(pid)=>duplicateNote(n.id,pid).then(render))},{icon:IC.del,label:"아이디어 보드 삭제",danger:true,fn:()=>confirmModal("아이디어 보드 삭제",`'${n.title}'를 삭제할까요?`,"삭제",true,async()=>{await deleteNote(n.id);back();})}];openSheet(n.title,items);
   }
 
   /* ---------- init ---------- */
