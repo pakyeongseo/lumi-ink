@@ -2536,12 +2536,12 @@
   /* ===== IDEA BOARD v63.1 ===== */
   #screen-idea { background:var(--bg); }
   .idea-workspace { height:calc(100vh - 57px - var(--safe-bottom)); display:flex; flex-direction:column; min-height:0; }
-  .idea-toolbar { flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--bar-bg),var(--bar-bg-2)); }
-  .idea-view-switch { display:flex; padding:3px; gap:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); }
-  .idea-view-btn { border:0; background:transparent; color:var(--muted); height:30px; padding:0 10px; border-radius:8px; font-size:11.5px; font-weight:750; cursor:pointer; }
+  .idea-toolbar { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--bar-bg),var(--bar-bg-2)); }
+  .idea-view-switch { display:flex; align-items:stretch; padding:3px; gap:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); min-width:0; }
+  .idea-view-btn { border:0; background:transparent; color:var(--muted); min-height:30px; min-width:42px; max-width:66px; padding:4px 9px; border-radius:8px; font-size:11.5px; line-height:1.05; font-weight:750; cursor:pointer; white-space:normal; word-break:keep-all; display:grid; place-items:center; }
   .idea-view-btn.active { color:#fff; background:var(--grad-blue); box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 28%,transparent); }
-  .idea-hint { margin-left:auto; min-width:0; color:var(--faint); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .idea-tb-actions { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+  .idea-hint { display:none; }
+  .idea-tb-actions { display:flex; align-items:center; gap:6px; flex:0 0 auto; margin-left:auto; }
   .idea-tb-btn.sm { width:32px; height:32px; }
   .idea-tb-btn.on { background:var(--grad-blue); color:#fff; border-color:transparent; box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 30%,transparent); }
   .idea-tb-sep { width:1px; height:22px; background:var(--line); flex:0 0 auto; margin:0 1px; }
@@ -2552,11 +2552,11 @@
   .idea-snap-guide { position:absolute; z-index:9998 !important; pointer-events:none; background:color-mix(in srgb,var(--accent) 88%,white); box-shadow:0 0 7px color-mix(in srgb,var(--accent) 60%,transparent); }
   .idea-snap-guide.gx { top:0; bottom:0; width:1.5px; }
   .idea-snap-guide.gy { left:0; right:0; height:1.5px; }
-  .idea-tb-btn { width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink); cursor:pointer; transition:background .15s, opacity .15s, border-color .15s; }
+  .idea-tb-btn { width:36px; height:36px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line)); border-radius:10px; background:color-mix(in srgb,var(--accent-soft) 72%,var(--surface-2)); color:color-mix(in srgb,var(--accent) 72%,var(--ink)); cursor:pointer; transition:background .15s, opacity .15s, border-color .15s, transform .12s; }
   .idea-tb-btn:hover { border-color:color-mix(in srgb,var(--accent) 40%,var(--line)); }
   .idea-tb-btn:active { background:var(--surface-3); }
   .idea-tb-btn:disabled { opacity:.32; cursor:default; }
-  .idea-tb-btn svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .idea-tb-btn svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block; transform:translateY(.2px); }
   .idea-item:focus { outline:none; }
   .idea-item:focus-visible { outline:2.5px solid var(--accent); outline-offset:4px; border-radius:5px; }
   @media (prefers-reduced-motion: reduce) {
@@ -2572,22 +2572,24 @@
   .idea-item { position:absolute; min-width:110px; min-height:54px; user-select:none; touch-action:none; -webkit-touch-callout:none; cursor:grab; transform:rotate(var(--idea-rot,0deg)); transform-origin:center center; transition:filter .16s,box-shadow .16s; }
   .idea-item.selected { z-index:9990 !important; }
   .idea-item.selected { outline:2px dashed color-mix(in srgb,var(--accent) 90%,white); outline-offset:5px; }
-  .idea-item.dragging { opacity:.94; filter:drop-shadow(0 18px 18px rgba(0,0,0,.28)); cursor:grabbing; transition:none; z-index:9999 !important; }
+  .idea-item.dragging { opacity:.94; filter:drop-shadow(0 9px 10px rgba(0,0,0,.18)); cursor:grabbing; transition:none; z-index:9999 !important; }
   .idea-item.move-mode { filter:drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 13px color-mix(in srgb,var(--accent) 75%,transparent)); }
   .idea-transform-tools { position:absolute; inset:0; overflow:visible; pointer-events:none; z-index:60; }
-  .idea-option-dot,.idea-rotate-handle,.idea-resize-handle { position:absolute; display:grid; place-items:center; width:28px; height:28px; padding:0; border:2px solid var(--surface); border-radius:50%; background:var(--accent); color:#fff; box-shadow:0 3px 10px rgba(0,0,0,.26); cursor:pointer; pointer-events:auto; font-weight:900; line-height:1; }
+  .idea-option-dot,.idea-move-handle,.idea-rotate-handle,.idea-resize-handle { position:absolute; display:grid; place-items:center; width:28px; height:28px; padding:0; border:2px solid var(--surface); border-radius:50%; background:var(--accent); color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.18); cursor:pointer; pointer-events:auto; font-weight:900; line-height:1; }
   .idea-option-dot { left:50%; top:-38px; transform:translateX(-50%); font-size:11px; letter-spacing:1px; }
+  .idea-move-handle { left:-12px; top:-12px; }
   .idea-rotate-handle { left:50%; top:-74px; transform:translateX(-50%); font-size:18px; }
   .idea-rotate-handle::after { content:""; position:absolute; top:27px; height:16px; border-left:1.5px solid var(--accent); }
   .idea-resize-handle { right:-12px; bottom:-12px; }
-  .idea-option-dot svg, .idea-rotate-handle svg, .idea-resize-handle svg { width:16px; height:16px; display:block; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .idea-option-dot svg, .idea-move-handle svg, .idea-rotate-handle svg, .idea-resize-handle svg { width:16px; height:16px; display:block; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
   .idea-option-dot svg { width:18px; height:18px; } .idea-option-dot svg circle { fill:#fff; stroke:none; }
   /* 포스트잇 장식이 아니라 편집 오버레이가 잘리지 않도록 별도 레이어로 둡니다. */
   .idea-item.idea-tools-below .idea-option-dot { top:calc(100% + 10px); }
+  .idea-item.idea-tools-below .idea-move-handle { top:calc(100% + 10px); }
   .idea-item.idea-tools-below .idea-rotate-handle { top:calc(100% + 46px); }
   .idea-item.idea-tools-below .idea-rotate-handle::after { top:-16px; height:16px; }
   .idea-item.idea-tools-inset .idea-resize-handle { right:6px; bottom:6px; }
-  .idea-sticky { border-radius:2px 3px 2px 3px; box-shadow:0 14px 24px rgba(35,30,12,.22),0 2px 3px rgba(35,30,12,.12); overflow:visible; isolation:isolate; }
+  .idea-sticky { border-radius:2px 3px 2px 3px; box-shadow:0 7px 13px rgba(35,30,12,.13),0 1px 2px rgba(35,30,12,.08); overflow:visible; isolation:isolate; }
   .idea-sticky::before,.idea-sticky::after { z-index:0; }
   .idea-sticky .idea-note-text { z-index:1; border-radius:inherit; overflow:auto; }
   .idea-sticky[data-color="yellow"] { --stick-1:#fff5a2; --stick-2:#ffd94d; --stick-ink:#5c4b15; }
@@ -2598,18 +2600,21 @@
   .idea-note-text { position:relative; display:block; width:100%; height:100%; min-height:54px; resize:none; border:0; outline:0; background:transparent; color:var(--stick-ink); font:650 14px/1.62 var(--user-font,inherit); padding:18px 15px 15px; user-select:text; cursor:text; }
   .idea-item.move-mode .idea-note-text,.idea-item.move-mode audio,.idea-item.move-mode video { user-select:none; cursor:grab; pointer-events:none; }
   .idea-image,.idea-video { overflow:visible; border-radius:0; box-shadow:none; background:transparent; }
-  .idea-image .idea-media-content,.idea-video .idea-media-content { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:rgba(9,13,20,.72); box-shadow:0 14px 25px rgba(0,0,0,.26); }
+  .idea-image .idea-media-content,.idea-video .idea-media-content { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:rgba(9,13,20,.72); box-shadow:0 7px 13px rgba(0,0,0,.16); }
   .idea-image img,.idea-video video { display:block; width:100%; height:100%; object-fit:contain; background:transparent; }
   .idea-media-loading { color:var(--muted); font-size:12px; }
   .idea-audio { border-radius:16px; overflow:visible; background:transparent; box-shadow:none; }
-  .idea-audio-shell { height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; gap:9px; padding:14px 16px; border-radius:16px; background:linear-gradient(135deg,rgba(26,32,49,.94),rgba(47,37,68,.94)); color:#f5f6ff; box-shadow:0 12px 24px rgba(0,0,0,.23); }
+  .idea-audio-shell { height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; gap:9px; padding:14px 16px; border-radius:16px; background:var(--idea-color-grad); color:var(--idea-chip-ink); box-shadow:0 7px 13px color-mix(in srgb,var(--idea-color-b,#b58bff) 18%,transparent); }
+  .idea-audio-icon { width:34px; height:34px; display:grid; place-items:center; border-radius:12px; background:var(--idea-chip-fill); color:var(--idea-color-b); border:1px solid var(--idea-chip-edge); }
   .idea-audio-name { font-size:12px; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .idea-audio .idea-media-content { height:32px; } .idea-audio audio { width:100%; height:32px; }
   .idea-file { overflow:visible; background:transparent; box-shadow:none; }
-  .idea-file-body { box-sizing:border-box; width:100%; height:100%; display:flex; align-items:center; gap:11px; padding:12px 14px; border:0; border-radius:14px; background:rgba(251,249,240,.96); color:#30313b; box-shadow:0 10px 18px rgba(0,0,0,.18); cursor:pointer; text-align:left; }
+  .idea-file-body { box-sizing:border-box; width:100%; height:100%; display:flex; align-items:center; gap:11px; padding:12px 14px; border:0; border-radius:14px; background:var(--idea-chip-fill,rgba(251,249,240,.96)); color:var(--idea-chip-ink,#30313b); box-shadow:0 6px 11px color-mix(in srgb,var(--idea-color-b,#b58bff) 15%,transparent); cursor:pointer; text-align:left; }
   .idea-file-icon { width:38px; height:38px; flex:0 0 auto; border-radius:12px; display:grid; place-items:center; background:#e7eafe; color:#586fca; }.idea-file-icon svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
   .idea-file-info { min-width:0; flex:1; }.idea-file-name { display:block; font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.idea-file-meta { display:block; font-size:11px; color:#77798a; margin-top:2px; }.idea-file-download { color:#586fca; display:grid; place-items:center; }.idea-file-download svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;}
-  .idea-quote { overflow:visible; background:transparent; box-shadow:none; }.idea-quote-body { appearance:none; width:100%; height:100%; display:flex; align-items:center; gap:12px; padding:16px; border:0; border-left:4px solid #82a7ff; border-radius:5px 13px 13px 5px; background:rgba(250,252,255,.94); color:#25304a; box-shadow:0 12px 22px rgba(0,0,0,.17); text-align:left; cursor:pointer; }.idea-quote-mark{font:800 31px/1 Georgia,serif;color:#7399ee;}.idea-quote-copy{display:grid;gap:4px;min-width:0;}.idea-quote-eyebrow{font-size:9px;font-weight:900;letter-spacing:.13em;color:#7192dc;}.idea-quote-title{font-size:14px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.idea-quote-preview{font-size:11px;line-height:1.45;color:#677087;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .idea-quote { overflow:visible; background:transparent; box-shadow:none; }.idea-quote-body { appearance:none; width:100%; height:100%; display:flex; align-items:center; gap:12px; padding:16px; border:0; border-left:4px solid var(--idea-color-b,#82a7ff); border-radius:5px 13px 13px 5px; background:var(--idea-chip-fill,rgba(250,252,255,.94)); color:var(--idea-chip-ink,#25304a); box-shadow:0 6px 12px color-mix(in srgb,var(--idea-color-b,#82a7ff) 16%,transparent); text-align:left; cursor:pointer; }.idea-quote-mark{font:800 31px/1 Georgia,serif;color:var(--idea-color-b,#7399ee);}.idea-quote-copy{display:grid;gap:4px;min-width:0;}.idea-quote-eyebrow{font-size:9px;font-weight:900;letter-spacing:.13em;color:var(--idea-color-b,#7192dc);}.idea-quote-title{font-size:14px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.idea-quote-preview{font-size:11px;line-height:1.45;color:#677087;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .idea-item.no-shadow,.idea-item.no-shadow .idea-sticky,.idea-item.no-shadow .idea-media-content,.idea-item.no-shadow .idea-audio-shell,.idea-item.no-shadow .idea-file-body,.idea-item.no-shadow .idea-quote-body { box-shadow:none !important; filter:none !important; }
+  .idea-item.no-shadow img { filter:none !important; }
   .idea-list { flex:1 1 auto; overflow:auto; padding:14px; display:grid; gap:10px; align-content:start; background:var(--bg-2); }.idea-list-empty { margin:48px auto; text-align:center; color:var(--faint); font-size:13px; }.idea-list-card{position:relative;display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:var(--surface);box-shadow:0 3px 10px rgba(0,0,0,.08);}.idea-list-thumb{width:48px;height:48px;flex:0 0 auto;border-radius:12px;display:grid;place-items:center;overflow:hidden;background:var(--accent-soft);color:var(--accent);font-size:21px;}.idea-list-thumb img{width:100%;height:100%;object-fit:cover;}.idea-list-copy{min-width:0;flex:1;}.idea-list-kind{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--accent);}.idea-list-title{font-size:14px;font-weight:750;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.idea-list-sub{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.idea-list-act{width:34px;height:34px;border:0;border-radius:10px;background:var(--surface-2);color:var(--muted);cursor:pointer;}.idea-list-act.danger{color:var(--danger);}
   .idea-board-mode .idea-stage-wrap{display:block;}.idea-list-mode .idea-stage-wrap{display:none;}.idea-board-mode .idea-list{display:none;}.idea-list-mode .idea-list{display:grid;}
   .idea-add-menu{display:grid;gap:8px;}.idea-add-choice{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);color:var(--ink);cursor:pointer;}.idea-add-choice:active{background:var(--accent-soft);border-color:var(--accent);}.idea-add-choice b{display:block;font-size:14px;}.idea-add-choice small{display:block;font-size:11px;color:var(--muted);margin-top:2px;}.idea-add-choice .iac-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;background:var(--accent-soft);color:var(--accent);font-size:18px;}
@@ -3014,7 +3019,7 @@
           <button class="idea-tb-btn" id="ideaSnapToggle" type="button" aria-label="스냅 정렬" aria-pressed="false" title="스냅 정렬: 드래그 시 정렬 가이드"><svg viewBox="0 0 24 24"><path d="M6 3v8a6 6 0 0 0 12 0V3"/><path d="M5 3h4M15 3h4"/></svg></button>
           <span class="idea-tb-sep"></span>
           <button class="idea-tb-btn sm" id="ideaZoomOut" type="button" aria-label="축소"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></button>
-          <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="30" max="250" step="1" value="100" aria-label="확대/축소 비율">
+          <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="20" max="250" step="1" value="100" aria-label="확대/축소 비율">
           <button class="idea-tb-zoomlabel" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화"><span id="ideaZoomLabel">100%</span></button>
           <button class="idea-tb-btn sm" id="ideaZoomIn" type="button" aria-label="확대"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></button>
           <button class="idea-tb-btn sm" id="ideaZoomFit" type="button" aria-label="화면에 맞추기" title="화면에 맞추기"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -3098,7 +3103,7 @@
   <input type="file" id="charCoverInput" class="hidden-input" accept="image/*">
   <input type="file" id="charCreatorImgInput" class="hidden-input">
   <input type="file" id="ideaMediaInput" class="hidden-input" accept="image/*,audio/*,video/*">
-  <input type="file" id="ideaCanvasBgInput" class="hidden-input" accept="image/*">
+  <input type="file" id="ideaCanvasBgInput" class="hidden-input">
   <input type="file" id="ideaFileInput" class="hidden-input">
 
   <!-- ============ SETTINGS ============ -->
