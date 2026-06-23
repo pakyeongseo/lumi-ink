@@ -2555,6 +2555,136 @@
   .idea-canvas > * { z-index:1; }
   .idea-canvas-empty { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; color:rgba(238,246,255,.62); text-align:center; font-size:14px; line-height:1.7; }
   .idea-canvas[data-background="scrapbook"] .idea-canvas-empty { color:rgba(71,52,35,.66); }
+  /* ============================================================
+     아이디어 보드 — 보드 배경 11종 추가
+     (background-* 만 · 4겹 이하 · position/overflow/transform/
+      z-index/pointer-events/size 미선언 · 라이트 배경은 빈보드 안내 색 보정)
+     ============================================================ */
+
+  /* 1. 코르크 보드 */
+  .idea-canvas[data-background="corkboard"] {
+    background-color:#c8a06a;
+    background-image:
+      radial-gradient(circle at 30% 28%, rgba(255,240,210,.18), transparent 30%),
+      radial-gradient(circle at 78% 76%, rgba(90,60,30,.22), transparent 34%),
+      radial-gradient(rgba(60,40,20,.16) 0 1px, transparent 1.4px),
+      radial-gradient(rgba(255,235,200,.10) 0 1px, transparent 1.4px);
+    background-size:auto,auto,7px 7px,11px 9px;
+    background-position:0 0,0 0,0 0,3px 4px;
+  }
+  .idea-canvas[data-background="corkboard"] .idea-canvas-empty{ color:rgba(74,52,28,.72); }
+
+  /* 2. 칠판 */
+  .idea-canvas[data-background="chalkboard"] {
+    background-color:#22302b;
+    background-image:
+      radial-gradient(circle at 50% 16%, rgba(220,235,225,.07), transparent 46%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.013) 0 24px, transparent 24px 48px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.013) 0 24px, transparent 24px 48px),
+      radial-gradient(circle at 84% 88%, rgba(255,255,255,.05) 0 1px, transparent 2px);
+    background-size:auto,auto,auto,5px 5px;
+  }
+
+  /* 3. 모눈 노트 */
+  .idea-canvas[data-background="graphpaper"] {
+    background-color:#f3efe2;
+    background-image:
+      linear-gradient(rgba(90,130,170,.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,130,170,.16) 1px, transparent 1px),
+      linear-gradient(rgba(90,130,170,.30) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,130,170,.30) 1px, transparent 1px);
+    background-size:18px 18px,18px 18px,90px 90px,90px 90px;
+  }
+  .idea-canvas[data-background="graphpaper"] .idea-canvas-empty{ color:rgba(56,72,92,.72); }
+
+  /* 4. 별자리도 */
+  .idea-canvas[data-background="starchart"] {
+    background-color:#10162e;
+    background-image:
+      radial-gradient(ellipse at 25% 22%, rgba(110,90,200,.22), transparent 42%),
+      radial-gradient(ellipse at 80% 80%, rgba(60,120,180,.18), transparent 44%),
+      radial-gradient(rgba(255,255,255,.5) 0 1px, transparent 1.6px),
+      radial-gradient(rgba(180,200,255,.35) 0 1px, transparent 1.4px);
+    background-size:auto,auto,120px 120px,70px 90px;
+    background-position:0 0,0 0,0 0,30px 40px;
+  }
+
+  /* 5. 리넨 패브릭 */
+  .idea-canvas[data-background="linen"] {
+    background-color:#dcd8cf;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.5) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(120,110,95,.10) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.4), transparent 60%);
+    background-blend-mode:overlay,normal,normal;
+  }
+  .idea-canvas[data-background="linen"] .idea-canvas-empty{ color:rgba(70,64,52,.7); }
+
+  /* 6. 크라프트지 */
+  .idea-canvas[data-background="kraft"] {
+    background-color:#a9824f;
+    background-image:
+      radial-gradient(ellipse at 50% 8%, rgba(255,240,210,.20), transparent 55%),
+      radial-gradient(circle at 80% 85%, rgba(60,40,18,.18), transparent 40%),
+      repeating-linear-gradient(96deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px),
+      repeating-linear-gradient(8deg, rgba(50,32,12,.05) 0 2px, transparent 2px 6px);
+  }
+  .idea-canvas[data-background="kraft"] .idea-canvas-empty{ color:rgba(40,26,10,.72); }
+
+  /* 7. 다크 그리드 */
+  .idea-canvas[data-background="slateGrid"] {
+    background-color:#1a1c22;
+    background-image:
+      radial-gradient(circle at 20% 12%, rgba(120,140,180,.10), transparent 40%),
+      radial-gradient(circle at 86% 90%, rgba(150,120,190,.08), transparent 42%),
+      radial-gradient(rgba(255,255,255,.07) 0 1.4px, transparent 1.6px);
+    background-size:auto,auto,26px 26px;
+  }
+
+  /* 8. 기밀 문서판 */
+  .idea-canvas[data-background="dossier"] {
+    background-color:#2b2922;
+    background-image:
+      radial-gradient(ellipse at 15% 12%, rgba(190,170,120,.10), transparent 36%),
+      radial-gradient(ellipse at 88% 84%, rgba(40,30,20,.5), transparent 50%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 9px),
+      radial-gradient(circle at 62% 38%, rgba(120,40,40,.10), transparent 24%);
+    background-blend-mode:normal,multiply,normal,normal;
+  }
+
+  /* 9. 벚꽃 보드 */
+  .idea-canvas[data-background="sakura"] {
+    background-color:#f6e4df;
+    background-image:
+      radial-gradient(ellipse at 18% 14%, rgba(255,255,255,.6), transparent 40%),
+      radial-gradient(ellipse at 86% 80%, rgba(255,190,205,.34), transparent 44%),
+      radial-gradient(rgba(232,150,170,.16) 0 2px, transparent 3px),
+      radial-gradient(rgba(255,205,180,.16) 0 1px, transparent 2px);
+    background-size:auto,auto,90px 80px,60px 70px;
+    background-position:0 0,0 0,0 0,30px 25px;
+  }
+  .idea-canvas[data-background="sakura"] .idea-canvas-empty{ color:rgba(120,70,80,.68); }
+
+  /* 10. 터미널 */
+  .idea-canvas[data-background="terminal"] {
+    background-color:#0c1110;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(60,230,140,.08), transparent 55%),
+      repeating-linear-gradient(0deg, rgba(80,255,170,.035) 0 1px, transparent 1px 3px),
+      linear-gradient(90deg, rgba(40,200,120,.05) 1px, transparent 1px),
+      linear-gradient(rgba(40,200,120,.05) 1px, transparent 1px);
+    background-size:auto,auto,30px 30px,30px 30px;
+  }
+
+  /* 11. 벨벳 나이트 */
+  .idea-canvas[data-background="velvet"] {
+    background-color:#241430;
+    background-image:
+      radial-gradient(ellipse at 50% 30%, rgba(150,90,180,.22), transparent 58%),
+      radial-gradient(ellipse at 50% 120%, rgba(10,6,16,.7), transparent 60%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 7px);
+    background-blend-mode:screen,multiply,overlay;
+  }
   .idea-canvas-empty b { display:block; color:inherit; font-size:15px; }
   .idea-item { position:absolute; min-width:110px; min-height:54px; user-select:none; touch-action:none; -webkit-touch-callout:none; cursor:grab; transform:rotate(var(--idea-rot,0deg)); transform-origin:center center; transition:filter .16s,box-shadow .16s; }
   .idea-item.selected { z-index:9990 !important; }
@@ -2580,6 +2710,149 @@
   .idea-note-text { position:relative; display:block; width:100%; height:100%; min-height:54px; resize:none; border:0; outline:0; background:transparent; color:var(--stick-ink); font:650 14px/1.62 var(--user-font,inherit); padding:18px 15px 15px; user-select:text; cursor:text; }
   .idea-item.move-mode .idea-note-text,.idea-item.move-mode audio,.idea-item.move-mode video { user-select:none; cursor:grab; pointer-events:none; }
   .idea-sticky[data-note-style="tape"] .idea-note-text { padding-top:28px; }
+  /* ============================================================
+     아이디어 보드 — 포스트잇 디자인 7종 추가
+     (--stick-1/2/ink 변수로 5색 자동 대응 · 장식 pointer-events:none
+      · position/size/transform 미선언 · 장식은 박스 안쪽)
+     ============================================================ */
+
+  /* 1. 영수증 — 감열지 + 상단 컬러 헤더 + 하단 바코드 */
+  .idea-sticky[data-note-style="receipt"] {
+    background:
+      repeating-linear-gradient(0deg, transparent 0 24px, color-mix(in srgb,var(--stick-2) 14%,transparent) 24px 25px),
+      linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 28%,#fffdf8), color-mix(in srgb,var(--stick-1) 44%,#fffdf8));
+    border-radius: 3px;
+    box-shadow: 0 12px 22px rgba(40,34,20,.20), inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 22%,transparent);
+  }
+  .idea-sticky[data-note-style="receipt"]::before {
+    content:""; position:absolute; left:0; right:0; top:0; height:7px; pointer-events:none;
+    background: var(--stick-2); opacity:.85;
+  }
+  .idea-sticky[data-note-style="receipt"]::after {
+    content:""; position:absolute; left:14px; right:14px; bottom:8px; height:13px; pointer-events:none; opacity:.45;
+    background: repeating-linear-gradient(90deg, var(--stick-ink) 0 1px, transparent 1px 2px, var(--stick-ink) 2px 4px, transparent 4px 7px);
+    -webkit-mask-image: linear-gradient(90deg,#000 72%,transparent); mask-image: linear-gradient(90deg,#000 72%,transparent);
+  }
+  .idea-sticky[data-note-style="receipt"] .idea-note-text { color: var(--stick-ink); padding: 16px 16px 30px; }
+
+  /* 2. 폴라로이드 — 상단 사진 틴트 + 넓은 하단 캡션 여백 */
+  .idea-sticky[data-note-style="polaroid"] {
+    background: linear-gradient(180deg,#fffffb,#fbfaf3);
+    border-radius: 4px;
+    box-shadow: 0 16px 28px rgba(30,26,18,.26), inset 0 0 0 1px rgba(0,0,0,.045);
+  }
+  .idea-sticky[data-note-style="polaroid"]::before {
+    content:""; position:absolute; left:9px; right:9px; top:9px; height:34%; min-height:24px; pointer-events:none; border-radius:2px;
+    background: linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 66%,#2a2f3a), color-mix(in srgb,var(--stick-2) 52%,#222732));
+    box-shadow: inset 0 0 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.20);
+  }
+  .idea-sticky[data-note-style="polaroid"]::after {
+    content:""; position:absolute; left:14px; width:42%; bottom:13px; height:2px; pointer-events:none; border-radius:2px;
+    background: color-mix(in srgb,var(--stick-2) 58%,#b9b3a4); opacity:.7;
+  }
+  .idea-sticky[data-note-style="polaroid"] .idea-note-text { color:#3a3630; padding: calc(34% + 16px) 16px 20px; }
+
+  /* 3. 라벨 스티커 — 두 겹 테두리 + 좌측 천공 + 우상단 탭 */
+  .idea-sticky[data-note-style="label"] {
+    background: linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 52%,white), color-mix(in srgb,var(--stick-1) 76%,white));
+    border-radius: 11px;
+    box-shadow: 0 10px 20px rgba(30,30,30,.16),
+                inset 0 0 0 1.5px color-mix(in srgb,var(--stick-2) 70%,white),
+                inset 0 0 0 4px color-mix(in srgb,var(--stick-1) 38%,white);
+  }
+  .idea-sticky[data-note-style="label"]::before {
+    content:""; position:absolute; left:5px; top:9px; bottom:9px; width:6px; pointer-events:none;
+    background: radial-gradient(circle, color-mix(in srgb,var(--stick-ink) 22%,transparent) 0 1.5px, transparent 2px);
+    background-size: 6px 11px;
+  }
+  .idea-sticky[data-note-style="label"]::after {
+    content:""; position:absolute; right:11px; top:11px; width:18px; height:6px; border-radius:3px; pointer-events:none;
+    background: var(--stick-2);
+  }
+  .idea-sticky[data-note-style="label"] .idea-note-text { color: var(--stick-ink); padding: 16px 16px 14px 21px; }
+
+  /* 4. 연구 노트 — 줄노트 + 좌측 여백선 + 하단 서명란 */
+  .idea-sticky[data-note-style="ledger"] {
+    background:
+      linear-gradient(90deg, transparent 0 26px, color-mix(in srgb,var(--stick-2) 48%,transparent) 26px 27px, transparent 27px 100%),
+      repeating-linear-gradient(0deg, transparent 0 25px, color-mix(in srgb,var(--stick-2) 24%,transparent) 25px 26px),
+      linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 34%,#fcfbf4), color-mix(in srgb,var(--stick-1) 48%,#fcfbf4));
+    border-radius: 3px;
+    box-shadow: 0 12px 22px rgba(40,38,22,.18), inset 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .idea-sticky[data-note-style="ledger"]::before {
+    content:""; position:absolute; left:0; right:0; top:10px; height:2px; pointer-events:none;
+    background: color-mix(in srgb,var(--stick-2) 72%,var(--stick-ink)); opacity:.5;
+  }
+  .idea-sticky[data-note-style="ledger"]::after {
+    content:""; position:absolute; left:14px; width:46%; bottom:12px; height:1.5px; pointer-events:none;
+    background: color-mix(in srgb,var(--stick-ink) 42%,transparent);
+  }
+  .idea-sticky[data-note-style="ledger"] .idea-note-text { color: var(--stick-ink); padding: 16px 14px 22px 32px; }
+
+  /* 5. 클립 메모 — 종이결 + 좌상단 금속 클립 */
+  .idea-sticky[data-note-style="paperclip"] {
+    background:
+      radial-gradient(120% 80% at 100% 0%, color-mix(in srgb,var(--stick-1) 58%,white), transparent 55%),
+      linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 70%,white), var(--stick-1));
+    border-radius: 4px;
+    box-shadow: 0 13px 24px rgba(35,30,15,.20), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .idea-sticky[data-note-style="paperclip"]::before {
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.55; border-radius:inherit;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.02) 0 2px, transparent 2px 6px);
+  }
+  .idea-sticky[data-note-style="paperclip"]::after {
+    content:""; position:absolute; left:12px; top:-3px; width:12px; height:33px; pointer-events:none;
+    border:2.5px solid color-mix(in srgb,#9aa3b2 68%,var(--stick-ink));
+    border-radius:7px;
+    background: linear-gradient(120deg, rgba(255,255,255,.85), rgba(150,158,170,.22));
+    box-shadow: 1px 1px 2px rgba(0,0,0,.25);
+  }
+  .idea-sticky[data-note-style="paperclip"] .idea-note-text { color: var(--stick-ink); padding: 18px 15px 15px 24px; }
+
+  /* 6. 봉랍 편지 — 양피지 + 데클 엣지 + 봉랍 씰 */
+  .idea-sticky[data-note-style="waxSeal"] {
+    background:
+      radial-gradient(140% 120% at 0% 0%, color-mix(in srgb,var(--stick-1) 28%,#efe6cf), transparent 60%),
+      radial-gradient(120% 120% at 100% 100%, color-mix(in srgb,var(--stick-2) 24%,#e6dcc2), transparent 55%),
+      linear-gradient(160deg,#f1e7cf,#e3d7ba);
+    border-radius: 5px;
+    box-shadow: 0 14px 26px rgba(60,46,20,.24), inset 0 0 22px rgba(120,92,40,.14);
+  }
+  .idea-sticky[data-note-style="waxSeal"]::before {
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    box-shadow: inset 0 0 0 1px rgba(120,92,40,.25), inset 0 0 0 3px rgba(255,250,235,.35);
+  }
+  .idea-sticky[data-note-style="waxSeal"]::after {
+    content:""; position:absolute; right:11px; bottom:11px; width:25px; height:25px; border-radius:50%; pointer-events:none;
+    background: radial-gradient(circle at 36% 32%, color-mix(in srgb,var(--stick-2) 50%,#b53a3a), color-mix(in srgb,var(--stick-2) 68%,#7e1f1f) 70%);
+    box-shadow: 0 2px 5px rgba(60,10,10,.4), inset 0 1px 2px rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.3);
+  }
+  .idea-sticky[data-note-style="waxSeal"] .idea-note-text { color:#5a4426; padding: 16px 42px 16px 16px; }
+
+  /* 7. 네온 글래스 — 어두운 글래스 + 네온 테두리 + 코너 글린트 */
+  .idea-sticky[data-note-style="neonGlass"] {
+    background: linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 24%,rgba(16,20,30,.88)), color-mix(in srgb,var(--stick-2) 18%,rgba(12,15,24,.92)));
+    border-radius: 12px;
+    box-shadow:
+      0 16px 30px rgba(0,0,0,.42),
+      inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 58%,transparent),
+      inset 0 0 14px color-mix(in srgb,var(--stick-2) 24%,transparent),
+      0 0 16px color-mix(in srgb,var(--stick-2) 28%,transparent);
+  }
+  .idea-sticky[data-note-style="neonGlass"]::before {
+    content:""; position:absolute; left:0; right:0; top:0; height:42%; pointer-events:none; border-radius:12px 12px 42% 42%;
+    background: linear-gradient(180deg, rgba(255,255,255,.13), transparent);
+  }
+  .idea-sticky[data-note-style="neonGlass"]::after {
+    content:""; position:absolute; left:9px; top:9px; width:18px; height:18px; pointer-events:none;
+    border-top:2px solid color-mix(in srgb,var(--stick-2) 90%,white);
+    border-left:2px solid color-mix(in srgb,var(--stick-2) 90%,white);
+    border-radius:8px 0 0 0; opacity:.85;
+    filter: drop-shadow(0 0 4px color-mix(in srgb,var(--stick-2) 70%,transparent));
+  }
+  .idea-sticky[data-note-style="neonGlass"] .idea-note-text { color: color-mix(in srgb,var(--stick-1) 78%,white); padding: 16px 15px 15px; }
   .idea-image,.idea-video { overflow:visible; border-radius:0; box-shadow:none; background:transparent; }
   .idea-image .idea-media-content,.idea-video .idea-media-content { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:rgba(9,13,20,.72); box-shadow:0 14px 25px rgba(0,0,0,.26); }
   .idea-image img,.idea-video video { display:block; width:100%; height:100%; object-fit:contain; background:transparent; }
@@ -2602,6 +2875,7 @@
   @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
 
 </style>
+<link rel="stylesheet" href="./idea-board-custom-templates.css">
 </head>
 <body>
 
@@ -3337,6 +3611,7 @@
 <script src="./assets-icons.js"></script>
 <script src="./assets-frames.js"></script>
 <script src="./log-templates.js"></script>
+<script src="./idea-board-templates.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

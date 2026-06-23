@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v63.2-idea-board-gesture-persistence";
+const CACHE = "ink-memo-v63.4-template-library-registry";
 
 const ASSETS = [
   "./",
@@ -15,6 +15,9 @@ const ASSETS = [
   "./lumink-log-template-guide.md",
   "./lumink-log-templates-50.html",
   "./idea-board-design-guide.md",
+  "./idea-board-template-registry-guide.md",
+  "./idea-board-templates.js",
+  "./idea-board-custom-templates.css",
   "./log-templates/lumi-aoharu-sky.json",
   "./log-templates/lumi-ashfall-signal.json",
   "./log-templates/lumi-brass-cog.json",

@@ -1,0 +1,171 @@
+/*
+ * Lumi Ink Idea Board — 사용자 확장 스타일 슬롯
+ * 등록: idea-board-templates.js
+ * 가이드: idea-board-template-registry-guide.md
+ *
+ * 새 배경 예시
+ * .idea-canvas[data-background="yourBackground"] { background-color:#...; background-image:...; }
+ *
+ * 새 포스트잇 예시
+ * .idea-sticky[data-note-style="yourNote"] { background:...; border-radius:...; box-shadow:...; }
+ * .idea-sticky[data-note-style="yourNote"]::before { content:""; pointer-events:none; }
+ * .idea-sticky[data-note-style="yourNote"] .idea-note-text { color:var(--stick-ink); padding:...; }
+ *
+ * position, width, height, transform, touch-action, z-index, overflow는 선언하지 마세요.
+ */
+
+/* ============================================================
+   템플릿 라이브러리 UI — 실제 배경/포스트잇을 축소 렌더링합니다.
+   이 블록은 등록한 새 CSS도 같은 데이터 키로 자동 미리보기 됩니다.
+   ============================================================ */
+.idea-template-grid {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  max-height:min(56dvh, 560px);
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:2px;
+  scrollbar-width:thin;
+}
+.idea-template-choice.idea-template-card {
+  position:relative;
+  min-width:0;
+  min-height:164px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--surface-2);
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  isolation:isolate;
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.idea-template-choice.idea-template-card:hover {
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 62%,var(--line));
+  box-shadow:0 10px 22px rgba(0,0,0,.14);
+}
+.idea-template-choice.idea-template-card:active { transform:translateY(0) scale(.985); }
+.idea-template-choice.idea-template-card.active {
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent), 0 10px 24px color-mix(in srgb,var(--accent) 18%,transparent);
+}
+.idea-template-preview {
+  display:block;
+  flex:0 0 auto;
+  padding:8px;
+  background:linear-gradient(135deg, color-mix(in srgb,var(--surface) 82%,var(--accent-soft)), var(--surface));
+  border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent);
+}
+.idea-template-thumb { display:block; pointer-events:none; box-sizing:border-box; }
+.idea-template-bg-thumb.idea-canvas {
+  position:relative;
+  width:100%;
+  min-height:0;
+  height:82px;
+  overflow:hidden;
+  isolation:isolate;
+  border-radius:10px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13), 0 5px 11px rgba(0,0,0,.16);
+}
+.idea-template-bg-thumb.idea-canvas::after { opacity:.34; }
+.idea-template-bg-thumb.idea-canvas i {
+  position:absolute;
+  right:9px;
+  bottom:7px;
+  z-index:2;
+  color:rgba(255,255,255,.82);
+  font-style:normal;
+  font-size:15px;
+  text-shadow:0 2px 4px rgba(0,0,0,.45);
+}
+.idea-template-note-thumb {
+  position:relative;
+  width:calc(100% - 24px);
+  height:72px;
+  min-height:0;
+  margin:5px 12px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  box-sizing:border-box;
+  transform:rotate(-1.35deg);
+}
+.idea-template-note-thumb i {
+  position:relative;
+  z-index:3;
+  max-width:68%;
+  overflow:hidden;
+  color:var(--stick-ink);
+  font:800 11px/1 var(--user-font, ui-sans-serif, sans-serif);
+  font-style:normal;
+  letter-spacing:.12em;
+  text-shadow:0 1px 0 rgba(255,255,255,.30);
+}
+.idea-template-note-thumb[data-note-style="neonGlass"] i {
+  color:color-mix(in srgb,var(--stick-1) 82%,white);
+  text-shadow:0 0 7px color-mix(in srgb,var(--stick-2) 68%,transparent);
+}
+.idea-template-copy {
+  display:grid;
+  gap:3px;
+  min-width:0;
+  padding:10px 11px 12px;
+}
+.idea-template-copy b {
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12.5px;
+  letter-spacing:-.01em;
+}
+.idea-template-copy small {
+  min-height:28px;
+  overflow:hidden;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+.idea-template-state {
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:5;
+  padding:3px 7px;
+  border:1px solid rgba(255,255,255,.34);
+  border-radius:999px;
+  background:rgba(10,14,22,.52);
+  color:rgba(255,255,255,.88);
+  box-shadow:0 2px 5px rgba(0,0,0,.22);
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.04em;
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+.idea-template-choice.idea-template-card.active .idea-template-state {
+  color:#fff;
+  background:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 62%,white);
+}
+@media (max-width:420px) {
+  .idea-template-grid { gap:8px; max-height:52dvh; }
+  .idea-template-choice.idea-template-card { min-height:151px; border-radius:13px; }
+  .idea-template-preview { padding:6px; }
+  .idea-template-bg-thumb.idea-canvas { height:70px; border-radius:8px; }
+  .idea-template-note-thumb { height:62px; width:calc(100% - 18px); margin:4px 9px; }
+  .idea-template-copy { padding:8px 9px 10px; }
+  .idea-template-copy b { font-size:11.5px; }
+  .idea-template-copy small { min-height:25px; font-size:9.5px; }
+  .idea-template-state { top:9px; left:9px; font-size:8.5px; }
+}
