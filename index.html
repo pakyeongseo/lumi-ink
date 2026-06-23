@@ -1446,7 +1446,40 @@
     font-size: 16.5px; line-height: 1.7; color: var(--ink); word-break: break-word; overflow-wrap: anywhere;
   }
   .editor:empty::before { content: attr(data-placeholder); color: var(--faint); }
-  .editor img { max-width: 100%; height: auto; border-radius: 6px; }
+  .editor img { max-width: 100%; height: auto; border-radius: 6px; cursor: pointer; }
+  .editor img.lumi-img-selected { outline: 2px solid var(--accent); outline-offset: 3px; box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 17%, transparent); }
+
+  /* 자유 메모 이미지 크기 조절 — 편집 보조 UI만 별도 레이어에 두고, 본문에는 이미지 인라인 스타일만 저장합니다. */
+  .img-resize-layer { display: none; position: fixed; inset: 0; z-index: 55; pointer-events: none; }
+  .img-resize-layer.open { display: block; }
+  .img-resize-box { position: fixed; box-sizing: border-box; border: 1.5px solid var(--accent); border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 74%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 26%, transparent); }
+  .img-resize-handle { position: absolute; width: 16px; height: 16px; margin: -8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--accent); box-shadow: 0 1px 5px rgba(0,0,0,.35); pointer-events: auto; touch-action: none; cursor: nwse-resize; }
+  .img-resize-handle[data-handle="ne"], .img-resize-handle[data-handle="sw"] { cursor: nesw-resize; }
+  .img-resize-handle[data-handle="nw"] { left: 0; top: 0; }
+  .img-resize-handle[data-handle="ne"] { right: 0; top: 0; }
+  .img-resize-handle[data-handle="sw"] { left: 0; bottom: 0; }
+  .img-resize-handle[data-handle="se"] { right: 0; bottom: 0; }
+  .img-resize-panel { position: fixed; width: min(326px, calc(100vw - 24px)); padding: 10px; border: 1px solid var(--line); border-radius: 13px; background: color-mix(in srgb, var(--surface) 94%, var(--paper)); color: var(--ink); box-shadow: 0 13px 34px rgba(0,0,0,.26); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); pointer-events: auto; }
+  .img-rs-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 8px; font-size: 12px; font-weight: 800; letter-spacing: .035em; color: var(--accent); }
+  .img-rs-close { width: 25px; height: 25px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: 17px; line-height: 1; cursor: pointer; }
+  .img-rs-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .img-rs-field { min-width: 0; display: flex; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--muted); font-size: 11px; font-weight: 700; }
+  .img-rs-field input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+  .img-rs-field input::-webkit-outer-spin-button, .img-rs-field input::-webkit-inner-spin-button { margin: 0; }
+  .img-rs-field em { font-style: normal; color: var(--faint); font-size: 10px; }
+  .img-rs-actions { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 9px; }
+  .img-rs-lock { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--muted); font-size: 11.5px; font-weight: 700; cursor: pointer; user-select: none; }
+  .img-rs-lock input { accent-color: var(--accent); }
+  .img-rs-buttons { display: flex; gap: 6px; }
+  .img-rs-btn { min-height: 29px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--muted); font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+  .img-rs-btn.primary { color: #07121f; border-color: var(--accent); background: var(--accent); }
+  @media (max-width: 420px) {
+    .img-resize-handle { width: 19px; height: 19px; margin: -9.5px; }
+    .img-resize-panel { padding: 9px; }
+    .img-rs-actions { align-items: flex-start; flex-direction: column; }
+    .img-rs-buttons { width: 100%; }
+    .img-rs-btn { flex: 1 1 0; }
+  }
   .editor a { color: var(--accent); }
   .editor blockquote { border-left: 3px solid var(--accent); margin: 8px 0; padding: 2px 0 2px 14px; color: var(--muted); }
   .editor pre, .read-body pre { background: var(--surface-2); padding: 12px 14px; border-radius: 10px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
@@ -2869,6 +2902,27 @@
     <button class="selbar-act" id="selMerge" hidden>합치기</button>
     <button class="selbar-act" id="selMove" hidden>이동</button>
     <button class="selbar-act danger" id="selDelete">삭제</button>
+  </div>
+
+  <!-- 자유 메모 이미지 리사이즈 보조 UI: 에디터 HTML 바깥에 존재하므로 저장되지 않습니다. -->
+  <div class="img-resize-layer" id="imgResizeLayer" aria-hidden="true">
+    <div class="img-resize-box" id="imgResizeBox">
+      <button type="button" class="img-resize-handle" data-handle="nw" aria-label="왼쪽 위 모서리로 크기 조절"></button>
+      <button type="button" class="img-resize-handle" data-handle="ne" aria-label="오른쪽 위 모서리로 크기 조절"></button>
+      <button type="button" class="img-resize-handle" data-handle="sw" aria-label="왼쪽 아래 모서리로 크기 조절"></button>
+      <button type="button" class="img-resize-handle" data-handle="se" aria-label="오른쪽 아래 모서리로 크기 조절"></button>
+    </div>
+    <div class="img-resize-panel" id="imgResizePanel" role="group" aria-label="이미지 크기 조절">
+      <div class="img-rs-head"><span>이미지 크기</span><button type="button" class="img-rs-close" id="imgResizeClose" aria-label="이미지 크기 조절 닫기">×</button></div>
+      <div class="img-rs-fields">
+        <label class="img-rs-field"><span>가로</span><input id="imgResizeW" type="number" min="1" step="1" inputmode="numeric" aria-label="가로 픽셀"><em>px</em></label>
+        <label class="img-rs-field"><span>세로</span><input id="imgResizeH" type="number" min="1" step="1" inputmode="numeric" aria-label="세로 픽셀"><em>px</em></label>
+      </div>
+      <div class="img-rs-actions">
+        <label class="img-rs-lock"><input id="imgAspectLock" type="checkbox" checked> 비율 고정</label>
+        <div class="img-rs-buttons"><button type="button" class="img-rs-btn" id="imgResizeReset">자동 크기</button><button type="button" class="img-rs-btn primary" id="imgResizeDone">완료</button></div>
+      </div>
+    </div>
   </div>
 
   <input type="file" id="restoreInput" class="hidden-input" accept=".html,text/html">

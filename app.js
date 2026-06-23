@@ -1043,10 +1043,11 @@
     if (!same) {
       clearTimeout(st.saveTimer); st.saveTimer = null;
       freeEditorSession = { noteId: n.id, active: true, dirty: false, revision: 0, lastQueuedRevision: -1, inFlight: Promise.resolve() };
+      clearEditorImageSelection();
       editor.classList.add("lumink-user-html");
       editor.innerHTML = html; code.value = html;
     } else if (!freeEditorSession.dirty) {
-      if (editor.innerHTML !== html) editor.innerHTML = html;
+      if (editor.innerHTML !== html) { clearEditorImageSelection(); editor.innerHTML = html; }
       if (code.value !== html) code.value = html;
     }
     if (st.codeMode) { st.codeMode = false; document.body.classList.remove("code-mode"); $("codeToggle").classList.remove("active"); }
@@ -1103,6 +1104,7 @@
     if (!session || !session.active) return;
     await flushSave(true, session.noteId);
     if (freeEditorSession === session) {
+      clearEditorImageSelection();
       session.active = false; session.noteId = null; session.dirty = false;
       clearTimeout(st.saveTimer); st.saveTimer = null;
     }
@@ -1113,7 +1115,8 @@
     if (!session || on === st.codeMode) return;
     await flushSave(true, session.noteId);
     const html = noteHtml(getNote(session.noteId));
-    if (on) $("codeArea").value = html; else $("editor").innerHTML = html;
+    if (on) { clearEditorImageSelection(); $("codeArea").value = html; }
+    else { $("editor").innerHTML = html; }
     st.codeMode = on;
     document.body.classList.toggle("code-mode", on);
     $("codeToggle").classList.toggle("active", on);
@@ -1321,13 +1324,208 @@
     }));
     $on("szClose", "click", closeModal);
   }
+  /* ---------- free-memo image resize ---------- */
+  // 선택 테두리와 조절창은 에디터 HTML 밖의 fixed 레이어에만 둡니다.
+  // 따라서 백업·내보내기에는 이미지의 실제 style(width/height)만 남고 보조 UI는 절대 섞이지 않아요.
+  const IMAGE_RESIZE_MIN = 1;
+  let editorImageResize = { image: null, ratio: 1, aspectLocked: true, raf: 0, drag: null };
+  function isActiveEditorImage(img) {
+    return !!(img && img.isConnected && $("editor") && $("editor").contains(img) && !st.codeMode && curView().s === "editor");
+  }
+  function clearEditorImageSelection() {
+    const state = editorImageResize;
+    if (state.raf) { cancelAnimationFrame(state.raf); state.raf = 0; }
+    if (state.image) state.image.classList.remove("lumi-img-selected");
+    state.image = null; state.drag = null;
+    const layer = $("imgResizeLayer");
+    if (layer) { layer.classList.remove("open"); layer.setAttribute("aria-hidden", "true"); }
+  }
+  function editorImageRect(img) {
+    const r = img.getBoundingClientRect();
+    return { width: Math.max(1, Math.round(r.width)), height: Math.max(1, Math.round(r.height)), left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  }
+  function editorImageRatio(img) {
+    const r = editorImageRect(img);
+    const natural = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0;
+    return Number.isFinite(natural) && natural > 0 ? natural : Math.max(.01, r.width / Math.max(1, r.height));
+  }
+  function editorImageMaxWidth(img) {
+    const ed = $("editor");
+    if (!ed) return IMAGE_RESIZE_MIN;
+    const cs = getComputedStyle(ed);
+    const content = Math.max(IMAGE_RESIZE_MIN, ed.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0));
+    const parent = img.parentElement;
+    const parentDisplay = parent ? getComputedStyle(parent).display : "block";
+    // 인라인 span 안의 이미지는 부모 폭이 이미지 현재 폭과 같을 수 있어, 그 경우 에디터 본문 폭을 한도로 씁니다.
+    const parentWidth = parent && parentDisplay !== "inline" && parentDisplay !== "contents" ? parent.getBoundingClientRect().width : content;
+    return Math.max(IMAGE_RESIZE_MIN, Math.floor(Math.min(content, parentWidth || content)));
+  }
+  function positivePixels(v, fallback) {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) && n >= IMAGE_RESIZE_MIN ? n : fallback;
+  }
+  function syncEditorImageResizeUI() {
+    const state = editorImageResize, img = state.image;
+    if (!isActiveEditorImage(img)) { clearEditorImageSelection(); return; }
+    const layer = $("imgResizeLayer"), box = $("imgResizeBox"), panel = $("imgResizePanel");
+    if (!layer || !box || !panel) return;
+    const r = img.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) { clearEditorImageSelection(); return; }
+    box.style.left = r.left + "px"; box.style.top = r.top + "px"; box.style.width = r.width + "px"; box.style.height = r.height + "px";
+    const widthInput = $("imgResizeW"), heightInput = $("imgResizeH");
+    if (document.activeElement !== widthInput) widthInput.value = String(Math.max(1, Math.round(r.width)));
+    if (document.activeElement !== heightInput) heightInput.value = String(Math.max(1, Math.round(r.height)));
+    const panelWidth = panel.offsetWidth || 326, panelHeight = panel.offsetHeight || 116, gutter = 12;
+    const centered = r.left + r.width / 2 - panelWidth / 2;
+    const left = Math.max(gutter, Math.min(centered, window.innerWidth - panelWidth - gutter));
+    let top = r.bottom + 14;
+    if (top + panelHeight > window.innerHeight - gutter) top = Math.max(gutter, r.top - panelHeight - 14);
+    panel.style.left = Math.round(left) + "px"; panel.style.top = Math.round(top) + "px";
+  }
+  function queueEditorImageResizeUI() {
+    if (!editorImageResize.image || editorImageResize.raf) return;
+    editorImageResize.raf = requestAnimationFrame(() => { editorImageResize.raf = 0; syncEditorImageResizeUI(); });
+  }
+  function selectEditorImage(img) {
+    if (!isActiveEditorImage(img)) return;
+    if (editorImageResize.image && editorImageResize.image !== img) editorImageResize.image.classList.remove("lumi-img-selected");
+    editorImageResize.image = img;
+    editorImageResize.ratio = editorImageRatio(img);
+    editorImageResize.aspectLocked = true;
+    img.classList.add("lumi-img-selected");
+    img.draggable = false;
+    const lock = $("imgAspectLock"); if (lock) lock.checked = true;
+    const layer = $("imgResizeLayer");
+    if (layer) { layer.classList.add("open"); layer.setAttribute("aria-hidden", "false"); }
+    img.addEventListener("load", queueEditorImageResizeUI, { once: true });
+    queueEditorImageResizeUI();
+  }
+  function setEditorImageDimensions(width, height, source, persist) {
+    const state = editorImageResize, img = state.image;
+    if (!isActiveEditorImage(img)) return;
+    const current = editorImageRect(img), ratio = Math.max(.01, state.ratio || current.width / Math.max(1, current.height));
+    let w = positivePixels(width, current.width), h = positivePixels(height, current.height);
+    if (state.aspectLocked) {
+      if (source === "height") w = Math.round(h * ratio);
+      w = Math.max(IMAGE_RESIZE_MIN, Math.min(editorImageMaxWidth(img), w));
+      h = Math.max(1, Math.round(w / ratio));
+      img.style.width = w + "px";
+      img.style.height = "auto";
+    } else {
+      w = Math.max(IMAGE_RESIZE_MIN, Math.min(editorImageMaxWidth(img), w));
+      h = Math.max(IMAGE_RESIZE_MIN, h);
+      img.style.width = w + "px";
+      img.style.height = h + "px";
+      state.ratio = w / h;
+    }
+    if (!img.style.maxWidth) img.style.maxWidth = "100%";
+    queueEditorImageResizeUI();
+    if (persist) scheduleSave();
+  }
+  function applyImageResizeFromInput(source) {
+    const img = editorImageResize.image;
+    if (!isActiveEditorImage(img)) return;
+    const current = editorImageRect(img);
+    const w = positivePixels($("imgResizeW").value, current.width);
+    const h = positivePixels($("imgResizeH").value, current.height);
+    setEditorImageDimensions(w, h, source, true);
+  }
+  function resetEditorImageSize() {
+    const img = editorImageResize.image;
+    if (!isActiveEditorImage(img)) return;
+    img.style.removeProperty("width");
+    img.style.removeProperty("height");
+    editorImageResize.ratio = editorImageRatio(img);
+    queueEditorImageResizeUI();
+    scheduleSave();
+    toast("이미지를 자동 크기로 되돌렸어요");
+  }
+  function beginEditorImageResize(event, handle) {
+    const img = editorImageResize.image;
+    if (!isActiveEditorImage(img)) return;
+    if (event.button != null && event.button !== 0) return;
+    event.preventDefault(); event.stopPropagation();
+    const r = editorImageRect(img);
+    editorImageResize.drag = { handle, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, startW: r.width, startH: r.height, ratio: Math.max(.01, r.width / Math.max(1, r.height)) };
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) {}
+  }
+  function moveEditorImageResize(event) {
+    const drag = editorImageResize.drag;
+    if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+    const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+    const east = drag.handle.indexOf("e") !== -1, south = drag.handle.indexOf("s") !== -1;
+    let w, h;
+    if (editorImageResize.aspectLocked) {
+      const byX = east ? dx : -dx;
+      const byY = (south ? dy : -dy) * drag.ratio;
+      const delta = Math.abs(byX) >= Math.abs(byY) ? byX : byY;
+      w = drag.startW + delta; h = Math.round(w / drag.ratio);
+      setEditorImageDimensions(w, h, "width", false);
+    } else {
+      w = drag.startW + (east ? dx : -dx);
+      h = drag.startH + (south ? dy : -dy);
+      setEditorImageDimensions(w, h, "both", false);
+    }
+  }
+  function endEditorImageResize(event) {
+    const drag = editorImageResize.drag;
+    if (!drag || (event && drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+    editorImageResize.drag = null;
+    if (isActiveEditorImage(editorImageResize.image)) scheduleSave();
+  }
+  function bindEditorImageResize() {
+    const editor = $("editor"), wrap = $("editorWrap"), layer = $("imgResizeLayer");
+    if (!editor || !wrap || !layer) return;
+    editor.addEventListener("click", (event) => {
+      const img = event.target && event.target.closest ? event.target.closest("img") : null;
+      if (img && editor.contains(img)) { selectEditorImage(img); return; }
+      clearEditorImageSelection();
+    });
+    editor.addEventListener("dragstart", (event) => { if (event.target && event.target.closest && event.target.closest("img")) event.preventDefault(); });
+    wrap.addEventListener("scroll", queueEditorImageResizeUI, { passive: true });
+    window.addEventListener("resize", queueEditorImageResizeUI, { passive: true });
+    document.addEventListener("pointerdown", (event) => {
+      const img = editorImageResize.image;
+      if (!img || event.target === img || (event.target && event.target.closest && (event.target.closest("#imgResizeLayer") || event.target.closest("#editor")))) return;
+      clearEditorImageSelection();
+    }, true);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && editorImageResize.image) { event.preventDefault(); clearEditorImageSelection(); }
+    });
+    layer.querySelectorAll(".img-resize-handle").forEach((handle) => {
+      handle.addEventListener("pointerdown", (event) => beginEditorImageResize(event, handle.dataset.handle));
+      handle.addEventListener("pointermove", moveEditorImageResize);
+      handle.addEventListener("pointerup", endEditorImageResize);
+      handle.addEventListener("pointercancel", endEditorImageResize);
+    });
+    $on("imgResizeClose", "click", clearEditorImageSelection);
+    $on("imgResizeDone", "click", clearEditorImageSelection);
+    $on("imgResizeReset", "click", resetEditorImageSize);
+    $on("imgAspectLock", "change", (event) => {
+      editorImageResize.aspectLocked = !!event.target.checked;
+      if (editorImageResize.aspectLocked && isActiveEditorImage(editorImageResize.image)) editorImageResize.ratio = editorImageRatio(editorImageResize.image);
+    });
+    ["imgResizeW", "imgResizeH"].forEach((id) => {
+      const input = $(id); if (!input) return;
+      input.addEventListener("change", () => applyImageResizeFromInput(id === "imgResizeH" ? "height" : "width"));
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); applyImageResizeFromInput(id === "imgResizeH" ? "height" : "width"); input.blur(); }
+      });
+    });
+  }
+
   async function insertImage(file) {
     if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     try {
       const data = await fileToResized(file, 1280);
       $("editor").focus();
-      document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;border-radius:6px"><br>`);
+      document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;height:auto;border-radius:6px"><br>`);
       scheduleSave();
+      requestAnimationFrame(() => {
+        const images = [...$("editor").querySelectorAll("img")];
+        const inserted = images.length ? images[images.length - 1] : null;
+        if (inserted) selectEditorImage(inserted);
+      });
     } catch (e) { toast((e && e.message) || "이미지를 넣지 못했어요"); }
   }
   function wrapCodeBlock() {
@@ -4798,6 +4996,7 @@ ${gallery}
     fb.addEventListener("mousedown", fbHandler);
     fb.addEventListener("touchstart", fbHandler, { passive: false });
     bindHiliteButton();
+    bindEditorImageResize();
 
     // lorebook
     $on("loreEdit", "input", scheduleLoreSave);
