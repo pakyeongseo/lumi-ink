@@ -5220,27 +5220,31 @@ ${gallery}
     return d;
   }
   function normalizeIdeaItem(raw) {
-    const kind = ["note", "image", "audio", "video", "file", "quote"].includes(raw.kind) ? raw.kind : "note";
+    // 정규화는 기존 객체를 갱신합니다. 캔버스 드래그 중 참조가 바뀌면
+    // DOM에는 움직였지만 저장 데이터에는 남지 않는 유령 이동이 생기기 때문입니다.
+    const item = raw && typeof raw === "object" ? raw : {};
+    const kind = ["note", "image", "audio", "video", "file", "quote"].includes(item.kind) ? item.kind : "note";
     const defaults = ideaItemDefaults(kind);
-    const aspectRaw = Number(raw.aspect);
+    const numeric = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    const aspectRaw = Number(item.aspect);
     const aspect = Number.isFinite(aspectRaw) && aspectRaw > .08 && aspectRaw < 20 ? aspectRaw : (kind === "image" || kind === "video" ? defaults.w / defaults.h : null);
-    return {
-      id: typeof raw.id === "string" ? raw.id : uid(), kind,
-      x: Math.max(0, Math.min(5900, Number(raw.x) || defaults.w / 2)),
-      y: Math.max(0, Math.min(5900, Number(raw.y) || defaults.h / 2)),
-      w: Math.max(110, Math.min(1400, Number(raw.w) || defaults.w)),
-      h: Math.max(54, Math.min(1100, Number(raw.h) || defaults.h)),
-      z: Math.max(1, Math.min(99999, Number(raw.z) || 1)),
-      rotation: Math.max(-180, Math.min(180, Number(raw.rotation) || 0)),
+    return Object.assign(item, {
+      id: typeof item.id === "string" ? item.id : uid(), kind,
+      x: Math.max(0, Math.min(5900, numeric(item.x, defaults.w / 2))),
+      y: Math.max(0, Math.min(5900, numeric(item.y, defaults.h / 2))),
+      w: Math.max(110, Math.min(1400, numeric(item.w, defaults.w))),
+      h: Math.max(54, Math.min(1100, numeric(item.h, defaults.h))),
+      z: Math.max(1, Math.min(99999, numeric(item.z, 1))),
+      rotation: Math.max(-180, Math.min(180, numeric(item.rotation, 0))),
       aspect,
-      lockAspect: raw.lockAspect !== false && (kind === "image" || kind === "video"),
-      text: typeof raw.text === "string" ? raw.text.slice(0, 12000) : "",
-      color: Object.prototype.hasOwnProperty.call(IDEA_NOTE_COLORS, raw.color) ? raw.color : "yellow",
-      noteStyle: Object.prototype.hasOwnProperty.call(IDEA_NOTE_TEMPLATES, raw.noteStyle) ? raw.noteStyle : "marker",
-      fileId: typeof raw.fileId === "string" ? raw.fileId : null,
-      noteId: typeof raw.noteId === "string" ? raw.noteId : null,
-      title: typeof raw.title === "string" ? raw.title.slice(0, 240) : ""
-    };
+      lockAspect: item.lockAspect !== false && (kind === "image" || kind === "video"),
+      text: typeof item.text === "string" ? item.text.slice(0, 12000) : "",
+      color: Object.prototype.hasOwnProperty.call(IDEA_NOTE_COLORS, item.color) ? item.color : "yellow",
+      noteStyle: Object.prototype.hasOwnProperty.call(IDEA_NOTE_TEMPLATES, item.noteStyle) ? item.noteStyle : "marker",
+      fileId: typeof item.fileId === "string" ? item.fileId : null,
+      noteId: typeof item.noteId === "string" ? item.noteId : null,
+      title: typeof item.title === "string" ? item.title.slice(0, 240) : ""
+    });
   }
   function ideaItemDefaults(kind) {
     return kind === "note" ? { w: 270, h: 190 }
@@ -5331,7 +5335,7 @@ ${gallery}
       input.addEventListener("input", persist);
       input.addEventListener("compositionend", persist);
       input.addEventListener("blur", () => { persist(); void flushIdeaBoard(false); });
-      input.addEventListener("pointerdown", (e) => e.stopPropagation());
+      // 텍스트 입력은 기본 동작을 유지하고, 이동 모드일 때만 상위 조각 제스처가 가로챕니다.
       input.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); persist(); void flushIdeaBoard(false); } });
     } else if (item.kind === "quote") {
       const ref = getNote(item.noteId);
@@ -5479,30 +5483,112 @@ ${gallery}
     });
   }
   function bindIdeaRotateHandle(handle,item,el) {
+    let lastTapAt = 0;
     handle.addEventListener("pointerdown",(e)=>{
-      e.preventDefault();e.stopPropagation();const fresh=getIdeaItem(item.id);if(!fresh)return; const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;try{handle.setPointerCapture(e.pointerId)}catch(_e){}
-      const move=(ev)=>{const deg=Math.atan2(ev.clientY-cy,ev.clientX-cx)*180/Math.PI+90;fresh.rotation=Math.round(((deg+180)%360+360)%360-180);setIdeaItemGeometry(el,fresh);ev.preventDefault();};
-      const end=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);scheduleIdeaSave(0);};
-      document.addEventListener("pointermove",move);document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      const d=currentIdeaData(), fresh=d && d.items.find((x)=>x.id===item.id); if(!fresh)return;
+      const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+      let moved=false;
+      try{handle.setPointerCapture(e.pointerId)}catch(_e){}
+      const move=(ev)=>{
+        if (ev.pointerId !== e.pointerId) return;
+        moved=true;
+        const deg=Math.atan2(ev.clientY-cy,ev.clientX-cx)*180/Math.PI+90;
+        fresh.rotation=Math.round(((deg+180)%360+360)%360-180);
+        setIdeaItemGeometry(el,fresh); ev.preventDefault();
+      };
+      const end=(ev)=>{
+        if (ev && ev.pointerId != null && ev.pointerId !== e.pointerId) return;
+        document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);
+        const at=Date.now();
+        if (!moved && at-lastTapAt < 340) {
+          fresh.rotation=0; lastTapAt=0; setIdeaItemGeometry(el,fresh); scheduleIdeaSave(0); toast("회전을 0°로 복원했어요");
+        } else {
+          lastTapAt = moved ? 0 : at;
+          if (moved) scheduleIdeaSave(0);
+        }
+      };
+      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);
     });
   }
   function bindIdeaItemInteractions(el,item) {
-    let holdTimer=null,start=null,dragging=false;
-    const cancel=()=>{clearTimeout(holdTimer);holdTimer=null;};
-    const beginDrag=(e, immediate)=>{
-      const fresh=getIdeaItem(item.id);if(!fresh)return; const p=boardPointFromEvent(e); start={x:e.clientX,y:e.clientY,left:fresh.x,top:fresh.y}; dragging=true;fresh.z=nextIdeaZ(currentIdeaData());setIdeaItemGeometry(el,fresh);el.classList.add("dragging");try{el.setPointerCapture(e.pointerId)}catch(_e){};if(!immediate)navigator.vibrate&&navigator.vibrate(10);
+    let holdTimer=null,start=null,dragging=false,dragPointerId=null,movedBeforeHold=false;
+    let suppressOptionsUntil=0,lastTouchTap=null;
+    const cancelHold=()=>{clearTimeout(holdTimer);holdTimer=null;};
+    const cleanupDragListeners=()=>{document.removeEventListener("pointermove",onDragMove);document.removeEventListener("pointerup",endDrag);document.removeEventListener("pointercancel",endDrag);};
+    const nativeControl=(target)=>target && target.closest && target.closest("audio,video");
+    const textEditor=(target)=>target && target.closest && target.closest("textarea");
+    const isTransformControl=(target)=>target && target.closest && target.closest(".idea-transform-tools");
+    const canStartOn=(target, event)=>{
+      if (isTransformControl(target)) return false;
+      const inEditor=!!textEditor(target), inMedia=!!nativeControl(target);
+      // 마우스에서는 본문 선택/재생을 우선하지만, 터치에서는 짧게 탭하면 원래 동작,
+      // 길게 누르면 모든 조각을 이동할 수 있어야 합니다.
+      return !(inEditor || inMedia) || ideaEditState.mode === "move" || event.pointerType !== "mouse";
     };
+    const beginDrag=(e, immediate)=>{
+      const d=currentIdeaData(), fresh=d && d.items.find((x)=>x.id===item.id); if(!fresh||!d)return;
+      start={x:e.clientX,y:e.clientY,left:fresh.x,top:fresh.y}; dragging=true; dragPointerId=e.pointerId; movedBeforeHold=false;
+      fresh.z=nextIdeaZ(d); setIdeaItemGeometry(el,fresh); el.classList.add("dragging");
+      try{el.setPointerCapture(e.pointerId)}catch(_e){}
+      cleanupDragListeners();
+      document.addEventListener("pointermove",onDragMove,{passive:false});document.addEventListener("pointerup",endDrag);document.addEventListener("pointercancel",endDrag);
+      if(!immediate)navigator.vibrate&&navigator.vibrate(10);
+    };
+    const onDragMove=(e)=>{
+      if(!dragging || e.pointerId!==dragPointerId || !start)return;
+      const d=currentIdeaData(),fresh=d && d.items.find((x)=>x.id===item.id); if(!fresh||!d)return;
+      const dx=e.clientX-start.x,dy=e.clientY-start.y,delta=boardDeltaFromEvent(dx,dy);
+      fresh.x=Math.round(Math.max(0,Math.min(d.canvas.width-fresh.w,start.left+delta.x)));
+      fresh.y=Math.round(Math.max(0,Math.min(d.canvas.height-fresh.h,start.top+delta.y)));
+      setIdeaItemGeometry(el,fresh);
+      // 좌표는 종료 이벤트가 누락되는 환경에서도 보존되어야 합니다.
+      scheduleIdeaSave(260);
+      e.preventDefault();
+    };
+    const endDrag=(e)=>{
+      if(dragPointerId!=null && e && e.pointerId!=null && e.pointerId!==dragPointerId)return;
+      const wasDragging=dragging;
+      cancelHold(); cleanupDragListeners(); dragging=false; dragPointerId=null;
+      if(wasDragging){el.classList.remove("dragging");suppressOptionsUntil=Date.now()+650;scheduleIdeaSave(0);}
+      start=null;
+    };
+    const maybeOpenTouchOptions=(e)=>{
+      if(e.pointerType!=="touch" || movedBeforeHold || Date.now()<suppressOptionsUntil) return;
+      if (e.target.closest?.(".idea-file-body,.idea-quote-body")) return;
+      const now=Date.now(), point={x:e.clientX,y:e.clientY};
+      if(lastTouchTap && now-lastTouchTap.at<320 && Math.hypot(point.x-lastTouchTap.x,point.y-lastTouchTap.y)<24){
+        lastTouchTap=null; suppressOptionsUntil=now+420; e.preventDefault(); openIdeaItemOptions(item.id);
+      } else lastTouchTap={at:now,x:point.x,y:point.y};
+    };
+    // 길게 끌고 난 뒤의 click이 링크 열기/다운로드로 이어지지 않도록 캡처 단계에서 차단합니다.
+    el.addEventListener("click",(e)=>{if(Date.now()<suppressOptionsUntil){e.preventDefault();e.stopImmediatePropagation();}},true);
     el.addEventListener("pointerdown",(e)=>{
       if(e.button!=null&&e.button!==0)return;
-      if(e.target.closest("textarea,audio,video,.idea-file-body,.idea-quote-body,.idea-transform-tools"))return;
-      cancel(); selectIdeaItem(item.id, ideaEditState.itemId===item.id?ideaEditState.mode:null);
-      if(ideaEditState.itemId===item.id&&ideaEditState.mode==="move"){ beginDrag(e,true);return; }
-      start={x:e.clientX,y:e.clientY,left:item.x,top:item.y};holdTimer=setTimeout(()=>beginDrag(e,false),360);
+      if(!canStartOn(e.target,e)) return;
+      cancelHold(); movedBeforeHold=false;
+      selectIdeaItem(item.id, ideaEditState.itemId===item.id?ideaEditState.mode:null);
+      if(ideaEditState.itemId===item.id&&ideaEditState.mode==="move"){e.preventDefault();beginDrag(e,true);return;}
+      const d=currentIdeaData(),fresh=d && d.items.find((x)=>x.id===item.id);
+      start={x:e.clientX,y:e.clientY,left:fresh?fresh.x:item.x,top:fresh?fresh.y:item.y};
+      holdTimer=setTimeout(()=>{holdTimer=null; if(!movedBeforeHold)beginDrag(e,false);},420);
     });
-    el.addEventListener("pointermove",(e)=>{if(!start)return;const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!dragging&&(Math.abs(dx)>8||Math.abs(dy)>8)){cancel();start=null;return;}if(!dragging)return;const fresh=getIdeaItem(item.id),d=currentIdeaData();if(!fresh||!d)return;const delta=boardDeltaFromEvent(dx,dy);fresh.x=Math.round(Math.max(0,Math.min(d.canvas.width-fresh.w,start.left+delta.x)));fresh.y=Math.round(Math.max(0,Math.min(d.canvas.height-fresh.h,start.top+delta.y)));setIdeaItemGeometry(el,fresh);e.preventDefault();});
-    const end=()=>{cancel();if(dragging){dragging=false;el.classList.remove("dragging");scheduleIdeaSave(0);}start=null;};el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
-    el.addEventListener("dblclick",(e)=>{if(e.target.closest("textarea,audio,video"))return;e.preventDefault();openIdeaItemOptions(item.id);});
-    el.addEventListener("contextmenu",(e)=>{e.preventDefault();openIdeaItemOptions(item.id);});
+    el.addEventListener("pointermove",(e)=>{
+      if(!start || dragging)return;
+      if(Math.abs(e.clientX-start.x)>8||Math.abs(e.clientY-start.y)>8){movedBeforeHold=true;cancelHold();}
+    });
+    el.addEventListener("pointerup",(e)=>{if(!dragging){cancelHold();maybeOpenTouchOptions(e);start=null;}});
+    el.addEventListener("pointercancel",()=>{if(!dragging){cancelHold();start=null;}});
+    el.addEventListener("dblclick",(e)=>{
+      if(Date.now()<suppressOptionsUntil || textEditor(e.target)||nativeControl(e.target))return;
+      e.preventDefault();openIdeaItemOptions(item.id);
+    });
+    el.addEventListener("contextmenu",(e)=>{
+      e.preventDefault();
+      if(dragging || Date.now()<suppressOptionsUntil) return;
+      openIdeaItemOptions(item.id);
+    });
   }
   function openIdeaItemOptions(id) {
     const n=currentIdeaNote(), item=getIdeaItem(id);if(!n||!item)return;selectIdeaItem(id,null);
