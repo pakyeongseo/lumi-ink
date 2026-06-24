@@ -1378,7 +1378,8 @@
     padding: 22px 18px calc(60px + var(--safe-bottom)); font-size: 16.5px; line-height: 1.7;
     color: var(--ink); word-break: break-word; overflow-wrap: anywhere;
   }
-  .read-body img { max-width: 100%; height: auto; border-radius: 6px; }
+  .read-body img, .read-body video { max-width: 100%; height: auto; border-radius: 10px; display:block; margin:8px 0; }
+  .read-body video { background:transparent; box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 16%,transparent); }
   .read-body a { color: var(--accent); }
   .read-body table { border-collapse: collapse; max-width: 100%; }
   .read-body td, .read-body th { border: 1px solid var(--line); padding: 4px 8px; }
@@ -1450,8 +1451,9 @@
      자유 메모 — 이미지 크기 조절 보조 UI 리파인
      (구조/클래스/ID 변경 없음 · 전 테마 accent 자동 적응)
      ============================================================ */
-  .editor img { max-width: 100%; height: auto; border-radius: 6px; cursor: pointer; }
-  .editor img.lumi-img-selected {
+  .editor img, .editor video { max-width: 100%; height: auto; border-radius: 10px; cursor: pointer; display:block; margin:8px 0; }
+  .editor video { background:transparent; box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 16%,transparent); }
+  .editor img.lumi-img-selected, .editor video.lumi-img-selected {
     outline: 2px solid var(--accent); outline-offset: 3px;
     box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent),
                 0 8px 26px color-mix(in srgb, var(--accent) 22%, transparent);
@@ -2764,7 +2766,7 @@
       <button class="fbtn" data-cmd="insertUnorderedList" title="목록"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></button>
       <button class="fbtn" data-cmd="insertOrderedList" title="번호 목록"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 5h1.5v3M3 11.5h2l-2 2.5h2"/></svg></button>
       <span class="fsep"></span>
-      <button class="fbtn" id="imgBtn" title="이미지 삽입"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
+      <button class="fbtn" id="imgBtn" title="사진 또는 동영상 삽입"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
       <button class="fbtn" id="attachBtn" title="파일 첨부"><svg viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L10 16.5a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg></button>
       <span class="fsep"></span>
       <button class="fbtn" id="linkBtn" title="하이퍼링크 삽입"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></button>
@@ -3123,6 +3125,7 @@
   <input type="file" id="iconInput" class="hidden-input">
   <input type="file" id="attachInput" class="hidden-input">
   <input type="file" id="imgInput" class="hidden-input" accept="image/*">
+  <input type="file" id="freeVideoInput" class="hidden-input" accept="video/mp4,video/webm,video/ogg,video/quicktime">
   <input type="file" id="perImgInput" class="hidden-input" multiple>
   <input type="file" id="charImgInput" class="hidden-input" multiple>
   <input type="file" id="charCoverInput" class="hidden-input" accept="image/*">
@@ -3212,7 +3215,7 @@
     <button class="selbar-act danger" id="selDelete">삭제</button>
   </div>
 
-  <!-- 자유 메모 이미지 리사이즈 보조 UI: 에디터 HTML 바깥에 존재하므로 저장되지 않습니다. -->
+  <!-- 자유 메모 사진·동영상 리사이즈 보조 UI: 에디터 HTML 바깥에 존재하므로 저장되지 않습니다. -->
   <div class="img-resize-layer" id="imgResizeLayer" aria-hidden="true">
     <div class="img-resize-box" id="imgResizeBox">
       <button type="button" class="img-resize-handle" data-handle="nw" aria-label="왼쪽 위 모서리로 크기 조절"></button>
@@ -3220,8 +3223,8 @@
       <button type="button" class="img-resize-handle" data-handle="sw" aria-label="왼쪽 아래 모서리로 크기 조절"></button>
       <button type="button" class="img-resize-handle" data-handle="se" aria-label="오른쪽 아래 모서리로 크기 조절"></button>
     </div>
-    <div class="img-resize-panel" id="imgResizePanel" role="group" aria-label="이미지 크기 조절">
-      <div class="img-rs-head"><span>이미지 크기</span><button type="button" class="img-rs-close" id="imgResizeClose" aria-label="이미지 크기 조절 닫기">×</button></div>
+    <div class="img-resize-panel" id="imgResizePanel" role="group" aria-label="미디어 크기 조절">
+      <div class="img-rs-head"><span>미디어 크기</span><button type="button" class="img-rs-close" id="imgResizeClose" aria-label="미디어 크기 조절 닫기">×</button></div>
       <div class="img-rs-fields">
         <label class="img-rs-field"><span>가로</span><input id="imgResizeW" type="number" min="1" step="1" inputmode="numeric" aria-label="가로 픽셀"><em>px</em></label>
         <label class="img-rs-field"><span>세로</span><input id="imgResizeH" type="number" min="1" step="1" inputmode="numeric" aria-label="세로 픽셀"><em>px</em></label>

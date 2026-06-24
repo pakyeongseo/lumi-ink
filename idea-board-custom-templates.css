@@ -1533,3 +1533,55 @@
   .ce-studio-side .ce-preview { grid-row:span 2; }
   .ce-square-hint { display:none; }
 }
+
+
+/* ===================================================================
+ * v63.25 — cheerful video shell / persistent music decoration
+ * =================================================================== */
+/* 음악 제목을 숨겨도 상단 레코드·MUSIC·별 장식은 유지합니다. */
+.idea-audio-head { min-height:30px; }
+.idea-audio-spark {
+  margin-left:auto; flex:0 0 auto; color:rgba(255,255,255,.92);
+  font-size:16px; line-height:1; text-shadow:0 2px 6px rgba(36,24,70,.24);
+}
+.idea-audio-eyebrow { font-size:10px; letter-spacing:.24em; font-weight:950; }
+.idea-audio-shell.is-title-hidden .idea-audio-meta { justify-content:center; }
+.idea-audio-shell.is-title-hidden .idea-audio-name { display:none; }
+.idea-audio-shell.is-title-hidden .idea-audio-head { min-height:31px; }
+
+/* 동영상: 어두운 매트 대신 밝고 작은 카드 프레임을 둡니다. */
+.idea-item.idea-video .idea-media-shell.idea-video-shell {
+  position:relative; padding:7px; border-radius:20px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--idea-color-a,#7b9bff) 20%,white),color-mix(in srgb,var(--idea-color-b,#b58bff) 13%,white));
+  box-shadow:0 13px 26px color-mix(in srgb,var(--idea-color-b,#7b9bff) 19%,transparent), inset 0 1px 0 rgba(255,255,255,.86);
+}
+.idea-item.idea-video .idea-media-content {
+  position:relative; overflow:hidden; border-radius:14px;
+  background:linear-gradient(135deg,#f8fbff,#eef4ff 54%,#fff8fc);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--idea-color-a,#7b9bff) 18%,white);
+}
+.idea-item.idea-video video {
+  position:relative; z-index:1; width:100%; height:100%; object-fit:contain;
+  background:transparent; border-radius:12px;
+}
+.idea-video-ribbon {
+  position:absolute; z-index:3; left:15px; top:14px; pointer-events:none;
+  padding:5px 9px 5px 10px; border-radius:999px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--idea-color-a,#7b9bff) 72%,white),color-mix(in srgb,var(--idea-color-b,#b58bff) 62%,white));
+  color:color-mix(in srgb,var(--idea-color-b,#475a9e) 76%,#28304d);
+  font:950 9px/1 var(--user-font,inherit); letter-spacing:.17em;
+  box-shadow:0 4px 10px color-mix(in srgb,var(--idea-color-b,#7b9bff) 19%,transparent), inset 0 1px 0 rgba(255,255,255,.8);
+}
+.idea-video-sparkle {
+  position:absolute; z-index:3; right:15px; top:12px; pointer-events:none;
+  color:color-mix(in srgb,var(--idea-color-a,#7b9bff) 70%,#fff); font-size:19px;
+  text-shadow:0 2px 5px rgba(68,81,150,.18);
+}
+.idea-item.idea-video .idea-media-shell.has-project-frame { padding:7px; }
+.idea-item.idea-video .idea-media-shell.has-project-frame .idea-media-frame { inset:-11px; }
+
+/* 자유 메모 영상은 이미지와 같은 리사이즈 상태 표시를 공유합니다. */
+.editor video.lumi-img-selected {
+  outline:2px solid var(--accent); outline-offset:3px;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent), 0 8px 26px color-mix(in srgb,var(--accent) 22%,transparent);
+}

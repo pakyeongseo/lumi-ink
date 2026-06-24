@@ -1457,7 +1457,8 @@
   const IMAGE_RESIZE_MIN = 1;
   let editorImageResize = { image: null, ratio: 1, aspectLocked: true, raf: 0, drag: null };
   function isActiveEditorImage(img) {
-    return !!(img && img.isConnected && $("editor") && $("editor").contains(img) && !st.codeMode && curView().s === "editor");
+    const tag = img && img.tagName ? img.tagName.toLowerCase() : "";
+    return !!(img && (tag === "img" || tag === "video") && img.isConnected && $("editor") && $("editor").contains(img) && !st.codeMode && curView().s === "editor");
   }
   function clearEditorImageSelection() {
     const state = editorImageResize;
@@ -1473,7 +1474,8 @@
   }
   function editorImageRatio(img) {
     const r = editorImageRect(img);
-    const natural = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0;
+    const natural = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight
+      : (img.videoWidth && img.videoHeight ? img.videoWidth / img.videoHeight : 0);
     return Number.isFinite(natural) && natural > 0 ? natural : Math.max(.01, r.width / Math.max(1, r.height));
   }
   function editorImageMaxWidth(img) {
@@ -1524,7 +1526,10 @@
     const lock = $("imgAspectLock"); if (lock) lock.checked = true;
     const layer = $("imgResizeLayer");
     if (layer) { layer.classList.add("open"); layer.setAttribute("aria-hidden", "false"); }
-    img.addEventListener("load", queueEditorImageResizeUI, { once: true });
+    if (img.tagName && img.tagName.toLowerCase() === "video") {
+      img.addEventListener("loadedmetadata", queueEditorImageResizeUI, { once: true });
+      img.addEventListener("loadeddata", queueEditorImageResizeUI, { once: true });
+    } else img.addEventListener("load", queueEditorImageResizeUI, { once: true });
     queueEditorImageResizeUI();
   }
   function setEditorImageDimensions(width, height, source, persist) {
@@ -1565,7 +1570,7 @@
     editorImageResize.ratio = editorImageRatio(img);
     queueEditorImageResizeUI();
     scheduleSave();
-    toast("이미지를 자동 크기로 되돌렸어요");
+    toast((img.tagName && img.tagName.toLowerCase() === "video") ? "동영상을 자동 크기로 되돌렸어요" : "사진을 자동 크기로 되돌렸어요");
   }
   function beginEditorImageResize(event, handle) {
     const img = editorImageResize.image;
@@ -1604,11 +1609,11 @@
     const editor = $("editor"), wrap = $("editorWrap"), layer = $("imgResizeLayer");
     if (!editor || !wrap || !layer) return;
     editor.addEventListener("click", (event) => {
-      const img = event.target && event.target.closest ? event.target.closest("img") : null;
+      const img = event.target && event.target.closest ? event.target.closest("img,video") : null;
       if (img && editor.contains(img)) { selectEditorImage(img); return; }
       clearEditorImageSelection();
     });
-    editor.addEventListener("dragstart", (event) => { if (event.target && event.target.closest && event.target.closest("img")) event.preventDefault(); });
+    editor.addEventListener("dragstart", (event) => { if (event.target && event.target.closest && event.target.closest("img,video")) event.preventDefault(); });
     wrap.addEventListener("scroll", queueEditorImageResizeUI, { passive: true });
     window.addEventListener("resize", queueEditorImageResizeUI, { passive: true });
     document.addEventListener("pointerdown", (event) => {
@@ -1641,19 +1646,45 @@
     });
   }
 
+  const FREE_MEMO_VIDEO_MAX = 30 * 1024 * 1024;
+  function freeMemoMediaPicker() {
+    openModal(`<h3>미디어 삽입</h3><p class="m-sub">사진 또는 동영상을 파일선택기로 불러옵니다. 동영상은 아이디어 보드와 같은 30MB 제한을 적용합니다.</p><div class="idea-add-menu free-media-menu"><button type="button" class="idea-add-choice" id="freeMediaPhoto"><span class="iac-ico">▧</span><span><b>사진</b><small>이미지 파일을 본문에 삽입</small></span></button><button type="button" class="idea-add-choice" id="freeMediaVideo"><span class="iac-ico">▶</span><span><b>동영상</b><small>30MB 이하 · 본문 안에서 크기 조절</small></span></button></div><div class="m-row"><button class="m-btn" id="freeMediaCancel">취소</button></div>`);
+    $on("freeMediaPhoto", "click", () => { closeModal(); $("imgInput").click(); });
+    $on("freeMediaVideo", "click", () => { closeModal(); $("freeVideoInput").click(); });
+    $on("freeMediaCancel", "click", closeModal);
+  }
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = () => reject(reader.error || new Error("file read error")); reader.readAsDataURL(file); });
+  }
   async function insertImage(file) {
-    if (!/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    if (!/^image\//.test(file.type)) { toast("사진 파일만 넣을 수 있어요"); return; }
     try {
       const data = await fileToResized(file, 1280);
       $("editor").focus();
-      document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;height:auto;border-radius:6px"><br>`);
+      document.execCommand("insertHTML", false, `<img src="${data}" style="max-width:100%;height:auto;border-radius:10px"><br>`);
       scheduleSave();
       requestAnimationFrame(() => {
         const images = [...$("editor").querySelectorAll("img")];
         const inserted = images.length ? images[images.length - 1] : null;
         if (inserted) selectEditorImage(inserted);
       });
-    } catch (e) { toast((e && e.message) || "이미지를 넣지 못했어요"); }
+    } catch (e) { toast((e && e.message) || "사진을 넣지 못했어요"); }
+  }
+  async function insertFreeMemoVideo(file) {
+    if (!file || !/^video\//i.test(file.type || "")) { toast("동영상 파일만 넣을 수 있어요"); return; }
+    if (file.size > FREE_MEMO_VIDEO_MAX) { toast("동영상은 30MB 이하만 넣을 수 있어요"); return; }
+    try {
+      const data = await fileToDataUrl(file);
+      if (!/^data:video\/(?:mp4|webm|ogg|quicktime);base64,/i.test(data)) throw new Error("지원하지 않는 동영상 형식이에요");
+      $("editor").focus();
+      document.execCommand("insertHTML", false, `<video controls playsinline preload="metadata" src="${data}" style="max-width:100%;height:auto;border-radius:14px;background:transparent;box-shadow:0 10px 24px rgba(43,76,126,.16)"></video><br>`);
+      scheduleSave();
+      requestAnimationFrame(() => {
+        const videos = [...$("editor").querySelectorAll("video")];
+        const inserted = videos.length ? videos[videos.length - 1] : null;
+        if (inserted) selectEditorImage(inserted);
+      });
+    } catch (e) { toast((e && e.message) || "동영상을 넣지 못했어요"); }
   }
   function wrapCodeBlock() {
     $("editor").focus();
@@ -3853,6 +3884,13 @@
     if (!/^data:image\/(?:png|jpe?g|gif|webp|avif);base64,/i.test(src)) return null;
     return src.length <= 32 * 1024 * 1024 ? src : null;
   }
+  function safeVideoSource(value) {
+    if (typeof value !== "string") return null;
+    const src = value.trim();
+    if (!/^data:video\/(?:mp4|webm|ogg|quicktime);base64,/i.test(src)) return null;
+    // 30MiB 원본의 Base64 확장분까지 고려한 상한입니다.
+    return src.length <= 41 * 1024 * 1024 ? src : null;
+  }
   function normalizeImportedProject(raw) {
     if (!raw || !isSafeRecordId(raw.id)) return null;
     return {
@@ -3938,7 +3976,7 @@
     };
     const data = raw.data && typeof raw.data === "object" ? raw.data : {};
     if (type === "free") {
-      note.data.html = sanitize(cleanImportedText(data.html, 1000000)).html;
+      note.data.html = sanitize(cleanImportedText(data.html, 45 * 1024 * 1024)).html;
       const attachments = normalizeImportedAttachments(data.attachments);
       if (attachments.length) note.data.attachments = attachments;
     } else if (type === "html") {
@@ -4467,7 +4505,7 @@ ${gallery}
   const SAFE_HTML_TAGS = new Set([
     "a", "abbr", "address", "article", "aside", "b", "bdi", "bdo", "blockquote", "br", "caption", "cite", "code", "col", "colgroup",
     "data", "dd", "del", "details", "dfn", "div", "dl", "dt", "em", "figcaption", "figure", "font", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
-    "header", "hr", "i", "img", "ins", "kbd", "li", "main", "mark", "menu", "nav", "ol", "p", "picture", "pre", "q", "s", "samp", "section",
+    "header", "hr", "i", "img", "ins", "kbd", "li", "main", "mark", "menu", "nav", "ol", "p", "picture", "pre", "q", "s", "samp", "section", "video",
     "small", "source", "span", "strike", "strong", "sub", "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "wbr"
   ]);
   const SAFE_SVG_TAGS = new Set([
@@ -4475,7 +4513,7 @@ ${gallery}
     "clippath", "mask", "pattern", "symbol", "use", "marker", "filter", "fegaussianblur", "feoffset", "fecolormatrix", "feblend", "femerge",
     "femergenode", "fedropshadow", "text", "tspan", "title", "desc"
   ]);
-  const DROP_HTML_TAGS = new Set(["script", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "video", "audio", "math", "template", "foreignobject"]);
+  const DROP_HTML_TAGS = new Set(["script", "link", "meta", "base", "iframe", "frame", "object", "embed", "form", "input", "button", "select", "textarea", "audio", "math", "template", "foreignobject"]);
   const SAFE_SVG_ATTRS = new Set([
     "alignment-baseline", "baseline-shift", "clip-path", "clip-rule", "color", "cx", "cy", "d", "dominant-baseline", "dx", "dy", "fill", "fill-opacity", "fill-rule",
     "filter", "font-family", "font-size", "font-style", "font-weight", "gradienttransform", "gradientunits", "height", "letter-spacing", "marker-end", "marker-height",
@@ -4676,6 +4714,15 @@ ${gallery}
         if (!src) { el.remove(); return; }
         set("src", src);
         const alt = safeAttrText(find("alt"), 500); if (alt) set("alt", alt);
+        const width = safeAttrText(find("width"), 12); if (/^\d{1,5}$/.test(width)) set("width", width);
+        const height = safeAttrText(find("height"), 12); if (/^\d{1,5}$/.test(height)) set("height", height);
+      } else if (tag === "video") {
+        const src = safeVideoSource(find("src"));
+        if (!src) { el.remove(); return; }
+        set("src", src);
+        set("controls", "controls");
+        set("playsinline", "playsinline");
+        const preload = find("preload"); if (/^(none|metadata|auto)$/i.test(preload)) set("preload", preload.toLowerCase());
         const width = safeAttrText(find("width"), 12); if (/^\d{1,5}$/.test(width)) set("width", width);
         const height = safeAttrText(find("height"), 12); if (/^\d{1,5}$/.test(height)) set("height", height);
       } else if (tag === "font") {
@@ -5289,7 +5336,8 @@ ${gallery}
     $on("codeArea", "input", scheduleSave);
     $on("codeArea", "blur", () => { const s = freeEditorSession; if (s && s.active) void flushSave(false, s.noteId); });
     $on("attachInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) addAttachment(f); e.target.value = ""; });
-    $on("imgInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) insertImage(f); e.target.value = ""; });
+    $on("imgInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) void insertImage(f); e.target.value = ""; });
+    $on("freeVideoInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) void insertFreeMemoVideo(f); e.target.value = ""; });
     $on("editor", "paste", onEditorPaste);
     $on("editor", "keydown", (e) => { if (e.key === " " || e.key === "Enter") setTimeout(linkifyBeforeCaret, 0); });
     const fb = $("formatbar");
@@ -5303,7 +5351,7 @@ ${gallery}
       else if (id === "fsDown") fontStep(-1);
       else if (id === "fsUp") fontStep(1);
       else if (id === "fsList") showFontSizes();
-      else if (id === "imgBtn") $("imgInput").click();
+      else if (id === "imgBtn") freeMemoMediaPicker();
       else if (id === "alignBtn") showAlignMenu();
       else if (id === "codeBlockBtn") wrapCodeBlock();
       else if (id === "linkBtn") insertLinkPrompt();
@@ -5938,12 +5986,13 @@ ${gallery}
     } else if (item.kind === "audio") {
       const att = itemAttachment(n, item.fileId);
       const trackName = item.title || (att && att.name) || "오디오 트랙";
-      const titleHtml = item.showTitle === false ? "" : `<div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span></div>`;
-      el.innerHTML = `<div class="idea-audio-shell" aria-label="음악 플레이어">${titleHtml}<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
+      const titleClass = item.showTitle === false ? " is-title-hidden" : "";
+      el.innerHTML = `<div class="idea-audio-shell${titleClass}" aria-label="음악 플레이어"><div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span><span class="idea-audio-spark" aria-hidden="true">✦</span></div><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
       hydrateIdeaMedia(el, item, att);
     } else {
       const needsFrame = item.kind === "image" || item.kind === "video";
-      el.innerHTML = needsFrame ? `<div class="idea-media-shell"><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div><div class="idea-media-frame" aria-hidden="true"></div></div>` : `<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div>`;
+      const videoDecor = item.kind === "video" ? `<span class="idea-video-ribbon" aria-hidden="true">PLAY</span><span class="idea-video-sparkle" aria-hidden="true">✦</span>` : "";
+      el.innerHTML = needsFrame ? `<div class="idea-media-shell${item.kind === "video" ? " idea-video-shell" : ""}">${videoDecor}<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div><div class="idea-media-frame" aria-hidden="true"></div></div>` : `<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div>`;
       refreshIdeaMediaFrame(el, item);
       hydrateIdeaMedia(el, item, itemAttachment(n, item.fileId));
     }
@@ -6034,7 +6083,7 @@ ${gallery}
     d.items.slice().sort((a,b) => b.z-a.z).forEach((item) => {
       const card = document.createElement("div"); card.className = "idea-list-card"; const att = itemAttachment(n, item.fileId);
       const icon = item.kind === "note" ? "✦" : item.kind === "image" ? "▧" : item.kind === "audio" ? "♫" : item.kind === "video" ? "▶" : item.kind === "quote" ? "↗" : "⌁";
-      card.innerHTML = `<div class="idea-list-thumb">${icon}</div><div class="idea-list-copy"><div class="idea-list-kind">${esc({note:"POST-IT",image:"IMAGE",audio:"AUDIO",video:"VIDEO",file:"FILE",quote:"MEMO LINK"}[item.kind])}</div><div class="idea-list-title">${esc(ideaItemTitle(item,n))}</div><div class="idea-list-sub">${esc(item.kind === "note" ? (item.text || "내용 없음").replace(/\s+/g," ").slice(0,70) : item.kind === "quote" ? "연결된 메모 열기" : (att ? `${att.type || "file"} · ${fmtSize(att.size)}` : "파일 없음"))}</div></div><button class="idea-list-act" type="button" title="미리보기">◉</button><button class="idea-list-act" type="button" title="보드에서 보기">⌖</button><button class="idea-list-act danger" type="button" title="삭제">×</button>`;
+      card.innerHTML = `<div class="idea-list-thumb">${icon}</div><div class="idea-list-copy"><div class="idea-list-kind">${esc({note:"MEMO",image:"IMAGE",audio:"AUDIO",video:"VIDEO",file:"FILE",quote:"MEMO LINK"}[item.kind])}</div><div class="idea-list-title">${esc(ideaItemTitle(item,n))}</div><div class="idea-list-sub">${esc(item.kind === "note" ? (item.text || "내용 없음").replace(/\s+/g," ").slice(0,70) : item.kind === "quote" ? "연결된 메모 열기" : (att ? `${att.type || "file"} · ${fmtSize(att.size)}` : "파일 없음"))}</div></div><button class="idea-list-act" type="button" title="미리보기">◉</button><button class="idea-list-act" type="button" title="보드에서 보기">⌖</button><button class="idea-list-act danger" type="button" title="삭제">×</button>`;
       const actions = card.querySelectorAll("button");
       actions[0].addEventListener("click", () => openIdeaArtifactPreview(item.id));
       actions[1].addEventListener("click", () => focusIdeaItem(item.id));
