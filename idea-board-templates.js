@@ -80,7 +80,9 @@ window.LumiInkIdeaTemplates = {
     legalPad: { label: "리갈 패드", desc: "노란 괘선과 빨간 여백선의 클래식 리갈 패드" },
     embossed: { label: "엠보스 카드", desc: "도톰한 이중 테두리로 양각한 미니멀 카드" },
     cassette: { label: "카세트 라벨", desc: "릴 구멍과 컬러 헤더의 레트로 믹스테이프 라벨" },
-    ticket: { label: "티켓", desc: "절취선 스텁과 컬러 헤더가 있는 입장권 메모" }
+    ticket: { label: "티켓", desc: "절취선 스텁과 컬러 헤더가 있는 입장권 메모" },
+    speechBubble: { label: "말풍선 메모지", desc: "가운데 꼬리와 내부 라인이 들어간 선명한 말풍선" },
+    speechBubbleRound: { label: "동글 말풍선 메모지", desc: "더 둥글고 통통한 느낌의 말풍선 메모지" }
   },
   imageBackgrounds: {
     "01-moonlit-crystal-castle": { label: "달빛 수정성", desc: "보랏빛 나비와 얼음 궁전이 떠오른 달밤", src: "./idea-board-backgrounds/01-moonlit-crystal-castle.png" },

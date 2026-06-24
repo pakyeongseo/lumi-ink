@@ -1191,3 +1191,183 @@
   .idea-note-rich-tools button,.idea-note-font-size { width:27px; height:27px; }
   .idea-note-font-size { width:35px; }
 }
+
+
+/* ===================================================================
+ * v63.22 — idea board interaction/card/frame/rgb polish
+ * =================================================================== */
+.ce-rgb-row {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+.ce-rgb {
+  width:100%;
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--ink);
+  font:700 13px/1.2 var(--user-font,inherit);
+}
+
+.idea-item,
+.idea-item * { -webkit-tap-highlight-color:transparent; }
+.idea-item.selected.move-mode,
+.idea-item.dragging { touch-action:none; }
+
+/* 메모지 미니 툴바는 선택 핸들을 가리지 않도록 아래쪽으로 배치 */
+.idea-note-rich-tools {
+  top:calc(100% + 10px);
+  bottom:auto;
+}
+@media (max-width:700px){
+  .idea-note-rich-tools { top:calc(100% + 8px); bottom:auto; }
+}
+
+/* 더 진한 말풍선 메모지 + 중앙 꼬리 + 내부 라인 */
+.idea-sticky[data-note-style="speechBubble"],
+.idea-preview-note[data-note-style="speechBubble"] {
+  background:linear-gradient(160deg,color-mix(in srgb,var(--stick-1) 64%, white), color-mix(in srgb,var(--stick-2) 24%, var(--stick-1)));
+  border-radius:24px;
+  box-shadow:0 14px 28px color-mix(in srgb,var(--stick-2) 26%,rgba(21,25,38,.20)), inset 0 1px 0 rgba(255,255,255,.72);
+}
+.idea-sticky[data-note-style="speechBubble"]::before,
+.idea-preview-note[data-note-style="speechBubble"]::before {
+  content:""; position:absolute; inset:9px 10px 16px; border-radius:18px; pointer-events:none;
+  border:1.5px solid color-mix(in srgb,var(--stick-2) 30%, rgba(255,255,255,.48)); opacity:.75;
+}
+.idea-sticky[data-note-style="speechBubble"]::after,
+.idea-preview-note[data-note-style="speechBubble"]::after {
+  content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-21px; width:42px; height:34px; pointer-events:none;
+  background:linear-gradient(140deg,var(--stick-1) 0 52%, transparent 53%);
+  clip-path:polygon(50% 100%, 0 0, 100% 0);
+  filter:drop-shadow(0 5px 3px color-mix(in srgb,var(--stick-2) 18%,transparent));
+}
+.idea-sticky[data-note-style="speechBubble"] .idea-note-text,
+.idea-preview-note[data-note-style="speechBubble"] .idea-note-text { padding:18px 18px 20px; }
+
+/* 더 동그란 말풍선 메모지 */
+.idea-sticky[data-note-style="speechBubbleRound"],
+.idea-preview-note[data-note-style="speechBubbleRound"] {
+  background:radial-gradient(circle at 30% 18%, rgba(255,255,255,.36), transparent 28%), linear-gradient(165deg, color-mix(in srgb,var(--stick-1) 68%, white), color-mix(in srgb,var(--stick-2) 20%, var(--stick-1)));
+  border-radius:32px;
+  box-shadow:0 14px 30px color-mix(in srgb,var(--stick-2) 24%,rgba(21,25,38,.18)), inset 0 1px 0 rgba(255,255,255,.72);
+}
+.idea-sticky[data-note-style="speechBubbleRound"]::before,
+.idea-preview-note[data-note-style="speechBubbleRound"]::before {
+  content:""; position:absolute; inset:10px 11px 18px; border-radius:24px; pointer-events:none;
+  border:1.5px solid color-mix(in srgb,var(--stick-2) 28%, rgba(255,255,255,.48)); opacity:.72;
+}
+.idea-sticky[data-note-style="speechBubbleRound"]::after,
+.idea-preview-note[data-note-style="speechBubbleRound"]::after {
+  content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-24px; width:46px; height:36px; pointer-events:none;
+  background:linear-gradient(150deg,var(--stick-1) 0 54%, transparent 55%);
+  clip-path:polygon(50% 100%, 5% 0, 95% 0);
+  filter:drop-shadow(0 5px 3px color-mix(in srgb,var(--stick-2) 18%,transparent));
+}
+.idea-sticky[data-note-style="speechBubbleRound"] .idea-note-text,
+.idea-preview-note[data-note-style="speechBubbleRound"] .idea-note-text { padding:19px 20px 21px; }
+
+/* 파일/링크는 끝단 버튼만 동작 */
+.idea-file-body,
+.idea-quote-body { display:flex; width:100%; }
+.idea-file-download,
+.idea-quote-go {
+  border:0;
+  cursor:pointer;
+}
+.idea-file-download:focus-visible,
+.idea-quote-go:focus-visible {
+  outline:2px solid color-mix(in srgb,var(--idea-color-b,#7b9bff) 65%, white);
+  outline-offset:2px;
+}
+
+/* 크기 확대 시 내부도 함께 스케일 */
+.idea-audio-shell {
+  gap:calc(7px * var(--idea-scale,1));
+  padding:calc(9px * var(--idea-scale,1)) calc(13px * var(--idea-scale,1)) calc(8px * var(--idea-scale,1));
+  border-radius:calc(18px * var(--idea-scale,1));
+}
+.idea-audio-icon { width:calc(28px * var(--idea-scale,1)); height:calc(28px * var(--idea-scale,1)); }
+.idea-audio-eyebrow { font-size:calc(8px * var(--idea-scale,1)); }
+.idea-audio-name { font-size:calc(12px * var(--idea-scale,1)); }
+.idea-audio .idea-media-content { height:calc(30px * var(--idea-scale,1)); }
+.idea-audio audio { height:calc(30px * var(--idea-scale,1)); }
+
+.idea-file-body {
+  gap:calc(12px * var(--idea-scale,1));
+  padding:calc(11px * var(--idea-scale,1)) calc(12px * var(--idea-scale,1));
+  border-radius:calc(16px * var(--idea-scale,1));
+}
+.idea-file-icon { width:calc(40px * var(--idea-scale,1)); height:calc(40px * var(--idea-scale,1)); border-radius:calc(13px * var(--idea-scale,1)); }
+.idea-file-icon svg { width:calc(20px * var(--idea-scale,1)); height:calc(20px * var(--idea-scale,1)); }
+.idea-file-name { font-size:calc(14px * var(--idea-scale,1)); }
+.idea-file-meta { font-size:calc(10px * var(--idea-scale,1)); }
+.idea-file-download { width:calc(30px * var(--idea-scale,1)); height:calc(30px * var(--idea-scale,1)); }
+.idea-file-download svg { width:calc(16px * var(--idea-scale,1)); height:calc(16px * var(--idea-scale,1)); }
+
+.idea-quote-body {
+  gap:calc(11px * var(--idea-scale,1));
+  padding:calc(11px * var(--idea-scale,1)) calc(12px * var(--idea-scale,1)) calc(11px * var(--idea-scale,1)) calc(15px * var(--idea-scale,1));
+  border-radius:calc(16px * var(--idea-scale,1));
+}
+.idea-quote-mark { width:calc(34px * var(--idea-scale,1)); height:calc(34px * var(--idea-scale,1)); border-radius:calc(11px * var(--idea-scale,1)); }
+.idea-quote-mark svg { width:calc(18px * var(--idea-scale,1)); height:calc(18px * var(--idea-scale,1)); }
+.idea-quote-eyebrow { font-size:calc(9px * var(--idea-scale,1)); }
+.idea-quote-title { font-size:calc(14px * var(--idea-scale,1)); }
+.idea-quote-preview { font-size:calc(10.5px * var(--idea-scale,1)); }
+.idea-quote-go { width:calc(26px * var(--idea-scale,1)); height:calc(26px * var(--idea-scale,1)); }
+.idea-quote-go svg { width:calc(15px * var(--idea-scale,1)); height:calc(15px * var(--idea-scale,1)); }
+
+/* 이미지/영상에 프로젝트 프레임 적용 */
+.idea-media-shell {
+  position:relative;
+  width:100%;
+  height:100%;
+}
+.idea-media-frame {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:4;
+}
+.idea-media-frame .thumb-frame,
+.idea-media-frame svg {
+  width:100%;
+  height:100%;
+  display:block;
+}
+.idea-media-shell.has-project-frame .idea-media-content {
+  overflow:hidden;
+  border-radius:12px;
+}
+.idea-item.idea-video .idea-media-shell.has-project-frame .idea-media-content,
+.idea-item.idea-image .idea-media-shell.has-project-frame .idea-media-content {
+  box-shadow:none !important;
+}
+.idea-item.idea-image .idea-media-shell.has-project-frame,
+.idea-item.idea-video .idea-media-shell.has-project-frame { padding:0; }
+
+/* 배경 썸네일 고정 플레이스홀더 */
+.idea-template-thumb.idea-bg-thumb-placeholder[data-background="preset-placeholder"] {
+  background:
+    radial-gradient(circle at 72% 24%, rgba(255,255,255,.38), transparent 24%),
+    linear-gradient(135deg, #17304a, #0e1c31 58%, #1c3f63);
+}
+.idea-template-thumb.idea-bg-thumb-placeholder[data-background="preset-placeholder"] i {
+  left:12px; right:auto; bottom:8px; font-size:18px;
+}
+.idea-template-thumb.idea-bg-thumb-placeholder[data-background="upload-placeholder"],
+.idea-bg-upload-preview.idea-canvas[data-background="upload-placeholder"] {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255,255,255,.18), transparent 22%),
+    linear-gradient(135deg, color-mix(in srgb,var(--upload-thumb,#7b9bff) 72%, white), color-mix(in srgb,var(--upload-thumb,#7b9bff) 28%, #23324f));
+}
+.idea-template-thumb.idea-bg-thumb-placeholder[data-background="upload-placeholder"] i {
+  left:50%; top:50%; right:auto; bottom:auto; transform:translate(-50%,-50%); font-size:22px;
+}
+.idea-bg-upload-preview.idea-canvas[data-background="upload-placeholder"]::after { opacity:0; }
+
