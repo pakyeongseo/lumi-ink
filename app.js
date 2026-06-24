@@ -5778,15 +5778,18 @@ ${gallery}
     } else if (item.kind === "quote") {
       const ref = getNote(item.noteId);
       const detail = ref ? (ref.type === "free" ? preview(noteHtml(ref)) : ref.type === "idea" ? ideaBoardSummary(ref) : noteTypeLabel(ref)) : "원본 메모가 삭제되었거나 이동되었습니다.";
-      el.innerHTML = `<button class="idea-quote-body" type="button" title="${esc(detail || "연결된 메모 열기")}"><span class="idea-quote-mark">↗</span><span class="idea-quote-title">${esc(ideaItemTitle(item, n))}</span><span class="idea-quote-go">열기</span></button>`;
+      el.innerHTML = `<button class="idea-quote-body" type="button" title="${esc(detail || "연결된 메모 열기")}"><span class="idea-quote-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14 21 3"/><path d="M15 3h6v6"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(ideaItemTitle(item, n))}</span><span class="idea-quote-preview">${esc(detail || "연결된 메모 열기")}</span></span><span class="idea-quote-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></button>`;
       el.querySelector(".idea-quote-body").addEventListener("click", (e) => { e.stopPropagation(); if (item.noteId && getNote(item.noteId)) openNote(item.noteId); else toast("연결된 메모를 찾을 수 없어요"); });
     } else if (item.kind === "file") {
       const att = itemAttachment(n, item.fileId), name = item.title || (att && att.name) || "첨부 파일";
-      el.innerHTML = `<button class="idea-file-body" type="button" aria-label="${esc(name)} 다운로드" title="${att ? esc(fmtSize(att.size)) : "파일을 찾을 수 없음"}"><span class="idea-file-icon">${fileIconSvg((att && att.type) || "")}</span><span class="idea-file-name">${esc(name)}</span><span class="idea-file-download">${DL_SVG}</span></button>`;
+      const fileExt = (String(name).split(".").pop() || "").slice(0, 5).toUpperCase();
+      const fileMeta = att ? `${fileExt && fileExt !== name.toUpperCase() ? fileExt + " · " : ""}${fmtSize(att.size)}` : "파일을 찾을 수 없음";
+      el.innerHTML = `<button class="idea-file-body" type="button" aria-label="${esc(name)} 다운로드" title="${att ? esc(fmtSize(att.size)) : "파일을 찾을 수 없음"}"><span class="idea-file-icon">${fileIconSvg((att && att.type) || "")}</span><span class="idea-file-info"><span class="idea-file-name">${esc(name)}</span><span class="idea-file-meta">${esc(fileMeta)}</span></span><span class="idea-file-download">${DL_SVG}</span></button>`;
       el.querySelector(".idea-file-body").addEventListener("click", (e) => { e.stopPropagation(); if (item.fileId) downloadAttachment(item.fileId); });
     } else if (item.kind === "audio") {
       const att = itemAttachment(n, item.fileId);
-      el.innerHTML = `<div class="idea-audio-shell" aria-label="음악 플레이어"><span class="idea-audio-icon">♫</span><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
+      const trackName = item.title || (att && att.name) || "오디오 트랙";
+      el.innerHTML = `<div class="idea-audio-shell" aria-label="음악 플레이어"><div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span></div><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
       hydrateIdeaMedia(el, item, att);
     } else {
       el.innerHTML = `<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div>`;

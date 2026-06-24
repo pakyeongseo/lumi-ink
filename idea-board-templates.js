@@ -49,7 +49,12 @@ window.LumiInkIdeaTemplates = {
     concreteWall: { label: "콘크리트", desc: "얼룩과 결이 남은 도시 회색 벽" },
     honeyComb: { label: "허니콤", desc: "벌집 무늬가 깔린 따뜻한 호박빛 보드" },
     inkWash: { label: "수묵", desc: "화선지에 옅은 먹이 번진 차분한 보드" },
-    carbonFiber: { label: "카본 파이버", desc: "사선으로 짜인 어두운 탄소섬유" }
+    carbonFiber: { label: "카본 파이버", desc: "사선으로 짜인 어두운 탄소섬유" },
+    moonphase: { label: "월령도", desc: "달무리와 잔별이 뜬 깊은 인디고 밤하늘" },
+    tatami: { label: "다다미", desc: "결대로 짠 짚색 다다미 패널이 깔린 보드" },
+    marble: { label: "대리석", desc: "은은한 결과 윤이 흐르는 밝은 대리석 면" },
+    synthwave: { label: "신스웨이브", desc: "네온 지평선과 시안 격자의 레트로퓨처 보드" },
+    graphite: { label: "그라파이트", desc: "교차 해칭과 번짐이 남은 연필 스케치판" }
   },
   noteStyles: {
     marker: { label: "형광 마커", desc: "형광 잉크가 번진 듯한 러프 메모" },
@@ -70,7 +75,12 @@ window.LumiInkIdeaTemplates = {
     folded: { label: "접힌 메모", desc: "오른쪽 아래가 살짝 말린 종이" },
     doodle: { label: "낙서 메모", desc: "손그림 같은 삐뚤 이중 테두리 메모" },
     vellum: { label: "트레이싱지", desc: "우윳빛으로 비치는 반투명 종이" },
-    woodTag: { label: "우드 태그", desc: "끈 구멍과 나뭇결이 살아있는 나무패" }
+    woodTag: { label: "우드 태그", desc: "끈 구멍과 나뭇결이 살아있는 나무패" },
+    blueprintNote: { label: "청사진 노트", desc: "어두운 청사진 모눈에 흰 잉크로 적는 제도 메모" },
+    legalPad: { label: "리갈 패드", desc: "노란 괘선과 빨간 여백선의 클래식 리갈 패드" },
+    embossed: { label: "엠보스 카드", desc: "도톰한 이중 테두리로 양각한 미니멀 카드" },
+    cassette: { label: "카세트 라벨", desc: "릴 구멍과 컬러 헤더의 레트로 믹스테이프 라벨" },
+    ticket: { label: "티켓", desc: "절취선 스텁과 컬러 헤더가 있는 입장권 메모" }
   },
   imageBackgrounds: {
     "01-moonlit-crystal-castle": { label: "달빛 수정성", desc: "보랏빛 나비와 얼음 궁전이 떠오른 달밤", src: "./idea-board-backgrounds/01-moonlit-crystal-castle.png" },

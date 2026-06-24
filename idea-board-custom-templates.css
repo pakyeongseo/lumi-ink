@@ -213,59 +213,75 @@
 }
 
 /* Plump player: no filename line; color is carried by the player body. */
+/* ===== 아이디어 칩 재디자인 v63.20 — 첨부 · 내 메모 · 뮤직 (테마 적응 다단 카드) ===== */
+/* 뮤직 플레이어 */
 .idea-audio-shell {
-  position:relative;
-  flex-direction:row;
-  align-items:center;
-  gap:11px;
-  padding:12px 14px;
-  border-radius:999px;
-  background:var(--idea-color-grad,linear-gradient(135deg,#7b9bff,#b58bff));
-  color:#fff;
-  box-shadow:0 14px 25px color-mix(in srgb,var(--idea-color-b,#b58bff) 28%,transparent), inset 0 1px 0 rgba(255,255,255,.30);
+  position:relative; flex-direction:column; justify-content:flex-start; align-items:stretch; gap:7px;
+  padding:9px 13px 8px; border-radius:18px; overflow:hidden; color:#fff;
+  background:linear-gradient(155deg, color-mix(in srgb,var(--idea-color-a,#b58bff) 60%, #241f33), color-mix(in srgb,var(--idea-color-b,#b58bff) 70%, #1d1930));
+  box-shadow:0 10px 22px color-mix(in srgb,var(--idea-color-b,#b58bff) 30%,transparent), inset 0 1px 0 rgba(255,255,255,.22);
 }
+.idea-audio-shell::before { content:""; position:absolute; right:-34px; top:-34px; width:118px; height:118px; border-radius:50%; pointer-events:none; background:radial-gradient(circle, color-mix(in srgb,var(--idea-color-a,#b58bff) 55%,white), transparent 68%); opacity:.26; }
+.idea-audio-head { display:flex; align-items:center; gap:9px; position:relative; z-index:1; min-width:0; }
 .idea-audio-icon {
-  width:42px;
-  height:42px;
-  flex:0 0 auto;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  background:rgba(255,255,255,.19);
-  border:1px solid rgba(255,255,255,.30);
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.34);
-  font-size:23px;
-  line-height:1;
+  width:28px; height:28px; flex:0 0 auto; border-radius:50%; font-size:0; border:0;
+  background:radial-gradient(circle at 50% 50%, #fff 0 16%, color-mix(in srgb,var(--idea-color-b,#b58bff) 62%,#241f33) 17% 36%, rgba(255,255,255,.92) 37% 44%, color-mix(in srgb,var(--idea-color-a,#b58bff) 55%,#2c2647) 45%);
+  box-shadow:0 2px 6px rgba(0,0,0,.32), inset 0 0 0 1px rgba(255,255,255,.4);
 }
-.idea-audio .idea-media-content { height:42px; flex:1; min-width:0; }
-.idea-audio audio { width:100%; height:42px; border-radius:999px; }
+.idea-audio-meta { display:flex; flex-direction:column; min-width:0; }
+.idea-audio-eyebrow { font-size:8px; font-weight:900; letter-spacing:.22em; color:rgba(255,255,255,.76); }
+.idea-audio-name { font-size:12px; font-weight:800; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff; }
+.idea-audio .idea-media-content { position:relative; z-index:1; height:30px; flex:0 0 auto; min-width:0; }
+.idea-audio audio { width:100%; height:30px; border-radius:999px; }
 
-/* Link and attachment become single-line chips rather than window cards. */
-.idea-file-body,.idea-quote-body {
-  min-width:0;
-  height:100%;
-  gap:9px;
-  padding:9px 12px;
-  border:1px solid var(--idea-chip-edge,#b58bff);
-  border-radius:999px;
-  background:var(--idea-chip-fill,#eef2ff);
+/* 첨부파일 */
+.idea-file-body {
+  min-width:0; gap:12px; padding:11px 12px; border:0; border-radius:16px; align-items:center;
   color:var(--idea-chip-ink,#20242d);
-  box-shadow:0 10px 18px color-mix(in srgb,var(--idea-color-b,#b58bff) 20%,transparent), inset 0 1px 0 rgba(255,255,255,.72);
+  background:linear-gradient(180deg, var(--idea-chip-fill,#fbf9f0), color-mix(in srgb,var(--idea-color-a,#7b9bff) 9%, var(--idea-chip-fill,#fbf9f0)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 0 0 1px color-mix(in srgb,var(--idea-color-b,#7b9bff) 13%,transparent), 0 8px 16px color-mix(in srgb,var(--idea-color-b,#7b9bff) 15%,transparent);
+  transition:box-shadow .16s;
 }
+.idea-file-body:hover { box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 0 0 1px color-mix(in srgb,var(--idea-color-b,#7b9bff) 28%,transparent), 0 11px 22px color-mix(in srgb,var(--idea-color-b,#7b9bff) 24%,transparent); }
 .idea-file-icon {
-  width:31px;
-  height:31px;
-  border-radius:50%;
-  background:var(--idea-color-grad,linear-gradient(135deg,#7b9bff,#b58bff));
-  color:#fff;
-  box-shadow:none;
+  width:40px; height:40px; flex:0 0 auto; border-radius:13px; display:grid; place-items:center;
+  background:linear-gradient(150deg, color-mix(in srgb,var(--idea-color-a,#7b9bff) 34%,white), color-mix(in srgb,var(--idea-color-b,#7b9bff) 30%,white));
+  color:color-mix(in srgb,var(--idea-color-b,#37467e) 72%, #28304d);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.75), 0 2px 6px color-mix(in srgb,var(--idea-color-b,#7b9bff) 22%,transparent);
 }
-.idea-file-icon svg { width:17px; height:17px; }
-.idea-file-name,.idea-quote-title { min-width:0; flex:1; font-size:12.5px; font-weight:830; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.idea-file-info,.idea-file-meta,.idea-quote-copy,.idea-quote-eyebrow,.idea-quote-preview { display:none; }
-.idea-file-download,.idea-quote-go { color:var(--idea-color-b,#7b9bff); flex:0 0 auto; font-size:10px; font-weight:900; letter-spacing:.04em; }
-.idea-quote-mark { flex:0 0 auto; width:31px; height:31px; display:grid; place-items:center; border-radius:50%; background:var(--idea-color-grad,linear-gradient(135deg,#7b9bff,#b58bff)); color:#fff; font:800 18px/1 ui-sans-serif,system-ui,sans-serif; }
-.idea-quote-body { border-left:1px solid var(--idea-chip-edge,#b58bff); }
+.idea-file-icon svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.idea-file-info { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+.idea-file-name { display:block; font-size:14px; font-weight:850; line-height:1.2; letter-spacing:-.012em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.idea-file-meta { display:block; font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:color-mix(in srgb,var(--idea-chip-ink,#20242d) 52%,transparent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.idea-file-download { width:30px; height:30px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; transition:background .16s;
+  background:color-mix(in srgb,var(--idea-color-b,#7b9bff) 14%,transparent); color:color-mix(in srgb,var(--idea-color-b,#37467e) 74%,#28304d); }
+.idea-file-body:hover .idea-file-download { background:color-mix(in srgb,var(--idea-color-b,#7b9bff) 28%,transparent); }
+.idea-file-download svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* 내 메모 링크 */
+.idea-quote-body {
+  min-width:0; gap:11px; padding:11px 12px 11px 15px; border:0; border-radius:16px; align-items:center; position:relative; overflow:hidden;
+  color:var(--idea-chip-ink,#25304a);
+  background:linear-gradient(180deg, var(--idea-chip-fill,#fafcff), color-mix(in srgb,var(--idea-color-a,#82a7ff) 10%, var(--idea-chip-fill,#fafcff)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 0 0 1px color-mix(in srgb,var(--idea-color-b,#82a7ff) 13%,transparent), 0 8px 16px color-mix(in srgb,var(--idea-color-b,#82a7ff) 14%,transparent);
+  transition:box-shadow .16s;
+}
+.idea-quote-body::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; pointer-events:none; background:linear-gradient(180deg, var(--idea-color-a,#82a7ff), var(--idea-color-b,#82a7ff)); }
+.idea-quote-body:hover { box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 0 0 1px color-mix(in srgb,var(--idea-color-b,#82a7ff) 28%,transparent), 0 11px 22px color-mix(in srgb,var(--idea-color-b,#82a7ff) 22%,transparent); }
+.idea-quote-mark {
+  flex:0 0 auto; width:34px; height:34px; border-radius:11px; display:grid; place-items:center; font:inherit;
+  background:linear-gradient(150deg, color-mix(in srgb,var(--idea-color-a,#82a7ff) 32%,white), color-mix(in srgb,var(--idea-color-b,#82a7ff) 28%,white));
+  color:color-mix(in srgb,var(--idea-color-b,#37467e) 72%,#28304d); box-shadow:inset 0 1px 1px rgba(255,255,255,.75), 0 2px 6px color-mix(in srgb,var(--idea-color-b,#82a7ff) 20%,transparent);
+}
+.idea-quote-mark svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.idea-quote-copy { display:flex; flex-direction:column; gap:1px; min-width:0; flex:1; }
+.idea-quote-eyebrow { display:block; font-size:9px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; color:color-mix(in srgb,var(--idea-color-b,#7192dc) 78%, var(--idea-chip-ink,#25304a)); }
+.idea-quote-title { display:block; font-size:14px; font-weight:850; line-height:1.2; letter-spacing:-.012em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.idea-quote-preview { display:block; font-size:10.5px; line-height:1.35; color:color-mix(in srgb,var(--idea-chip-ink,#25304a) 56%,transparent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.idea-quote-go { flex:0 0 auto; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; transition:background .16s, transform .16s; font-size:0;
+  color:color-mix(in srgb,var(--idea-color-b,#37467e) 72%,#28304d); background:color-mix(in srgb,var(--idea-color-b,#82a7ff) 12%,transparent); }
+.idea-quote-body:hover .idea-quote-go { background:color-mix(in srgb,var(--idea-color-b,#82a7ff) 24%,transparent); transform:translateX(2px); }
+.idea-quote-go svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
 
 .idea-color-grid.theme-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:324px; overflow:auto; padding-right:2px; }
 .idea-color-choice.theme { min-width:0; }
@@ -938,20 +954,6 @@
 .idea-item .idea-media-content {
   box-shadow:0 7px 13px rgba(0,0,0,.16) !important;
 }
-.idea-item .idea-audio-shell {
-  background:var(--idea-color-grad,linear-gradient(135deg,#7b9bff,#b58bff)) !important;
-  color:var(--idea-chip-ink,#20242d) !important;
-  box-shadow:0 7px 13px color-mix(in srgb,var(--idea-color-b,#b58bff) 18%,transparent) !important;
-}
-.idea-item .idea-audio-icon {
-  background:var(--idea-chip-fill,#f7f8fe) !important;
-  color:var(--idea-color-b,#b58bff) !important;
-  border-color:var(--idea-chip-edge,#cfd7ff) !important;
-}
-.idea-item .idea-file-body,
-.idea-item .idea-quote-body {
-  box-shadow:0 6px 12px color-mix(in srgb,var(--idea-color-b,#b58bff) 16%,transparent) !important;
-}
 .idea-item.idea-sticky .idea-note-text,
 .idea-preview-note.idea-sticky {
   color:var(--stick-ink,#27303a) !important;
@@ -979,3 +981,152 @@
 /* v63.16 — post-it color preview uses the same surface + text DOM as a real board item. */
 .idea-preview-note.idea-sticky { position:relative; isolation:isolate; overflow:visible; }
 .idea-preview-note.idea-sticky .idea-note-text { position:relative; z-index:1; display:block; width:100%; height:100%; min-height:180px; white-space:pre-wrap; overflow:auto; }
+
+
+/* ===================================================================
+ * v63.20 추가 — 부착 메모지 5종 + 보드 배경 5종
+ * 노트는 --stick-1/2/ink 테마 변수로 적응, 보드는 background-* 4레이어 이내.
+ * =================================================================== */
+
+/* ── 부착 메모지 5종 ── */
+
+/* 청사진 노트 — 어두운 제도 모눈 + 흰 잉크 */
+.idea-sticky[data-note-style="blueprintNote"] {
+  background:
+    linear-gradient(color-mix(in srgb,var(--stick-1) 34%, transparent) 1px, transparent 1px) 0 0/22px 22px,
+    linear-gradient(90deg, color-mix(in srgb,var(--stick-1) 34%, transparent) 1px, transparent 1px) 0 0/22px 22px,
+    linear-gradient(160deg, color-mix(in srgb,var(--stick-2) 34%, #16263f), color-mix(in srgb,var(--stick-2) 20%, #0e1b2e));
+  border-radius:4px;
+  box-shadow:0 12px 22px rgba(8,18,33,.34), inset 0 0 0 1px color-mix(in srgb,var(--stick-1) 24%, transparent);
+}
+.idea-sticky[data-note-style="blueprintNote"]::before {
+  content:""; position:absolute; inset:6px; pointer-events:none; border-radius:3px;
+  border:1px solid color-mix(in srgb,var(--stick-1) 30%, transparent);
+}
+.idea-sticky[data-note-style="blueprintNote"] .idea-note-text { color:color-mix(in srgb,var(--stick-1) 88%, white); padding:16px 16px 15px; }
+
+/* 리갈 패드 — 노란 괘선 + 빨간 여백선 + 상단 제본 */
+.idea-sticky[data-note-style="legalPad"] {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 24px, color-mix(in srgb,var(--stick-2) 42%,transparent) 24px 25px) 0 16px,
+    linear-gradient(180deg, color-mix(in srgb,var(--stick-1) 22%, #fff6bf), color-mix(in srgb,var(--stick-1) 36%, #fff0a4));
+  border-radius:3px 3px 5px 5px;
+  box-shadow:0 12px 22px rgba(60,50,10,.2), inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 18%,transparent);
+}
+.idea-sticky[data-note-style="legalPad"]::before {
+  content:""; position:absolute; left:0; right:0; top:0; height:11px; pointer-events:none;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--stick-2) 62%,#c8a23a), color-mix(in srgb,var(--stick-2) 44%,#c8a23a));
+  box-shadow:inset 0 -1px 2px rgba(0,0,0,.18);
+}
+.idea-sticky[data-note-style="legalPad"]::after {
+  content:""; position:absolute; left:30px; top:11px; bottom:0; width:1.5px; pointer-events:none;
+  background:rgba(214,90,90,.5);
+}
+.idea-sticky[data-note-style="legalPad"] .idea-note-text { color:var(--stick-ink); padding:18px 14px 12px 40px; }
+
+/* 엠보스 카드 — 양각 이중 테두리 */
+.idea-sticky[data-note-style="embossed"] {
+  background:linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 72%,white), var(--stick-1));
+  border-radius:12px;
+  box-shadow:0 12px 22px rgba(40,34,18,.18), inset 0 2px 3px rgba(255,255,255,.8), inset 0 -2px 4px color-mix(in srgb,var(--stick-2) 32%,transparent);
+}
+.idea-sticky[data-note-style="embossed"]::before {
+  content:""; position:absolute; inset:7px; pointer-events:none; border-radius:8px;
+  border:1px solid color-mix(in srgb,var(--stick-2) 42%,white);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.7), 0 1px 1px rgba(255,255,255,.5);
+}
+.idea-sticky[data-note-style="embossed"] .idea-note-text { color:var(--stick-ink); padding:18px 18px 16px; }
+
+/* 카세트 라벨 — 컬러 헤더 + 릴 구멍 + 괘선 */
+.idea-sticky[data-note-style="cassette"] {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 22px, color-mix(in srgb,var(--stick-2) 32%,transparent) 22px 23px) 0 30px,
+    linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 34%,white), color-mix(in srgb,var(--stick-1) 48%,white));
+  border-radius:6px;
+  box-shadow:0 11px 20px rgba(35,30,40,.22), inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 22%,transparent);
+}
+.idea-sticky[data-note-style="cassette"]::before {
+  content:""; position:absolute; left:0; right:0; top:0; height:22px; pointer-events:none;
+  background:linear-gradient(180deg, var(--stick-2), color-mix(in srgb,var(--stick-2) 64%,#2a2438));
+  border-radius:6px 6px 0 0;
+}
+.idea-sticky[data-note-style="cassette"]::after {
+  content:""; position:absolute; top:6px; left:50%; width:48px; height:10px; margin-left:-24px; pointer-events:none;
+  background:
+    radial-gradient(circle at 25% 50%, color-mix(in srgb,var(--stick-1) 82%,white) 0 3px, transparent 3.4px),
+    radial-gradient(circle at 75% 50%, color-mix(in srgb,var(--stick-1) 82%,white) 0 3px, transparent 3.4px);
+}
+.idea-sticky[data-note-style="cassette"] .idea-note-text { color:var(--stick-ink); padding:30px 14px 12px; }
+
+/* 티켓 — 우측 절취선 스텁 + 상단 컬러 헤더 */
+.idea-sticky[data-note-style="ticket"] {
+  background:linear-gradient(160deg, color-mix(in srgb,var(--stick-1) 36%,white), color-mix(in srgb,var(--stick-1) 50%,white));
+  border-radius:6px;
+  box-shadow:0 11px 20px rgba(40,34,18,.2), inset 0 0 0 1px color-mix(in srgb,var(--stick-2) 20%,transparent);
+}
+.idea-sticky[data-note-style="ticket"]::before {
+  content:""; position:absolute; top:9px; bottom:6px; right:52px; width:0; pointer-events:none;
+  border-left:2px dashed color-mix(in srgb,var(--stick-2) 52%,transparent);
+}
+.idea-sticky[data-note-style="ticket"]::after {
+  content:""; position:absolute; left:0; right:0; top:0; height:9px; pointer-events:none;
+  background:linear-gradient(90deg, var(--stick-2), color-mix(in srgb,var(--stick-2) 56%,white));
+  border-radius:6px 6px 0 0;
+}
+.idea-sticky[data-note-style="ticket"] .idea-note-text { color:var(--stick-ink); padding:18px 62px 14px 14px; }
+
+/* ── 보드 배경 5종 ── */
+
+/* 월령도 — 인디고 밤하늘 + 달무리 + 잔별 */
+.idea-canvas[data-background="moonphase"] {
+  background-color:#0c1326;
+  background-image:
+    radial-gradient(circle at 78% 20%, rgba(232,236,255,.95) 0 36px, rgba(180,192,238,.28) 42px, transparent 60px),
+    radial-gradient(circle at 78% 20%, rgba(120,140,220,.16), transparent 28%),
+    radial-gradient(rgba(255,255,255,.5) 0 1px, transparent 1.4px),
+    radial-gradient(rgba(190,205,255,.3) 0 1px, transparent 1.3px);
+  background-size:auto,auto,150px 150px,92px 122px;
+  background-position:0 0,0 0,0 0,46px 32px;
+}
+
+/* 다다미 — 짚색 직조 + 패널 경계 (라이트) */
+.idea-canvas[data-background="tatami"] {
+  background-color:#cdc69e;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(120,110,70,.10) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(90deg, rgba(120,110,70,.10) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(0deg, rgba(60,80,50,.16) 0 2px, transparent 2px 98px),
+    repeating-linear-gradient(90deg, rgba(60,80,50,.16) 0 2px, transparent 2px 98px);
+}
+.idea-canvas[data-background="tatami"] .idea-canvas-empty{ color:rgba(70,68,40,.74); }
+
+/* 대리석 — 밝은 결 + 윤기 (라이트) */
+.idea-canvas[data-background="marble"] {
+  background-color:#eceef1;
+  background-image:
+    linear-gradient(125deg, transparent 0 37%, rgba(120,130,150,.18) 38% 39%, transparent 40% 61%, rgba(120,130,150,.12) 62% 63%, transparent 64%),
+    linear-gradient(58deg, transparent 0 52%, rgba(140,150,170,.14) 53% 54%, transparent 55%),
+    radial-gradient(ellipse at 30% 24%, rgba(255,255,255,.6), transparent 50%),
+    linear-gradient(160deg, #f4f5f7, #e6e8ec);
+}
+.idea-canvas[data-background="marble"] .idea-canvas-empty{ color:rgba(80,86,100,.72); }
+
+/* 신스웨이브 — 네온 지평선 + 시안 격자 */
+.idea-canvas[data-background="synthwave"] {
+  background-color:#160a2a;
+  background-image:
+    radial-gradient(ellipse at 50% 66%, rgba(255,120,200,.34), transparent 42%),
+    repeating-linear-gradient(0deg, transparent 0 28px, rgba(90,232,255,.16) 28px 29px),
+    repeating-linear-gradient(90deg, transparent 0 28px, rgba(90,232,255,.10) 28px 29px),
+    linear-gradient(180deg, #1d0d3a 0 56%, #2a1146 56%);
+}
+
+/* 그라파이트 — 교차 해칭 + 번짐 (미드다크) */
+.idea-canvas[data-background="graphite"] {
+  background-color:#3a3d43;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.045) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,.06) 0 1px, transparent 1px 6px),
+    radial-gradient(ellipse at 30% 22%, rgba(255,255,255,.06), transparent 45%),
+    radial-gradient(ellipse at 72% 78%, rgba(0,0,0,.22), transparent 50%);
+}
