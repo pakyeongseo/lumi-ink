@@ -1474,6 +1474,10 @@
     const layer = $("imgResizeLayer");
     if (layer) { layer.classList.remove("open"); layer.setAttribute("aria-hidden", "true"); }
   }
+  function editorOverlayScale() {
+    const raw = parseFloat(document.body && (document.body.style.zoom || getComputedStyle(document.body).zoom));
+    return Number.isFinite(raw) && raw > 0 ? raw : 1;
+  }
   function editorImageRect(img) {
     const r = img.getBoundingClientRect();
     return { width: Math.max(1, Math.round(r.width)), height: Math.max(1, Math.round(r.height)), left: r.left, top: r.top, right: r.right, bottom: r.bottom };
@@ -1487,11 +1491,12 @@
   function editorImageMaxWidth(img) {
     const ed = $("editor");
     if (!ed) return IMAGE_RESIZE_MIN;
-    const cs = getComputedStyle(ed);
-    const content = Math.max(IMAGE_RESIZE_MIN, ed.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0));
+    const zoom = editorOverlayScale(), cs = getComputedStyle(ed), edRect = ed.getBoundingClientRect();
+    // body zoom이 켜진 상태에서도 선택 박스·수치 입력·실물 크기가 모두 같은 시각 픽셀을 사용합니다.
+    const pad = (parseFloat(cs.paddingLeft || 0) + parseFloat(cs.paddingRight || 0)) * zoom;
+    const content = Math.max(IMAGE_RESIZE_MIN, edRect.width - pad);
     const parent = img.parentElement;
     const parentDisplay = parent ? getComputedStyle(parent).display : "block";
-    // 인라인 span 안의 이미지는 부모 폭이 이미지 현재 폭과 같을 수 있어, 그 경우 에디터 본문 폭을 한도로 씁니다.
     const parentWidth = parent && parentDisplay !== "inline" && parentDisplay !== "contents" ? parent.getBoundingClientRect().width : content;
     return Math.max(IMAGE_RESIZE_MIN, Math.floor(Math.min(content, parentWidth || content)));
   }
@@ -1506,15 +1511,18 @@
     if (!layer || !box || !panel) return;
     const r = img.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) { clearEditorImageSelection(); return; }
-    box.style.left = r.left + "px"; box.style.top = r.top + "px"; box.style.width = r.width + "px"; box.style.height = r.height + "px";
+    // fixed 레이어도 body zoom을 상속합니다. 화면 좌표를 CSS 좌표로 역환산해야 large/small 글자 크기에서 밀리지 않습니다.
+    const zoom = editorOverlayScale(), rr = { left:r.left / zoom, top:r.top / zoom, width:r.width / zoom, height:r.height / zoom, right:r.right / zoom, bottom:r.bottom / zoom };
+    box.style.left = rr.left + "px"; box.style.top = rr.top + "px"; box.style.width = rr.width + "px"; box.style.height = rr.height + "px";
     const widthInput = $("imgResizeW"), heightInput = $("imgResizeH");
     if (document.activeElement !== widthInput) widthInput.value = String(Math.max(1, Math.round(r.width)));
     if (document.activeElement !== heightInput) heightInput.value = String(Math.max(1, Math.round(r.height)));
     const panelWidth = panel.offsetWidth || 326, panelHeight = panel.offsetHeight || 116, gutter = 12;
-    const centered = r.left + r.width / 2 - panelWidth / 2;
-    const left = Math.max(gutter, Math.min(centered, window.innerWidth - panelWidth - gutter));
-    let top = r.bottom + 14;
-    if (top + panelHeight > window.innerHeight - gutter) top = Math.max(gutter, r.top - panelHeight - 14);
+    const viewportW = window.innerWidth / zoom, viewportH = window.innerHeight / zoom;
+    const centered = rr.left + rr.width / 2 - panelWidth / 2;
+    const left = Math.max(gutter, Math.min(centered, viewportW - panelWidth - gutter));
+    let top = rr.bottom + 14;
+    if (top + panelHeight > viewportH - gutter) top = Math.max(gutter, rr.top - panelHeight - 14);
     panel.style.left = Math.round(left) + "px"; panel.style.top = Math.round(top) + "px";
   }
   function queueEditorImageResizeUI() {
@@ -1537,6 +1545,7 @@
       img.addEventListener("loadeddata", queueEditorImageResizeUI, { once: true });
     } else img.addEventListener("load", queueEditorImageResizeUI, { once: true });
     queueEditorImageResizeUI();
+    requestAnimationFrame(() => requestAnimationFrame(queueEditorImageResizeUI));
   }
   function setEditorImageDimensions(width, height, source, persist) {
     const state = editorImageResize, img = state.image;
@@ -1547,13 +1556,14 @@
       if (source === "height") w = Math.round(h * ratio);
       w = Math.max(IMAGE_RESIZE_MIN, Math.min(editorImageMaxWidth(img), w));
       h = Math.max(1, Math.round(w / ratio));
-      img.style.width = w + "px";
+      img.style.width = (w / editorOverlayScale()) + "px";
       img.style.height = "auto";
     } else {
       w = Math.max(IMAGE_RESIZE_MIN, Math.min(editorImageMaxWidth(img), w));
       h = Math.max(IMAGE_RESIZE_MIN, h);
-      img.style.width = w + "px";
-      img.style.height = h + "px";
+      const zoom = editorOverlayScale();
+      img.style.width = (w / zoom) + "px";
+      img.style.height = (h / zoom) + "px";
       state.ratio = w / h;
     }
     if (!img.style.maxWidth) img.style.maxWidth = "100%";
@@ -5302,6 +5312,10 @@ ${gallery}
     $on("ideaZoomReset", "click", () => setIdeaZoom(1));
     $on("ideaZoomFit", "click", ideaZoomFit);
     $on("ideaZoomRange", "input", (e) => setIdeaZoom(Number(e.target.value) / 100));
+    const applyIdeaZoomInput=()=>{ const input=$("ideaZoomInput"); if(!input)return; const raw=Number(String(input.value||"").replace(/%/g,"").trim()); const fallback=Math.round(ideaZoom*100); const min=Math.round(ideaMinAllowedZoom()*100), max=Math.round(IDEA_ZOOM_MAX*100); const pct=Number.isFinite(raw)?Math.max(min,Math.min(max,raw)):fallback; setIdeaZoom(pct/100); input.value=String(Math.round(ideaZoom*100)); };
+    $on("ideaZoomInput","change",applyIdeaZoomInput);
+    $on("ideaZoomInput","blur",applyIdeaZoomInput);
+    $on("ideaZoomInput","keydown",(e)=>{if(e.key==="Enter"){e.preventDefault();applyIdeaZoomInput();e.currentTarget.blur();}});
     $on("ideaSnapToggle", "click", () => { ideaSnapOn = !ideaSnapOn; const b = $("ideaSnapToggle"); if (b) { b.setAttribute("aria-pressed", String(ideaSnapOn)); b.classList.toggle("on", ideaSnapOn); } if (!ideaSnapOn) clearIdeaSnapGuides(); toast(ideaSnapOn ? "스냅 정렬 켜짐 · 드래그 시 가이드 표시" : "스냅 정렬 꺼짐"); });
     (() => {
       const stage = $("ideaStageWrap"); if (!stage) return;
@@ -5855,6 +5869,8 @@ ${gallery}
       // v63.24부터 프레임은 조각별 독립 값만 보관합니다. 과거 프로젝트 연동 전용 값은 정리합니다.
       frame: legacyLinkedFrame ? null : (frameById(item.frame) ? item.frame : null),
       frameColor: legacyLinkedFrame ? null : (frameById(item.frame) ? (normalizeFrameColor(item.frameColor) || "#d4af37") : null),
+      videoDecor: item.videoDecor !== false,
+      videoDecorColor: normalizeIdeaColorValue(item.videoDecorColor, isIdeaColorValue(item.color) ? item.color : ideaPreferredColor()),
       shadow: item.shadow !== false
     });
   }
@@ -6021,11 +6037,13 @@ ${gallery}
       hydrateIdeaMedia(el, item, att);
     } else {
       const needsFrame = item.kind === "image" || item.kind === "video";
-      const videoDecor = item.kind === "video" ? `<span class="idea-video-ribbon" aria-hidden="true">PLAY</span><span class="idea-video-sparkle" aria-hidden="true">✦</span>` : "";
+      const videoDecor = item.kind === "video" ? ideaVideoDecorMarkup(item) : "";
       el.innerHTML = needsFrame ? `<div class="idea-media-shell${item.kind === "video" ? " idea-video-shell" : ""}">${videoDecor}<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div><div class="idea-media-frame" aria-hidden="true"></div></div>` : `<div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div>`;
       refreshIdeaMediaFrame(el, item);
       hydrateIdeaMedia(el, item, itemAttachment(n, item.fileId));
     }
+    // 모든 조각이 동일한 독립 프레임 레이어를 공유합니다.
+    refreshIdeaMediaFrame(el, item);
     bindIdeaItemInteractions(el, item);
     return el;
   }
@@ -6085,7 +6103,7 @@ ${gallery}
   }
 
   function ideaMediaFrameConfig(item) {
-    if (!item || !["image","video"].includes(item.kind) || !frameById(item.frame)) return null;
+    if (!item || !frameById(item.frame)) return null;
     return { id:item.frame, color:normalizeFrameColor(item.frameColor) || "#d4af37" };
   }
 
@@ -6098,13 +6116,39 @@ ${gallery}
     return config ? ((frameById(config.id) || {}).name || "프레임") : "프레임 없음";
   }
 
+  function ideaVideoDecorStyle(item) {
+    const meta = ideaColorMeta(item && item.videoDecorColor || ideaPreferredColor());
+    return `--idea-video-decor-a:${meta.ig[0]};--idea-video-decor-b:${meta.ig[1]};`;
+  }
+  function ideaVideoDecorMarkup(item) {
+    if (!item || item.kind !== "video" || item.videoDecor === false) return "";
+    return `<div class="idea-video-decor" style="${ideaVideoDecorStyle(item)}" aria-hidden="true"><span class="idea-video-ribbon">PLAY</span><span class="idea-video-sparkle">✦</span></div>`;
+  }
+  function refreshIdeaVideoDecor(el, item) {
+    if (!el || !item || item.kind !== "video") return;
+    const shell = el.querySelector(".idea-video-shell"); if (!shell) return;
+    shell.querySelectorAll(".idea-video-decor").forEach((node) => node.remove());
+    const markup = ideaVideoDecorMarkup(item);
+    if (markup) shell.insertAdjacentHTML("afterbegin", markup);
+  }
   function refreshIdeaMediaFrame(el, item) {
     if (!el) return;
-    const frame = el.querySelector(".idea-media-frame");
+    const config = ideaMediaFrameConfig(item), markup = ideaMediaFrameMarkup(item);
+    let frame = el.querySelector(".idea-media-frame");
     const shell = el.querySelector(".idea-media-shell");
-    const markup = ideaMediaFrameMarkup(item);
-    if (frame) frame.innerHTML = markup;
+    if (!frame && config) {
+      frame = document.createElement("div");
+      frame.className = "idea-media-frame idea-item-frame";
+      frame.setAttribute("aria-hidden", "true");
+      el.appendChild(frame);
+    }
+    if (frame) {
+      frame.innerHTML = markup;
+      if (!config && frame.classList.contains("idea-item-frame")) frame.remove();
+    }
     if (shell) shell.classList.toggle("has-project-frame", !!markup);
+    el.classList.toggle("has-media-frame", !!config);
+    refreshIdeaVideoDecor(el, item);
   }
 
   async function hydrateIdeaMedia(el, item, att) {
@@ -6217,8 +6261,10 @@ ${gallery}
     const dim = ideaBoardDims();
     canvas.style.transformOrigin = "0 0"; canvas.style.transform = "scale(" + ideaZoom + ")";
     if (sizer) { sizer.style.width = Math.round(dim.w * ideaZoom) + "px"; sizer.style.height = Math.round(dim.h * ideaZoom) + "px"; }
-    const lbl = $("ideaZoomLabel"); if (lbl) lbl.textContent = Math.round(ideaZoom * 100) + "%";
-    const rng = $("ideaZoomRange"); if (rng) { rng.min = String(Math.round(ideaMinAllowedZoom() * 100)); if (document.activeElement !== rng) rng.value = String(Math.round(ideaZoom * 100)); }
+    const percent=Math.round(ideaZoom * 100);
+    const lbl = $("ideaZoomLabel"); if (lbl) lbl.textContent = percent + "%";
+    const input = $("ideaZoomInput"); if (input) { input.min=String(Math.round(ideaMinAllowedZoom()*100)); input.max=String(Math.round(IDEA_ZOOM_MAX*100)); if(document.activeElement!==input) input.value=String(percent); }
+    const rng = $("ideaZoomRange"); if (rng) { rng.min = String(Math.round(ideaMinAllowedZoom() * 100)); if (document.activeElement !== rng) rng.value = String(percent); }
   }
   function setIdeaZoom(z, focalClientX, focalClientY, persist) {
     const wrap = $("ideaStageWrap"); if (!wrap) return;
@@ -6505,15 +6551,17 @@ ${gallery}
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
     const audioTitleAction=item.kind==="audio"?`<button class="idea-options-action" id="ideaOptAudioTitle"><b>${item.showTitle===false?"제목 표시 끔":"제목 표시 켬"}</b><small>플레이어 상단 제목 보이기/숨기기</small></button>`:"";
-    const frameAction=["image","video"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFrame"><b>${esc(ideaMediaFrameLabel(item))}</b><small>프로젝트 썸네일과 같은 전체 프레임·색상 라이브러리</small></button>`:"";
-    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요.</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${frameAction}${renameAction}${audioTitleAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
+    const frameAction=["note","image","audio","video","file","quote"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFrame"><b>${esc(ideaMediaFrameLabel(item))}</b><small>전체 프레임·색상 라이브러리를 이 조각에 적용</small></button>`:"";
+    const videoDecorAction=item.kind==="video"?`<button class="idea-options-action" id="ideaOptVideoDecor"><b>${item.videoDecor===false?"영상 장식 꺼짐":"영상 장식 켜짐"}</b><small>PLAY 배지·별 장식의 표시와 색상 조절</small></button>`:"";
+    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요.</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${frameAction}${videoDecorAction}${renameAction}${audioTitleAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
     $on("ideaOptClose","click",closeModal);
     $on("ideaOptMove","click",()=>{closeModal();selectIdeaItem(id,"move");toast("이동 모드: 조각을 드래그해 배치하세요");});
     $on("ideaOptAdjust","click",()=>{closeModal();selectIdeaItem(id,"transform");toast("모서리 ↘로 크기, ↻로 회전을 조절하세요");});
     if(supportsAspect)$on("ideaOptAspect","click",()=>{pushIdeaUndo();item.lockAspect=!item.lockAspect;scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     if(["quote","file","audio"].includes(item.kind))$on("ideaOptRename","click",()=>renameIdeaItemTitle(id));
     if(item.kind==="audio")$on("ideaOptAudioTitle","click",()=>{pushIdeaUndo();item.showTitle=item.showTitle===false;renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
-    if(["image","video"].includes(item.kind))$on("ideaOptFrame","click",()=>openIdeaMediaFramePicker(id));
+    if(["note","image","audio","video","file","quote"].includes(item.kind))$on("ideaOptFrame","click",()=>openIdeaMediaFramePicker(id));
+    if(item.kind==="video")$on("ideaOptVideoDecor","click",()=>openIdeaVideoDecorPicker(id));
     $on("ideaOptShadow","click",()=>{pushIdeaUndo();item.shadow=item.shadow===false;const el=ideaItemElement(id);if(el)el.classList.toggle("no-shadow",item.shadow===false);scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     $on("ideaOptPreview","click",()=>{closeModal();openIdeaArtifactPreview(id);});
     $on("ideaOptDuplicate","click",()=>{closeModal();duplicateIdeaItem(id);});
@@ -6530,12 +6578,12 @@ ${gallery}
   }
 
   function openIdeaMediaFramePicker(id) {
-    const item=getIdeaItem(id); if(!item || !["image","video"].includes(item.kind)) return;
+    const item=getIdeaItem(id); if(!item || !["note","image","audio","video","file","quote"].includes(item.kind)) return;
     const p=getProject(st.curProjectId), config=ideaMediaFrameConfig(item);
     const activeId=config && config.id, activeColor=config ? config.color : "#d4af37";
     const none=`<button type="button" class="frame-opt${!config ? " sel" : ""}" data-idea-frame=""><div class="idea-frame-select-preview">${frameThumbInner(p || {})}</div><span>없음</span></button>`;
     const grid=FRAMES.map((f)=>`<button type="button" class="frame-opt${activeId===f.id ? " sel" : ""}" data-idea-frame="${esc(f.id)}">${ideaFramePreviewMarkup(f.id, activeId===f.id ? activeColor : "#d4af37", p)}<span>${esc(f.name)}</span></button>`).join("");
-    openModal(`<h3>이미지·영상 프레임</h3><p class="m-sub">프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임 값은 이 조각 안에만 독립 저장됩니다.</p><div class="frame-grid idea-media-frame-grid">${none}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
+    openModal(`<h3>조각 프레임</h3><p class="m-sub">프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임 값은 이 조각 안에만 독립 저장됩니다.</p><div class="frame-grid idea-media-frame-grid">${none}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-idea-frame]").forEach((button)=>button.addEventListener("click",()=>{
       const fid=button.dataset.ideaFrame;
       if(!fid){ pushIdeaUndo(); item.frame=null; item.frameColor=null; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 제거했어요"); return; }
@@ -6578,6 +6626,28 @@ ${gallery}
     });
   }
 
+
+  function openIdeaVideoDecorPicker(id) {
+    const item=getIdeaItem(id); if(!item || item.kind!=="video") return;
+    let pushed=false;
+    const commit=()=>{ if(!pushed){pushIdeaUndo();pushed=true;} };
+    const render=()=>{
+      const fresh=getIdeaItem(id); if(!fresh) return;
+      openModal(`<h3>영상 장식</h3><p class="m-sub">네이티브 동영상 컨트롤은 유지하고, 위에 얹는 PLAY 배지와 별 장식만 조절합니다.</p><div class="idea-video-decor-preview" id="ideaVideoDecorPreview">${ideaVideoDecorMarkup(fresh) || '<span class="idea-video-decor-off">장식이 꺼져 있습니다</span>'}</div><label class="idea-size-lock"><input id="ideaVideoDecorOn" type="checkbox" ${fresh.videoDecor===false?"":"checked"}><span>장식 표시</span><small>PLAY 배지와 별 장식을 영상 위에 보입니다.</small></label><div class="idea-options-label">장식 컬러</div><div class="idea-color-grid palette-grid" id="ideaVideoDecorColors">${ideaColorChoicesMarkup(fresh.videoDecorColor,"data-idea-video-decor-color",true)}</div><div class="m-row"><button class="m-btn" id="ideaVideoDecorBack">뒤로</button><button class="m-btn primary" id="ideaVideoDecorDone">완료</button></div>`);
+      const refresh=()=>{
+        const current=getIdeaItem(id); if(!current)return;
+        const preview=$("ideaVideoDecorPreview"); if(preview)preview.innerHTML=ideaVideoDecorMarkup(current)||'<span class="idea-video-decor-off">장식이 꺼져 있습니다</span>';
+        const el=ideaItemElement(id); if(el)refreshIdeaVideoDecor(el,current);
+        $("modalBox").querySelectorAll("[data-idea-video-decor-color]").forEach((b)=>b.classList.toggle("active",b.dataset.ideaVideoDecorColor===current.videoDecorColor));
+      };
+      $on("ideaVideoDecorOn","change",(e)=>{const current=getIdeaItem(id);if(!current)return;commit();current.videoDecor=!!e.target.checked;scheduleIdeaSave(0);refresh();});
+      $("modalBox").querySelectorAll("[data-idea-video-decor-color]").forEach((b)=>b.addEventListener("click",()=>{const current=getIdeaItem(id);if(!current)return;commit();current.videoDecorColor=b.dataset.ideaVideoDecorColor;current.videoDecor=true;scheduleIdeaSave(0);const on=$("ideaVideoDecorOn");if(on)on.checked=true;refresh();}));
+      $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-video-decor-color"]').forEach((b)=>b.addEventListener("click",()=>{const current=getIdeaItem(id);if(!current)return;openIdeaCustomColorPicker("영상 장식 직접 색상",current.videoDecorColor,(value)=>{commit();const next=getIdeaItem(id);if(!next)return;next.videoDecorColor=value;next.videoDecor=true;scheduleIdeaSave(0);openIdeaVideoDecorPicker(id);});}));
+      $on("ideaVideoDecorBack","click",()=>openIdeaItemOptions(id));
+      $on("ideaVideoDecorDone","click",closeModal);
+    };
+    render();
+  }
 
   function renameIdeaItemTitle(id) {
     const n=currentIdeaNote(), item=getIdeaItem(id); if(!n||!item)return;
@@ -6884,16 +6954,18 @@ ${gallery}
     const colorStyle=(["note","audio","quote","file"].includes(item.kind) ? ideaColorStyleAttr(item.color, item.textColor) : "");
     const base=`left:${Math.round(item.x)}px;top:${Math.round(item.y)}px;width:${Math.round(item.w)}px;height:${Math.round(item.h)}px;z-index:${Math.round(item.z)};--idea-rot:${Math.round(item.rotation || 0)}deg;${colorStyle}`;
     const cls=`idea-item idea-${esc(item.kind)}${item.kind==="note" ? " idea-sticky" : ""}${item.shadow===false ? " no-shadow" : ""}`;
-    if(item.kind==="note") return `<article class="${cls}" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${esc(base)}"><div class="idea-note-text">${ideaNoteHtml(item)}</div></article>`;
+    if(item.kind==="note") { const noteFrame=ideaMediaFrameConfig(item), noteMarkup=noteFrame?`<div class="idea-media-frame idea-item-frame">${frameNineSliceMarkup(noteFrame.id,noteFrame.color)}</div>`:"", noteStyle=noteFrame?`--idea-frame-cap:${Math.round(Math.max(16,Math.min(44,Math.min(Number(item.w)||110,Number(item.h)||54)*.16)))}px;--idea-frame-outset:10px;`:""; return `<article class="${cls}${noteFrame?" has-media-frame":""}" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${esc(base+noteStyle)}"><div class="idea-note-text">${ideaNoteHtml(item)}</div>${noteMarkup}</article>`; }
     const source=fileMap.get(item.fileId) || "", title=ideaItemTitle(item,n);
     const frameConfig=ideaMediaFrameConfig(item);
     const frameMarkup=frameConfig ? `<div class="idea-media-frame">${frameNineSliceMarkup(frameConfig.id,frameConfig.color)}</div>` : "";
     const frameStyle=frameConfig ? `--idea-frame-cap:${Math.round(Math.max(16,Math.min(44,Math.min(Number(item.w)||110,Number(item.h)||54)*.16)))}px;--idea-frame-outset:10px;` : "";
     if(item.kind==="image") return `<article class="${cls}${frameConfig?" has-media-frame":""}" style="${esc(base+frameStyle)}"><div class="idea-media-shell${frameConfig?" has-project-frame":""}"><div class="idea-media-content">${source?`<img src="${esc(source)}" alt="${esc(title)}">`:`<span>이미지 파일 없음</span>`}</div>${frameMarkup}</div></article>`;
-    if(item.kind==="video") return `<article class="${cls}${frameConfig?" has-media-frame":""}" style="${esc(base+frameStyle)}"><div class="idea-media-shell${frameConfig?" has-project-frame":""}"><div class="idea-media-content">${source?`<video controls playsinline src="${esc(source)}"></video>`:`<span>동영상 파일 없음</span>`}</div>${frameMarkup}</div></article>`;
-    if(item.kind==="audio") return `<article class="${cls}" data-color="${esc(item.color)}" style="${esc(base)}"><div class="idea-audio-shell"><span class="idea-audio-icon">♫</span><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div></article>`;
-    if(item.kind==="quote") return `<article class="${cls}" data-color="${esc(item.color)}" style="${esc(base)}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-go">연결 메모</span></div></article>`;
-    return `<article class="${cls}" data-color="${esc(item.color)}" style="${esc(base)}">${source?`<a class="idea-file-body" href="${esc(source)}" download="${esc(title)}"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">받기</span></a>`:`<div class="idea-file-body"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">파일 없음</span></div>`}</article>`;
+    if(item.kind==="video") return `<article class="${cls}${frameConfig?" has-media-frame":""}" style="${esc(base+frameStyle)}"><div class="idea-media-shell${frameConfig?" has-project-frame":""} idea-video-shell">${ideaVideoDecorMarkup(item)}<div class="idea-media-content">${source?`<video controls playsinline src="${esc(source)}"></video>`:`<span>동영상 파일 없음</span>`}</div>${frameMarkup}</div></article>`;
+    const genericFrame=frameConfig ? `<div class="idea-media-frame idea-item-frame">${frameNineSliceMarkup(frameConfig.id,frameConfig.color)}</div>` : "";
+    const genericBase=base+frameStyle;
+    if(item.kind==="audio") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-audio-shell"><span class="idea-audio-icon">♫</span><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div>${genericFrame}</article>`;
+    if(item.kind==="quote") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-go">연결 메모</span></div>${genericFrame}</article>`;
+    return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}">${source?`<a class="idea-file-body" href="${esc(source)}" download="${esc(title)}"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">받기</span></a>`:`<div class="idea-file-body"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">파일 없음</span></div>`}${genericFrame}</article>`;
   }
   async function exportIdeaBoardHtml(id) {
     if(st.curNoteId===id) await flushIdeaBoard(false);

@@ -1637,3 +1637,68 @@
 
 /* 자유 메모 영상은 이미지를 선택했을 때와 동일한 레이어 좌표계를 사용합니다. */
 .editor video { max-width:100%; width:auto; min-height:80px; object-fit:contain; }
+
+/* ===================================================================
+ * v63.27 — video decoration controls / universal item frames
+ * =================================================================== */
+/* 동영상의 외곽 흰 띠를 제거합니다. 브라우저의 실제 재생 컨트롤은 그대로 둡니다. */
+.idea-item.idea-video .idea-media-shell.idea-video-shell {
+  padding:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:14px;
+}
+.idea-item.idea-video .idea-media-shell.idea-video-shell > .idea-media-content {
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:14px;
+}
+.idea-item.idea-video .idea-media-shell.idea-video-shell > .idea-media-content > video {
+  background:transparent !important;
+  border-radius:14px;
+}
+.idea-video-decor { position:absolute; inset:0; z-index:4; pointer-events:none; }
+.idea-video-ribbon {
+  position:absolute; left:12px; top:12px;
+  padding:5px 10px 5px 11px; border-radius:999px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--idea-video-decor-a,#7b9bff) 76%,white),color-mix(in srgb,var(--idea-video-decor-b,#b58bff) 62%,white));
+  color:color-mix(in srgb,var(--idea-video-decor-b,#475a9e) 78%,#26334d);
+  font:950 9px/1 var(--user-font,inherit); letter-spacing:.17em;
+  box-shadow:0 4px 10px color-mix(in srgb,var(--idea-video-decor-b,#7b9bff) 24%,transparent), inset 0 1px 0 rgba(255,255,255,.86);
+}
+.idea-video-sparkle {
+  position:absolute; right:12px; top:10px;
+  color:color-mix(in srgb,var(--idea-video-decor-a,#7b9bff) 72%,#fff);
+  font-size:20px; line-height:1; text-shadow:0 2px 5px color-mix(in srgb,var(--idea-video-decor-b,#7b9bff) 24%,transparent);
+}
+.idea-video-decor-preview {
+  position:relative; min-height:112px; overflow:hidden; margin:8px 0 12px; border-radius:15px;
+  background:linear-gradient(135deg,#283a5d,#7c9ed0 52%,#ead9ed);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 8px 18px rgba(24,37,67,.14);
+}
+.idea-video-decor-preview .idea-video-decor { position:absolute; }
+.idea-video-decor-off { position:absolute; inset:0; display:grid; place-items:center; color:rgba(255,255,255,.9); font-size:12px; font-weight:800; }
+
+/* 프레임은 이제 모든 조각 바깥에 같은 9-slice 레이어로 걸립니다. */
+.idea-item.has-media-frame { overflow:visible; }
+.idea-item.has-media-frame > .idea-media-frame.idea-item-frame {
+  position:absolute; inset:calc(var(--idea-frame-outset, 10px) * -1); z-index:16;
+}
+.idea-item.idea-sticky.has-media-frame > .idea-media-frame.idea-item-frame { border-radius:inherit; }
+.idea-item.has-media-frame .idea-note-rich-tools { z-index:10020; }
+
+/* 상단 비율 직접 입력 */
+.idea-tb-zoominput {
+  width:47px; min-width:47px; grid-template-columns:minmax(0,1fr) auto; gap:1px; padding:0 4px 0 6px;
+  cursor:text; font:800 10px/1 system-ui;
+}
+.idea-tb-zoominput input {
+  min-width:0; width:100%; border:0; outline:0; padding:0; background:transparent; color:var(--ink);
+  text-align:right; font:800 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums;
+}
+.idea-tb-zoominput input::-webkit-inner-spin-button,.idea-tb-zoominput input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.idea-tb-zoominput input[type=number] { -moz-appearance:textfield; }
+.idea-tb-zoominput span { color:var(--muted); }
+.idea-tb-zoomreset { width:28px; min-width:28px; height:32px; padding:0; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--muted); cursor:pointer; font:800 8px/1 system-ui; }
+.idea-tb-zoomreset:active { background:var(--surface-3); }
+@media(max-width:700px){ .idea-tb-zoominput{width:46px;min-width:46px;} }

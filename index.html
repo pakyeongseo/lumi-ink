@@ -3047,7 +3047,8 @@
           <span class="idea-tb-sep"></span>
           <button class="idea-tb-btn sm" id="ideaZoomOut" type="button" aria-label="축소"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></button>
           <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="20" max="250" step="1" value="100" aria-label="확대/축소 비율">
-          <button class="idea-tb-zoomlabel" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화"><span id="ideaZoomLabel">100%</span></button>
+          <label class="idea-tb-zoomlabel idea-tb-zoominput" title="확대 비율 직접 입력"><input id="ideaZoomInput" type="number" inputmode="decimal" min="20" max="250" step="1" value="100" aria-label="확대 비율 직접 입력"><span>%</span></label>
+          <button class="idea-tb-zoomreset" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화">100</button>
           <button class="idea-tb-btn sm" id="ideaZoomIn" type="button" aria-label="확대"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></button>
           <button class="idea-tb-btn sm" id="ideaZoomFit" type="button" aria-label="화면에 맞추기" title="화면에 맞추기"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
           <span class="idea-tb-sep"></span>
