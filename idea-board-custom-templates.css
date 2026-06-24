@@ -1130,3 +1130,64 @@
     radial-gradient(ellipse at 30% 22%, rgba(255,255,255,.06), transparent 45%),
     radial-gradient(ellipse at 72% 78%, rgba(0,0,0,.22), transparent 50%);
 }
+
+
+/* ===================================================================
+ * v63.21 — rich sticky note, custom palette, transparent-image polish
+ * =================================================================== */
+/* 말풍선 부착 메모: 내부 콘텐츠는 기존 --stick-* 변수로 적응합니다. */
+.idea-sticky[data-note-style="speechBubble"] {
+  background:linear-gradient(155deg,color-mix(in srgb,var(--stick-1) 82%,white),var(--stick-1));
+  border-radius:20px 20px 20px 6px;
+  box-shadow:0 12px 24px color-mix(in srgb,var(--stick-2) 24%,rgba(21,25,38,.18)), inset 0 1px 0 rgba(255,255,255,.82);
+}
+.idea-sticky[data-note-style="speechBubble"]::after {
+  content:""; position:absolute; left:18px; bottom:-14px; width:26px; height:24px; pointer-events:none;
+  background:linear-gradient(135deg,var(--stick-1) 0 50%,transparent 51%);
+  filter:drop-shadow(-2px 4px 2px color-mix(in srgb,var(--stick-2) 16%,transparent));
+}
+.idea-sticky[data-note-style="speechBubble"] .idea-note-text { padding:18px 18px 16px; color:var(--stick-ink); }
+
+/* 선택·포커스 중에만 노출되는 미니 리치메모 툴바. 보드 변형 핸들과 별도 레이어입니다. */
+.idea-note-rich-tools {
+  position:absolute; z-index:10020; left:0; bottom:calc(100% + 10px); display:none; align-items:center; gap:3px;
+  max-width:min(440px,calc(100vw - 28px)); padding:5px; overflow-x:auto; overscroll-behavior:contain;
+  border:1px solid color-mix(in srgb,var(--line) 82%,white); border-radius:12px;
+  background:color-mix(in srgb,var(--surface) 95%,white); box-shadow:0 10px 24px rgba(21,29,48,.20); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  user-select:none; -webkit-user-select:none; white-space:nowrap;
+}
+.idea-sticky.selected .idea-note-rich-tools,
+.idea-sticky:focus-within .idea-note-rich-tools { display:flex; }
+.idea-note-rich-tools button,.idea-note-font-size {
+  flex:0 0 auto; width:29px; height:28px; padding:0; display:grid; place-items:center; border:0; border-radius:8px;
+  background:transparent; color:var(--ink); font:750 12px/1 var(--user-font,inherit); cursor:pointer;
+}
+.idea-note-rich-tools button:hover,.idea-note-rich-tools button:focus-visible,.idea-note-font-size:hover,.idea-note-font-size:focus-visible { background:var(--accent-soft); color:var(--accent); outline:none; }
+.idea-note-rich-tools button[data-idea-note-cmd="justifyLeft"] { text-align:left; }
+.idea-note-rich-tools button[data-idea-note-cmd="justifyCenter"] { text-align:center; }
+.idea-note-rich-tools button[data-idea-note-cmd="justifyRight"] { text-align:right; }
+.idea-note-hi { display:block; padding:0 1px 2px; border-bottom:5px solid var(--hilite-color,#ffe27a); line-height:.65; }
+.idea-note-font-size { width:38px; appearance:none; -webkit-appearance:none; text-align:center; font-size:11px; }
+.idea-note-tool-sep { width:1px; height:17px; flex:0 0 auto; background:var(--line); margin:0 1px; }
+.idea-note-text[contenteditable="true"] { min-height:54px; white-space:pre-wrap; overflow:auto; touch-action:pan-y; }
+.idea-note-text[contenteditable="true"]:empty::before { content:attr(data-placeholder); color:color-mix(in srgb,var(--stick-ink) 48%,transparent); pointer-events:none; }
+.idea-note-text[contenteditable="true"] :is(div,p) { margin:0; min-height:1.35em; }
+.idea-note-text[contenteditable="true"] [style*="background-color"] { border-radius:2px; padding:0 .08em; }
+
+/* 모든 팔레트의 마지막 직접 선택 타일. */
+.idea-color-choice.idea-custom-color { background:linear-gradient(135deg,var(--surface-2),var(--surface)); border-style:dashed; }
+.idea-color-choice.idea-custom-color span { display:grid; place-items:center; background:conic-gradient(from 35deg,#ff92b8,#ffd96a,#74dfb1,#77bfff,#ba92ff,#ff92b8); }
+.idea-color-choice.idea-custom-color span::after { content:""; width:76%; height:76%; border-radius:inherit; background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.16); }
+.idea-color-choice.idea-custom-color i { position:absolute; z-index:1; color:var(--ink); font:900 18px/1 var(--user-font,inherit); font-style:normal; }
+.idea-color-choice.idea-custom-color.active { border-style:solid; }
+
+/* 투명 PNG/GIF는 이미지 자체의 drop-shadow 하나만 남기고, 미디어 컨테이너의 사각 그림자는 제거합니다. */
+.idea-item.idea-image,.idea-item.idea-image .idea-media-content { background:transparent !important; box-shadow:none !important; filter:none; }
+.idea-item.idea-image .idea-media-content { overflow:visible !important; border-radius:0 !important; }
+.idea-item.idea-image img { background:transparent !important; filter:drop-shadow(0 9px 12px rgba(0,0,0,.20)); }
+
+@media (max-width:700px){
+  .idea-note-rich-tools { max-width:calc(100vw - 20px); bottom:calc(100% + 8px); padding:4px; border-radius:10px; }
+  .idea-note-rich-tools button,.idea-note-font-size { width:27px; height:27px; }
+  .idea-note-font-size { width:35px; }
+}
