@@ -1417,15 +1417,18 @@
   .fbtn.extra-slot svg.star-ico { fill: var(--accent); stroke: none; }
   .fbtn.hilite-btn {
     --hilite-color: #ffe27a;
-    position: relative; overflow: hidden; font-weight: 800; color: #222;
-    background: linear-gradient(transparent 56%, var(--hilite-color) 56%);
-    box-shadow: inset 0 -1px 0 rgba(34,34,34,.14);
+    position: relative; overflow: visible; color: var(--ink); padding-bottom: 4px;
   }
+  html[data-theme="light"] .fbtn.hilite-btn { color: var(--accent); }
+  .fbtn.hilite-btn svg { transform: translateY(-1px); }
   .fbtn.hilite-btn::after {
-    content: ""; position: absolute; right: 5px; bottom: 4px; width: 4px; height: 4px;
-    border-radius: 50%; background: var(--hilite-color); box-shadow: 0 0 0 1px rgba(34,34,34,.24);
+    content: ""; position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%);
+    width: 17px; height: 3px; border-radius: 2px; background: var(--hilite-color);
+    box-shadow: 0 0 0 .5px color-mix(in srgb, var(--hilite-color) 55%, #000 24%),
+                0 0 6px color-mix(in srgb, var(--hilite-color) 50%, transparent);
   }
-  .fbtn.hilite-btn.holding { transform: scale(.95); filter: saturate(1.15); }
+  .fbtn.hilite-btn.holding { transform: scale(.95); }
+  .fbtn.hilite-btn.holding::after { filter: saturate(1.2) brightness(1.08); }
   .hilite-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin: 14px 0 17px; }
   .hilite-choice {
     min-height: 74px; padding: 8px 3px 7px; border-radius: 11px; border: 1px solid var(--line);
@@ -1669,6 +1672,10 @@
     box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 70%, transparent);
   }
   .html-pane-note { color: var(--faint); font-size: 10.5px; text-align: right; font-variant-numeric: tabular-nums; }
+  @media(max-width:700px){
+    .html-workbar .raw-note { display: none; }
+    .html-workbar .html-work-label { flex: 0 0 auto; margin-left: 8px; -webkit-mask-image: none; mask-image: none; overflow: visible; }
+  }
 
   .html-source-area {
     flex: 1 1 auto; min-height: 0; width: 100%; resize: none; border: 0; outline: 0; margin: 0;
@@ -2234,24 +2241,24 @@
   .seg { display: flex; gap: 6px; }
   .seg button { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
   .seg button.on { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-  .ce-section-label { font-size: 12px; font-weight: 700; color: var(--muted); margin: 4px 0 9px; letter-spacing: .02em; }
-  .ce-swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; margin-bottom: 16px; }
-  .ce-sw { width: 100%; aspect-ratio: 1; border-radius: 8px; border: 1px solid rgba(128,128,128,.25); cursor: pointer; position: relative; padding: 0; }
-  .ce-sw.sel::after { content: ""; position: absolute; inset: -3px; border: 2px solid var(--accent); border-radius: 10px; }
-  .ce-custom-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
-  .ce-native { width: 44px; height: 40px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); cursor: pointer; flex: 0 0 auto; }
-  .ce-hex { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 14px; font-family: ui-monospace, monospace; outline: none; }
+  .ce-section-label { font-size: 11.5px; font-weight: 700; color: var(--muted); margin: 2px 0 7px; letter-spacing: .02em; }
+  .ce-swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 12px; }
+  .ce-sw { width: 100%; height: 27px; border-radius: 7px; border: 1px solid rgba(128,128,128,.25); cursor: pointer; position: relative; padding: 0; }
+  .ce-sw.sel::after { content: ""; position: absolute; inset: -3px; border: 2px solid var(--accent); border-radius: 9px; }
+  .ce-custom-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .ce-native { width: 42px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); cursor: pointer; flex: 0 0 auto; }
+  .ce-hex { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 14px; font-family: ui-monospace, monospace; outline: none; letter-spacing: .02em; }
   .ce-hex:focus { border-color: var(--accent); }
-  .ce-addbtn { flex: 0 0 auto; padding: 0 14px; height: 40px; border: none; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .ce-addbtn { flex: 0 0 auto; padding: 0 16px; height: 38px; border: none; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 800; cursor: pointer; }
   .restore-mode { display: flex; flex-direction: column; gap: 5px; width: 100%; margin: 9px 0; padding: 14px 15px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--ink); cursor: pointer; }
   .restore-mode b { color: var(--accent); font-size: 14px; }
   .restore-mode span { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
   .restore-mode.warning b { color: var(--danger); }
   .restore-mode:active { transform: scale(.985); background: var(--surface-3); }
-  .ce-saved-empty { font-size: 12.5px; color: var(--faint); margin-bottom: 14px; }
-  .ce-preview { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 13px; border-radius: 10px; background: var(--surface-2); }
-  .ce-preview-chip { width: 26px; height: 26px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(128,128,128,.25); }
-  .ce-preview-text { font-size: 14px; font-weight: 600; }
+  .ce-saved-empty { font-size: 12px; color: var(--faint); }
+  .ce-preview { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 9px 12px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--line); }
+  .ce-preview-chip { width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(128,128,128,.3); }
+  .ce-preview-text { font-size: 14px; font-weight: 700; flex: 1 1 auto; }
   .set-rtext { flex: 1; min-width: 0; }
   .set-rlabel { font-size: 15px; font-weight: 650; }
   .set-rsub { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
@@ -2539,8 +2546,8 @@
   #screen-idea { background:var(--bg); }
   .idea-workspace { height:calc(100vh - 57px - var(--safe-bottom)); height:calc(100dvh - 57px - var(--safe-bottom)); display:flex; flex-direction:column; min-height:0; }
   .idea-toolbar { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,var(--bar-bg),var(--bar-bg-2)); }
-  .idea-view-switch { display:flex; align-items:stretch; padding:3px; gap:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); min-width:0; }
-  .idea-view-btn { border:0; background:transparent; color:var(--muted); min-height:30px; min-width:42px; max-width:66px; padding:4px 9px; border-radius:8px; font-size:11.5px; line-height:1.05; font-weight:750; cursor:pointer; white-space:normal; word-break:keep-all; display:grid; place-items:center; }
+  .idea-view-switch { display:flex; align-items:stretch; padding:3px; gap:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); flex:0 0 auto; }
+  .idea-view-btn { border:0; background:transparent; color:var(--muted); min-height:30px; min-width:42px; padding:4px 11px; border-radius:8px; font-size:11.5px; line-height:1.05; font-weight:750; cursor:pointer; white-space:nowrap; display:grid; place-items:center; }
   .idea-view-btn.active { color:#fff; background:var(--grad-blue); box-shadow:0 3px 9px color-mix(in srgb,var(--accent) 28%,transparent); }
   .idea-hint { display:none; }
   .idea-tb-actions { display:flex; align-items:center; gap:5px; flex:0 0 auto; margin-left:auto; }
@@ -2648,7 +2655,7 @@
   .idea-preview-note.idea-sticky .idea-note-text { position:relative; z-index:1; display:block; width:100%; height:100%; min-height:180px; overflow:auto; white-space:pre-wrap; }
   @media(max-width:700px){ .idea-color-grid.palette-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; } .idea-color-choice.palette { min-height:32px; } .idea-color-choice.text-preset.palette span { width:23px; height:17px; } }
 
-  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));height:calc(100dvh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
+  @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));height:calc(100dvh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;gap:6px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}.idea-toolbar::-webkit-scrollbar{display:none;}.idea-view-switch{position:sticky;left:0;z-index:3;box-shadow:8px 0 10px -6px var(--bar-bg);}.idea-tb-actions{gap:4px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
@@ -2664,7 +2671,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
       <div class="tb-center">
-        <span class="brand-logo" id="homeLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">Ink</span></span></span>
+        <span class="brand-logo" id="homeLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2C12.6 8 16 11.4 22 12C16 12.6 12.6 16 12 22C11.4 16 8 12.6 2 12C8 11.4 11.4 8 12 2Z"/></svg><span class="word">Ink</span></span></span>
       </div>
       <button class="iconbtn" id="homeSettings" aria-label="설정">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg>
@@ -2759,7 +2766,7 @@
       <button class="fbtn" id="fsList" title="글자 크기 선택" style="font-weight:800;font-size:14px">A▾</button>
       <span class="fsep"></span>
       <button class="fbtn fcolor-btn" id="colorBtn" title="글자 색"><span class="swatch" id="colorSwatch"></span></button>
-      <button class="fbtn hilite-btn" id="hiliteBtn" title="형광펜 · 노란색 (길게 눌러 색상 선택)" aria-label="형광펜 · 노란색">H</button>
+      <button class="fbtn hilite-btn" id="hiliteBtn" title="형광펜 · 노란색 (길게 눌러 색상 선택)" aria-label="형광펜 · 노란색"><svg viewBox="0 0 24 24"><path d="M8.7 12.4l2.9 2.9"/><path d="M5.6 15.5l3.1-.9 8-8a1.85 1.85 0 0 0 0-2.6l-.6-.6a1.85 1.85 0 0 0-2.6 0l-8 8-.9 3.1z"/></svg></button>
       <span class="fsep"></span>
       <button class="fbtn" id="alignBtn" title="정렬"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg><svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
       <span class="fsep"></span>
@@ -2797,7 +2804,7 @@
         <button class="html-mode active" id="htmlModeSource" type="button">SOURCE</button>
         <button class="html-mode" id="htmlModePreview" type="button">PREVIEW</button>
         <button class="html-mode" id="htmlModeSplit" type="button">SPLIT</button>
-        <span class="html-work-label"><b>RAW</b> · 정화하지 않고 원본 문자열 그대로 저장</span>
+        <span class="html-work-label" title="필터링 없이 원본 문자열을 그대로 저장합니다"><b>RAW</b> <span class="raw-note">· 필터링 없이 원본 문자열 그대로 저장</span></span>
         <span class="html-work-spacer"></span>
         <button class="html-mini-btn" id="htmlCopy" type="button" aria-label="원본 복사" title="원본 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
         <button class="html-mini-btn" id="htmlReload" type="button" aria-label="미리보기 새로고침" title="미리보기 새로고침"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 2 5"/><path d="M20 4v7h-7"/></svg></button>
@@ -2992,7 +2999,7 @@
             <span class="fsep"></span>
             <button class="fbtn" id="charCreatorFsDown" title="글자 작게" style="font-size:13px;font-weight:800">A−</button><button class="fbtn" id="charCreatorFsUp" title="글자 크게" style="font-size:17px;font-weight:800">A+</button><button class="fbtn" id="charCreatorFsList" title="글자 크기 선택" style="font-weight:800;font-size:14px">A▾</button>
             <span class="fsep"></span>
-            <button class="fbtn fcolor-btn" id="charCreatorColorBtn" title="글자 색"><span class="swatch" id="charCreatorColorSwatch"></span></button><button class="fbtn hilite-btn" id="charCreatorHiliteBtn" title="형광펜 · 길게 눌러 색상 선택" aria-label="형광펜 · 길게 눌러 색상 선택">H</button>
+            <button class="fbtn fcolor-btn" id="charCreatorColorBtn" title="글자 색"><span class="swatch" id="charCreatorColorSwatch"></span></button><button class="fbtn hilite-btn" id="charCreatorHiliteBtn" title="형광펜 · 길게 눌러 색상 선택" aria-label="형광펜 · 길게 눌러 색상 선택"><svg viewBox="0 0 24 24"><path d="M8.7 12.4l2.9 2.9"/><path d="M5.6 15.5l3.1-.9 8-8a1.85 1.85 0 0 0 0-2.6l-.6-.6a1.85 1.85 0 0 0-2.6 0l-8 8-.9 3.1z"/></svg></button>
             <span class="fsep"></span>
             <button class="fbtn" id="charCreatorAlignBtn" title="정렬"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg><svg class="fb-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
             <span class="fsep"></span>
@@ -3048,7 +3055,7 @@
           <button class="idea-tb-btn sm" id="ideaZoomOut" type="button" aria-label="축소"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></button>
           <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="20" max="250" step="1" value="100" aria-label="확대/축소 비율">
           <label class="idea-tb-zoomlabel idea-tb-zoominput" title="확대 비율 직접 입력"><input id="ideaZoomInput" type="number" inputmode="decimal" min="20" max="250" step="1" value="100" aria-label="확대 비율 직접 입력"><span>%</span></label>
-          <button class="idea-tb-zoomreset" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화">100</button>
+          <button class="idea-tb-zoomreset" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화">1:1</button>
           <button class="idea-tb-btn sm" id="ideaZoomIn" type="button" aria-label="확대"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></button>
           <button class="idea-tb-btn sm" id="ideaZoomFit" type="button" aria-label="화면에 맞추기" title="화면에 맞추기"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
           <span class="idea-tb-sep"></span>
@@ -3091,7 +3098,7 @@
   <div class="scrim for-sidebar" id="sidebarScrim"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
-      <span class="brand-logo" id="sbLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg><span class="word">Ink</span></span></span>
+      <span class="brand-logo" id="sbLogo"><svg class="niblogo" viewBox="0 0 64 64"><path class="nib-body" d="M32 7C22 7 15 17 15 29c0 14 12 26 17 29 5-3 17-15 17-29 0-12-7-22-17-22z"/><circle class="nib-ink" cx="32" cy="25" r="6"/><rect class="nib-ink" x="30.6" y="28" width="2.8" height="23" rx="1.4"/><circle class="nib-tip" cx="32" cy="52" r="3.6"/></svg><span class="wordrow"><span class="word">Lumi</span><svg class="bstar" viewBox="0 0 24 24"><path d="M12 2C12.6 8 16 11.4 22 12C16 12.6 12.6 16 12 22C11.4 16 8 12.6 2 12C8 11.4 11.4 8 12 2Z"/></svg><span class="word">Ink</span></span></span>
     </div>
     <div class="searchbar sb-searchbar" id="sbSearchbar">
       <input id="sbSearch" placeholder="검색" autocapitalize="off" autocorrect="off" enterkeyhint="search">

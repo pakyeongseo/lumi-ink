@@ -1212,9 +1212,17 @@
   function colorStudioMarkup(prefix, options) {
     const opts = Object.assign({ saved: true, save: true }, options || {});
     const palette = COLOR_PALETTE.map((c) => `<button type="button" class="ce-sw" data-${prefix}-preset="${c}" style="background:${c}" aria-label="${c}" title="${c}"></button>`).join("");
-    const save = opts.save ? `<button class="ce-addbtn" id="${prefix}Save">저장</button>` : "";
+    const save = opts.save ? `<button class="ce-addbtn" id="${prefix}Save" type="button">저장</button>` : "";
     const saved = opts.saved ? `<div class="ce-section-label">내 색상</div><div id="${prefix}Saved"></div>` : "";
-    return `<div class="ce-studio" data-color-studio="${prefix}"><div class="ce-studio-top"><div class="ce-square" id="${prefix}Square" role="slider" aria-label="채도와 명도 선택"><span class="ce-square-cursor" id="${prefix}SquareCursor"></span></div><div class="ce-studio-side"><div class="ce-preview"><span class="ce-preview-chip" id="${prefix}PrevChip"></span><span class="ce-preview-text" id="${prefix}PrevText">가나다 Sample</span></div><label class="ce-hue-control"><span>색조</span><input id="${prefix}Hue" type="range" min="0" max="360" step="1" aria-label="색조"></label><p class="ce-square-hint">사각형을 터치해 채도와 명도를 고르세요.</p></div></div><div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="${prefix}Palette">${palette}</div><div class="ce-section-label">직접 입력</div><div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="기본 색상 입력"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}</div>${colorStudioRgbFields(prefix)}${saved}</div>`;
+    return `<div class="ce-studio" data-color-studio="${prefix}">`
+      + `<div class="ce-square" id="${prefix}Square" role="slider" aria-label="채도와 명도 선택"><span class="ce-square-cursor" id="${prefix}SquareCursor"></span></div>`
+      + `<input class="ce-hue" id="${prefix}Hue" type="range" min="0" max="360" step="1" aria-label="색조">`
+      + `<div class="ce-preview"><span class="ce-preview-chip" id="${prefix}PrevChip"></span><span class="ce-preview-text" id="${prefix}PrevText">가나다 Sample</span></div>`
+      + `<div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="색상 선택기"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}</div>`
+      + colorStudioRgbFields(prefix)
+      + `<div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="${prefix}Palette">${palette}</div>`
+      + saved
+      + `</div>`;
   }
   function bindColorStudio(prefix, initial, options) {
     const opts = Object.assign({ saved: true, save: true, onChange: null, onSave: null }, options || {});
