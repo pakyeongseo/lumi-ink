@@ -1237,52 +1237,49 @@
   .idea-note-rich-tools { top:calc(100% + 8px); bottom:auto; }
 }
 
-/* 선명한 라인형 말풍선 메모지 + 중앙 꼬리 + 내부 라인 */
+/* 더 진한 말풍선 메모지 + 중앙 꼬리 + 내부 라인 */
 .idea-sticky[data-note-style="speechBubble"],
 .idea-preview-note[data-note-style="speechBubble"] {
-  background:linear-gradient(160deg,color-mix(in srgb,var(--stick-1) 70%, white), color-mix(in srgb,var(--stick-2) 26%, var(--stick-1)));
-  border-radius:22px;
-  box-shadow:0 14px 28px color-mix(in srgb,var(--stick-2) 26%,rgba(21,25,38,.20)), inset 0 1px 0 rgba(255,255,255,.75);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--stick-1) 64%, white), color-mix(in srgb,var(--stick-2) 24%, var(--stick-1)));
+  border-radius:24px;
+  box-shadow:0 14px 28px color-mix(in srgb,var(--stick-2) 26%,rgba(21,25,38,.20)), inset 0 1px 0 rgba(255,255,255,.72);
 }
 .idea-sticky[data-note-style="speechBubble"]::before,
 .idea-preview-note[data-note-style="speechBubble"]::before {
-  content:""; position:absolute; inset:7px; border-radius:15px; pointer-events:none;
-  border:1.4px solid color-mix(in srgb,var(--stick-2) 48%, white);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);
-  opacity:.92;
+  content:""; position:absolute; inset:9px 10px 16px; border-radius:18px; pointer-events:none;
+  border:1.5px solid color-mix(in srgb,var(--stick-2) 30%, rgba(255,255,255,.48)); opacity:.75;
 }
 .idea-sticky[data-note-style="speechBubble"]::after,
 .idea-preview-note[data-note-style="speechBubble"]::after {
-  content:""; position:absolute; left:50%; bottom:-13px; transform:translateX(-50%); width:28px; height:18px; pointer-events:none;
-  background:color-mix(in srgb,var(--stick-2) 26%, var(--stick-1));
-  clip-path:polygon(0 0, 100% 0, 50% 100%);
-  filter:drop-shadow(0 5px 3px color-mix(in srgb,var(--stick-2) 20%,transparent));
+  content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-21px; width:42px; height:34px; pointer-events:none;
+  background:linear-gradient(140deg,var(--stick-1) 0 52%, transparent 53%);
+  clip-path:polygon(50% 100%, 0 0, 100% 0);
+  filter:drop-shadow(0 5px 3px color-mix(in srgb,var(--stick-2) 18%,transparent));
 }
 .idea-sticky[data-note-style="speechBubble"] .idea-note-text,
-.idea-preview-note[data-note-style="speechBubble"] .idea-note-text { padding:17px 18px 19px; }
+.idea-preview-note[data-note-style="speechBubble"] .idea-note-text { padding:18px 18px 20px; }
 
-/* 통통하고 둥근 말풍선 메모지 (광택 + 둥근 꼬리 + 보조 방울) */
+/* 더 동그란 말풍선 메모지 */
 .idea-sticky[data-note-style="speechBubbleRound"],
 .idea-preview-note[data-note-style="speechBubbleRound"] {
-  background:radial-gradient(125% 85% at 27% 14%, rgba(255,255,255,.46), transparent 44%), linear-gradient(165deg, color-mix(in srgb,var(--stick-1) 74%, white), color-mix(in srgb,var(--stick-2) 24%, var(--stick-1)));
-  border-radius:30px;
-  box-shadow:0 16px 32px color-mix(in srgb,var(--stick-2) 24%,rgba(21,25,38,.18)), inset 0 1px 0 rgba(255,255,255,.80), inset 0 0 0 1.4px color-mix(in srgb,var(--stick-2) 18%, rgba(255,255,255,.55));
+  background:radial-gradient(circle at 30% 18%, rgba(255,255,255,.36), transparent 28%), linear-gradient(165deg, color-mix(in srgb,var(--stick-1) 68%, white), color-mix(in srgb,var(--stick-2) 20%, var(--stick-1)));
+  border-radius:32px;
+  box-shadow:0 14px 30px color-mix(in srgb,var(--stick-2) 24%,rgba(21,25,38,.18)), inset 0 1px 0 rgba(255,255,255,.72);
 }
 .idea-sticky[data-note-style="speechBubbleRound"]::before,
 .idea-preview-note[data-note-style="speechBubbleRound"]::before {
-  content:""; position:absolute; left:50%; bottom:-12px; transform:translate(-50%,0) rotate(45deg); width:24px; height:24px; pointer-events:none;
-  background:color-mix(in srgb,var(--stick-2) 24%, var(--stick-1));
-  border-radius:7px 0 11px 0;
-  box-shadow:5px 5px 9px color-mix(in srgb,var(--stick-2) 18%,transparent);
+  content:""; position:absolute; inset:10px 11px 18px; border-radius:24px; pointer-events:none;
+  border:1.5px solid color-mix(in srgb,var(--stick-2) 28%, rgba(255,255,255,.48)); opacity:.72;
 }
 .idea-sticky[data-note-style="speechBubbleRound"]::after,
 .idea-preview-note[data-note-style="speechBubbleRound"]::after {
-  content:""; position:absolute; left:calc(50% + 19px); bottom:-22px; width:11px; height:11px; border-radius:50%; pointer-events:none;
-  background:color-mix(in srgb,var(--stick-2) 24%, var(--stick-1));
-  box-shadow:0 3px 5px color-mix(in srgb,var(--stick-2) 16%,transparent);
+  content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-24px; width:46px; height:36px; pointer-events:none;
+  background:linear-gradient(150deg,var(--stick-1) 0 54%, transparent 55%);
+  clip-path:polygon(50% 100%, 5% 0, 95% 0);
+  filter:drop-shadow(0 5px 3px color-mix(in srgb,var(--stick-2) 18%,transparent));
 }
 .idea-sticky[data-note-style="speechBubbleRound"] .idea-note-text,
-.idea-preview-note[data-note-style="speechBubbleRound"] .idea-note-text { padding:19px 21px 21px; }
+.idea-preview-note[data-note-style="speechBubbleRound"] .idea-note-text { padding:19px 20px 21px; }
 
 /* 파일/링크는 끝단 버튼만 동작 */
 .idea-file-body,
@@ -1703,3 +1700,27 @@
 .idea-tb-zoomreset { width:28px; min-width:28px; height:32px; padding:0; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--muted); cursor:pointer; font:800 8px/1 system-ui; }
 .idea-tb-zoomreset:active { background:var(--surface-3); }
 @media(max-width:700px){ .idea-tb-zoominput{width:46px;min-width:46px;} }
+
+/* v63.33: idea-board horizontal flip for note designs and images */
+.idea-item.idea-sticky.flipped-x {
+  transform:rotate(var(--idea-rot,0deg)) scaleX(-1);
+}
+.idea-item.idea-sticky.flipped-x > .idea-note-text,
+.idea-item.idea-sticky.flipped-x > .idea-note-rich-tools,
+.idea-item.idea-sticky.flipped-x > .idea-transform-tools {
+  transform:scaleX(-1);
+  transform-origin:center center;
+}
+.idea-item.idea-image.flipped-x .idea-media-content {
+  transform:scaleX(-1);
+  transform-origin:center center;
+}
+.idea-preview-note.idea-sticky.flipped-x {
+  transform:scaleX(-1);
+  transform-origin:center center;
+}
+.idea-preview-note.idea-sticky.flipped-x .idea-note-text,
+.idea-preview-media.flipped-x img {
+  transform:scaleX(-1);
+  transform-origin:center center;
+}
