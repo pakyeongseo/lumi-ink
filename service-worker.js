@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v63.17-idea-viewport-fit";
+const CACHE = "ink-memo-v63.19-preset-image-registry-fix";
 
 const ASSETS = [
   "./",
@@ -18,6 +18,25 @@ const ASSETS = [
   "./idea-board-template-registry-guide.md",
   "./idea-board-templates.js",
   "./idea-board-custom-templates.css",
+  "./idea-board-backgrounds/01-moonlit-crystal-castle.png",
+  "./idea-board-backgrounds/02-firefly-forest.png",
+  "./idea-board-backgrounds/03-butterfly-path.png",
+  "./idea-board-backgrounds/04-coral-garden.png",
+  "./idea-board-backgrounds/05-sunlit-underwater.png",
+  "./idea-board-backgrounds/06-rose-bunny-room.png",
+  "./idea-board-backgrounds/07-dreamy-bunny-room.png",
+  "./idea-board-backgrounds/08-snowy-pine-forest.png",
+  "./idea-board-backgrounds/09-moonlit-snow-woods.png",
+  "./idea-board-backgrounds/10-golden-throne-hall.png",
+  "./idea-board-backgrounds/11-crystal-flower-garden.png",
+  "./idea-board-backgrounds/12-wonderland-rabbit-forest.png",
+  "./idea-board-backgrounds/13-rose-bunny-window.png",
+  "./idea-board-backgrounds/14-ruby-throne-room.png",
+  "./idea-board-backgrounds/15-moonlit-study.png",
+  "./idea-board-backgrounds/16-dawn-snow-castle.png",
+  "./idea-board-backgrounds/17-cosmic-whale.png",
+  "./idea-board-backgrounds/18-blue-hour-city.png",
+  "./idea-board-backgrounds/19-cloud-castle.png",
   "./log-templates/lumi-aoharu-sky.json",
   "./log-templates/lumi-ashfall-signal.json",
   "./log-templates/lumi-brass-cog.json",

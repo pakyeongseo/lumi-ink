@@ -71,5 +71,26 @@ window.LumiInkIdeaTemplates = {
     doodle: { label: "낙서 메모", desc: "손그림 같은 삐뚤 이중 테두리 메모" },
     vellum: { label: "트레이싱지", desc: "우윳빛으로 비치는 반투명 종이" },
     woodTag: { label: "우드 태그", desc: "끈 구멍과 나뭇결이 살아있는 나무패" }
+  },
+  imageBackgrounds: {
+    "01-moonlit-crystal-castle": { label: "달빛 수정성", desc: "보랏빛 나비와 얼음 궁전이 떠오른 달밤", src: "./idea-board-backgrounds/01-moonlit-crystal-castle.png" },
+    "02-firefly-forest": { label: "반딧불 숲", desc: "푸른 안개와 반딧불이 흐르는 깊은 숲", src: "./idea-board-backgrounds/02-firefly-forest.png" },
+    "03-butterfly-path": { label: "푸른 나비 길", desc: "빛나는 계단과 나비가 이어지는 신비한 숲길", src: "./idea-board-backgrounds/03-butterfly-path.png" },
+    "04-coral-garden": { label: "산호 정원", desc: "수면 아래 산호와 꽃이 만개한 푸른 정원", src: "./idea-board-backgrounds/04-coral-garden.png" },
+    "05-sunlit-underwater": { label: "햇살 심해", desc: "햇살이 물결처럼 쏟아지는 맑은 바닷속", src: "./idea-board-backgrounds/05-sunlit-underwater.png" },
+    "06-rose-bunny-room": { label: "로즈 버니룸", desc: "햇살과 장미, 인형이 머무는 핑크 드로잉룸", src: "./idea-board-backgrounds/06-rose-bunny-room.png" },
+    "07-dreamy-bunny-room": { label: "드리미 버니룸", desc: "부드러운 아침빛이 감도는 토끼 인형방", src: "./idea-board-backgrounds/07-dreamy-bunny-room.png" },
+    "08-snowy-pine-forest": { label: "설원 침엽수림", desc: "눈 덮인 전나무와 고요한 겨울 산책로", src: "./idea-board-backgrounds/08-snowy-pine-forest.png" },
+    "09-moonlit-snow-woods": { label: "달빛 설림", desc: "은하와 보름달이 비추는 새벽의 눈 숲", src: "./idea-board-backgrounds/09-moonlit-snow-woods.png" },
+    "10-golden-throne-hall": { label: "황금 왕좌실", desc: "빛줄기와 샹들리에가 쏟아지는 왕좌의 전당", src: "./idea-board-backgrounds/10-golden-throne-hall.png" },
+    "11-crystal-flower-garden": { label: "크리스탈 플라워가든", desc: "보랏빛 꽃과 수정 장식이 반짝이는 온실", src: "./idea-board-backgrounds/11-crystal-flower-garden.png" },
+    "12-wonderland-rabbit-forest": { label: "원더랜드 래빗 포레스트", desc: "버섯과 토끼, 카드가 숨은 동화 속 숲", src: "./idea-board-backgrounds/12-wonderland-rabbit-forest.png" },
+    "13-rose-bunny-window": { label: "장미 토끼 창가", desc: "분홍 커튼과 장미가 둘러싼 햇살 창가", src: "./idea-board-backgrounds/13-rose-bunny-window.png" },
+    "14-ruby-throne-room": { label: "루비 왕좌실", desc: "적색 벨벳 왕좌와 황금빛 채광의 궁정", src: "./idea-board-backgrounds/14-ruby-throne-room.png" },
+    "15-moonlit-study": { label: "월광 서재", desc: "푸른 밤빛과 열린 책이 놓인 고요한 서재", src: "./idea-board-backgrounds/15-moonlit-study.png" },
+    "16-dawn-snow-castle": { label: "새벽 설성", desc: "분홍빛 새벽과 서리 낀 성채의 풍경", src: "./idea-board-backgrounds/16-dawn-snow-castle.png" },
+    "17-cosmic-whale": { label: "성운 고래", desc: "별빛을 가르며 유영하는 거대한 우주 고래", src: "./idea-board-backgrounds/17-cosmic-whale.png" },
+    "18-blue-hour-city": { label: "블루 아워 시티", desc: "저녁 빛이 머무는 현대적인 푸른 도심", src: "./idea-board-backgrounds/18-blue-hour-city.png" },
+    "19-cloud-castle": { label: "구름 위 성", desc: "맑은 하늘과 초원 위로 솟은 동화 같은 성", src: "./idea-board-backgrounds/19-cloud-castle.png" }
   }
 };

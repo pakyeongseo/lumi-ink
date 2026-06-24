@@ -5430,7 +5430,7 @@ ${gallery}
     const out = {};
     if (!raw || typeof raw !== "object") return out;
     Object.entries(raw).forEach(([key, value]) => {
-      if (!/^[A-Za-z][A-Za-z0-9_-]{0,47}$/.test(key) || !value || typeof value !== "object") return;
+      if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$/.test(key) || !value || typeof value !== "object") return;
       const label = typeof value.label === "string" ? value.label.trim().slice(0, 42) : "";
       const desc = typeof value.desc === "string" ? value.desc.trim().slice(0, 96) : "";
       if (label) out[key] = { label, desc };
@@ -5442,7 +5442,7 @@ ${gallery}
     const out = {};
     if (!raw || typeof raw !== "object") return out;
     Object.entries(raw).forEach(([key, value]) => {
-      if (!/^[A-Za-z][A-Za-z0-9_-]{0,47}$/.test(key) || !value || typeof value !== "object") return;
+      if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$/.test(key) || !value || typeof value !== "object") return;
       const label = typeof value.label === "string" ? value.label.trim().slice(0, 42) : "";
       const desc = typeof value.desc === "string" ? value.desc.trim().slice(0, 96) : "";
       const src = typeof value.src === "string" ? value.src.trim() : "";
@@ -5452,6 +5452,11 @@ ${gallery}
     return out;
   }
   const IDEA_IMAGE_BACKGROUND_PRESETS = Object.freeze(readIdeaImageBackgroundRegistry(IDEA_TEMPLATE_REGISTRY.imageBackgrounds));
+  // 숫자로 시작하는 프리셋 키(예: 01-moonlit-...)도 유효한 안전 키입니다.
+  // 등록 파일이 누락되면 런타임에서 조용히 빈 목록이 되는 대신, 개발 콘솔에 정확한 원인을 남깁니다.
+  if (typeof console !== "undefined" && IDEA_TEMPLATE_REGISTRY.imageBackgrounds && !Object.keys(IDEA_IMAGE_BACKGROUND_PRESETS).length) {
+    console.warn("[Lumi Ink] 이미지 배경 레지스트리를 읽지 못했습니다. 키/경로 형식을 확인하세요.");
+  }
   const IDEA_BG_TEMPLATES = Object.freeze({ ...IDEA_BUILTIN_BG_TEMPLATES, ...readIdeaTemplateRegistry(IDEA_TEMPLATE_REGISTRY.backgrounds) });
   const IDEA_NOTE_TEMPLATES = Object.freeze({ ...IDEA_BUILTIN_NOTE_TEMPLATES, ...readIdeaTemplateRegistry(IDEA_TEMPLATE_REGISTRY.noteStyles || IDEA_TEMPLATE_REGISTRY.notes) });
   const IDEA_NOTE_COLORS = IDEA_THEME_COLORS;
