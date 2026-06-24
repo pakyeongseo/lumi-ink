@@ -66,9 +66,15 @@
     const f = frameById(fid); if (!f) return "";
     const resolved = resolveFrameColor(color);
     const inner = resolved === FRAME_PUNCH_TOKEN ? punchedFrameInner(f) : f.build(resolved);
+    // 바로크는 아칸서스 모서리 장식이 넓어서, 모서리를 크게 보존하고
+    // 가운데 띠만 좁게 잡습니다. 그 외 프레임은 기존의 균형 분할을 유지합니다.
+    const cap = fid === "baroque" ? 42 : 28;
+    const mid = 100 - cap * 2;
+    const end = cap + mid;
+    const kind = fid === "baroque" ? " idea-frame-9slice-baroque" : "";
     const svg = (viewBox, stretch, role) => `<svg class="idea-frame-slice idea-frame-slice-${role}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg"${stretch ? ' preserveAspectRatio="none"' : ''} aria-hidden="true">${inner}</svg>`;
     // 모서리는 고정 크기, 네 변의 중앙부만 늘리는 9-slice 프레임입니다.
-    return `<span class="idea-frame-9slice" aria-hidden="true">${svg('0 0 28 28',false,'tl')}${svg('28 0 44 28',true,'t')}${svg('72 0 28 28',false,'tr')}${svg('0 28 28 44',true,'l')}<span class="idea-frame-slice idea-frame-slice-c"></span>${svg('72 28 28 44',true,'r')}${svg('0 72 28 28',false,'bl')}${svg('28 72 44 28',true,'b')}${svg('72 72 28 28',false,'br')}</span>`;
+    return `<span class="idea-frame-9slice${kind}" aria-hidden="true">${svg(`0 0 ${cap} ${cap}`,false,'tl')}${svg(`${cap} 0 ${mid} ${cap}`,true,'t')}${svg(`${end} 0 ${cap} ${cap}`,false,'tr')}${svg(`0 ${cap} ${cap} ${mid}`,true,'l')}<span class="idea-frame-slice idea-frame-slice-c"></span>${svg(`${end} ${cap} ${cap} ${mid}`,true,'r')}${svg(`0 ${end} ${cap} ${cap}`,false,'bl')}${svg(`${cap} ${end} ${mid} ${cap}`,true,'b')}${svg(`${end} ${end} ${cap} ${cap}`,false,'br')}</span>`;
   }
   function frameInner(p) {
     if (!p || !p.frame) return "";
@@ -1608,6 +1614,11 @@
   function bindEditorImageResize() {
     const editor = $("editor"), wrap = $("editorWrap"), layer = $("imgResizeLayer");
     if (!editor || !wrap || !layer) return;
+    // video 기본 컨트롤은 click을 소비할 수 있어 캡처 단계에서 먼저 선택합니다.
+    editor.addEventListener("pointerdown", (event) => {
+      const media = event.target && event.target.closest ? event.target.closest("img,video") : null;
+      if (media && editor.contains(media)) requestAnimationFrame(() => selectEditorImage(media));
+    }, true);
     editor.addEventListener("click", (event) => {
       const img = event.target && event.target.closest ? event.target.closest("img,video") : null;
       if (img && editor.contains(img)) { selectEditorImage(img); return; }
@@ -1648,7 +1659,7 @@
 
   const FREE_MEMO_VIDEO_MAX = 30 * 1024 * 1024;
   function freeMemoMediaPicker() {
-    openModal(`<h3>미디어 삽입</h3><p class="m-sub">사진 또는 동영상을 파일선택기로 불러옵니다. 동영상은 아이디어 보드와 같은 30MB 제한을 적용합니다.</p><div class="idea-add-menu free-media-menu"><button type="button" class="idea-add-choice" id="freeMediaPhoto"><span class="iac-ico">▧</span><span><b>사진</b><small>이미지 파일을 본문에 삽입</small></span></button><button type="button" class="idea-add-choice" id="freeMediaVideo"><span class="iac-ico">▶</span><span><b>동영상</b><small>30MB 이하 · 본문 안에서 크기 조절</small></span></button></div><div class="m-row"><button class="m-btn" id="freeMediaCancel">취소</button></div>`);
+    openModal(`<h3>미디어 삽입</h3><p class="m-sub">사진 또는 동영상을 기기의 파일 선택기로 불러옵니다. 동영상은 아이디어 보드와 같은 30MB 제한을 적용합니다.</p><div class="idea-add-menu free-media-menu"><button type="button" class="idea-add-choice" id="freeMediaPhoto"><span class="iac-ico">▧</span><span><b>사진</b><small>이미지 파일을 본문에 삽입</small></span></button><button type="button" class="idea-add-choice" id="freeMediaVideo"><span class="iac-ico">▶</span><span><b>동영상</b><small>30MB 이하 · 본문 안에서 크기 조절</small></span></button></div><div class="m-row"><button class="m-btn" id="freeMediaCancel">취소</button></div>`);
     $on("freeMediaPhoto", "click", () => { closeModal(); $("imgInput").click(); });
     $on("freeMediaVideo", "click", () => { closeModal(); $("freeVideoInput").click(); });
     $on("freeMediaCancel", "click", closeModal);
@@ -1676,13 +1687,32 @@
     try {
       const data = await fileToDataUrl(file);
       if (!/^data:video\/(?:mp4|webm|ogg|quicktime);base64,/i.test(data)) throw new Error("지원하지 않는 동영상 형식이에요");
-      $("editor").focus();
-      document.execCommand("insertHTML", false, `<video controls playsinline preload="metadata" src="${data}" style="max-width:100%;height:auto;border-radius:14px;background:transparent;box-shadow:0 10px 24px rgba(43,76,126,.16)"></video><br>`);
+      const editor = $("editor"); editor.focus();
+      // 메타데이터가 도착하기 전 브라우저 기본 원본 폭으로 튀는 일을 막기 위해
+      // 처음부터 본문 폭에 맞는 안정적인 시작 폭을 부여합니다.
+      document.execCommand("insertHTML", false, `<video controls playsinline preload="metadata" src="${data}" style="width:420px;max-width:100%;height:auto;border-radius:14px;background:transparent;box-shadow:0 10px 24px rgba(43,76,126,.16)"></video><br>`);
       scheduleSave();
       requestAnimationFrame(() => {
-        const videos = [...$("editor").querySelectorAll("video")];
+        const videos = [...editor.querySelectorAll("video")];
         const inserted = videos.length ? videos[videos.length - 1] : null;
-        if (inserted) selectEditorImage(inserted);
+        if (!inserted) return;
+        const fitInitialSize = () => {
+          const max = editorImageMaxWidth(inserted);
+          const target = Math.max(220, Math.min(460, Math.round(max * .78)));
+          inserted.style.width = Math.min(max, target) + "px";
+          inserted.style.maxWidth = "100%";
+          inserted.style.height = "auto";
+          selectEditorImage(inserted);
+          queueEditorImageResizeUI();
+        };
+        // loadedmetadata 전후 어느 순서에서도 한 번만 올바른 치수로 맞춥니다.
+        if (inserted.readyState >= 1 && inserted.videoWidth > 0) fitInitialSize();
+        else {
+          inserted.addEventListener("loadedmetadata", fitInitialSize, { once:true });
+          inserted.addEventListener("loadeddata", queueEditorImageResizeUI, { once:true });
+          // 네트워크/코덱 지연에도 조절창을 잃지 않도록 임시 박스 기준으로 먼저 선택합니다.
+          selectEditorImage(inserted);
+        }
       });
     } catch (e) { toast((e && e.message) || "동영상을 넣지 못했어요"); }
   }
@@ -5812,7 +5842,7 @@ ${gallery}
       z: Math.max(1, Math.min(99999, numeric(item.z, 1))),
       rotation: Math.max(-180, Math.min(180, numeric(item.rotation, 0))),
       aspect,
-      lockAspect: item.lockAspect !== false && (kind === "image" || kind === "video"),
+      lockAspect: item.lockAspect !== false,
       text: normalizedPlainText,
       richText: normalizedRichText,
       color: normalizeIdeaColorValue(item.color, ideaPreferredColor()),
@@ -6018,15 +6048,39 @@ ${gallery}
     if(!editor)return; const tools=el.querySelector(".idea-note-rich-tools"); let before=null,dirty=false,savedRange=null;
     const begin=()=>{if(before==null)before=ideaSnapshot();};
     const persist=()=>{const html=sanitizeIdeaNoteRichHtml(editor.innerHTML);const plain=ideaNotePlainText(html);const fresh=getIdeaItem(item.id);if(!fresh)return; if(fresh.richText!==html||fresh.text!==plain){fresh.richText=html;fresh.text=plain;dirty=true;scheduleIdeaSave(420);}};
-    const command=(cmd,value)=>{ if(cmd==="hiliteColor"){ savedRange=savedRange||captureIdeaNoteRange(editor); openIdeaNoteHilitePicker((color)=>{ begin(); restoreIdeaNoteRange(editor,savedRange||captureIdeaNoteRange(editor)); try{document.execCommand("styleWithCSS",false,true);}catch(e){} try{document.execCommand("hiliteColor",false,color||getHiliteColor());}catch(e){} savedRange=captureIdeaNoteRange(editor); persist(); }); return; } begin();restoreIdeaNoteRange(editor,savedRange||captureIdeaNoteRange(editor));try{document.execCommand("styleWithCSS",false,true);}catch(e){} if(cmd==="removeFormat"){try{document.execCommand("removeFormat",false,null);document.execCommand("unlink",false,null);}catch(e){}}else{try{document.execCommand(cmd,false,value||null);}catch(e){}}savedRange=captureIdeaNoteRange(editor);persist();};
+    const applyHilite=(color, range)=>{begin();restoreIdeaNoteRange(editor,range||savedRange||captureIdeaNoteRange(editor));try{document.execCommand("styleWithCSS",false,true);}catch(e){}try{document.execCommand("hiliteColor",false,color||getHiliteColor());}catch(e){}savedRange=captureIdeaNoteRange(editor);persist();};
+    const command=(cmd,value)=>{begin();restoreIdeaNoteRange(editor,savedRange||captureIdeaNoteRange(editor));try{document.execCommand("styleWithCSS",false,true);}catch(e){} if(cmd==="removeFormat"){try{document.execCommand("removeFormat",false,null);document.execCommand("unlink",false,null);}catch(e){}}else{try{document.execCommand(cmd,false,value||null);}catch(e){}}savedRange=captureIdeaNoteRange(editor);persist();};
     editor.addEventListener("focus",()=>{before=null;dirty=false;savedRange=captureIdeaNoteRange(editor);});
     editor.addEventListener("input",()=>{begin();persist();savedRange=captureIdeaNoteRange(editor);});
     editor.addEventListener("compositionend",()=>{begin();persist();});
     editor.addEventListener("blur",()=>{setTimeout(()=>{persist();if(dirty&&before!=null)pushIdeaUndo(before);before=null;dirty=false;void flushIdeaBoard(false);},0);});
     editor.addEventListener("keydown",(e)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();persist();void flushIdeaBoard(false);}else if(e.key==="Escape"){e.preventDefault();editor.blur();el.focus();}});
     if(!tools)return;
-    tools.addEventListener("pointerdown",(e)=>{e.stopPropagation();savedRange=captureIdeaNoteRange(editor);const button=e.target.closest("button");if(button){e.preventDefault();command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");}});
-    tools.addEventListener("click",(e)=>{e.stopPropagation();const button=e.target.closest("button");if(button&&e.detail===0)command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");});
+    const hilite=tools.querySelector('[data-idea-note-cmd="hiliteColor"]');
+    if(hilite){
+      hilite.style.setProperty("--hilite-color",getHiliteColor());
+      let holdTimer=null,held=false,pointerId=null,holdRange=null;
+      const clearHold=()=>{if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}};
+      const reset=()=>{clearHold();held=false;pointerId=null;holdRange=null;hilite.classList.remove("holding");};
+      hilite.addEventListener("pointerdown",(e)=>{
+        if(e.button!=null&&e.button!==0)return;
+        e.preventDefault();e.stopPropagation();savedRange=captureIdeaNoteRange(editor);holdRange=savedRange;pointerId=e.pointerId;held=false;hilite.classList.add("holding");
+        try{hilite.setPointerCapture(pointerId);}catch(_e){}
+        holdTimer=setTimeout(()=>{holdTimer=null;held=true;hilite.classList.remove("holding");const pickerRange=holdRange;if(navigator.vibrate)navigator.vibrate(10);openIdeaNoteHilitePicker((color)=>{applyHilite(color,pickerRange);});},480);
+      });
+      hilite.addEventListener("pointerup",(e)=>{
+        if(pointerId!=null&&e.pointerId!==pointerId)return;
+        e.preventDefault();e.stopPropagation();const wasHeld=held,range=holdRange;reset();
+        // 짧은 탭은 현재 색상을 즉시 칠하고, 팝업을 열지 않습니다.
+        if(!wasHeld) applyHilite(getHiliteColor(),range);
+      });
+      hilite.addEventListener("pointercancel",(e)=>{if(pointerId==null||e.pointerId===pointerId)reset();});
+      hilite.addEventListener("lostpointercapture",()=>{if(!held)reset();});
+      hilite.addEventListener("click",(e)=>{e.preventDefault();e.stopImmediatePropagation();});
+      hilite.addEventListener("contextmenu",(e)=>e.preventDefault());
+    }
+    tools.addEventListener("pointerdown",(e)=>{e.stopPropagation();savedRange=captureIdeaNoteRange(editor);const button=e.target.closest("button");if(button&&button.dataset.ideaNoteCmd!=="hiliteColor"){e.preventDefault();command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");}});
+    tools.addEventListener("click",(e)=>{e.stopPropagation();const button=e.target.closest("button");if(button&&button.dataset.ideaNoteCmd!=="hiliteColor"&&e.detail===0)command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");});
     const size=tools.querySelector(".idea-note-font-size"); if(size){size.addEventListener("pointerdown",(e)=>{e.stopPropagation();savedRange=captureIdeaNoteRange(editor);begin();});size.addEventListener("change",()=>command("fontSize",size.value));}
   }
 
@@ -6228,7 +6282,7 @@ ${gallery}
   }
   function addIdeaItem(kind, pos, extra) {
     const n=currentIdeaNote(); if (!n) return null; const d=ensureIdeaBoardData(n); pushIdeaUndo(); const def=ideaItemDefaults(kind); const p=pos || findIdeaDropPosition(d,def);
-    const item=Object.assign({ id:uid(), kind, x:Math.max(0,Math.min(d.canvas.width-def.w,p.x)), y:Math.max(0,Math.min(d.canvas.height-def.h,p.y)), w:def.w, h:def.h, z:nextIdeaZ(d), rotation:0, aspect:(kind==="image"||kind==="video")?def.w/def.h:null, lockAspect:(kind==="image"||kind==="video"), text:"", color:ideaPreferredColor(), noteStyle:"marker", fileId:null, noteId:null, title:"" },extra||{});
+    const item=Object.assign({ id:uid(), kind, x:Math.max(0,Math.min(d.canvas.width-def.w,p.x)), y:Math.max(0,Math.min(d.canvas.height-def.h,p.y)), w:def.w, h:def.h, z:nextIdeaZ(d), rotation:0, aspect:(kind==="image"||kind==="video")?def.w/def.h:null, lockAspect:true, text:"", color:ideaPreferredColor(), noteStyle:"marker", fileId:null, noteId:null, title:"" },extra||{});
     d.items.push(normalizeIdeaItem(item)); renderIdeaBoard(); scheduleIdeaSave(); return d.items[d.items.length-1];
   }
   function removeIdeaItem(id, skipUndo) {
@@ -6310,10 +6364,13 @@ ${gallery}
   }
   function openIdeaSizeModal(id) {
     const item=getIdeaItem(id); if(!item)return;
-    openModal(`<h3>조각 크기 입력</h3><p class="m-sub">정확한 픽셀 수치를 입력해 크기를 맞춥니다.</p><div class="m-row"><input class="m-input" id="ideaSizeW" inputmode="numeric" type="number" min="110" max="1400" value="${Math.round(item.w)}" aria-label="너비"><input class="m-input" id="ideaSizeH" inputmode="numeric" type="number" min="54" max="1100" value="${Math.round(item.h)}" aria-label="높이"></div><div class="m-row"><button class="m-btn" id="ideaSizeCancel">취소</button><button class="m-btn primary" id="ideaSizeApply">적용</button></div>`);
+    const ratio=Math.max(.08,Math.min(20,(Number(item.w)||110)/Math.max(1,Number(item.h)||54)));
+    openModal(`<h3>조각 크기 입력</h3><p class="m-sub">정확한 픽셀 수치를 입력해 크기를 맞춥니다.</p><div class="m-row"><input class="m-input" id="ideaSizeW" inputmode="numeric" type="number" min="110" max="1400" value="${Math.round(item.w)}" aria-label="너비"><input class="m-input" id="ideaSizeH" inputmode="numeric" type="number" min="54" max="1100" value="${Math.round(item.h)}" aria-label="높이"></div><label class="idea-size-lock"><input type="checkbox" id="ideaSizeLock" ${item.lockAspect!==false?"checked":""}><span>비율 고정</span><small>가로 또는 세로를 바꾸면 현재 비율로 함께 계산합니다.</small></label><div class="m-row"><button class="m-btn" id="ideaSizeCancel">취소</button><button class="m-btn primary" id="ideaSizeApply">적용</button></div>`);
+    const sync=(source)=>{if(!$("ideaSizeLock").checked)return;const w=Math.max(110,Number($("ideaSizeW").value)||item.w),h=Math.max(54,Number($("ideaSizeH").value)||item.h);if(source==="w")$("ideaSizeH").value=String(Math.max(54,Math.min(1100,Math.round(w/ratio))));else $("ideaSizeW").value=String(Math.max(110,Math.min(1400,Math.round(h*ratio))));};
+    $on("ideaSizeW","input",()=>sync("w"));$on("ideaSizeH","input",()=>sync("h"));
     setTimeout(()=>{const input=$("ideaSizeW");if(input){input.focus();input.select();}},80);
     $on("ideaSizeCancel","click",closeModal);
-    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;const w=Math.max(110,Math.min(1400,Math.round(Number($("ideaSizeW").value)||fresh.w))),h=Math.max(54,Math.min(1100,Math.round(Number($("ideaSizeH").value)||fresh.h)));pushIdeaUndo();fresh.w=w;fresh.h=h;if(["image","video"].includes(fresh.kind))fresh.aspect=Math.max(.08,Math.min(20,w/h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${w}×${h}px로 맞췄어요`);});
+    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;let w=Math.max(110,Math.min(1400,Math.round(Number($("ideaSizeW").value)||fresh.w))),h=Math.max(54,Math.min(1100,Math.round(Number($("ideaSizeH").value)||fresh.h)));const locked=$("ideaSizeLock").checked;if(locked)h=Math.max(54,Math.min(1100,Math.round(w/ratio)));pushIdeaUndo();fresh.w=w;fresh.h=h;fresh.lockAspect=locked;fresh.aspect=Math.max(.08,Math.min(20,w/h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${w}×${h}px로 맞췄어요`);});
   }
   function bindIdeaRotateHandle(handle,item,el) {
     let lastTapAt = 0;
@@ -6603,7 +6660,7 @@ ${gallery}
   async function addIdeaMediaFile(file, kind) {
     const n=currentIdeaNote();if(!n||!file)return;
     if(kind==="video"&&file.size>IDEA_MAX_VIDEO){toast("동영상은 30MB 이하만 붙일 수 있어요");return;}if(file.size>IDEA_MAX_MEDIA){toast("미디어 파일은 30MB 이하만 붙일 수 있어요");return;}
-    const id=uid();try{const dims=await measureIdeaMedia(file,kind);await put("files",{id,noteId:n.id,name:file.name||"미디어",type:file.type||"application/octet-stream",size:file.size,blob:file,createdAt:now()});const d=ensureIdeaBoardData(n);d.attachments.push({id,name:file.name||"미디어",type:file.type||"",size:file.size});const size=["image","video"].includes(kind)?ideaMediaSize(kind,dims):{};addIdeaItem(kind,ideaPendingPos,{fileId:id,title:file.name||"미디어",...size,lockAspect:["image","video"].includes(kind)});toast(kind==="image"?"이미지를 붙였어요":kind==="audio"?"오디오를 붙였어요":kind==="video"?"동영상을 붙였어요":"파일을 붙였어요");}catch(e){toast("파일을 보드에 저장하지 못했어요");}
+    const id=uid();try{const dims=await measureIdeaMedia(file,kind);await put("files",{id,noteId:n.id,name:file.name||"미디어",type:file.type||"application/octet-stream",size:file.size,blob:file,createdAt:now()});const d=ensureIdeaBoardData(n);d.attachments.push({id,name:file.name||"미디어",type:file.type||"",size:file.size});const size=["image","video"].includes(kind)?ideaMediaSize(kind,dims):{};addIdeaItem(kind,ideaPendingPos,{fileId:id,title:file.name||"미디어",...size,lockAspect:true});toast(kind==="image"?"이미지를 붙였어요":kind==="audio"?"오디오를 붙였어요":kind==="video"?"동영상을 붙였어요":"파일을 붙였어요");}catch(e){toast("파일을 보드에 저장하지 못했어요");}
   }
   function canvasBackgroundImageStatus(d) {
     const image=d && d.canvas && normalizeIdeaCanvasImage(d.canvas.backgroundImage);

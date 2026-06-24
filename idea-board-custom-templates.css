@@ -1585,3 +1585,55 @@
   outline:2px solid var(--accent); outline-offset:3px;
   box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent), 0 8px 26px color-mix(in srgb,var(--accent) 22%,transparent);
 }
+
+/* ===================================================================
+ * v63.26 — targeted media, frame and editor interaction fixes
+ * =================================================================== */
+/* 바로크는 넓은 아칸서스 모서리와 좁은 원본 중앙 띠를 보존합니다. */
+.idea-frame-9slice-baroque {
+  --idea-frame-cap:clamp(22px, 28%, 42px);
+  --idea-frame-outset:12px;
+}
+.idea-frame-9slice-baroque .idea-frame-slice-t,
+.idea-frame-9slice-baroque .idea-frame-slice-b { overflow:hidden; }
+
+/* 기존 내부 검정 매트를 반드시 덮어쓰는 동영상 카드형 플레이어. */
+.idea-item.idea-video .idea-media-shell.idea-video-shell > .idea-media-content {
+  background:linear-gradient(135deg,#fbfdff 0%,#eef6ff 52%,#fff7fb 100%) !important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--idea-color-a,#7b9bff) 20%,white),
+             0 5px 12px color-mix(in srgb,var(--idea-color-b,#b58bff) 13%,transparent) !important;
+}
+.idea-item.idea-video .idea-media-shell.idea-video-shell > .idea-media-content > video {
+  background:transparent !important;
+  border-radius:12px;
+}
+.idea-item.idea-video .idea-media-shell.idea-video-shell {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--idea-color-a,#7b9bff) 18%,#fff),
+    color-mix(in srgb,var(--idea-color-b,#b58bff) 14%,#fff)) !important;
+}
+
+/* 수치 입력의 비율 고정 옵션 */
+.idea-size-lock {
+  display:grid;
+  grid-template-columns:auto auto 1fr;
+  align-items:center;
+  gap:8px;
+  margin:10px 1px 2px;
+  padding:10px 12px;
+  border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--accent-soft) 44%,var(--surface));
+  color:var(--ink);
+  cursor:pointer;
+}
+.idea-size-lock input { accent-color:var(--accent); width:17px; height:17px; margin:0; }
+.idea-size-lock span { font-size:13px; font-weight:850; }
+.idea-size-lock small { min-width:0; color:var(--muted); font-size:10.5px; line-height:1.35; }
+
+/* 메모지 형광펜: 짧은 탭/길게 누르기 상태를 분명하게 보입니다. */
+.idea-note-rich-tools button[data-idea-note-cmd="hiliteColor"] { --hilite-color:#ffe27a; }
+.idea-note-rich-tools button[data-idea-note-cmd="hiliteColor"].holding { background:color-mix(in srgb,var(--hilite-color) 44%,var(--surface)); transform:scale(.96); }
+
+/* 자유 메모 영상은 이미지를 선택했을 때와 동일한 레이어 좌표계를 사용합니다. */
+.editor video { max-width:100%; width:auto; min-height:80px; object-fit:contain; }
