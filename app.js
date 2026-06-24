@@ -38,7 +38,7 @@
     // v49 초기 구현은 색상 키(gold, pastel-pink)를 저장했어요.
     // 기존 프로젝트·백업도 열 때 실제 HEX 값으로 승격해 보존합니다.
     if (FRAME_COLOR_BY_KEY.has(color)) return FRAME_COLOR_BY_KEY.get(color);
-    return FRAME_COLOR_SET.has(color) ? color : null;
+    return FRAME_COLOR_SET.has(color) ? color : (normHex(color) || null);
   }
   function resolveFrameColor(value) {
     if (value === FRAME_THEME_TOKEN) {
@@ -314,6 +314,19 @@
         project.frameColor = validColor;
         await put("projects", project);
       }
+    }
+    // v63.24: 정식 배포 전의 프로젝트 연동 프레임 실험값은 조각별 독립 프레임 모델에서 제거합니다.
+    for (const note of st.notes) {
+      if (!note || note.type !== "idea" || !note.data || !Array.isArray(note.data.items)) continue;
+      let changed = false;
+      note.data.items.forEach((item) => {
+        if (!item || typeof item !== "object") return;
+        if (Object.prototype.hasOwnProperty.call(item, "frameLinked") || Object.prototype.hasOwnProperty.call(item, "useProjectFrame")) {
+          if (item.frameLinked === true || (item.useProjectFrame === true && !frameById(item.frame))) { item.frame = null; item.frameColor = null; }
+          delete item.frameLinked; delete item.useProjectFrame; changed = true;
+        }
+      });
+      if (changed) await put("notes", note);
     }
     // v62: 기존 persona 레코드는 character 단일 모드로 손실 없이 승격합니다.
     // 변환 직전에 자동 백업을 남기고, 알려지지 않은 data 필드는 legacyPersonaExtras에 보존합니다.
@@ -1161,32 +1174,111 @@
   function hexToRgbParts(hex) { const h = normHex(hex) || "#000000"; return { r: parseInt(h.slice(1,3),16), g: parseInt(h.slice(3,5),16), b: parseInt(h.slice(5,7),16) }; }
   function clampRgb(value) { return Math.max(0, Math.min(255, Math.round(Number(value) || 0))); }
   function rgbPartsToHex(r, g, b) { return "#" + [clampRgb(r), clampRgb(g), clampRgb(b)].map((n) => n.toString(16).padStart(2, "0")).join(""); }
+
+  function rgbToHsvParts(r, g, b) {
+    const rr = clampRgb(r) / 255, gg = clampRgb(g) / 255, bb = clampRgb(b) / 255;
+    const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb), d = max - min;
+    let h = 0;
+    if (d) {
+      if (max === rr) h = 60 * (((gg - bb) / d) % 6);
+      else if (max === gg) h = 60 * (((bb - rr) / d) + 2);
+      else h = 60 * (((rr - gg) / d) + 4);
+    }
+    if (h < 0) h += 360;
+    return { h: Math.round(h), s: max ? Math.round((d / max) * 100) : 0, v: Math.round(max * 100) };
+  }
+  function hexToHsvParts(hex) { const rgb = hexToRgbParts(hex); return rgbToHsvParts(rgb.r, rgb.g, rgb.b); }
+  function hsvToHex(h, s, v) {
+    const hue = ((Number(h) % 360) + 360) % 360, sat = Math.max(0, Math.min(100, Number(s) || 0)) / 100, val = Math.max(0, Math.min(100, Number(v) || 0)) / 100;
+    const c = val * sat, x = c * (1 - Math.abs(((hue / 60) % 2) - 1)), m = val - c;
+    let r = 0, g = 0, b = 0;
+    if (hue < 60) [r, g, b] = [c, x, 0];
+    else if (hue < 120) [r, g, b] = [x, c, 0];
+    else if (hue < 180) [r, g, b] = [0, c, x];
+    else if (hue < 240) [r, g, b] = [0, x, c];
+    else if (hue < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    return rgbPartsToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+  function colorStudioRgbFields(prefix) {
+    return `<div class="ce-rgb-row" aria-label="RGB 직접 입력"><label class="ce-rgb-field"><span class="ce-rgb-tag">R</span><input class="ce-rgb" id="${prefix}RgbR" inputmode="numeric" type="number" min="0" max="255" aria-label="Red"></label><label class="ce-rgb-field"><span class="ce-rgb-tag">G</span><input class="ce-rgb" id="${prefix}RgbG" inputmode="numeric" type="number" min="0" max="255" aria-label="Green"></label><label class="ce-rgb-field"><span class="ce-rgb-tag">B</span><input class="ce-rgb" id="${prefix}RgbB" inputmode="numeric" type="number" min="0" max="255" aria-label="Blue"></label></div>`;
+  }
+  function colorStudioMarkup(prefix, options) {
+    const opts = Object.assign({ saved: true, save: true }, options || {});
+    const palette = COLOR_PALETTE.map((c) => `<button type="button" class="ce-sw" data-${prefix}-preset="${c}" style="background:${c}" aria-label="${c}" title="${c}"></button>`).join("");
+    const save = opts.save ? `<button class="ce-addbtn" id="${prefix}Save">저장</button>` : "";
+    const saved = opts.saved ? `<div class="ce-section-label">내 색상</div><div id="${prefix}Saved"></div>` : "";
+    return `<div class="ce-studio" data-color-studio="${prefix}"><div class="ce-studio-top"><div class="ce-square" id="${prefix}Square" role="slider" aria-label="채도와 명도 선택"><span class="ce-square-cursor" id="${prefix}SquareCursor"></span></div><div class="ce-studio-side"><div class="ce-preview"><span class="ce-preview-chip" id="${prefix}PrevChip"></span><span class="ce-preview-text" id="${prefix}PrevText">가나다 Sample</span></div><label class="ce-hue-control"><span>색조</span><input id="${prefix}Hue" type="range" min="0" max="360" step="1" aria-label="색조"></label><p class="ce-square-hint">사각형을 터치해 채도와 명도를 고르세요.</p></div></div><div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="${prefix}Palette">${palette}</div><div class="ce-section-label">직접 입력</div><div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="기본 색상 입력"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}</div>${colorStudioRgbFields(prefix)}${saved}</div>`;
+  }
+  function bindColorStudio(prefix, initial, options) {
+    const opts = Object.assign({ saved: true, save: true, onChange: null, onSave: null }, options || {});
+    const root = $("modalBox");
+    let current = normHex(initial) || "#7b9bff";
+    let hsv = hexToHsvParts(current);
+    const node = (suffix) => $(prefix + suffix);
+    const square = node("Square"), cursor = node("SquareCursor"), hue = node("Hue");
+    const sync = () => {
+      const rgb = hexToRgbParts(current);
+      const chip = node("PrevChip"), label = node("PrevText"), native = node("Native"), field = node("Hex");
+      if (square) square.style.setProperty("--ce-hue", String(hsv.h));
+      if (cursor) { cursor.style.left = `${hsv.s}%`; cursor.style.top = `${100 - hsv.v}%`; }
+      if (hue && document.activeElement !== hue) hue.value = String(hsv.h);
+      if (chip) chip.style.background = current;
+      if (label) label.style.color = current;
+      if (native) native.value = current;
+      if (field && document.activeElement !== field) field.value = current;
+      ["R", "G", "B"].forEach((part) => { const input = node("Rgb" + part); const key = part.toLowerCase(); if (input && document.activeElement !== input) input.value = rgb[key]; });
+      if (root) root.querySelectorAll(`[data-${prefix}-preset]`).forEach((button) => button.classList.toggle("sel", button.getAttribute(`data-${prefix}-preset`) === current));
+      if (typeof opts.onChange === "function") opts.onChange(current);
+    };
+    const setCurrent = (value, nextHsv) => {
+      const hex = normHex(value); if (!hex) return;
+      current = hex; hsv = nextHsv || hexToHsvParts(hex); sync();
+    };
+    const setSquarePoint = (event) => {
+      if (!square) return;
+      const rect = square.getBoundingClientRect();
+      const s = Math.max(0, Math.min(100, ((event.clientX - rect.left) / Math.max(1, rect.width)) * 100));
+      const v = Math.max(0, Math.min(100, (1 - ((event.clientY - rect.top) / Math.max(1, rect.height))) * 100));
+      setCurrent(hsvToHex(hsv.h, s, v), { h: hsv.h, s, v });
+    };
+    if (square) {
+      square.addEventListener("pointerdown", (event) => { if (event.button != null && event.button !== 0) return; event.preventDefault(); try { square.setPointerCapture(event.pointerId); } catch (e) {} setSquarePoint(event); });
+      square.addEventListener("pointermove", (event) => { if (event.buttons || event.pointerType === "touch") setSquarePoint(event); });
+    }
+    if (hue) hue.addEventListener("input", () => { const h = Number(hue.value) || 0; setCurrent(hsvToHex(h, hsv.s, hsv.v), { h, s: hsv.s, v: hsv.v }); });
+    if (root) root.querySelectorAll(`[data-${prefix}-preset]`).forEach((button) => button.addEventListener("click", () => setCurrent(button.getAttribute(`data-${prefix}-preset`))));
+    const native = node("Native"), hexField = node("Hex");
+    if (native) native.addEventListener("input", (event) => setCurrent(event.target.value));
+    if (hexField) hexField.addEventListener("input", (event) => { const hex = normHex(event.target.value); if (hex) setCurrent(hex); });
+    ["R", "G", "B"].forEach((part) => { const input = node("Rgb" + part); if (input) input.addEventListener("input", () => { const values = [node("RgbR").value, node("RgbG").value, node("RgbB").value]; if (values.some((value) => value === "")) return; setCurrent(rgbPartsToHex(values[0], values[1], values[2])); }); });
+    const drawSaved = () => {
+      const host = node("Saved"); if (!host) return;
+      const saved = getSavedColors();
+      host.innerHTML = saved.length ? `<div class="ce-swatches">${saved.map((color) => `<button type="button" class="ce-sw" data-${prefix}-saved="${color}" style="background:${color}" aria-label="${color}" title="${color}"></button>`).join("")}</div>` : '<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>';
+      host.querySelectorAll(`[data-${prefix}-saved]`).forEach((button) => button.addEventListener("click", () => setCurrent(button.getAttribute(`data-${prefix}-saved`))));
+    };
+    const save = node("Save");
+    if (save) save.addEventListener("click", () => { const colors = getSavedColors().filter((color) => color !== current); colors.unshift(current); setSavedColors(colors); drawSaved(); if (typeof opts.onSave === "function") opts.onSave(current); else toast("색을 저장했어요"); });
+    sync(); if (opts.saved) drawSaved();
+    return { get current() { return current; }, setCurrent };
+  }
+  function openAdvancedColorPicker(title, initial, onApply, options) {
+    const opts = Object.assign({ prefix: "advancedColor", saved: true, save: true, intro: "사각형 안을 터치해 원하는 채도와 명도를 고르고, 색조 슬라이더로 전체 색감을 바꿀 수 있어요." }, options || {});
+    openModal(`<h3>${esc(title || "직접 색상 선택")}</h3><p class="m-sub">${esc(opts.intro)}</p>${colorStudioMarkup(opts.prefix, opts)}<div class="m-row"><button class="m-btn" id="${opts.prefix}Cancel">취소</button><button class="m-btn primary" id="${opts.prefix}Apply">적용</button></div>`);
+    const studio = bindColorStudio(opts.prefix, initial, opts);
+    $on(opts.prefix + "Cancel", "click", closeModal);
+    $on(opts.prefix + "Apply", "click", () => { try { localStorage.setItem("luminkLastColor", studio.current); } catch (e) {} closeModal(); if (typeof onApply === "function") onApply(studio.current); });
+  }
   function openColorEditor() {
     const sel = window.getSelection();
     colorRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
     try { const last = localStorage.getItem("luminkLastColor"); if (last) colorCur = last; } catch (e) {}
-    const pal = COLOR_PALETTE.map((c) => `<button class="ce-sw" data-c="${c}" style="background:${c}"></button>`).join("");
-    openModal(`<h3>글자 색</h3>
-      <div class="ce-preview"><span class="ce-preview-chip" id="cePrevChip"></span><span class="ce-preview-text" id="cePrevText">가나다 Sample</span></div>
-      <div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="cePalette">${pal}</div>
-      <div class="ce-section-label">직접 입력</div>
-      <div class="ce-custom-row"><input type="color" class="ce-native" id="ceNative"><input class="ce-hex" id="ceHex" maxlength="7" spellcheck="false" placeholder="#000000"><button class="ce-addbtn" id="ceSave">저장</button></div><div class="ce-rgb-row"><input class="ce-rgb" id="ceRgbR" inputmode="numeric" type="number" min="0" max="255" placeholder="R"><input class="ce-rgb" id="ceRgbG" inputmode="numeric" type="number" min="0" max="255" placeholder="G"><input class="ce-rgb" id="ceRgbB" inputmode="numeric" type="number" min="0" max="255" placeholder="B"></div>
-      <div class="ce-section-label">내 색상</div><div id="ceSavedWrap"></div>
-      <div class="m-row"><button class="m-btn" id="ceCancel">취소</button><button class="m-btn primary" id="ceApply">적용</button></div>`);
-    const setCur = (hex) => { const h = normHex(hex); if (!h) return; colorCur = h; const rgb = hexToRgbParts(h); $("cePrevChip").style.background = h; $("cePrevText").style.color = h; $("ceNative").value = h; if (document.activeElement !== $("ceHex")) $("ceHex").value = h; if (document.activeElement !== $("ceRgbR")) $("ceRgbR").value = rgb.r; if (document.activeElement !== $("ceRgbG")) $("ceRgbG").value = rgb.g; if (document.activeElement !== $("ceRgbB")) $("ceRgbB").value = rgb.b; $("modalBox").querySelectorAll("#cePalette .ce-sw").forEach((s) => s.classList.toggle("sel", s.dataset.c === h)); };
-    const drawSaved = () => {
-      const arr = getSavedColors(), wrap = $("ceSavedWrap");
-      if (!arr.length) { wrap.innerHTML = '<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>'; return; }
-      wrap.innerHTML = `<div class="ce-swatches">${arr.map((c) => `<button class="ce-sw" data-c="${c}" style="background:${c}"></button>`).join("")}</div>`;
-      wrap.querySelectorAll(".ce-sw").forEach((s) => s.addEventListener("click", () => setCur(s.dataset.c)));
-    };
-    $("modalBox").querySelectorAll("#cePalette .ce-sw").forEach((s) => s.addEventListener("click", () => setCur(s.dataset.c)));
-    $on("ceNative", "input", (e) => setCur(e.target.value));
-    $on("ceHex", "input", (e) => { const h = normHex(e.target.value); if (h) setCur(h); });
-    ["ceRgbR","ceRgbG","ceRgbB"].forEach((id) => $on(id, "input", () => setCur(rgbPartsToHex($("ceRgbR").value, $("ceRgbG").value, $("ceRgbB").value))));
-    $on("ceSave", "click", () => { const arr = getSavedColors().filter((c) => c !== colorCur); arr.unshift(colorCur); setSavedColors(arr); drawSaved(); toast("색을 저장했어요"); });
+    openModal(`<h3>글자 색</h3><p class="m-sub">정사각형 색상판을 터치해 색을 고르거나, HEX·RGB로 정확히 맞출 수 있어요.</p>${colorStudioMarkup("ce", { saved:true, save:true })}<div class="m-row"><button class="m-btn" id="ceCancel">취소</button><button class="m-btn primary" id="ceApply">적용</button></div>`);
+    const studio = bindColorStudio("ce", colorCur, { saved:true, save:true });
     $on("ceCancel", "click", closeModal);
     $on("ceApply", "click", () => {
+      colorCur = studio.current;
       try { localStorage.setItem("luminkLastColor", colorCur); } catch (e) {}
       const ed = $("editor"); ed.focus();
       if (colorRange) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(colorRange); }
@@ -1195,8 +1287,8 @@
       const sw = $("colorSwatch"); if (sw) sw.style.background = colorCur;
       closeModal(); scheduleSave();
     });
-    setCur(colorCur); drawSaved();
   }
+
   const HILITE_COLORS = [
     { id: "sky", label: "하늘색", value: "#a8e4ff" },
     { id: "pink", label: "핑크색", value: "#ffb6d9" },
@@ -2810,17 +2902,12 @@
     if (!range || range.collapsed) { toast("색을 바꿀 텍스트를 선택해 주세요"); return; }
     let current = colorCur;
     try { current = localStorage.getItem("luminkLastColor") || current; } catch (e) {}
-    const palette = COLOR_PALETTE.map((c) => `<button class="ce-sw creator-color" data-c="${c}" style="background:${c}"></button>`).join("");
-    openModal(`<h3>글자 색</h3><div class="ce-preview"><span class="ce-preview-chip" id="ccPrevChip"></span><span class="ce-preview-text" id="ccPrevText">가나다 Sample</span></div><div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="ccPalette">${palette}</div><div class="ce-section-label">직접 입력</div><div class="ce-custom-row"><input type="color" class="ce-native" id="ccNative"><input class="ce-hex" id="ccHex" maxlength="7" spellcheck="false" placeholder="#000000"></div><div class="ce-rgb-row"><input class="ce-rgb" id="ccRgbR" inputmode="numeric" type="number" min="0" max="255" placeholder="R"><input class="ce-rgb" id="ccRgbG" inputmode="numeric" type="number" min="0" max="255" placeholder="G"><input class="ce-rgb" id="ccRgbB" inputmode="numeric" type="number" min="0" max="255" placeholder="B"></div><div class="m-row"><button class="m-btn" id="ccCancel">취소</button><button class="m-btn primary" id="ccApply">적용</button></div>`);
-    const set = (value) => { const hex = normHex(value); if (!hex) return; current = hex; const rgb = hexToRgbParts(hex); $("ccPrevChip").style.background = hex; $("ccPrevText").style.color = hex; $("ccNative").value = hex; if (document.activeElement !== $("ccHex")) $("ccHex").value = hex; if (document.activeElement !== $("ccRgbR")) $("ccRgbR").value = rgb.r; if (document.activeElement !== $("ccRgbG")) $("ccRgbG").value = rgb.g; if (document.activeElement !== $("ccRgbB")) $("ccRgbB").value = rgb.b; $("modalBox").querySelectorAll(".creator-color").forEach((b) => b.classList.toggle("sel", b.dataset.c === hex)); };
-    $("modalBox").querySelectorAll(".creator-color").forEach((b) => b.addEventListener("click", () => set(b.dataset.c)));
-    $on("ccNative", "input", (e) => set(e.target.value));
-    $on("ccHex", "input", (e) => { const hex = normHex(e.target.value); if (hex) set(hex); });
-    ["ccRgbR","ccRgbG","ccRgbB"].forEach((id) => $on(id, "input", () => set(rgbPartsToHex($("ccRgbR").value, $("ccRgbG").value, $("ccRgbB").value))));
+    openModal(`<h3>글자 색</h3><p class="m-sub">정사각형 색상판과 HEX·RGB 입력을 함께 사용할 수 있어요.</p>${colorStudioMarkup("cc", { saved:true, save:true })}<div class="m-row"><button class="m-btn" id="ccCancel">취소</button><button class="m-btn primary" id="ccApply">적용</button></div>`);
+    const studio = bindColorStudio("cc", current, { saved:true, save:true });
     $on("ccCancel", "click", closeModal);
-    $on("ccApply", "click", () => { try { localStorage.setItem("luminkLastColor", current); } catch (e) {} closeModal(); restoreCreatorRange(range); document.execCommand("styleWithCSS", false, true); document.execCommand("foreColor", false, current); $("charCreatorColorSwatch").style.background = current; scheduleCreatorSave(); });
-    set(current);
+    $on("ccApply", "click", () => { const color = studio.current; try { localStorage.setItem("luminkLastColor", color); } catch (e) {} closeModal(); restoreCreatorRange(range); document.execCommand("styleWithCSS", false, true); document.execCommand("foreColor", false, color); $("charCreatorColorSwatch").style.background = color; scheduleCreatorSave(); });
   }
+
   function toggleCreatorHilite(color, savedRange, forceColor) {
     const range = savedRange || creatorRange();
     if (!range || range.collapsed) { toast("형광펜을 칠할 텍스트를 선택해 주세요"); return; }
@@ -3525,25 +3612,27 @@
     }));
     $on("frClose", "click", closeModal);
   }
-  function showFrameColorPicker(pid, fid) {
+  function showFrameColorPicker(pid, fid, initialColor) {
     const p = getProject(pid); if (!p) return;
-    let color = normalizeFrameColor(p.frameColor) || "#d4af37";
+    let color = normalizeFrameColor(initialColor || p.frameColor) || "#d4af37";
     const themeAccent = resolveFrameColor(FRAME_THEME_TOKEN);
     const colors = FRAME_COLORS.concat([[FRAME_THEME_TOKEN, "테마와 연동", themeAccent]]);
+    const isCustom = () => { const h = normHex(color); return !!h && !FRAME_COLOR_SET.has(h); };
     const isSelectedFrameColor = (key, value) => {
+      if (key === "__custom__") return isCustom();
       if (key === FRAME_THEME_TOKEN) return color === FRAME_THEME_TOKEN;
       if (key === FRAME_PUNCH_TOKEN) return color === FRAME_PUNCH_TOKEN;
-      return color === value.toLowerCase();
+      return color === String(value).toLowerCase();
     };
     const sw = () => colors.map(([key, name, value]) => {
       const previewColor = key === FRAME_THEME_TOKEN ? themeAccent : value;
       const isGlass = key === "glass";
       const isPunch = key === FRAME_PUNCH_TOKEN;
       const punchStyle = 'background:linear-gradient(135deg, rgba(255,255,255,.68), rgba(255,255,255,.15)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.85), inset 0 0 0 6px rgba(255,255,255,.14), 0 0 0 1px rgba(87,106,146,.32);';
-      return `<div class="fcolor-sw${isGlass ? " glass" : ""}${isPunch ? " punch" : ""}${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}"><span${isGlass ? "" : isPunch ? ` style="${punchStyle}"` : ` style="background:${previewColor}"`}></span></div>`;
-    }).join("");
+      return `<button type="button" class="fcolor-sw${isGlass ? " glass" : ""}${isPunch ? " punch" : ""}${isSelectedFrameColor(key, value) ? " sel" : ""}" data-c="${key}" title="${esc(name)}" aria-label="${esc(name)}"><span${isGlass ? "" : isPunch ? ` style="${punchStyle}"` : ` style="background:${previewColor}"`}></span></button>`;
+    }).join("") + `<button type="button" class="fcolor-sw fcolor-custom${isSelectedFrameColor("__custom__") ? " sel" : ""}" data-c="__custom__" title="직접 색상 선택" aria-label="직접 색상 선택"><span>+</span></button>`;
     openModal(`
-      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · ‘테마와 연동’은 앱 컬러 테마를 바꿀 때 함께 바뀌며, ‘투명 글래스’는 썸네일 위에 반투명하게 겹쳐지고, ‘글래시한 명암’은 반투명 하이라이트와 그림자로 유리 같은 깊이를 더해요.</p>
+      <h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid) || {}).name || "")} · 직접 색상은 정사각형 색상판과 HEX·RGB 입력으로 고를 수 있어요.</p>
       <div class="fr-bigprev"><div class="proj-icon has-frame">${frameThumbInner(p)}<div class="frame" id="frBigFrame">${frameSvgFor(fid, color)}</div></div></div>
       <div class="fcolor-grid" id="fcGrid">${sw()}</div>
       <div class="m-row"><button class="m-btn" id="fcBack">뒤로</button><button class="m-btn primary" id="fcOk">적용</button></div>
@@ -3553,19 +3642,19 @@
       $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => {
         const key = item.dataset.c;
         const value = key === FRAME_THEME_TOKEN ? themeAccent : (key === FRAME_PUNCH_TOKEN ? FRAME_PUNCH_TOKEN : FRAME_COLOR_BY_KEY.get(key));
-        item.classList.toggle("sel", key === FRAME_THEME_TOKEN
-          ? color === FRAME_THEME_TOKEN
-          : color === value);
+        item.classList.toggle("sel", isSelectedFrameColor(key, value));
       });
     };
     $("fcGrid").querySelectorAll(".fcolor-sw").forEach((item) => item.addEventListener("click", () => {
       const key = item.dataset.c;
+      if (key === "__custom__") { openAdvancedColorPicker("프레임 직접 색상", normHex(color) || "#d4af37", (value) => showFrameColorPicker(pid, fid, value), { prefix:"projectFrameCustom", saved:true, save:true }); return; }
       color = key === FRAME_THEME_TOKEN ? FRAME_THEME_TOKEN : (key === FRAME_PUNCH_TOKEN ? FRAME_PUNCH_TOKEN : (FRAME_COLOR_BY_KEY.get(key) || color));
       refresh();
     }));
     $on("fcBack", "click", () => showFramePicker(pid));
     $on("fcOk", "click", async () => { p.frame = fid; p.frameColor = color; await saveProject(p); closeModal(); render(); renderSidebar(); toast(color === FRAME_THEME_TOKEN ? "테마와 연동되는 프레임을 적용했어요" : color === FRAME_PUNCH_TOKEN ? "글래시한 명암 프레임을 적용했어요" : "프레임을 적용했어요"); });
   }
+
   const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
   const MAX_IMAGE_PIXELS = 24 * 1000 * 1000;
   function imageLimitText() { return "이미지는 12MB 이하, 2,400만 픽셀 이하만 넣을 수 있어요"; }
@@ -5546,20 +5635,9 @@ ${gallery}
   // Legacy call site compatibility for extension CSS and older embedded scripts.
   function ideaNoteTextColorChoicesMarkup(selected, attrName, compact = false) { return ideaTextColorChoicesMarkup(selected, attrName, compact); }
   function openIdeaCustomColorPicker(title, initial, onApply) {
-    let current=normHex(initial) || "#7b9bff";
-    const palette=COLOR_PALETTE.map((c)=>`<button type="button" class="ce-sw" data-idea-custom-hex="${c}" style="background:${c}" aria-label="${c}" title="${c}"></button>`).join("");
-    openModal(`<h3>${esc(title || "직접 색상 선택")}</h3><p class="m-sub">리치메모의 색상 편집기와 같은 팔레트입니다. 직접 만든 색은 ‘내 색상’으로 저장해 다른 조각에도 다시 쓸 수 있어요.</p><div class="ce-preview"><span class="ce-preview-chip" id="ideaCustomPrevChip"></span><span class="ce-preview-text" id="ideaCustomPrevText">가나다 Sample</span></div><div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="ideaCustomPalette">${palette}</div><div class="ce-section-label">직접 입력</div><div class="ce-custom-row"><input type="color" class="ce-native" id="ideaCustomNative"><input class="ce-hex" id="ideaCustomHex" maxlength="7" spellcheck="false" placeholder="#000000"><button class="ce-addbtn" id="ideaCustomSave">저장</button></div><div class="ce-rgb-row"><input class="ce-rgb" id="ideaCustomRgbR" inputmode="numeric" type="number" min="0" max="255" placeholder="R"><input class="ce-rgb" id="ideaCustomRgbG" inputmode="numeric" type="number" min="0" max="255" placeholder="G"><input class="ce-rgb" id="ideaCustomRgbB" inputmode="numeric" type="number" min="0" max="255" placeholder="B"></div><div class="ce-section-label">내 색상</div><div id="ideaCustomSaved"></div><div class="m-row"><button class="m-btn" id="ideaCustomCancel">취소</button><button class="m-btn primary" id="ideaCustomApply">적용</button></div>`);
-    const setCurrent=(value)=>{const hex=normHex(value); if(!hex)return; current=hex; const rgb=hexToRgbParts(hex); const chip=$("ideaCustomPrevChip"), label=$("ideaCustomPrevText"), native=$("ideaCustomNative"), field=$("ideaCustomHex"); if(chip)chip.style.background=hex; if(label)label.style.color=hex; if(native)native.value=hex; if(field&&document.activeElement!==field)field.value=hex; if(document.activeElement!==$("ideaCustomRgbR")) $("ideaCustomRgbR").value=rgb.r; if(document.activeElement!==$("ideaCustomRgbG")) $("ideaCustomRgbG").value=rgb.g; if(document.activeElement!==$("ideaCustomRgbB")) $("ideaCustomRgbB").value=rgb.b; $("modalBox").querySelectorAll("[data-idea-custom-hex]").forEach((b)=>b.classList.toggle("sel",b.dataset.ideaCustomHex===hex));};
-    const drawSaved=()=>{const host=$("ideaCustomSaved"),saved=getSavedColors(); if(!host)return; host.innerHTML=saved.length?`<div class="ce-swatches">${saved.map((c)=>`<button type="button" class="ce-sw" data-idea-custom-hex="${c}" style="background:${c}" aria-label="${c}" title="${c}"></button>`).join("")}</div>`:`<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>`;host.querySelectorAll("[data-idea-custom-hex]").forEach((b)=>b.addEventListener("click",()=>setCurrent(b.dataset.ideaCustomHex)));};
-    $("modalBox").querySelectorAll("[data-idea-custom-hex]").forEach((b)=>b.addEventListener("click",()=>setCurrent(b.dataset.ideaCustomHex)));
-    $on("ideaCustomNative","input",(e)=>setCurrent(e.target.value));
-    $on("ideaCustomHex","input",(e)=>{const hex=normHex(e.target.value); if(hex)setCurrent(hex);});
-    ["ideaCustomRgbR","ideaCustomRgbG","ideaCustomRgbB"].forEach((id)=>$on(id,"input",()=>setCurrent(rgbPartsToHex($("ideaCustomRgbR").value,$("ideaCustomRgbG").value,$("ideaCustomRgbB").value))));
-    $on("ideaCustomSave","click",()=>{const colors=getSavedColors().filter((c)=>c!==current); colors.unshift(current); setSavedColors(colors); drawSaved(); toast("색을 저장했어요");});
-    $on("ideaCustomCancel","click",closeModal);
-    $on("ideaCustomApply","click",()=>{try{localStorage.setItem("luminkLastColor",current);}catch(e){} closeModal(); if(typeof onApply==="function")onApply(current);});
-    setCurrent(current); drawSaved();
+    openAdvancedColorPicker(title || "직접 색상 선택", initial, onApply, { prefix:"ideaCustom", saved:true, save:true, intro:"정사각형 색상판을 터치해 색을 고르고, HEX·RGB 입력으로 정확한 코드도 맞출 수 있어요." });
   }
+
   const IDEA_NOTE_RICH_TAGS = new Set(["B","STRONG","I","EM","S","STRIKE","U","BR","DIV","P","SPAN","FONT"]);
   function sanitizeIdeaNoteRichHtml(raw) {
     if (!raw || typeof raw !== "string" || typeof document === "undefined") return "";
@@ -5675,6 +5753,8 @@ ${gallery}
     if (kind === "audio" && normalizedW === 330 && normalizedH === 96) { normalizedW = 360; normalizedH = 82; }
     if (kind === "quote" && normalizedW === 310 && normalizedH === 170) { normalizedW = 300; normalizedH = 62; }
     if (kind === "file" && normalizedW === 300 && normalizedH === 86) { normalizedH = 62; }
+    const legacyLinkedFrame = item.frameLinked === true || (item.useProjectFrame === true && !frameById(item.frame));
+    delete item.frameLinked; delete item.useProjectFrame;
     return Object.assign(item, {
       id: typeof item.id === "string" ? item.id : uid(), kind,
       x: Math.max(0, Math.min(5900, numeric(item.x, defaults.w / 2))),
@@ -5694,11 +5774,9 @@ ${gallery}
       noteId: typeof item.noteId === "string" ? item.noteId : null,
       title: typeof item.title === "string" ? item.title.slice(0, 240) : "",
       showTitle: item.showTitle !== false,
-      // v63.22의 ‘프로젝트 프레임 사용’은 동기화 모드로 호환합니다.
-      frame: frameById(item.frame) ? item.frame : null,
-      frameColor: frameById(item.frame) ? (normalizeFrameColor(item.frameColor) || "#d4af37") : null,
-      frameLinked: item.frameLinked === true || (item.useProjectFrame === true && !frameById(item.frame)),
-      useProjectFrame: item.useProjectFrame === true,
+      // v63.24부터 프레임은 조각별 독립 값만 보관합니다. 과거 프로젝트 연동 전용 값은 정리합니다.
+      frame: legacyLinkedFrame ? null : (frameById(item.frame) ? item.frame : null),
+      frameColor: legacyLinkedFrame ? null : (frameById(item.frame) ? (normalizeFrameColor(item.frameColor) || "#d4af37") : null),
       shadow: item.shadow !== false
     });
   }
@@ -5904,23 +5982,19 @@ ${gallery}
   }
 
   function ideaMediaFrameConfig(item) {
-    if (!item || !["image","video"].includes(item.kind)) return null;
-    const p = getProject(st.curProjectId);
-    if (item.frameLinked || (item.useProjectFrame === true && !frameById(item.frame))) {
-      return p && frameById(p.frame) ? { id:p.frame, color:normalizeFrameColor(p.frameColor) || "#d4af37", linked:true } : null;
-    }
-    return frameById(item.frame) ? { id:item.frame, color:normalizeFrameColor(item.frameColor) || "#d4af37", linked:false } : null;
+    if (!item || !["image","video"].includes(item.kind) || !frameById(item.frame)) return null;
+    return { id:item.frame, color:normalizeFrameColor(item.frameColor) || "#d4af37" };
   }
+
   function ideaMediaFrameMarkup(item) {
     const config=ideaMediaFrameConfig(item);
     return config ? frameNineSliceMarkup(config.id, config.color) : "";
   }
   function ideaMediaFrameLabel(item) {
     const config=ideaMediaFrameConfig(item);
-    if (!config) return "프레임 없음";
-    const name=(frameById(config.id) || {}).name || "프레임";
-    return config.linked ? `프로젝트 연동 · ${name}` : name;
+    return config ? ((frameById(config.id) || {}).name || "프레임") : "프레임 없음";
   }
+
   function refreshIdeaMediaFrame(el, item) {
     if (!el) return;
     const frame = el.querySelector(".idea-media-frame");
@@ -6343,64 +6417,61 @@ ${gallery}
     if(item.kind==="note")$on("ideaOptDesign","click",()=>openIdeaNoteDesignPicker(id));
     if(isColorable&&item.kind!=="note")$on("ideaOptColor","click",()=>openIdeaItemColorPicker(id));
   }
-  function ideaFramePreviewMarkup(fid, color, p, linked) {
+  function ideaFramePreviewMarkup(fid, color, p) {
     const media=frameThumbInner(p || {});
     const frame=fid ? frameNineSliceMarkup(fid,color) : "";
-    return `<div class="idea-frame-select-preview${frame ? " has-frame" : ""}">${media}${frame ? `<div class="idea-media-frame">${frame}</div>` : ""}${linked ? '<span class="idea-frame-linked-badge">연동</span>' : ""}</div>`;
+    return `<div class="idea-frame-select-preview${frame ? " has-frame" : ""}">${media}${frame ? `<div class="idea-media-frame">${frame}</div>` : ""}</div>`;
   }
+
   function openIdeaMediaFramePicker(id) {
     const item=getIdeaItem(id); if(!item || !["image","video"].includes(item.kind)) return;
-    const p=getProject(st.curProjectId);
-    const config=ideaMediaFrameConfig(item);
-    const activeId=config && config.id;
-    const activeColor=config ? config.color : "#d4af37";
-    const linked=!!(config && config.linked);
+    const p=getProject(st.curProjectId), config=ideaMediaFrameConfig(item);
+    const activeId=config && config.id, activeColor=config ? config.color : "#d4af37";
     const none=`<button type="button" class="frame-opt${!config ? " sel" : ""}" data-idea-frame=""><div class="idea-frame-select-preview">${frameThumbInner(p || {})}</div><span>없음</span></button>`;
-    const sync=(p && frameById(p.frame)) ? `<button type="button" class="frame-opt${linked ? " sel" : ""}" data-idea-frame-link="1">${ideaFramePreviewMarkup(p.frame,normalizeFrameColor(p.frameColor)||"#d4af37",p,true)}<span>프로젝트와 연동</span></button>` : "";
-    const grid=FRAMES.map((f)=>`<button type="button" class="frame-opt${!linked && activeId===f.id ? " sel" : ""}" data-idea-frame="${esc(f.id)}">${ideaFramePreviewMarkup(f.id, activeId===f.id ? activeColor : "#d4af37", p, false)}<span>${esc(f.name)}</span></button>`).join("");
-    openModal(`<h3>이미지·영상 프레임</h3><p class="m-sub">프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임은 요소의 바깥선에 걸치고, 가로·세로를 늘려도 모서리와 장식은 원형을 유지합니다.</p><div class="frame-grid idea-media-frame-grid">${none}${sync}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
+    const grid=FRAMES.map((f)=>`<button type="button" class="frame-opt${activeId===f.id ? " sel" : ""}" data-idea-frame="${esc(f.id)}">${ideaFramePreviewMarkup(f.id, activeId===f.id ? activeColor : "#d4af37", p)}<span>${esc(f.name)}</span></button>`).join("");
+    openModal(`<h3>이미지·영상 프레임</h3><p class="m-sub">프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임 값은 이 조각 안에만 독립 저장됩니다.</p><div class="frame-grid idea-media-frame-grid">${none}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-idea-frame]").forEach((button)=>button.addEventListener("click",()=>{
       const fid=button.dataset.ideaFrame;
-      if(!fid){ pushIdeaUndo(); item.frame=null; item.frameColor=null; item.frameLinked=false; item.useProjectFrame=false; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 제거했어요"); return; }
+      if(!fid){ pushIdeaUndo(); item.frame=null; item.frameColor=null; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 제거했어요"); return; }
       openIdeaMediaFrameColorPicker(id,fid);
-    }));
-    $("modalBox").querySelectorAll("[data-idea-frame-link]").forEach((button)=>button.addEventListener("click",()=>{
-      if(!p || !frameById(p.frame)) return;
-      pushIdeaUndo(); item.frame=null; item.frameColor=null; item.frameLinked=true; item.useProjectFrame=true; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프로젝트 썸네일 프레임과 연동했어요");
     }));
     $on("ideaFramePickerClose","click",closeModal);
   }
-  function openIdeaMediaFrameColorPicker(id,fid) {
+
+  function openIdeaMediaFrameColorPicker(id,fid,initialColor) {
     const item=getIdeaItem(id); if(!item || !frameById(fid)) return;
     const p=getProject(st.curProjectId);
-    let color=(item.frame===fid && !item.frameLinked ? normalizeFrameColor(item.frameColor) : null) || (p && normalizeFrameColor(p.frameColor)) || "#d4af37";
+    let color=normalizeFrameColor(initialColor || (item.frame===fid ? item.frameColor : null)) || "#d4af37";
     const themeAccent=resolveFrameColor(FRAME_THEME_TOKEN);
     const colors=FRAME_COLORS.concat([[FRAME_THEME_TOKEN,"테마와 연동",themeAccent]]);
-    const isSelected=(key,value)=> key===FRAME_THEME_TOKEN ? color===FRAME_THEME_TOKEN : key===FRAME_PUNCH_TOKEN ? color===FRAME_PUNCH_TOKEN : color===String(value).toLowerCase();
+    const isCustom=()=>{const h=normHex(color); return !!h && !FRAME_COLOR_SET.has(h);};
+    const isSelected=(key,value)=> key==="__custom__" ? isCustom() : key===FRAME_THEME_TOKEN ? color===FRAME_THEME_TOKEN : key===FRAME_PUNCH_TOKEN ? color===FRAME_PUNCH_TOKEN : color===String(value).toLowerCase();
     const swatches=()=>colors.map(([key,name,value])=>{
       const preview=key===FRAME_THEME_TOKEN?themeAccent:value;
       const isGlass=key==="glass", isPunch=key===FRAME_PUNCH_TOKEN;
       const punch='background:linear-gradient(135deg, rgba(255,255,255,.68), rgba(255,255,255,.15)); box-shadow:inset 0 0 0 1px rgba(255,255,255,.85), inset 0 0 0 6px rgba(255,255,255,.14), 0 0 0 1px rgba(87,106,146,.32);';
       return `<button type="button" class="fcolor-sw${isGlass?" glass":""}${isPunch?" punch":""}${isSelected(key,value)?" sel":""}" data-idea-frame-color="${esc(key)}" title="${esc(name)}" aria-label="${esc(name)}"><span${isGlass?"":isPunch?` style="${punch}"`:` style="background:${preview}"`}></span></button>`;
-    }).join("");
-    openModal(`<h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid)||{}).name||"")} · 프로젝트 썸네일과 동일한 색상 선택기입니다.</p><div class="idea-frame-big-preview" id="ideaFrameBigPreview">${ideaFramePreviewMarkup(fid,color,p,false)}</div><div class="fcolor-grid" id="ideaFrameColorGrid">${swatches()}</div><div class="m-row"><button class="m-btn" id="ideaFrameColorBack">뒤로</button><button class="m-btn primary" id="ideaFrameColorApply">적용</button></div>`);
+    }).join("") + `<button type="button" class="fcolor-sw fcolor-custom${isSelected("__custom__")?" sel":""}" data-idea-frame-color="__custom__" title="직접 색상 선택" aria-label="직접 색상 선택"><span>+</span></button>`;
+    openModal(`<h3>프레임 색상</h3><p class="m-sub">${esc((frameById(fid)||{}).name||"")} · 직접 색상은 정사각형 색상판과 HEX·RGB 입력으로 정밀하게 고를 수 있어요.</p><div class="idea-frame-big-preview" id="ideaFrameBigPreview">${ideaFramePreviewMarkup(fid,color,p)}</div><div class="fcolor-grid" id="ideaFrameColorGrid">${swatches()}</div><div class="m-row"><button class="m-btn" id="ideaFrameColorBack">뒤로</button><button class="m-btn primary" id="ideaFrameColorApply">적용</button></div>`);
     const refresh=()=>{
-      const preview=$("ideaFrameBigPreview"); if(preview) preview.innerHTML=ideaFramePreviewMarkup(fid,color,p,false);
+      const preview=$("ideaFrameBigPreview"); if(preview) preview.innerHTML=ideaFramePreviewMarkup(fid,color,p);
       $("ideaFrameColorGrid").querySelectorAll("[data-idea-frame-color]").forEach((button)=>{
         const key=button.dataset.ideaFrameColor;
         const value=key===FRAME_THEME_TOKEN?themeAccent:(key===FRAME_PUNCH_TOKEN?FRAME_PUNCH_TOKEN:FRAME_COLOR_BY_KEY.get(key));
-        button.classList.toggle("sel", key===FRAME_THEME_TOKEN ? color===FRAME_THEME_TOKEN : color===value);
+        button.classList.toggle("sel", isSelected(key,value));
       });
     };
     $("ideaFrameColorGrid").querySelectorAll("[data-idea-frame-color]").forEach((button)=>button.addEventListener("click",()=>{
       const key=button.dataset.ideaFrameColor;
+      if(key==="__custom__") { openAdvancedColorPicker("프레임 직접 색상", normHex(color) || "#d4af37", (value)=>openIdeaMediaFrameColorPicker(id,fid,value), { prefix:"ideaFrameCustom", saved:true, save:true }); return; }
       color=key===FRAME_THEME_TOKEN?FRAME_THEME_TOKEN:(key===FRAME_PUNCH_TOKEN?FRAME_PUNCH_TOKEN:(FRAME_COLOR_BY_KEY.get(key)||color)); refresh();
     }));
     $on("ideaFrameColorBack","click",()=>openIdeaMediaFramePicker(id));
     $on("ideaFrameColorApply","click",()=>{
-      pushIdeaUndo(); item.frame=fid; item.frameColor=color; item.frameLinked=false; item.useProjectFrame=false; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 적용했어요");
+      pushIdeaUndo(); item.frame=fid; item.frameColor=color; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 적용했어요");
     });
   }
+
 
   function renameIdeaItemTitle(id) {
     const n=currentIdeaNote(), item=getIdeaItem(id); if(!n||!item)return;
