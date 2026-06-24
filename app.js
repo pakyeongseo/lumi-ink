@@ -5856,7 +5856,8 @@ ${gallery}
       z: Math.max(1, Math.min(99999, numeric(item.z, 1))),
       rotation: Math.max(-180, Math.min(180, numeric(item.rotation, 0))),
       aspect,
-      lockAspect: item.lockAspect !== false,
+      // 이미지·동영상만 비율 고정 설정을 가집니다. 메모지·음악·링크·첨부는 프레임 유무와 무관하게 항상 자유 비율입니다.
+      lockAspect: (kind === "image" || kind === "video") ? item.lockAspect !== false : false,
       text: normalizedPlainText,
       richText: normalizedRichText,
       color: normalizeIdeaColorValue(item.color, ideaPreferredColor()),
@@ -6328,7 +6329,7 @@ ${gallery}
   }
   function addIdeaItem(kind, pos, extra) {
     const n=currentIdeaNote(); if (!n) return null; const d=ensureIdeaBoardData(n); pushIdeaUndo(); const def=ideaItemDefaults(kind); const p=pos || findIdeaDropPosition(d,def);
-    const item=Object.assign({ id:uid(), kind, x:Math.max(0,Math.min(d.canvas.width-def.w,p.x)), y:Math.max(0,Math.min(d.canvas.height-def.h,p.y)), w:def.w, h:def.h, z:nextIdeaZ(d), rotation:0, aspect:(kind==="image"||kind==="video")?def.w/def.h:null, lockAspect:true, text:"", color:ideaPreferredColor(), noteStyle:"marker", fileId:null, noteId:null, title:"" },extra||{});
+    const item=Object.assign({ id:uid(), kind, x:Math.max(0,Math.min(d.canvas.width-def.w,p.x)), y:Math.max(0,Math.min(d.canvas.height-def.h,p.y)), w:def.w, h:def.h, z:nextIdeaZ(d), rotation:0, aspect:(kind==="image"||kind==="video")?def.w/def.h:null, lockAspect:(kind==="image"||kind==="video"), text:"", color:ideaPreferredColor(), noteStyle:"marker", fileId:null, noteId:null, title:"" },extra||{});
     d.items.push(normalizeIdeaItem(item)); renderIdeaBoard(); scheduleIdeaSave(); return d.items[d.items.length-1];
   }
   function removeIdeaItem(id, skipUndo) {
@@ -6410,13 +6411,15 @@ ${gallery}
   }
   function openIdeaSizeModal(id) {
     const item=getIdeaItem(id); if(!item)return;
+    const supportsAspect=item.kind === "image" || item.kind === "video";
     const ratio=Math.max(.08,Math.min(20,(Number(item.w)||110)/Math.max(1,Number(item.h)||54)));
-    openModal(`<h3>조각 크기 입력</h3><p class="m-sub">정확한 픽셀 수치를 입력해 크기를 맞춥니다.</p><div class="m-row"><input class="m-input" id="ideaSizeW" inputmode="numeric" type="number" min="110" max="1400" value="${Math.round(item.w)}" aria-label="너비"><input class="m-input" id="ideaSizeH" inputmode="numeric" type="number" min="54" max="1100" value="${Math.round(item.h)}" aria-label="높이"></div><label class="idea-size-lock"><input type="checkbox" id="ideaSizeLock" ${item.lockAspect!==false?"checked":""}><span>비율 고정</span><small>가로 또는 세로를 바꾸면 현재 비율로 함께 계산합니다.</small></label><div class="m-row"><button class="m-btn" id="ideaSizeCancel">취소</button><button class="m-btn primary" id="ideaSizeApply">적용</button></div>`);
-    const sync=(source)=>{if(!$("ideaSizeLock").checked)return;const w=Math.max(110,Number($("ideaSizeW").value)||item.w),h=Math.max(54,Number($("ideaSizeH").value)||item.h);if(source==="w")$("ideaSizeH").value=String(Math.max(54,Math.min(1100,Math.round(w/ratio))));else $("ideaSizeW").value=String(Math.max(110,Math.min(1400,Math.round(h*ratio))));};
+    const lockControl=supportsAspect ? `<label class="idea-size-lock"><input type="checkbox" id="ideaSizeLock" ${item.lockAspect!==false?"checked":""}><span>비율 고정</span><small>가로 또는 세로를 바꾸면 현재 비율로 함께 계산합니다.</small></label>` : `<p class="m-sub idea-size-free-hint">메모지·음악·링크·첨부파일은 가로와 세로를 자유롭게 조절할 수 있어요.</p>`;
+    openModal(`<h3>조각 크기 입력</h3><p class="m-sub">정확한 픽셀 수치를 입력해 크기를 맞춥니다.</p><div class="m-row"><input class="m-input" id="ideaSizeW" inputmode="numeric" type="number" min="110" max="1400" value="${Math.round(item.w)}" aria-label="너비"><input class="m-input" id="ideaSizeH" inputmode="numeric" type="number" min="54" max="1100" value="${Math.round(item.h)}" aria-label="높이"></div>${lockControl}<div class="m-row"><button class="m-btn" id="ideaSizeCancel">취소</button><button class="m-btn primary" id="ideaSizeApply">적용</button></div>`);
+    const sync=(source)=>{const lock=$("ideaSizeLock");if(!lock||!lock.checked)return;const w=Math.max(110,Number($("ideaSizeW").value)||item.w),h=Math.max(54,Number($("ideaSizeH").value)||item.h);if(source==="w")$("ideaSizeH").value=String(Math.max(54,Math.min(1100,Math.round(w/ratio))));else $("ideaSizeW").value=String(Math.max(110,Math.min(1400,Math.round(h*ratio))));};
     $on("ideaSizeW","input",()=>sync("w"));$on("ideaSizeH","input",()=>sync("h"));
     setTimeout(()=>{const input=$("ideaSizeW");if(input){input.focus();input.select();}},80);
     $on("ideaSizeCancel","click",closeModal);
-    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;let w=Math.max(110,Math.min(1400,Math.round(Number($("ideaSizeW").value)||fresh.w))),h=Math.max(54,Math.min(1100,Math.round(Number($("ideaSizeH").value)||fresh.h)));const locked=$("ideaSizeLock").checked;if(locked)h=Math.max(54,Math.min(1100,Math.round(w/ratio)));pushIdeaUndo();fresh.w=w;fresh.h=h;fresh.lockAspect=locked;fresh.aspect=Math.max(.08,Math.min(20,w/h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${w}×${h}px로 맞췄어요`);});
+    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;let w=Math.max(110,Math.min(1400,Math.round(Number($("ideaSizeW").value)||fresh.w))),h=Math.max(54,Math.min(1100,Math.round(Number($("ideaSizeH").value)||fresh.h)));const locked=supportsAspect && $("ideaSizeLock") && $("ideaSizeLock").checked;if(locked)h=Math.max(54,Math.min(1100,Math.round(w/ratio)));pushIdeaUndo();fresh.w=w;fresh.h=h;fresh.lockAspect=!!locked;if(supportsAspect)fresh.aspect=Math.max(.08,Math.min(20,w/h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${w}×${h}px로 맞췄어요`);});
   }
   function bindIdeaRotateHandle(handle,item,el) {
     let lastTapAt = 0;
