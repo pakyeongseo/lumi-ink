@@ -2256,9 +2256,6 @@
   .restore-mode.warning b { color: var(--danger); }
   .restore-mode:active { transform: scale(.985); background: var(--surface-3); }
   .ce-saved-empty { font-size: 12px; color: var(--faint); }
-  .ce-preview { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 9px 12px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--line); }
-  .ce-preview-chip { width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto; border: 1px solid rgba(128,128,128,.3); }
-  .ce-preview-text { font-size: 14px; font-weight: 700; flex: 1 1 auto; }
   .set-rtext { flex: 1; min-width: 0; }
   .set-rlabel { font-size: 15px; font-weight: 650; }
   .set-rsub { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
@@ -3055,7 +3052,6 @@
           <button class="idea-tb-btn sm" id="ideaZoomOut" type="button" aria-label="축소"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></button>
           <input class="idea-zoom-range" id="ideaZoomRange" type="range" min="20" max="250" step="1" value="100" aria-label="확대/축소 비율">
           <label class="idea-tb-zoomlabel idea-tb-zoominput" title="확대 비율 직접 입력"><input id="ideaZoomInput" type="number" inputmode="decimal" min="20" max="250" step="1" value="100" aria-label="확대 비율 직접 입력"><span>%</span></label>
-          <button class="idea-tb-zoomreset" id="ideaZoomReset" type="button" aria-label="100%로 초기화" title="100%로 초기화">1:1</button>
           <button class="idea-tb-btn sm" id="ideaZoomIn" type="button" aria-label="확대"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></button>
           <button class="idea-tb-btn sm" id="ideaZoomFit" type="button" aria-label="화면에 맞추기" title="화면에 맞추기"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
           <span class="idea-tb-sep"></span>

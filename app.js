@@ -1217,7 +1217,6 @@
     return `<div class="ce-studio" data-color-studio="${prefix}">`
       + `<div class="ce-square" id="${prefix}Square" role="slider" aria-label="채도와 명도 선택"><span class="ce-square-cursor" id="${prefix}SquareCursor"></span></div>`
       + `<input class="ce-hue" id="${prefix}Hue" type="range" min="0" max="360" step="1" aria-label="색조">`
-      + `<div class="ce-preview"><span class="ce-preview-chip" id="${prefix}PrevChip"></span><span class="ce-preview-text" id="${prefix}PrevText">가나다 Sample</span></div>`
       + `<div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="색상 선택기"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}</div>`
       + colorStudioRgbFields(prefix)
       + `<div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="${prefix}Palette">${palette}</div>`
@@ -5317,7 +5316,6 @@ ${gallery}
     $on("ideaRedo", "click", ideaRedo);
     $on("ideaZoomIn", "click", () => setIdeaZoom(ideaZoom + 0.2));
     $on("ideaZoomOut", "click", () => setIdeaZoom(ideaZoom - 0.2));
-    $on("ideaZoomReset", "click", () => setIdeaZoom(1));
     $on("ideaZoomFit", "click", ideaZoomFit);
     $on("ideaZoomRange", "input", (e) => setIdeaZoom(Number(e.target.value) / 100));
     const applyIdeaZoomInput=()=>{ const input=$("ideaZoomInput"); if(!input)return; const raw=Number(String(input.value||"").replace(/%/g,"").trim()); const fallback=Math.round(ideaZoom*100); const min=Math.round(ideaMinAllowedZoom()*100), max=Math.round(IDEA_ZOOM_MAX*100); const pct=Number.isFinite(raw)?Math.max(min,Math.min(max,raw)):fallback; setIdeaZoom(pct/100); input.value=String(Math.round(ideaZoom*100)); };
@@ -6042,7 +6040,7 @@ ${gallery}
       const att = itemAttachment(n, item.fileId);
       const trackName = item.title || (att && att.name) || "오디오 트랙";
       const titleClass = item.showTitle === false ? " is-title-hidden" : "";
-      el.innerHTML = `<div class="idea-audio-shell${titleClass}" aria-label="음악 플레이어"><div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span><span class="idea-audio-spark" aria-hidden="true">✦</span></div><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
+      el.innerHTML = `<div class="idea-audio-shell${titleClass}" aria-label="음악 플레이어"><div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V6.2l9-2V15" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.4" cy="17.3" r="2.7" fill="#fff"/><circle cx="15.4" cy="15.3" r="2.7" fill="#fff"/></svg></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span><span class="idea-audio-spark" aria-hidden="true">✦</span></div><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
       hydrateIdeaMedia(el, item, att);
     } else {
       const needsFrame = item.kind === "image" || item.kind === "video";
@@ -6675,7 +6673,7 @@ ${gallery}
   function openIdeaNoteColorPicker(id) {
     const item=getIdeaItem(id);if(!item)return;
     let cpPushed=false; const cpUndo=()=>{ if(!cpPushed){ pushIdeaUndo(); cpPushed=true; } };
-    const sample=esc(item.text || "메모지 미리보기\\n컬러와 글자색을 고르면 바로 반영됩니다.");
+    const sample=esc(item.text || "메모지 미리보기\n컬러와 글자색을 고르면 바로 반영됩니다.");
     openModal(`<h3>메모지 컬러</h3><p class="m-sub">${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)} 디자인에 적용할 색을 고릅니다.</p><article class="idea-preview-note idea-sticky" id="ideaNoteColorPreview" data-note-style="${esc(item.noteStyle)}" data-color="${esc(item.color)}" style="${ideaColorStyleAttr(item.color,item.textColor)}"><div class="idea-note-text">${sample}</div></article><div class="idea-options-label">메모지 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(item.color,"data-idea-note-color",true)}</div><div class="idea-options-label">글자색</div><div class="idea-color-grid palette-grid">${ideaTextColorChoicesMarkup(item.textColor,"data-idea-note-text-color",true)}</div><div class="m-row"><button class="m-btn" id="ideaNoteColorBack">디자인 다시 선택</button><button class="m-btn primary" id="ideaNoteColorDone">완료</button></div>`);
     const update=()=>{const fresh=getIdeaItem(id), preview=$("ideaNoteColorPreview"), el=ideaItemElement(id);if(!fresh)return;if(preview){preview.dataset.color=fresh.color;preview.dataset.noteStyle=fresh.noteStyle;preview.setAttribute("style",ideaColorStyleAttr(fresh.color,fresh.textColor));}if(el)applyIdeaColor(el,fresh);};
     $("modalBox").querySelectorAll("[data-idea-note-color]").forEach((b)=>b.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;cpUndo();fresh.color=b.dataset.ideaNoteColor;scheduleIdeaSave(0);$("modalBox").querySelectorAll("[data-idea-note-color]").forEach(x=>x.classList.toggle("active",x===b));update();}));
@@ -6974,7 +6972,7 @@ ${gallery}
     if(item.kind==="video") return `<article class="${cls}${frameConfig?" has-media-frame":""}" style="${esc(base+frameStyle)}"><div class="idea-media-shell${frameConfig?" has-project-frame":""} idea-video-shell">${ideaVideoDecorMarkup(item)}<div class="idea-media-content">${source?`<video controls playsinline src="${esc(source)}"></video>`:`<span>동영상 파일 없음</span>`}</div>${frameMarkup}</div></article>`;
     const genericFrame=frameConfig ? `<div class="idea-media-frame idea-item-frame">${frameNineSliceMarkup(frameConfig.id,frameConfig.color)}</div>` : "";
     const genericBase=base+frameStyle;
-    if(item.kind==="audio") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-audio-shell"><span class="idea-audio-icon">♫</span><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div>${genericFrame}</article>`;
+    if(item.kind==="audio") { const aTitleCls=item.showTitle===false?" is-title-hidden":""; return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-audio-shell${aTitleCls}"><div class="idea-audio-head"><span class="idea-audio-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V6.2l9-2V15" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.4" cy="17.3" r="2.7" fill="#fff"/><circle cx="15.4" cy="15.3" r="2.7" fill="#fff"/></svg></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(title)}</span></span><span class="idea-audio-spark">✦</span></div><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div>${genericFrame}</article>`; }
     if(item.kind==="quote") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-go">연결 메모</span></div>${genericFrame}</article>`;
     return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}">${source?`<a class="idea-file-body" href="${esc(source)}" download="${esc(title)}"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">받기</span></a>`:`<div class="idea-file-body"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">파일 없음</span></div>`}${genericFrame}</article>`;
   }
