@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v63.46-idea-board-render-fixes";
+const CACHE = "ink-memo-v63.47-idea-board-interaction-fixes";
 
 const ASSETS = [
   "./",
@@ -10,6 +10,7 @@ const ASSETS = [
   "./Lumi_Ink_Manual_1.html",
   "./Lumi_Ink_v63.45_Release_Notes.md",
   "./Lumi_Ink_v63.46_Release_Notes.md",
+  "./Lumi_Ink_v63.47_Release_Notes.md",
   "./app.js",
   "./assets-icons.js",
   "./assets-frames.js",

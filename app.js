@@ -1209,6 +1209,61 @@
     else [r, g, b] = [c, 0, x];
     return rgbPartsToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
   }
+  // EyeDropper API 미지원 브라우저용 실제 화면 색추출기.
+  // 화면을 캡처해 전체화면으로 띄우고, 손가락 위 돋보기로 정확한 지점의 색을 탭으로 추출합니다.
+  async function runScreenEyedropper(onPick){
+    if(typeof window.html2canvas!=="function"){ toast("이 브라우저에서는 화면 스포이드를 사용할 수 없어요."); return; }
+    toast("화면을 준비하고 있어요…");
+    const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+    let shot;
+    try{
+      shot=await window.html2canvas(document.body,{
+        backgroundColor:(getComputedStyle(document.body).backgroundColor)||"#0e1320",
+        scale:dpr, logging:false, useCORS:true, allowTaint:false,
+        x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
+        scrollX:0, scrollY:0, windowWidth:document.documentElement.clientWidth, windowHeight:document.documentElement.clientHeight,
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} }
+      });
+    }catch(e){ console.warn("eyedropper snapshot",e); toast("화면을 캡처하지 못해 스포이드를 열 수 없어요."); return; }
+    const ctx=shot.getContext("2d", { willReadFrequently:true });
+    await new Promise((resolve)=>{
+      const ov=document.createElement("div"); ov.className="ce-eyedropper-overlay";
+      ov.innerHTML=`<canvas class="ce-eyedropper-shot"></canvas><div class="ce-eyedropper-loupe" hidden><canvas></canvas><span class="ce-eyedropper-hex"></span></div><button type="button" class="ce-eyedropper-cancel">취소</button><div class="ce-eyedropper-hint">화면을 탭하면 그 지점의 색을 추출해요</div>`;
+      const view=ov.querySelector(".ce-eyedropper-shot");
+      view.width=shot.width; view.height=shot.height;
+      view.getContext("2d").drawImage(shot,0,0);
+      view.style.width=window.innerWidth+"px"; view.style.height=window.innerHeight+"px";
+      const loupe=ov.querySelector(".ce-eyedropper-loupe"), lcv=loupe.querySelector("canvas"), hexEl=loupe.querySelector(".ce-eyedropper-hex");
+      lcv.width=lcv.height=96;
+      document.body.appendChild(ov);
+      const toHex=(r,g,b)=>"#"+[r,g,b].map((x)=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,"0")).join("");
+      let lastHex=null;
+      const sample=(clientX,clientY)=>{
+        const cx=Math.max(0,Math.min(shot.width-1,Math.round(clientX*dpr))), cy=Math.max(0,Math.min(shot.height-1,Math.round(clientY*dpr)));
+        let d; try{ d=ctx.getImageData(cx,cy,1,1).data; }catch(e){ return; }
+        lastHex=toHex(d[0],d[1],d[2]);
+        loupe.hidden=false;
+        const lctx=lcv.getContext("2d"); lctx.imageSmoothingEnabled=false;
+        const span=Math.round(lcv.width/8);
+        lctx.clearRect(0,0,lcv.width,lcv.height);
+        lctx.drawImage(shot, cx-span/2, cy-span/2, span, span, 0,0, lcv.width, lcv.height);
+        lctx.strokeStyle="rgba(0,0,0,.55)"; lctx.strokeRect(lcv.width/2-6,lcv.height/2-6,12,12);
+        lctx.strokeStyle="#fff"; lctx.strokeRect(lcv.width/2-5,lcv.height/2-5,10,10);
+        hexEl.textContent=lastHex;
+        let lx=clientX+20, ly=clientY-118; if(lx+112>window.innerWidth)lx=clientX-132; if(ly<8)ly=clientY+28;
+        loupe.style.left=lx+"px"; loupe.style.top=ly+"px";
+      };
+      const move=(e)=>{ if(e.cancelable)e.preventDefault(); sample(e.clientX,e.clientY); };
+      const cleanup=(done,hex)=>{ document.removeEventListener("keydown",onKey,true); ov.remove(); if(done&&hex&&typeof onPick==="function"){ onPick(hex); toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다."); } resolve(); };
+      const onKey=(e)=>{ if(e.key==="Escape"){ e.preventDefault(); cleanup(false); } };
+      view.addEventListener("pointermove",move,{passive:false});
+      view.addEventListener("pointerdown",(e)=>{ if(e.cancelable)e.preventDefault(); sample(e.clientX,e.clientY); });
+      view.addEventListener("pointerup",(e)=>{ if(e.cancelable)e.preventDefault(); sample(e.clientX,e.clientY); cleanup(true,lastHex); });
+      ov.querySelector(".ce-eyedropper-cancel").addEventListener("pointerdown",(e)=>{ e.preventDefault(); e.stopPropagation(); cleanup(false); });
+      document.addEventListener("keydown",onKey,true);
+      toast("화면을 탭해 색을 추출하세요");
+    });
+  }
   function colorStudioRgbFields(prefix) {
     return `<div class="ce-rgb-row" aria-label="RGB 직접 입력"><label class="ce-rgb-field"><span class="ce-rgb-tag">R</span><input class="ce-rgb" id="${prefix}RgbR" inputmode="numeric" type="number" min="0" max="255" aria-label="Red"></label><label class="ce-rgb-field"><span class="ce-rgb-tag">G</span><input class="ce-rgb" id="${prefix}RgbG" inputmode="numeric" type="number" min="0" max="255" aria-label="Green"></label><label class="ce-rgb-field"><span class="ce-rgb-tag">B</span><input class="ce-rgb" id="${prefix}RgbB" inputmode="numeric" type="number" min="0" max="255" aria-label="Blue"></label></div>`;
   }
@@ -1285,31 +1340,28 @@
       const supported = typeof EyeDropperCtor === "function";
       const nativeFallback = node("Native");
       eyedropper.disabled = false;
-      eyedropper.classList.toggle("unsupported", !supported);
-      eyedropper.setAttribute("aria-disabled", supported ? "false" : "true");
-      eyedropper.title = supported ? "화면에서 색상 추출" : "이 브라우저에서는 기본 색상 선택기로 전환합니다";
+      eyedropper.classList.remove("unsupported");
+      eyedropper.setAttribute("aria-disabled", "false");
+      eyedropper.title = supported ? "화면에서 색상 추출" : "화면을 캡처해 색을 추출합니다";
       let sampling = false;
       eyedropper.addEventListener("click", async (event) => {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (sampling) return;
-        if (!supported) {
-          if (nativeFallback) {
-            try { nativeFallback.focus({ preventScroll:true }); nativeFallback.click(); } catch (e) {}
-            toast("이 브라우저에서는 기본 색상 선택기를 열었어요.");
-          } else toast("이 브라우저에서는 화면 스포이드를 지원하지 않아요.");
-          return;
-        }
         sampling = true;
         eyedropper.classList.add("is-sampling");
         try {
-          const result = await new EyeDropperCtor().open();
-          if (result && result.sRGBHex) {
-            setCurrent(result.sRGBHex);
-            toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다.");
+          if (supported) {
+            const result = await new EyeDropperCtor().open();
+            if (result && result.sRGBHex) {
+              setCurrent(result.sRGBHex);
+              toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다.");
+            }
+          } else {
+            await runScreenEyedropper(setCurrent);
           }
         } catch (e) {
-          if (e && e.name !== "AbortError") toast("스포이드를 실행하지 못했어요. HTTPS/지원 브라우저인지 확인해 주세요.");
+          if (e && e.name !== "AbortError") toast("스포이드를 실행하지 못했어요. 잠시 후 다시 시도해 주세요.");
         } finally {
           sampling = false;
           eyedropper.classList.remove("is-sampling");
@@ -6677,7 +6729,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
   }
   function clearIdeaSelection() { ideaEditState={itemId:null,groupId:null,mode:null}; const c=$("ideaCanvas"); if(c)c.querySelectorAll(".idea-item.selected,.idea-item.group-selected").forEach((x)=>x.classList.remove("selected","group-selected","move-mode")); c&&c.querySelector(".idea-transform-tools")?.remove(); c&&c.querySelector(".idea-group-box")?.remove(); }
   function expandIdeaGroupSelectionIds(ids) {
-    const d=currentIdeaData(), requested=new Set((ids||[]).filter(Boolean));
+    const d=currentIdeaData(), requested=new Set([...(ids||[])].filter(Boolean));
     if(!d) return requested;
     const groupIds=new Set();
     d.items.forEach((item)=>{ if(requested.has(item.id) && item.groupId) groupIds.add(item.groupId); });
@@ -7341,6 +7393,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-note-text-color"]').forEach((b)=>b.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;openIdeaCustomColorPicker("메모지 글자색 직접 선택",ideaTextColorValue(fresh.textColor)||"#27303a",(value)=>{cpUndo();fresh.textColor=value;scheduleIdeaSave(0);openIdeaNoteColorPicker(id);});}));
     $on("ideaNoteColorBack","click",()=>openIdeaNoteDesignPicker(id));
     $on("ideaNoteColorDone","click",closeModal);
+    update();
   }
   function openIdeaItemColorPicker(id) {
     const item=getIdeaItem(id); if(!item) return;
@@ -7361,6 +7414,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-item-color"]').forEach((button)=>button.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;openIdeaCustomColorPicker(`${label} 컬러 직접 선택`,fresh.color,(value)=>{if(!cpPushed){pushIdeaUndo();cpPushed=true;}fresh.color=value;scheduleIdeaSave(0);openIdeaItemColorPicker(id);});}));
     $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-item-text-color"]').forEach((button)=>button.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;openIdeaCustomColorPicker(`${label} 글자색 직접 선택`,ideaTextColorValue(fresh.textColor)||"#20242d",(value)=>{if(!cpPushed){pushIdeaUndo();cpPushed=true;}fresh.textColor=value;scheduleIdeaSave(0);openIdeaItemColorPicker(id);});}));
     $on("ideaItemColorDone","click",closeModal);
+    update();
   }
   function bindIdeaCanvasLongPress() {
     const canvas=$("ideaCanvas");let timer=null,start=null;
@@ -7844,6 +7898,50 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     await Promise.all(waits);
     await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   }
+  // html2canvas는 color()/color-mix() 같은 최신 색 함수를 파싱하지 못해 캡처가 실패합니다.
+  // 캡처 직전 복제본의 색을 캔버스로 rgb()로 환산해 주입해, 보드의 color-mix 디자인도 정상 캡처되게 합니다.
+  let __colorFnCtx=null;
+  function __colorFnToRgb(token){
+    try{
+      if(!__colorFnCtx) __colorFnCtx=document.createElement("canvas").getContext("2d");
+      __colorFnCtx.fillStyle="#abcdef"; __colorFnCtx.fillStyle=token;
+      const a=__colorFnCtx.fillStyle;
+      __colorFnCtx.fillStyle="#123456"; __colorFnCtx.fillStyle=token;
+      const b=__colorFnCtx.fillStyle;
+      return a===b ? a : null; // 두 센티넬에서 같은 값이면 유효 변환
+    }catch(e){ return null; }
+  }
+  function resolveColorFunctions(value){
+    if(typeof value!=="string" || (value.indexOf("color(")<0 && value.indexOf("color-mix(")<0)) return value;
+    let out="", i=0;
+    while(i<value.length){
+      const m=/^color(?:-mix)?\(/i.exec(value.slice(i));
+      if(m){
+        let depth=0, j=i+m[0].length-1;
+        for(; j<value.length; j++){ if(value[j]==="(")depth++; else if(value[j]===")"){ depth--; if(depth===0){ j++; break; } } }
+        const token=value.slice(i,j), rgb=__colorFnToRgb(token);
+        out+= rgb || token; i=j;
+      } else { out+=value[i]; i++; }
+    }
+    return out;
+  }
+  function normalizeCloneColorFns(root){
+    if(!root) return;
+    const win=(root.ownerDocument&&root.ownerDocument.defaultView)||window;
+    const props=["color","backgroundColor","backgroundImage","borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor","boxShadow","fill","stroke","columnRuleColor","textDecorationColor","caretColor"];
+    const nodes=[root].concat([...root.querySelectorAll("*")]);
+    nodes.forEach((node)=>{
+      if(node.nodeType!==1) return;
+      let cs; try{ cs=win.getComputedStyle(node); }catch(e){ return; }
+      props.forEach((p)=>{
+        const val=cs[p];
+        if(val && (val.indexOf("color(")>=0 || val.indexOf("color-mix(")>=0)){
+          const fixed=resolveColorFunctions(val);
+          if(fixed && fixed!==val){ try{ node.style[p]=fixed; }catch(e){} }
+        }
+      });
+    });
+  }
   async function exportIdeaViewportPng(id) {
     if(st.curNoteId===id) await flushIdeaBoard(false);
     const n=getNote(id); if(!n || n.type!=="idea") return;
@@ -7876,6 +7974,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
         logging:false,
         useCORS:true,
         allowTaint:false,
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} },
         width:Math.max(1,Math.round(crop.w)),
         height:Math.max(1,Math.round(crop.h)),
         windowWidth:Math.max(1,Math.round(crop.w)),

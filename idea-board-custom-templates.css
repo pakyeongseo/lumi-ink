@@ -2414,3 +2414,12 @@
 }
 .ce-eye-btn.is-sampling { opacity:.64; cursor:progress; }
 
+
+/* ── 화면 색추출기(스포이드 폴백) 오버레이 ── */
+.ce-eyedropper-overlay { position:fixed; inset:0; z-index:2147483000; background:rgba(0,0,0,.001); cursor:crosshair; touch-action:none; -webkit-tap-highlight-color:transparent; }
+.ce-eyedropper-shot { position:absolute; left:0; top:0; display:block; }
+.ce-eyedropper-loupe { position:fixed; left:0; top:0; width:96px; display:flex; flex-direction:column; align-items:center; gap:4px; pointer-events:none; z-index:2; }
+.ce-eyedropper-loupe canvas { width:96px; height:96px; border-radius:50%; border:3px solid #fff; box-shadow:0 6px 18px rgba(0,0,0,.55); background:#222; }
+.ce-eyedropper-hex { font:800 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; color:#fff; background:rgba(0,0,0,.74); padding:3px 8px; border-radius:7px; letter-spacing:.06em; }
+.ce-eyedropper-hint { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:rgba(0,0,0,.78); color:#fff; font-size:12px; font-weight:600; padding:8px 15px; border-radius:999px; pointer-events:none; max-width:90vw; text-align:center; z-index:2; }
+.ce-eyedropper-cancel { position:fixed; top:14px; right:14px; background:rgba(0,0,0,.72); color:#fff; border:1px solid rgba(255,255,255,.32); border-radius:999px; padding:8px 17px; font-size:13px; font-weight:700; z-index:3; }
