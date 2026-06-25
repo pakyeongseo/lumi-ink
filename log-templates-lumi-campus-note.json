@@ -1,0 +1,140 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-campus-note",
+  "name": "청춘 노트",
+  "description": "밝고 산뜻한 학원물 로그. 공책 마진선과 형광펜 강조.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background-color": "#ffffff",
+      "color": "#39404a",
+      "border": "1px solid #e4e8ee",
+      "border-left": "6px solid #6fb7e8",
+      "border-radius": "10px",
+      "padding": "24px 22px 24px 26px",
+      "box-shadow": "0 10px 30px rgba(80,120,170,.12)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.82",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#f0788a",
+      "font-size": "13px",
+      "font-weight": "800",
+      "letter-spacing": ".14em",
+      "border-bottom": "2px dashed #cfe2f2",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 11px"
+    },
+    "empty": {
+      "height": "10px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2f7fc4",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3da58a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7a6320",
+        "background-color": "#fdf2a6",
+        "border-radius": "4px",
+        "padding": "1px 6px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e8536a",
+        "font-weight": "800",
+        "text-decoration": "underline"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7d8694",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#97bfe2"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9ed2c4"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "걔",
+    "style": {
+      "color": "#fff",
+      "background-color": "#6fb7e8",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    }
+  }
+}

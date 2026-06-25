@@ -1,0 +1,132 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-leaf-cabin",
+  "name": "리프 캐빈",
+  "description": "잎사귀 그린과 크림 우드의 힐링 일상 로그. 둥글둥글 따뜻한 자연 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#f8f5e9,#eef4dd 60%,#e9f1e0)",
+      "color": "#4f5340",
+      "border": "1px solid #cdd9a8",
+      "border-radius": "24px",
+      "padding": "26px 24px",
+      "box-shadow": "0 14px 38px rgba(120,140,80,.16)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.86",
+      "max-width": "700px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#6e924a",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".16em",
+      "text-align": "center",
+      "border-bottom": "2px dotted #c4d59a",
+      "padding": "0 0 13px",
+      "margin": "0 0 17px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5a8a3a",
+        "background-color": "rgba(150,190,90,.16)",
+        "border-radius": "12px",
+        "padding": "2px 10px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a08a4a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(이벤트)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b07a3a",
+        "background-color": "rgba(230,200,140,.3)",
+        "border-radius": "10px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#43702a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8a7c52",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c8be96"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "이웃",
+    "style": {
+      "color": "#fff",
+      "background-color": "#8db84e",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    }
+  }
+}

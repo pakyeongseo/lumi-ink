@@ -1,0 +1,142 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-cloudsea-jade",
+  "name": "운해옥검",
+  "description": "옥빛 운무가 흐르는 청량한 선협 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#ecf6ef,#dfeee7 55%,#e7f0e6)",
+      "color": "#3a4a4a",
+      "border": "1px solid #b9d3cc",
+      "border-radius": "14px",
+      "padding": "28px 26px",
+      "box-shadow": "0 16px 42px rgba(90,130,125,.16), inset 0 0 60px rgba(220,238,234,.5)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#3f7a72",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".36em",
+      "text-align": "center",
+      "border-bottom": "1px solid #c5dcd5",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#1f6b62",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(심상·전음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7d72b0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(선술·이펙트)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#3c8079",
+        "border": "1px solid #a7cfc6",
+        "border-radius": "8px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em",
+        "box-shadow": "0 0 12px rgba(120,190,178,.3)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#1c3a38",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5a8782",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#82aea6"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b2b2cc"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 분",
+    "style": {
+      "color": "#eef6f3",
+      "background-color": "#3f8a80",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "letter-spacing": ".04em"
+    }
+  }
+}

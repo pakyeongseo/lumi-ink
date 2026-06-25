@@ -1,0 +1,140 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-concerto-stage",
+  "name": "콘체르토 스테이지",
+  "description": "버건디 무대와 샴페인 골드의 음악 연주 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#2c0e2e,#36143c 55%,#2d1034)",
+      "color": "#d8c2c0",
+      "border": "1px solid #a86a9a",
+      "border-radius": "8px",
+      "padding": "28px 26px",
+      "box-shadow": "0 20px 48px rgba(12,4,8,.55), inset 0 0 60px rgba(120,40,60,.16)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#d8a070",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".32em",
+      "text-align": "center",
+      "border-bottom": "1px solid #6e4a64",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#f2e8d8",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d49aa6",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(악장·음악)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#cf9ad0",
+        "border": "1px solid #8a5a86",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d6986a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c0a0c8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#907c86"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#82556d"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#2a1030",
+      "background-color": "#d8b06a",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    }
+  }
+}

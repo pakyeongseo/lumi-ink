@@ -1,0 +1,141 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-holy-night",
+  "name": "홀리 나이트",
+  "description": "에버그린과 홀리 레드, 금빛 전구의 크리스마스 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#0e2418,#13301f 55%,#0e2418)",
+      "color": "#bcccb4",
+      "border": "1px solid #9a6a3a",
+      "border-radius": "14px",
+      "padding": "28px 26px",
+      "box-shadow": "0 18px 46px rgba(4,14,8,.5), inset 0 0 60px rgba(180,40,40,.08)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#e6c46a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "text-align": "center",
+      "border-bottom": "1px solid #2e5238",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ec5a52",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d8be7e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e6c46a",
+        "border": "1px solid #7a5e2e",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em",
+        "box-shadow": "0 0 12px rgba(230,196,106,.25)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f2d488",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8aae84",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7e4136"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#74734c"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#0e2418",
+      "background-color": "#e05148",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    }
+  }
+}

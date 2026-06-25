@@ -1,0 +1,140 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-first-rose",
+  "name": "퍼스트 로즈",
+  "description": "장미 레드와 짙은 잎 그린의 첫사랑 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#fffaf8,#fceef0 55%,#f3f7ee)",
+      "color": "#5a4a4c",
+      "border": "1px solid #ecc4cc",
+      "border-radius": "16px",
+      "padding": "28px 26px",
+      "box-shadow": "0 14px 38px rgba(200,120,140,.16)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.88",
+      "max-width": "700px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#c8324e",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".26em",
+      "text-align": "center",
+      "border-bottom": "1px solid #f0d2d8",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c0263f",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2f7a4e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2f7a4e",
+        "border": "1px solid #9ac4a6",
+        "border-radius": "8px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".03em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a81e36",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5a8a64",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#dd8e98"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#94b8a0"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 애",
+    "style": {
+      "color": "#fff",
+      "background-color": "#d23a56",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    }
+  }
+}

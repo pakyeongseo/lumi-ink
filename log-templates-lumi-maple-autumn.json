@@ -1,0 +1,140 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-maple-autumn",
+  "name": "메이플 오텀",
+  "description": "단풍 진홍과 황금빛의 가을 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#fdf0e0,#f8dcc0 55%,#f3d0b0)",
+      "color": "#5a4330",
+      "border": "1px solid #d9a866",
+      "border-radius": "14px",
+      "padding": "28px 26px",
+      "box-shadow": "0 14px 38px rgba(160,100,40,.18)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.88",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#b8562a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".28em",
+      "text-align": "center",
+      "border-bottom": "1px solid #e0b078",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b3322a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b07a28",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a6428",
+        "border": "1px solid #cf9a52",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".04em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c75a1e",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8a6a44",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d68878"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d4ac76"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#fdf3e3",
+      "background-color": "#bb4a2a",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    }
+  }
+}

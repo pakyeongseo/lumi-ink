@@ -1,0 +1,133 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-derelict-whisper",
+  "name": "폐옥의 속삭임",
+  "description": "탁한 차콜·시체빛 호러 로그. 어긋난 굵은 좌측선과 핏빛 대사.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(170deg,#15171450,#181a16),linear-gradient(#14150f,#1a1c16)",
+      "color": "#b3b6a6",
+      "border": "1px solid #2c3026",
+      "border-left": "5px solid #5a1f1f",
+      "border-radius": "2px",
+      "padding": "26px 24px",
+      "box-shadow": "0 16px 40px rgba(0,0,0,.6), inset -30px 0 60px rgba(0,0,0,.35)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#8a3a32",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".4em",
+      "border-bottom": "1px solid #2c3026",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "14px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(목소리)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c4574e",
+        "background-color": "rgba(90,31,31,.28)",
+        "padding": "1px 6px",
+        "letter-spacing": ".04em",
+        "font-weight": "600"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(환청)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7e8a72",
+        "font-style": "italic",
+        "letter-spacing": ".08em"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(기척)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8f5a",
+        "font-size": "13px",
+        "letter-spacing": ".14em",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d96b5f",
+        "font-weight": "800",
+        "letter-spacing": ".05em"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8c8f7e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4a5142"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그것",
+    "style": {
+      "color": "#d8d4c4",
+      "background-color": "#4a1818",
+      "border-radius": "1px",
+      "padding": "1px 7px",
+      "font-weight": "700",
+      "letter-spacing": ".1em"
+    }
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-ashfall-signal",
+  "name": "애시폴 시그널",
+  "description": "잿빛 콘크리트와 경고 앰버의 종말물 로그. 생존자 무전 톤의 모노스페이스.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#1b1d1a,#22231d 55%,#1d1f1b)",
+      "color": "#a7a596",
+      "border": "1px solid #3a3a30",
+      "border-left": "5px solid #c47a1f",
+      "border-radius": "2px",
+      "padding": "26px 24px",
+      "box-shadow": "0 16px 40px rgba(0,0,0,.55), inset -20px 0 50px rgba(0,0,0,.3)",
+      "font-family": "'DejaVu Sans Mono','Courier New',monospace",
+      "line-height": "1.84",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#d68a2a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "border-bottom": "1px solid #3a3a30",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(교신)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#dcd6c4",
+        "background-color": "rgba(196,122,31,.10)",
+        "border-left": "2px solid #c47a1f",
+        "padding": "1px 8px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(독백)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7d8772",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(경고·상태)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e4b24a",
+        "background-color": "rgba(180,40,30,.16)",
+        "border": "1px solid #8a3a26",
+        "border-radius": "1px",
+        "padding": "0 7px",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": ".08em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e89a30",
+        "font-weight": "800",
+        "letter-spacing": ".03em"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#878b78",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4e5346"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "UNKNOWN",
+    "style": {
+      "color": "#1b1d1a",
+      "background-color": "#c47a1f",
+      "border-radius": "0",
+      "padding": "1px 8px",
+      "font-weight": "800",
+      "letter-spacing": ".1em"
+    }
+  }
+}

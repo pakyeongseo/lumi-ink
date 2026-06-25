@@ -1,0 +1,135 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-amethyst-luxe",
+  "name": "어메시스트 럭스",
+  "description": "자수정과 샴페인 골드가 반짝이는 보석 럭셔리 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(155deg,#251739,#32204c 55%,#2a1b42)",
+      "color": "#d6c8e6",
+      "border": "1px solid #c2a050",
+      "border-radius": "12px",
+      "padding": "28px 26px",
+      "box-shadow": "0 0 0 1px rgba(200,160,90,.2), 0 20px 50px rgba(10,4,20,.55), inset 0 0 60px rgba(150,90,200,.14)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#e3c878",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "text-align": "center",
+      "border-bottom": "1px solid #6e5a30",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c79af0",
+        "background-color": "rgba(170,110,220,.14)",
+        "border-radius": "8px",
+        "padding": "1px 9px",
+        "font-weight": "700",
+        "box-shadow": "0 0 16px rgba(170,110,220,.3)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a98ed0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e3c878",
+        "border": "1px solid #8a6e38",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em",
+        "box-shadow": "0 0 12px rgba(200,160,90,.25)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#edd388",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#bca6dc",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a5489"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 분",
+    "style": {
+      "color": "#1f1430",
+      "background-color": "#e3c878",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "box-shadow": "0 0 12px rgba(227,200,120,.5)"
+    }
+  }
+}

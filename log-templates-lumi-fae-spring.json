@@ -1,0 +1,135 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-fae-spring",
+  "name": "페이 스프링",
+  "description": "에메랄드 샘물과 요정의 반짝임이 흐르는 몽환 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#0c211b,#0f2a22 50%,#0d231d)",
+      "color": "#a8cdc6",
+      "border": "1px solid #2c5a52",
+      "border-radius": "16px",
+      "padding": "28px 26px",
+      "box-shadow": "0 0 0 1px rgba(110,230,200,.10), 0 18px 46px rgba(4,16,14,.55), inset 0 0 60px rgba(60,170,150,.10)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#5fe0c0",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".32em",
+      "text-align": "center",
+      "border-bottom": "1px solid #245048",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(요정 목소리)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6cf0d2",
+        "background-color": "rgba(90,224,192,.10)",
+        "border-radius": "10px",
+        "padding": "2px 10px",
+        "font-weight": "700",
+        "box-shadow": "0 0 16px rgba(90,224,192,.3)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속삭임)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a99cdf",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(마법·이펙트)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5fd6c0",
+        "border": "1px solid #3a8a7c",
+        "border-radius": "8px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em",
+        "box-shadow": "0 0 12px rgba(95,214,192,.3)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d6f7ee",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7fb8ad",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5b607e"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 이름",
+    "style": {
+      "color": "#0f221f",
+      "background-color": "#5fe0c0",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "box-shadow": "0 0 14px rgba(95,224,192,.55)"
+    }
+  }
+}

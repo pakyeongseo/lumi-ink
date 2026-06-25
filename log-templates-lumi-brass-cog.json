@@ -1,0 +1,141 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-brass-cog",
+  "name": "브라스 코그",
+  "description": "황동과 녹청, 증기의 빅토리안 스팀펑크 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#241b11,#2c2116 55%,#251c12)",
+      "color": "#c4ad88",
+      "border": "3px double #8a6a30",
+      "border-radius": "5px",
+      "padding": "28px 26px",
+      "box-shadow": "0 20px 48px rgba(0,0,0,.55), inset 0 0 60px rgba(120,86,30,.18)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.88",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#caa44c",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "border-bottom": "3px double #7a5e2c",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e6cf9a",
+        "font-weight": "700",
+        "letter-spacing": ".01em"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(독백)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4fb0a6",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(장치·기계)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5fc0b4",
+        "border": "1px solid #348078",
+        "border-radius": "2px",
+        "padding": "0 7px",
+        "font-size": "13px",
+        "letter-spacing": ".06em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d6a44c",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8964",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#867656"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3b665c"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "기명 불명",
+    "style": {
+      "color": "#241b11",
+      "background-color": "#c89b44",
+      "border-radius": "1px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}

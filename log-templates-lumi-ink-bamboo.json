@@ -1,0 +1,133 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-ink-bamboo",
+  "name": "묵향 죽간",
+  "description": "한지빛 바탕에 먹과 주사(朱砂) 인장 톤의 무협·동양풍 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(180deg,#f7f1e0,#f2ebd6)",
+      "color": "#3b332a",
+      "border": "1px solid #cdb98f",
+      "border-left": "4px solid #9c3b2e",
+      "border-radius": "3px",
+      "padding": "28px 26px",
+      "box-shadow": "0 14px 36px rgba(90,70,40,.18)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.95",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#2c241c",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".42em",
+      "border-bottom": "1px solid #cdb98f",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9c2f24",
+        "background-color": "rgba(156,47,36,.08)",
+        "border-radius": "2px",
+        "padding": "1px 7px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(전음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3a5a6a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6b5436",
+        "border": "1px solid #b7a075",
+        "border-radius": "2px",
+        "padding": "0 7px",
+        "font-size": "13px",
+        "letter-spacing": ".06em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#1f1a14",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a5d49",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#97a4a2"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "某人",
+    "style": {
+      "color": "#f4ecd9",
+      "background-color": "#9c3b2e",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".1em"
+    }
+  }
+}

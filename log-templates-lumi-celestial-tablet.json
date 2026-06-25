@@ -1,0 +1,135 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-celestial-tablet",
+  "name": "천계의 서판",
+  "description": "화이트-골드 발광 톤의 천상계·신화 로그. 후광 강조와 성스러운 여백.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(170deg,#fffdf8,#f6f1ff 60%,#eef4ff)",
+      "color": "#4c4658",
+      "border": "1px solid #e3d4a8",
+      "border-radius": "16px",
+      "padding": "30px 28px",
+      "box-shadow": "0 18px 50px rgba(180,160,120,.18), inset 0 0 70px rgba(255,240,200,.3)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#bf9d52",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".4em",
+      "text-align": "center",
+      "border-bottom": "1px solid #ecdfbf",
+      "padding": "0 0 16px",
+      "margin": "0 0 22px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "13px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(신탁)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3d76c4",
+        "background-color": "rgba(120,170,235,.12)",
+        "border-radius": "10px",
+        "padding": "2px 10px",
+        "font-weight": "700",
+        "box-shadow": "0 0 16px rgba(120,170,235,.25)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(기원)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a76b8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(권능)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b08a3a",
+        "border": "1px solid #e3cf94",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".06em",
+        "box-shadow": "0 0 12px rgba(224,196,111,.3)"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a7320",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7d7390",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c0b6da"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 이름",
+    "style": {
+      "color": "#fffdf8",
+      "background-color": "#d4ad55",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "box-shadow": "0 0 14px rgba(212,173,85,.55)"
+    }
+  }
+}
