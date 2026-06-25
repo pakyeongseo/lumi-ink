@@ -1713,6 +1713,12 @@
 /* Recent board editing: quote search, read-only mode and expanded board editing */
 .idea-quote-search { margin:8px 0 10px; }
 .idea-quote-results { max-height:min(50dvh,420px); overflow:auto; overscroll-behavior:auto; padding-right:2px; }
+.idea-quote-manager .log-template-tools { grid-template-columns:minmax(0,1fr) auto; }
+.idea-quote-manager .idea-quote-results { max-height:none; }
+.idea-quote-manager .memo-tag { flex:0 0 auto; }
+.idea-quote-manager .log-template-title b { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.idea-quote-manager .log-template-main small { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; overflow:hidden; }
+.idea-quote-project-item .log-template-main small { -webkit-line-clamp:1; }
 .idea-readonly-mode #ideaAdd,
 .idea-readonly-mode #ideaSave,
 .idea-readonly-mode #ideaSnapToggle,
@@ -1723,7 +1729,7 @@
 .idea-readonly-mode .idea-item { cursor:default; }
 .idea-readonly-mode .idea-note-text { user-select:text; }
 
-/* v63.37: lock, multi-select, grouping and empty frame elements */
+/* Recent board editing: lock, multi-select, grouping and empty frame elements */
 .idea-item { min-width:24px; min-height:24px; }
 .idea-note-ink { display:block; color:var(--stick-ink,#27303a); font-weight:950; border-bottom:3px solid currentColor; line-height:.8; padding-bottom:2px; }
 .idea-sticky[data-v-align="center"] .idea-note-text,

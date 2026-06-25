@@ -5315,7 +5315,7 @@ ${gallery}
     $on("ideaAdd", "click", () => { if (!isIdeaReadonly()) openIdeaAddMenu(null, false); });
     $on("ideaMore", "click", () => { const n=getNote(st.curNoteId); if(n&&n.type==="idea") openIdeaBoardSheet(n); });
     $on("ideaSave", "click", async () => { await flushIdeaBoard(); toast("저장했어요"); });
-    $on("ideaViewToggle", "click", () => setIdeaView(ideaViewMode === "board" ? "list" : ideaViewMode === "list" ? "view" : "board"));
+    $on("ideaViewToggle", "click", () => setIdeaView(ideaViewMode === "view" ? "board" : "view"));
     $on("ideaUndo", "click", ideaUndo);
     $on("ideaRedo", "click", ideaRedo);
     $on("ideaZoomIn", "click", () => setIdeaZoom(ideaZoom + 0.2));
@@ -5326,7 +5326,7 @@ ${gallery}
     $on("ideaZoomInput","change",applyIdeaZoomInput);
     $on("ideaZoomInput","blur",applyIdeaZoomInput);
     $on("ideaZoomInput","keydown",(e)=>{if(e.key==="Enter"){e.preventDefault();applyIdeaZoomInput();e.currentTarget.blur();}});
-    $on("ideaSnapToggle", "click", () => { if (isIdeaReadonly()) return; ideaSnapOn = !ideaSnapOn; const b = $("ideaSnapToggle"); if (b) { b.setAttribute("aria-pressed", String(ideaSnapOn)); b.classList.toggle("on", ideaSnapOn); } if (!ideaSnapOn) clearIdeaSnapGuides(); toast(ideaSnapOn ? "스냅 정렬 켜짐 · 드래그 시 가이드 표시" : "스냅 정렬 꺼짐"); });
+    $on("ideaSnapToggle", "click", () => { if (isIdeaReadonly()) return; const d=currentIdeaData(); ideaSnapOn = !ideaSnapOn; if(d)d.canvas.snapOn=ideaSnapOn; updateIdeaSnapButton(); if (!ideaSnapOn) clearIdeaSnapGuides(); scheduleIdeaSave(0); toast(ideaSnapOn ? "스냅 정렬 켜짐 · 이 보드에 저장됩니다" : "스냅 정렬 꺼짐 · 이 보드에 저장됩니다"); });
     $on("ideaMultiToggle", "click", () => setIdeaMultiSelectMode(!ideaMultiSelectMode));
     (() => {
       const stage = $("ideaStageWrap"); if (!stage) return;
@@ -5381,7 +5381,6 @@ ${gallery}
     });
     $on("ideaBoardMode", "click", () => setIdeaView("board"));
     $on("ideaListMode", "click", () => setIdeaView("list"));
-    $on("ideaReadMode", "click", () => setIdeaView("view"));
     $on("ideaMediaInput", "change", (e) => { const f=e.target.files&&e.target.files[0],kind=e.target.dataset.ideaKind||"image"; e.target.value="";delete e.target.dataset.ideaKind;if(f)void addIdeaMediaFile(f,kind); });
     $on("ideaFileInput", "change", (e) => { const f=e.target.files&&e.target.files[0];e.target.value="";if(f)void addIdeaMediaFile(f,"file"); });
     $on("ideaCanvasBgInput", "change", (e) => { const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) void addIdeaCanvasBackgroundImage(f); });
@@ -5761,6 +5760,8 @@ ${gallery}
   const IDEA_HISTORY_MAX = 20;
   const IDEA_KIND_LABEL = { note:"메모지", image:"이미지", audio:"음악", video:"영상", file:"파일", quote:"링크", frame:"빈 프레임" };
   let ideaMultiSelectMode = false, ideaSelectedIds = new Set();
+  const IDEA_EYE_SVG = '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const IDEA_PENCIL_SVG = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
   let ideaZoom = 1, ideaSnapOn = false, ideaPinch = null; const ideaPointers = new Map();
   const IDEA_ZOOM_MIN = 0.2, IDEA_ZOOM_MAX = 2.5;
   const ideaReduceMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -5782,13 +5783,13 @@ ${gallery}
   }
   function finalizeIdeaBoardHistory(boardId) { const note = boardId ? getNote(boardId) : null; ideaUndoStack.length = 0; ideaRedoStack.length = 0; commitIdeaRemovedBlobs(note, true); ideaRemovedBlobIds.clear(); }
   function pushIdeaUndo(snap) { const n = currentIdeaNote(); if (!n) return; syncIdeaHistoryBoard(); const s = snap || ideaSnapshot(); if (s == null) return; ideaUndoStack.push(s); ideaRedoStack.length = 0; while (ideaUndoStack.length > IDEA_HISTORY_MAX) ideaUndoStack.shift(); commitIdeaRemovedBlobs(n, false); updateIdeaHistoryButtons(); }
-  function applyIdeaSnapshot(s) { const d = currentIdeaData(); if (!d || s == null) return; try { const o = JSON.parse(s); d.items = Array.isArray(o.items) ? o.items : []; if (o.canvas) d.canvas = o.canvas; d.attachments = Array.isArray(o.attachments) ? o.attachments : []; } catch (e) { return; } ideaEditState = { itemId: null, mode: null }; renderIdeaBoard(); scheduleIdeaSave(0); }
+  function applyIdeaSnapshot(s) { const d = currentIdeaData(); if (!d || s == null) return; try { const o = JSON.parse(s); d.items = Array.isArray(o.items) ? o.items : []; if (o.canvas) d.canvas = o.canvas; d.attachments = Array.isArray(o.attachments) ? o.attachments : []; } catch (e) { return; } ideaEditState = { itemId: null, groupId:null, mode: null }; renderIdeaBoard(); scheduleIdeaSave(0); }
   function ideaUndo() { syncIdeaHistoryBoard(); if (!ideaUndoStack.length) { toast("되돌릴 작업이 없어요"); return; } const cur = ideaSnapshot(); const prev = ideaUndoStack.pop(); if (cur != null) ideaRedoStack.push(cur); applyIdeaSnapshot(prev); updateIdeaHistoryButtons(); toast("되돌렸어요"); }
   function ideaRedo() { syncIdeaHistoryBoard(); if (!ideaRedoStack.length) { toast("다시 실행할 작업이 없어요"); return; } const cur = ideaSnapshot(); const next = ideaRedoStack.pop(); if (cur != null) ideaUndoStack.push(cur); applyIdeaSnapshot(next); updateIdeaHistoryButtons(); toast("다시 적용했어요"); }
   function updateIdeaHistoryButtons() { const u = $("ideaUndo"), r = $("ideaRedo"); if (u) u.disabled = !ideaUndoStack.length; if (r) r.disabled = !ideaRedoStack.length; }
 
   function makeIdeaBoardData() {
-    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundMode: "template", backgroundImage: null, backgroundPreset: null, fitMode: false }, items: [], attachments: [], viewMode: "board" };
+    return { canvas: { width: 1600, height: 1100, background: "blueprint", backgroundMode: "template", backgroundImage: null, backgroundPreset: null, fitMode: false, snapOn: false }, items: [], attachments: [], viewMode: "board" };
   }
   function normalizeIdeaCanvasImage(raw) {
     if (!raw || typeof raw !== "object" || typeof raw.fileId !== "string" || !raw.fileId) return null;
@@ -5830,6 +5831,7 @@ ${gallery}
     // 화면 맞춤은 고정 배율이 아니라 현재 기기의 가용 스테이지 크기를 따라가는 모드입니다.
     // 구형 보드는 false로 시작해, 사용자가 직접 맞춤을 눌렀을 때만 자동 재계산됩니다.
     d.canvas.fitMode = d.canvas.fitMode === true;
+    d.canvas.snapOn = d.canvas.snapOn === true;
     d.canvas.background = IDEA_BG_TEMPLATES[d.canvas.background] ? d.canvas.background : "blueprint";
     d.canvas.backgroundImage = normalizeIdeaCanvasImage(d.canvas.backgroundImage);
     d.canvas.backgroundPreset = normalizeIdeaCanvasPreset(d.canvas.backgroundPreset);
@@ -5939,6 +5941,19 @@ ${gallery}
   function currentIdeaData() { const n = currentIdeaNote(); return n ? ensureIdeaBoardData(n) : null; }
   function isIdeaReadonly() { return ideaViewMode === "view"; }
   function getIdeaItem(id) { const d = currentIdeaData(); return d ? d.items.find((item) => item.id === id) || null : null; }
+  function updateIdeaSnapButton() {
+    const b = $("ideaSnapToggle"); if (!b) return;
+    b.setAttribute("aria-pressed", String(ideaSnapOn));
+    b.classList.toggle("on", ideaSnapOn);
+  }
+  function updateIdeaTopViewToggle() {
+    const b=$("ideaViewToggle"); if(!b)return;
+    const readOnly=ideaViewMode==="view";
+    b.innerHTML=readOnly ? IDEA_PENCIL_SVG : IDEA_EYE_SVG;
+    b.setAttribute("aria-label", readOnly ? "편집 모드" : "보기 모드");
+    b.setAttribute("title", readOnly ? "편집 모드로 돌아가기" : "보기 전용 모드");
+    b.classList.toggle("on", readOnly);
+  }
   function setIdeaSaver(mode) {
     const s = $("ideaSaver"); if (!s) return;
     s.className = "saver " + mode;
@@ -5980,12 +5995,13 @@ ${gallery}
     const n = currentIdeaNote(); if (!n) { back(); return; }
     const d = ensureIdeaBoardData(n); revokeIdeaObjectUrls();
     if (ideaActiveBoardId !== n.id) { if (ideaActiveBoardId) finalizeIdeaBoardHistory(ideaActiveBoardId); ideaActiveBoardId = n.id; ideaHistoryBoardId = n.id; ideaDirty = false; ideaEditState = { itemId: null, groupId:null, mode: null }; ideaSelectedIds.clear(); ideaMultiSelectMode=false; ideaZoom = Math.max(IDEA_ZOOM_MIN, Math.min(IDEA_ZOOM_MAX, Number(d.canvas.zoom) || 1)); }
+    ideaSnapOn = d.canvas.snapOn === true;
     ideaViewMode = d.viewMode || "board";
     const readOnly = ideaViewMode === "view", boardLike = ideaViewMode !== "list";
     if (readOnly) { if (ideaEditState.itemId) ideaEditState = { itemId: null, groupId:null, mode: null }; ideaMultiSelectMode=false; ideaSelectedIds.clear(); }
     $("ideaTitle").textContent = n.title || "아이디어 보드"; if (!ideaDirty) setIdeaSaver("");
     const screen = $("screen-idea"); screen.classList.toggle("idea-board-mode", boardLike); screen.classList.toggle("idea-list-mode", ideaViewMode === "list"); screen.classList.toggle("idea-readonly-mode", readOnly);
-    $("ideaBoardMode").classList.toggle("active", ideaViewMode === "board"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list"); if ($("ideaReadMode")) $("ideaReadMode").classList.toggle("active", readOnly);
+    $("ideaBoardMode").classList.toggle("active", ideaViewMode !== "list"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list"); updateIdeaTopViewToggle(); updateIdeaSnapButton();
     const canvas = $("ideaCanvas"), sizer = $("ideaCanvasSizer");
     if (sizer) { sizer.style.width = d.canvas.width + "px"; sizer.style.height = d.canvas.height + "px"; }
     canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = "";
@@ -6934,18 +6950,39 @@ ${gallery}
     const candidates=st.notes.filter((n)=>n.id!==cur.id&&["free","html","lorebook","log","idea","character"].includes(n.type));
     const bodyText=(n)=>{try{return [preview(noteHtml(n)),JSON.stringify(n.data||{}).slice(0,3000)].join(" ");}catch(e){return preview(noteHtml(n));}};
     const searchText=(n)=>[n.title||"",noteTypeShortLabel(n),noteTypeLabel(n),TYPE_TAG[visualMemoType(n)]||"",n.type==="idea"?ideaBoardSummary(n):bodyText(n)].join(" ").toLowerCase();
-    const rowMarkup=(list)=>list.length?list.map((n)=>`<button class="pick-item" type="button" data-idea-quote="${esc(n.id)}"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><div class="pk-name">${esc(n.title||"제목 없는 메모")}</div></button>`).join(""):'<div class="m-sub">검색 결과가 없어요.</div>';
-    openModal(`<h3>메모 인용 링크</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><input class="m-input idea-quote-search" id="ideaQuoteSearch" type="search" placeholder="제목·내용·종류 검색"><div class="proj-pick idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteCancel">취소</button></div>`);
-    const renderRows=()=>{
-      const q=String($("ideaQuoteSearch")?.value||"").trim().toLowerCase();
-      const list=q?candidates.filter((n)=>searchText(n).includes(q)):candidates;
-      const box=$("ideaQuoteResults");if(!box)return;
-      box.innerHTML=candidates.length?rowMarkup(list):'<div class="m-sub">연결할 다른 메모가 없어요.</div>';
-      box.querySelectorAll("[data-idea-quote]").forEach((button)=>button.addEventListener("click",()=>{const ref=getNote(button.dataset.ideaQuote);closeModal();if(ref)addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});}));
+    let tab="all", selectedProjectId=null, query="";
+    const projectName=(pid)=>{const p=getProject(pid);return p?p.name:"프로젝트 없음";};
+    const pick=(id)=>{const ref=getNote(id);closeModal();if(ref)addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});};
+    const noteRows=(list)=>list.length?list.map((n)=>`<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-idea-quote="${esc(n.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><b>${esc(n.title||"제목 없는 메모")}</b></span><small>${esc(projectName(n.projectId))} · ${esc(noteTypeShortLabel(n))} · ${esc(n.type==="idea"?ideaBoardSummary(n):preview(noteHtml(n))||"내용 없음")}</small></button></div>`).join(""):'<div class="log-template-empty">검색 결과가 없어요.</div>';
+    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
+    openModal(`<div class="log-template-manager idea-quote-manager"><h3>내 메모 링크</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="log-template-tabs" role="tablist" aria-label="내 메모 링크 구분"><button data-idea-quote-tab="all" role="tab">전체보기 <small></small></button><button data-idea-quote-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="ideaQuoteSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"><button class="m-btn" id="ideaQuoteProjectBack" type="button" hidden>프로젝트</button></div><div class="log-template-list idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteCancel">닫기</button></div></div>`);
+    $("modalBox").classList.add("log-template-modal","idea-quote-modal");
+    $("modalScrim").classList.add("log-template-open");
+    const draw=()=>{
+      $("modalBox").querySelectorAll("[data-idea-quote-tab]").forEach((button)=>{const active=button.dataset.ideaQuoteTab===tab;button.classList.toggle("active",active);button.setAttribute("aria-selected",active?"true":"false");const small=button.querySelector("small");if(small)small.textContent=button.dataset.ideaQuoteTab==="all"?String(candidates.length):String(st.projects.length);});
+      const input=$("ideaQuoteSearch"), back=$("ideaQuoteProjectBack"), box=$("ideaQuoteResults");
+      if(!box)return;
+      if(input&&document.activeElement!==input)input.value=query;
+      const q=query.trim().toLocaleLowerCase("ko");
+      if(tab==="project" && back) back.hidden=!selectedProjectId;
+      if(tab==="project" && selectedProjectId==null) {
+        if(input)input.placeholder="프로젝트 이름 검색";
+        const projects=st.projects.filter((p)=>!q||String(p.name||"").toLocaleLowerCase("ko").includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ko"));
+        box.innerHTML=projectRows(projects);
+        box.querySelectorAll("[data-idea-quote-project]").forEach((button)=>button.addEventListener("click",()=>{selectedProjectId=button.dataset.ideaQuoteProject;query="";draw();}));
+        return;
+      }
+      if(input)input.placeholder=tab==="project"?`${projectName(selectedProjectId)} 안에서 검색`:"제목·내용·종류 검색";
+      const source=(tab==="project"&&selectedProjectId)?candidates.filter((n)=>n.projectId===selectedProjectId):candidates;
+      const list=(q?source.filter((n)=>searchText(n).toLocaleLowerCase("ko").includes(q)):source).sort((a,b)=>String(a.title||"").localeCompare(String(b.title||""),"ko"));
+      box.innerHTML=source.length?noteRows(list):'<div class="log-template-empty">연결할 메모가 없어요.</div>';
+      box.querySelectorAll("[data-idea-quote]").forEach((button)=>button.addEventListener("click",()=>pick(button.dataset.ideaQuote)));
     };
-    renderRows();
-    $on("ideaQuoteSearch","input",renderRows);
+    $("modalBox").querySelectorAll("[data-idea-quote-tab]").forEach((button)=>button.addEventListener("click",()=>{tab=button.dataset.ideaQuoteTab;selectedProjectId=null;query="";draw();}));
+    $("ideaQuoteSearch").addEventListener("input",(event)=>{query=event.target.value;draw();});
+    $on("ideaQuoteProjectBack","click",()=>{selectedProjectId=null;query="";draw();});
     $on("ideaQuoteCancel","click",closeModal);
+    draw();
   }
   function measureIdeaMedia(file, kind) {
     return new Promise((resolve)=>{
