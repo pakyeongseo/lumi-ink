@@ -54,7 +54,12 @@ window.LumiInkIdeaTemplates = {
     tatami: { label: "다다미", desc: "결대로 짠 짚색 다다미 패널이 깔린 보드" },
     marble: { label: "대리석", desc: "은은한 결과 윤이 흐르는 밝은 대리석 면" },
     synthwave: { label: "신스웨이브", desc: "네온 지평선과 시안 격자의 레트로퓨처 보드" },
-    graphite: { label: "그라파이트", desc: "교차 해칭과 번짐이 남은 연필 스케치판" }
+    graphite: { label: "그라파이트", desc: "교차 해칭과 번짐이 남은 연필 스케치판" },
+    versaillesWall: { label: "베르사유 벽지", desc: "금색 격자 문양이 깔린 크림색 고급 벽지" },
+    witchForest: { label: "마녀의 숲", desc: "포자빛이 떠도는 깊고 어두운 마법의 숲" },
+    fairyDust: { label: "요정의 반짝임", desc: "파스텔 빛무리와 잔별이 흩날리는 보드" },
+    magicalGirl: { label: "마법소녀", desc: "핑크·퍼플 그라데이션에 반짝이 별이 뜬 보드" },
+    youthPop: { label: "청춘 카드", desc: "맑은 하늘빛에 하프톤 점이 찍힌 산뜻한 보드" }
   },
   noteStyles: {
     marker: { label: "형광 마커", desc: "형광 잉크가 번진 듯한 러프 메모" },
@@ -82,7 +87,12 @@ window.LumiInkIdeaTemplates = {
     cassette: { label: "카세트 라벨", desc: "릴 구멍과 컬러 헤더의 레트로 믹스테이프 라벨" },
     ticket: { label: "티켓", desc: "절취선 스텁과 컬러 헤더가 있는 입장권 메모" },
     speechBubble: { label: "말풍선 메모지", desc: "가운데 꼬리와 내부 라인이 들어간 선명한 말풍선" },
-    speechBubbleRound: { label: "동글 말풍선 메모지", desc: "더 둥글고 통통한 느낌의 말풍선 메모지" }
+    speechBubbleRound: { label: "동글 말풍선 메모지", desc: "더 둥글고 통통한 느낌의 말풍선 메모지" },
+    versaillesCard: { label: "베르사유 카드", desc: "금색 이중 테두리와 문양이 들어간 크림 카드" },
+    witchGrimoire: { label: "마녀의 약초지", desc: "약초빛이 스민 낡은 양피지 메모" },
+    fairyDustNote: { label: "요정 반짝 메모", desc: "잔별이 박힌 반투명 파스텔 메모지" },
+    magicalGirlCard: { label: "마법소녀 카드", desc: "별과 하트가 빛나는 핑크·퍼플 카드" },
+    youthCard: { label: "청춘 카드", desc: "컬러 스파인과 하프톤이 들어간 산뜻한 카드" }
   },
   imageBackgrounds: {
     "01-moonlit-crystal-castle": { label: "달빛 수정성", desc: "보랏빛 나비와 얼음 궁전이 떠오른 달밤", src: "./idea-board-backgrounds/01-moonlit-crystal-castle.png" },

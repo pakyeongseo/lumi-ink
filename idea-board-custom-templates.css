@@ -237,6 +237,18 @@
 .idea-audio-name { font-size:12px; font-weight:800; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff; text-shadow:0 1px 2px rgba(20,14,40,.32); }
 .idea-audio .idea-media-content { position:relative; z-index:1; height:34px; flex:0 0 auto; min-width:0; border-radius:11px; overflow:hidden; background:rgba(8,10,18,.30); box-shadow:inset 0 0 0 1px rgba(255,255,255,.16); }
 .idea-audio audio { width:100%; height:34px; border-radius:11px; display:block; color-scheme:dark; }
+.idea-audio-shell.is-player-dark > .idea-media-content { background:rgba(8,10,18,.30); box-shadow:inset 0 0 0 1px rgba(255,255,255,.16); }
+.idea-audio-shell.is-player-dark audio,
+.idea-preview-audio.is-player-dark audio { color-scheme:dark; }
+.idea-audio-shell.is-player-light > .idea-media-content {
+  background:rgba(255,255,255,.76);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.74), 0 3px 9px color-mix(in srgb,var(--idea-color-b,#7b9bff) 18%,transparent);
+}
+.idea-audio-shell.is-player-light audio,
+.idea-preview-audio.is-player-light audio { color-scheme:light; }
+.idea-preview-audio.is-player-light {
+  background:linear-gradient(135deg,color-mix(in srgb,var(--idea-color-a,#7b9bff) 38%,#fff),color-mix(in srgb,var(--idea-color-b,#b58bff) 34%,#fff));
+}
 
 /* 첨부파일 */
 .idea-file-body {
@@ -298,6 +310,8 @@
 .idea-color-choice.text-preset.palette span { width:100%; height:100%; border-radius:10px; flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.16); }
 .idea-color-choice.palette.idea-custom-color span { box-shadow:none; }
 .idea-template-grid-compact { max-height:min(48dvh, 460px); }
+.idea-bg-preset-list { max-height:min(34dvh, 320px); overflow:auto; overscroll-behavior:auto; padding-bottom:4px; }
+.idea-bg-preset-preview.idea-canvas { min-height:112px; margin-bottom:10px; }
 .idea-bg-special .idea-template-state { background:color-mix(in srgb,var(--accent) 18%,var(--surface)); color:var(--accent); }
 .idea-bg-live-preview.idea-canvas,
 .idea-bg-upload-preview.idea-canvas {
@@ -339,6 +353,10 @@
 .idea-bg-upload-preview b { font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .idea-bg-upload-preview small { display:block; font-size:11px; opacity:.86; }
 .idea-bg-image-panel { margin-top:16px; padding:13px; border:1px solid var(--line); border-radius:15px; background:color-mix(in srgb,var(--surface-2) 86%,var(--accent-soft)); }
+.idea-bg-image-panel-compact { margin-top:10px; padding:11px; }
+.idea-bg-file-actions { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.idea-bg-file-actions .m-btn { margin:0; flex:1; padding:9px 10px; font-size:12px; }
+.idea-bg-file-actions .m-btn.danger { flex:0 0 auto; color:var(--danger); }
 .idea-bg-image-status { display:flex; align-items:center; gap:7px; min-width:0; }
 .idea-bg-image-status > span { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
 .idea-bg-image-status .m-btn { margin:0; padding:8px 10px; font-size:11px; white-space:nowrap; }
@@ -352,6 +370,10 @@
 .idea-preview-audio audio { width:100%; height:42px; border-radius:999px; }
 @media (max-width:420px) {
   .idea-color-grid.theme-grid { max-height:290px; }
+  .idea-bg-live-preview.idea-canvas,
+  .idea-bg-upload-preview.idea-canvas { min-height:104px; margin:6px 0 10px; }
+  .idea-bg-preset-list { max-height:30dvh; }
+  .idea-bg-image-panel-compact { padding:10px; }
   .idea-bg-image-status { flex-wrap:wrap; }
   .idea-bg-image-status > span { flex-basis:100%; }
 }
@@ -1687,19 +1709,19 @@
 
 /* 상단 비율 직접 입력 */
 .idea-tb-zoominput {
-  width:47px; min-width:47px; grid-template-columns:minmax(0,1fr) auto; gap:1px; padding:0 4px 0 6px;
-  cursor:text; font:800 10px/1 system-ui;
+  width:54px; min-width:54px; grid-template-columns:minmax(0,1fr) auto; gap:0; padding:0 6px;
+  cursor:text; color:color-mix(in srgb,var(--accent) 78%,var(--ink)); font:900 12px/1 system-ui;
 }
 .idea-tb-zoominput input {
-  min-width:0; width:100%; border:0; outline:0; padding:0; background:transparent; color:var(--ink);
-  text-align:right; font:800 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums;
+  min-width:0; width:100%; border:0; outline:0; padding:0; background:transparent; color:color-mix(in srgb,var(--accent) 82%,var(--ink));
+  text-align:center; font:900 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums;
 }
 .idea-tb-zoominput input::-webkit-inner-spin-button,.idea-tb-zoominput input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 .idea-tb-zoominput input[type=number] { -moz-appearance:textfield; }
-.idea-tb-zoominput span { color:var(--muted); }
+.idea-tb-zoominput span { color:color-mix(in srgb,var(--accent) 76%,var(--ink)); font:900 11px/1 system-ui; }
 .idea-tb-zoomreset { width:28px; min-width:28px; height:32px; padding:0; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--muted); cursor:pointer; font:800 8px/1 system-ui; }
 .idea-tb-zoomreset:active { background:var(--surface-3); }
-@media(max-width:700px){ .idea-tb-zoominput{width:46px;min-width:46px;} }
+@media(max-width:700px){ .idea-tb-zoominput{width:52px;min-width:52px;} }
 
 /* v63.33: idea-board horizontal flip for note designs and images */
 .idea-item.idea-sticky.flipped-x {
@@ -1724,3 +1746,168 @@
   transform:scaleX(-1);
   transform-origin:center center;
 }
+
+/* ============================================================
+ * Lumi Ink · 테마 템플릿 5종 (배경 5 + 메모지 5)
+ * 베르사유 / 마녀의 숲 / 요정의 반짝임 / 마법소녀 / 청춘 카드
+ * ============================================================ */
+
+/* ── 배경: 로열 왕실 베르사유 ── */
+.idea-canvas[data-background="versaillesWall"] {
+  background-color:#ecdcb6;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(166,128,52,.20) 0 3px, transparent 4px 9px),
+    repeating-linear-gradient(45deg, rgba(150,112,40,.12) 0 2px, transparent 2px 30px),
+    repeating-linear-gradient(-45deg, rgba(150,112,40,.12) 0 2px, transparent 2px 30px),
+    linear-gradient(160deg, #f7eed2, #e6d4a8);
+  background-size:42px 42px, 42px 42px, 42px 42px, auto;
+}
+.idea-canvas[data-background="versaillesWall"] .idea-canvas-empty { color:rgba(120,90,36,.82); }
+
+/* ── 배경: 동화 속 마녀의 숲 ── */
+.idea-canvas[data-background="witchForest"] {
+  background-color:#15241b;
+  background-image:
+    radial-gradient(circle at 22% 16%, rgba(150,255,176,.12), transparent 28%),
+    radial-gradient(circle at 80% 74%, rgba(86,176,118,.14), transparent 34%),
+    radial-gradient(rgba(196,255,206,.16) 0 1px, transparent 2px),
+    linear-gradient(165deg, #1c2e21, #0e1a12);
+  background-size:auto, auto, 27px 31px, auto;
+}
+.idea-canvas[data-background="witchForest"] .idea-canvas-empty { color:rgba(176,224,186,.78); }
+
+/* ── 배경: 요정의 반짝임 ── */
+.idea-canvas[data-background="fairyDust"] {
+  background-color:#f3ecff;
+  background-image:
+    radial-gradient(circle at 20% 22%, rgba(255,214,243,.55), transparent 34%),
+    radial-gradient(circle at 82% 30%, rgba(198,232,255,.55), transparent 36%),
+    radial-gradient(rgba(255,255,255,.9) 0 1px, transparent 1.7px),
+    linear-gradient(155deg, #fbf4ff, #ebe0ff);
+  background-size:auto, auto, 23px 23px, auto;
+}
+.idea-canvas[data-background="fairyDust"] .idea-canvas-empty { color:rgba(150,118,190,.78); }
+
+/* ── 배경: 마법소녀 ── */
+.idea-canvas[data-background="magicalGirl"] {
+  background-color:#ffd6ec;
+  background-image:
+    radial-gradient(circle at 80% 16%, rgba(255,255,255,.6), transparent 30%),
+    radial-gradient(circle at 14% 82%, rgba(178,148,255,.42), transparent 42%),
+    radial-gradient(rgba(255,255,255,.85) 0 1.4px, transparent 2.1px),
+    linear-gradient(150deg, #ffd0ea 0%, #dcc2ff 58%, #c6d8ff 100%);
+  background-size:auto, auto, 30px 30px, auto;
+}
+.idea-canvas[data-background="magicalGirl"] .idea-canvas-empty { color:rgba(158,86,158,.8); }
+
+/* ── 배경: 청춘 카드 ── */
+.idea-canvas[data-background="youthPop"] {
+  background-color:#eaf1ff;
+  background-image:
+    radial-gradient(circle at 86% 12%, rgba(255,221,148,.5), transparent 28%),
+    radial-gradient(rgba(118,158,232,.20) 0 2px, transparent 3px),
+    repeating-linear-gradient(122deg, rgba(255,140,180,.05) 0 16px, rgba(118,200,255,.05) 16px 32px),
+    linear-gradient(160deg, #f4f9ff, #e3ecff);
+  background-size:auto, 26px 26px, auto, auto;
+}
+.idea-canvas[data-background="youthPop"] .idea-canvas-empty { color:rgba(86,108,162,.78); }
+
+/* ── 메모지: 베르사유 카드 ── */
+.idea-sticky[data-note-style="versaillesCard"] {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(255,255,255,.55), transparent 55%),
+    linear-gradient(160deg, color-mix(in srgb, var(--stick-1) 34%, #fbf4e2), color-mix(in srgb, var(--stick-1) 68%, #ece0bd));
+  border:1.5px solid color-mix(in srgb, var(--stick-2) 42%, #c1a052);
+  border-radius:9px;
+  box-shadow:0 14px 26px rgba(62,48,18,.22),
+    inset 0 0 0 3px rgba(255,255,255,.55),
+    inset 0 0 0 4.5px color-mix(in srgb, var(--stick-2) 38%, #c9a758);
+}
+.idea-sticky[data-note-style="versaillesCard"]::before {
+  content:"❦"; position:absolute; top:7px; right:12px;
+  color:color-mix(in srgb, var(--stick-ink) 28%, #b1873a); font-size:15px; pointer-events:none;
+}
+.idea-sticky[data-note-style="versaillesCard"]::after {
+  content:"❧"; position:absolute; bottom:6px; left:12px;
+  color:color-mix(in srgb, var(--stick-ink) 28%, #b1873a); font-size:15px; pointer-events:none;
+}
+.idea-sticky[data-note-style="versaillesCard"] .idea-note-text { color:var(--stick-ink); padding:20px 19px 19px; }
+
+/* ── 메모지: 마녀의 약초 노트 ── */
+.idea-sticky[data-note-style="witchGrimoire"] {
+  background:
+    radial-gradient(circle at 84% 14%, rgba(120,162,90,.22), transparent 40%),
+    radial-gradient(circle at 12% 90%, rgba(96,74,40,.16), transparent 42%),
+    linear-gradient(160deg, color-mix(in srgb, var(--stick-1) 44%, #f1ead2), color-mix(in srgb, var(--stick-1) 74%, #e2d6b3));
+  border:1px solid color-mix(in srgb, var(--stick-2) 50%, #8a7a44);
+  border-radius:5px 15px 7px 14px;
+  box-shadow:0 13px 24px rgba(40,34,16,.26), inset 0 0 18px rgba(120,96,40,.10);
+}
+.idea-sticky[data-note-style="witchGrimoire"]::before {
+  content:"❧"; position:absolute; top:6px; right:11px;
+  color:color-mix(in srgb, var(--stick-ink) 24%, #4f6b34); font-size:16px; pointer-events:none;
+}
+.idea-sticky[data-note-style="witchGrimoire"]::after {
+  content:"✦"; position:absolute; bottom:8px; right:12px;
+  color:color-mix(in srgb, var(--stick-ink) 30%, #6a5a30); font-size:10px; pointer-events:none; opacity:.8;
+}
+.idea-sticky[data-note-style="witchGrimoire"] .idea-note-text { color:var(--stick-ink); padding:20px 17px 17px; }
+
+/* ── 메모지: 요정의 반짝임 ── */
+.idea-sticky[data-note-style="fairyDustNote"] {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255,255,255,.7) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 72% 58%, rgba(255,255,255,.6) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 32% 82%, rgba(255,255,255,.65) 0 1px, transparent 1.6px),
+    linear-gradient(150deg, color-mix(in srgb, var(--stick-1) 52%, white), color-mix(in srgb, var(--stick-2) 22%, white));
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:18px;
+  box-shadow:0 12px 24px color-mix(in srgb, var(--stick-2) 26%, rgba(46,34,66,.16)), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.idea-sticky[data-note-style="fairyDustNote"]::before {
+  content:"✦"; position:absolute; top:7px; right:11px; font-size:13px;
+  color:color-mix(in srgb, var(--stick-ink) 34%, white); pointer-events:none;
+  text-shadow:0 0 5px rgba(255,255,255,.9);
+}
+.idea-sticky[data-note-style="fairyDustNote"]::after {
+  content:"⋆"; position:absolute; bottom:7px; left:12px; font-size:14px;
+  color:color-mix(in srgb, var(--stick-ink) 30%, white); pointer-events:none;
+}
+.idea-sticky[data-note-style="fairyDustNote"] .idea-note-text { color:var(--stick-ink); padding:19px 17px 17px; }
+
+/* ── 메모지: 마법소녀 카드 ── */
+.idea-sticky[data-note-style="magicalGirlCard"] {
+  background:
+    radial-gradient(circle at 84% -8%, rgba(255,255,255,.62), transparent 44%),
+    linear-gradient(150deg, color-mix(in srgb, var(--stick-1) 46%, #ffe3f3), color-mix(in srgb, var(--stick-2) 28%, #e7d4ff));
+  border:1.5px solid color-mix(in srgb, var(--stick-2) 44%, white);
+  border-radius:17px;
+  box-shadow:0 13px 26px color-mix(in srgb, var(--stick-2) 30%, rgba(120,60,120,.16)), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.idea-sticky[data-note-style="magicalGirlCard"]::before {
+  content:"★"; position:absolute; top:7px; right:12px; font-size:15px;
+  color:color-mix(in srgb, var(--stick-2) 58%, #ff9ad2); pointer-events:none;
+  text-shadow:0 0 6px rgba(255,180,230,.7);
+}
+.idea-sticky[data-note-style="magicalGirlCard"]::after {
+  content:"♡"; position:absolute; bottom:7px; left:12px; font-size:13px;
+  color:color-mix(in srgb, var(--stick-2) 52%, #c79bff); pointer-events:none;
+}
+.idea-sticky[data-note-style="magicalGirlCard"] .idea-note-text { color:var(--stick-ink); padding:19px 17px 17px; }
+
+/* ── 메모지: 청춘 카드 ── */
+.idea-sticky[data-note-style="youthCard"] {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--stick-2) 66%, white) 0 6px, transparent 6px),
+    radial-gradient(rgba(80,110,160,.06) 0 1px, transparent 1.5px),
+    linear-gradient(160deg, color-mix(in srgb, var(--stick-1) 24%, white), color-mix(in srgb, var(--stick-1) 50%, white));
+  background-size:auto, 13px 13px, auto;
+  border:1px solid color-mix(in srgb, var(--stick-2) 38%, #d4dae6);
+  border-radius:6px 15px 15px 6px;
+  box-shadow:0 12px 22px rgba(40,52,84,.16), inset 0 1px 0 rgba(255,255,255,.92);
+}
+.idea-sticky[data-note-style="youthCard"]::before {
+  content:"✶"; position:absolute; top:6px; right:13px; font-size:13px;
+  color:color-mix(in srgb, var(--stick-2) 58%, #6f8ad0); pointer-events:none;
+}
+.idea-sticky[data-note-style="youthCard"] .idea-note-text { color:var(--stick-ink); padding:17px 16px 16px 18px; }
