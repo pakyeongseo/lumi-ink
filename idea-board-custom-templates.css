@@ -2011,3 +2011,79 @@
   color:color-mix(in srgb, var(--stick-2) 58%, #6f8ad0); pointer-events:none;
 }
 .idea-sticky[data-note-style="youthCard"] .idea-note-text { color:var(--stick-ink); padding:17px 16px 16px 18px; }
+
+/* ===================================================================
+ * v63.39 — lock visibility, compact multi-select control deck
+ * =================================================================== */
+/* 잠김 표시 자체는 평소 감추고, 실제 선택 상태에서만 경계·배지를 드러냅니다. */
+.idea-item.locked { outline:none; }
+.idea-item.locked .idea-lock-badge { display:none; }
+.idea-item.locked.selected,
+.idea-item.locked.multi-selected,
+.idea-item.locked.group-selected {
+  outline:1.5px dashed color-mix(in srgb,var(--accent) 64%,transparent);
+  outline-offset:5px;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 11%,transparent);
+}
+.idea-item.locked.selected .idea-lock-badge,
+.idea-item.locked.multi-selected .idea-lock-badge,
+.idea-item.locked.group-selected .idea-lock-badge { display:grid; }
+
+/* 다중선택 바: 여섯 개의 주 버튼 + 위로 펼쳐지는 세부 액션. */
+.idea-multi-tools {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:6px;
+  width:min(660px,calc(100% - 20px));
+  padding:8px;
+  border-radius:18px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 96%,white),color-mix(in srgb,var(--surface-2) 84%,var(--accent-soft)));
+  box-shadow:0 18px 38px rgba(25,35,58,.22),inset 0 1px 0 rgba(255,255,255,.8);
+}
+.idea-multi-tools-head { display:flex; align-items:center; min-width:0; padding:0 3px; }
+.idea-multi-tools-head span { padding:0 4px; font-size:11px; font-weight:900; letter-spacing:.01em; color:color-mix(in srgb,var(--accent) 78%,var(--ink)); }
+.idea-multi-tools-main { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; }
+.idea-multi-tools button {
+  min-width:0; border:1px solid transparent; border-radius:11px; padding:8px 7px;
+  background:linear-gradient(155deg,color-mix(in srgb,var(--accent-soft) 52%,var(--surface)),color-mix(in srgb,var(--surface-2) 88%,white));
+  color:color-mix(in srgb,var(--accent) 82%,var(--ink));
+  font:850 10.5px/1.1 var(--user-font,inherit); cursor:pointer; white-space:nowrap;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.idea-multi-tools button:hover:not(:disabled),
+.idea-multi-tools button:focus-visible,
+.idea-multi-tools button.active {
+  outline:none; transform:translateY(-1px);
+  border-color:color-mix(in srgb,var(--accent) 40%,transparent);
+  background:linear-gradient(155deg,color-mix(in srgb,var(--accent) 18%,white),color-mix(in srgb,var(--accent-soft) 78%,var(--surface)));
+  box-shadow:0 5px 12px color-mix(in srgb,var(--accent) 18%,transparent);
+}
+.idea-multi-tools button.danger { color:color-mix(in srgb,var(--danger,#d95162) 82%,var(--ink)); }
+.idea-multi-popover {
+  display:flex; align-items:center; flex-wrap:wrap; gap:5px;
+  padding:7px; border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line)); border-radius:13px;
+  background:color-mix(in srgb,var(--surface) 93%,white);
+  transform-origin:left bottom; animation:ideaMultiPopoverIn .18s cubic-bezier(.2,.8,.2,1) both;
+}
+.idea-multi-popover[hidden] { display:none; }
+.idea-multi-popover-label { padding:0 4px; color:var(--muted); font:850 10px/1 var(--user-font,inherit); }
+.idea-multi-popover button { flex:0 0 auto; padding:7px 9px; }
+.idea-multi-popover-divider { width:1px; height:20px; background:var(--line); margin:0 1px; }
+@keyframes ideaMultiPopoverIn { from { opacity:0; transform:translateY(8px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+/* 글자색/형광펜은 짧게 눌렀을 때 현재 색, 길게 눌렀을 때 선택창으로 이어집니다. */
+.idea-note-rich-tools button[data-idea-note-cmd="foreColor"].holding,
+.idea-note-rich-tools button[data-idea-note-cmd="hiliteColor"].holding {
+  background:color-mix(in srgb,var(--accent-soft) 68%,var(--surface));
+  transform:scale(.96);
+}
+.idea-note-rich-tools button[data-idea-note-cmd="foreColor"] .idea-note-ink {
+  color:var(--idea-note-fore-color,var(--stick-ink,#27303a));
+}
+
+@media(max-width:700px){
+  .idea-multi-tools { width:calc(100% - 16px); margin-left:8px; border-radius:15px; }
+  .idea-multi-tools-main { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .idea-multi-tools button { padding:8px 6px; font-size:10px; }
+  .idea-multi-popover { gap:4px; }
+}
