@@ -2,15 +2,13 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v63.43-note-lock-handles-eyedropper";
+const CACHE = "ink-memo-v63.44-integrated-export-divider";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./Lumi_Ink_Manual_1.html",
-  "./Lumi_Ink_v63.40_Release_Notes.md",
-  "./Lumi_Ink_v63.41_Release_Notes.md",
-  "./Lumi_Ink_v63.42_Release_Notes.md",
+  "./Lumi_Ink_v63.44_Release_Notes.md",
   "./app.js",
   "./assets-icons.js",
   "./assets-frames.js",
@@ -19,6 +17,7 @@ const ASSETS = [
   "./lumink-log-templates-50.html",
   "./idea-board-design-guide.md",
   "./idea-board-template-registry-guide.md",
+  "./idea-divider-template-guide.md",
   "./idea-board-templates.js",
   "./idea-board-custom-templates.css",
   "./idea-board-backgrounds/01-moonlit-crystal-castle.png",

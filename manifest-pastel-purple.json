@@ -1,28 +1,55 @@
-{
-  "name": "루미잉크",
-  "short_name": "루미잉크",
-  "description": "창작을 위한 메모 · 로어북 · 페르소나 · 캐릭터 관리 앱",
-  "lang": "ko",
-  "dir": "ltr",
-  "start_url": "./?pwa-icon=pastel-purple",
-  "scope": "./",
-  "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait-primary",
-  "background_color": "#c9b8e8",
-  "theme_color": "#c9b8e8",
-  "categories": ["productivity", "utilities"],
-  "icons": [
-    { "src": "./icon-pastel-purple-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./icon-pastel-purple-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ],
-  "file_handlers": [
-    {
-      "action": "./",
-      "name": "HTML 메모",
-      "accept": { "text/html": [".html", ".htm"] },
-      "icons": [{ "src": "./icon-pastel-purple-192.png", "sizes": "192x192", "type": "image/png" }]
-    }
-  ],
-  "id": "./?pwa-icon=pastel-purple"
+﻿{
+    "name":  "루미잉크",
+    "short_name":  "루미잉크",
+    "description":  "창작을 위한 메모, 로그, 페르소나, 캐릭터 관리 앱",
+    "lang":  "ko",
+    "dir":  "ltr",
+    "start_url":  "./?pwa-icon=pastel-purple",
+    "scope":  "./",
+    "display":  "standalone",
+    "display_override":  [
+                             "standalone",
+                             "minimal-ui"
+                         ],
+    "orientation":  "portrait-primary",
+    "background_color":  "#c9b8e8",
+    "theme_color":  "#c9b8e8",
+    "categories":  [
+                       "productivity",
+                       "utilities"
+                   ],
+    "icons":  [
+                  {
+                      "src":  "./icon-pastel-purple-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "./icon-pastel-purple-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  }
+              ],
+    "file_handlers":  [
+                          {
+                              "action":  "./",
+                              "name":  "HTML 메모",
+                              "accept":  {
+                                             "text/html":  [
+                                                               ".html",
+                                                               ".htm"
+                                                           ]
+                                         },
+                              "icons":  [
+                                            {
+                                                "src":  "./icon-pastel-purple-192.png",
+                                                "sizes":  "192x192",
+                                                "type":  "image/png"
+                                            }
+                                        ]
+                          }
+                      ],
+    "id":  "./?pwa-icon=pastel-purple"
 }
