@@ -1,14 +1,14 @@
-# Lumi Ink v63.44
+# Lumi Ink v63.45
 
-루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본은 v63.43 구글 드라이브 제공본을 기준으로 검수하고, v63.39~v63.43 변경 이력과 누락 기능을 통합한 v63.44 정리본입니다.
+루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본은 v63.44 정리본 이후 아이디어 보드에서 실제 사용 중 남아 있던 이벤트·잠금·색상·썸네일·스크린샷 문제를 보수한 버전입니다.
 
 ## 현재 버전
 
-- 버전: v63.44
+- 버전: v63.45
 - 기준 빌드: `lumi-ink-v63.43-note-lock-handles-eyedropper`
-- 서비스워커 캐시: `ink-memo-v63.44-integrated-export-divider`
+- 서비스워커 캐시: `ink-memo-v63.45-idea-board-fixes`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
-- 릴리즈 노트: `Lumi_Ink_v63.44_Release_Notes.md`
+- 릴리즈 노트: `Lumi_Ink_v63.45_Release_Notes.md`
 
 ## 주요 기능
 
@@ -35,15 +35,16 @@
 - 메모지, 이미지/GIF, 음악, 동영상, 첨부파일, 내 메모 링크, 빈 프레임, 구분선 조각 배치
 - 조각 이동, 크기 조정, 회전, 복제, 삭제, 잠금
 - 다중선택, 전체선택, 정렬, 간격 맞춤, 그룹화/그룹 해제
+- 그룹화 시 잠금 조각 자동 제외
 - 스냅 ON/OFF 및 보드별 스냅 상태 저장
-- 메모지 리치 편집, 글자색·형광펜, 세로 중앙 맞춤
+- 메모지 리치 편집, 선택 영역 글자색·형광펜, 세로 중앙 맞춤
 - 메모지 디자인, 컬러, 글자색 선택
 - 메모지·이미지 좌우반전
 - 음악 플레이어 라이트/다크 모드
 - 이미지·음악·동영상·첨부파일·메모 링크 교체
 - 보드 배경 템플릿, 컬러 캔버스, 제공 이미지 배경, 업로드 이미지 배경
 - 보기 전용 모드
-- 보기 모드에서 현재 작업 영역 PNG 스크린샷 저장
+- 보기 모드에서 현재 작업 영역 PNG 스크린샷 저장, 실패 시 SVG 대체 저장
 - 꾸며진 HTML 내보내기
   - 현재 보이는 화면만 표시
   - 전체 화면 표시
@@ -78,28 +79,20 @@
 문서·가이드:
 
 - `Lumi_Ink_Manual_1.html`
-- `Lumi_Ink_v63.44_Release_Notes.md`
+- `Lumi_Ink_v63.45_Release_Notes.md`
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
 - `idea-board-template-registry-guide.md`
 - `idea-divider-template-guide.md`
 
-## v63.44 검수 기준
+## v63.45 검수 기준
 
 - JavaScript 문법 검사 통과
 - 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
 - manifest JSON 파싱 확인
 - HTML 중복 ID 확인
-- 아이디어 보드 구분선 요소 기본 동작 확인
-- HTML 내보내기 표시 범위 선택 구조 확인
-- 보기 모드 스크린샷 버튼 표시 조건 확인
-
-## 정리된 과거 파일
-
-배포본을 명확하게 유지하기 위해 다음 파일은 최신 배포 ZIP에서 제외합니다.
-
-- 과거 `Lumi_Ink_Manual_v63.xx_current.html` 사본
-- v63.38~v63.43 개별 릴리즈 노트
-- 임시 패치 스크립트
+- 다중선택 터치 fallback 확인
+- 메모지 선택 글자색 적용 경로 확인
+- 스크린샷 PNG/SVG fallback 구조 확인
 

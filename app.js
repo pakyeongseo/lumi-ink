@@ -1279,9 +1279,21 @@
     if (save) save.addEventListener("click", () => { const colors = getSavedColors().filter((color) => color !== current); colors.unshift(current); setSavedColors(colors); drawSaved(); if (typeof opts.onSave === "function") opts.onSave(current); else toast("색을 저장했어요"); });
     const eyedropper = node("Eyedropper");
     if (eyedropper) {
-      const supported = !!(window.isSecureContext && typeof window.EyeDropper === "function");
+      const supported = typeof window.EyeDropper === "function";
       eyedropper.disabled = !supported;
       eyedropper.classList.toggle("unsupported", !supported);
+      eyedropper.title = supported ? "화면에서 색상 추출" : "이 브라우저에서는 화면 색상 추출을 지원하지 않아요";
+      eyedropper.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!supported) { toast("이 브라우저에서는 스포이드를 지원하지 않아요. 색상판이나 HEX/RGB 입력을 사용해 주세요."); return; }
+        try {
+          const result = await new window.EyeDropper().open();
+          if (result && result.sRGBHex) { setCurrent(result.sRGBHex); toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다."); }
+        } catch (e) {
+          if (e && e.name !== "AbortError") toast("스포이드를 실행하지 못했어요. HTTPS/지원 브라우저인지 확인해 주세요.");
+        }
+      }, true);
       if (!supported) eyedropper.title = "이 브라우저에서는 화면 색상 추출을 지원하지 않아요";
       eyedropper.addEventListener("click", async () => {
         if (!supported) { toast("화면 색상 추출은 HTTPS 환경의 지원 브라우저에서 사용할 수 있어요"); return; }
@@ -5364,6 +5376,24 @@ ${gallery}
       if (!$("screen-idea").classList.contains("active")) return;
       const t = (e.target.tagName || "").toLowerCase(), typing = t === "textarea" || t === "input" || e.target.isContentEditable;
       const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key.toLowerCase() === "a") {
+        const noteText = e.target.closest && e.target.closest(".idea-note-text");
+        const activeItem = e.target.closest && e.target.closest(".idea-item");
+        const item = activeItem && getIdeaItem(activeItem.dataset.itemId);
+        if (noteText || (item && item.kind === "note" && ideaIsLocked(item))) {
+          if (item && item.kind === "note" && ideaIsLocked(item) && activeItem) {
+            const editor = activeItem.querySelector(".idea-note-text");
+            if (editor) {
+              e.preventDefault();
+              const range = document.createRange();
+              range.selectNodeContents(editor);
+              const sel = window.getSelection();
+              if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+            }
+          }
+          return;
+        }
+      }
       if (isIdeaReadonly()) return;
       if (mod && e.key.toLowerCase() === "z" && !typing) { e.preventDefault(); e.shiftKey ? ideaRedo() : ideaUndo(); return; }
       if (mod && e.key.toLowerCase() === "y" && !typing) { e.preventDefault(); ideaRedo(); return; }
@@ -6198,6 +6228,24 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     if(!editor)return false; try{editor.focus({preventScroll:true});}catch(e){editor.focus();}
     if(!range)return false; const sel=window.getSelection(); sel.removeAllRanges();sel.addRange(range);return true;
   }
+  function applyIdeaNoteColorRange(editor, range, cssColor) {
+    if(!editor || !range || range.collapsed) return null;
+    try {
+      if(!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return null;
+      const work=range.cloneRange();
+      const span=document.createElement("span");
+      span.style.color=cssColor;
+      span.appendChild(work.extractContents());
+      work.insertNode(span);
+      const selected=document.createRange();
+      selected.selectNodeContents(span);
+      const sel=window.getSelection();
+      if(sel){sel.removeAllRanges();sel.addRange(selected);}
+      return selected.cloneRange();
+    } catch(e) {
+      try{restoreIdeaNoteRange(editor,range);document.execCommand("styleWithCSS",false,true);document.execCommand("foreColor",false,cssColor);return captureIdeaNoteRange(editor);}catch(_e){return null;}
+    }
+  }
   function openIdeaNoteHilitePicker(onPick) {
     const current = getHiliteColor();
     openModal(`<h3>메모지 형광펜 색상</h3><p class="m-sub">다섯 가지 형광펜 색 중 하나를 골라 메모지에 적용합니다.</p><div class="hilite-picker">${HILITE_COLORS.map((x) => `<button class="hilite-choice${x.value === current ? " sel" : ""}" data-color="${x.value}" aria-label="${x.label}"><span class="hilite-swatch" style="background:${x.value}"></span><span>${x.label}</span></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="ideaHiliteCancel">취소</button></div>`);
@@ -6219,7 +6267,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
 
   function bindIdeaNoteRichEditor(el,item,editor) {
     if(!editor)return;
-    const tools=el.querySelector(".idea-note-rich-tools"); let before=null,dirty=false,savedRange=null;
+    const tools=el.querySelector(".idea-note-rich-tools"); let before=null,dirty=false,savedRange=null,lastForeColor=(item&&item.textColor)||"auto";
     const begin=()=>{if(before==null)before=ideaSnapshot();};
     const persist=()=>{const html=sanitizeIdeaNoteRichHtml(editor.innerHTML);const plain=ideaNotePlainText(html);const fresh=getIdeaItem(item.id);if(!fresh)return;if(fresh.richText!==html||fresh.text!==plain){fresh.richText=html;fresh.text=plain;dirty=true;scheduleIdeaSave(420);}};
     const applyHilite=(color,range)=>{begin();restoreIdeaNoteRange(editor,range||savedRange||captureIdeaNoteRange(editor));try{document.execCommand("styleWithCSS",false,true);}catch(e){}try{document.execCommand("hiliteColor",false,color||getHiliteColor());}catch(e){}savedRange=captureIdeaNoteRange(editor);persist();};
@@ -6227,12 +6275,9 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       const target=range||savedRange||captureIdeaNoteRange(editor);
       if(!target || target.collapsed){ toast("색을 바꿀 글자를 먼저 선택해 주세요"); return; }
       begin(); restoreIdeaNoteRange(editor,target);
-      const fresh=getIdeaItem(item.id);
-      if(remember&&fresh){fresh.textColor=normalizeIdeaTextColorValue(value);applyIdeaColor(el,fresh);}
-      try{document.execCommand("styleWithCSS",false,true);}catch(e){}
+      if(remember) lastForeColor=normalizeIdeaTextColorValue(value);
       const cssColor=ideaTextColorValue(value)||getComputedStyle(editor).getPropertyValue("--stick-ink")||"#27303a";
-      try{document.execCommand("foreColor",false,cssColor);}catch(e){}
-      savedRange=captureIdeaNoteRange(editor);persist();
+      savedRange=applyIdeaNoteColorRange(editor,target,cssColor)||captureIdeaNoteRange(editor);persist();
       const ink=tools&&tools.querySelector('[data-idea-note-cmd="foreColor"] .idea-note-ink'); if(ink)ink.style.color=cssColor;
     };
     const command=(cmd,value)=>{begin();restoreIdeaNoteRange(editor,savedRange||captureIdeaNoteRange(editor));try{document.execCommand("styleWithCSS",false,true);}catch(e){}if(cmd==="removeFormat"){try{document.execCommand("removeFormat",false,null);document.execCommand("unlink",false,null);}catch(e){}}else{try{document.execCommand(cmd,false,value||null);}catch(e){}}savedRange=captureIdeaNoteRange(editor);persist();};
@@ -6243,7 +6288,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       const reset=()=>{clear();held=false;pointerId=null;button.classList.remove("holding");};
       button.addEventListener("pointerdown",(e)=>{
         if(e.button!=null&&e.button!==0)return;
-        e.preventDefault();e.stopPropagation();savedRange=captureIdeaNoteRange(editor);holdRange=savedRange;pointerId=e.pointerId;held=false;button.classList.add("holding");
+        e.preventDefault();e.stopPropagation();savedRange=captureIdeaNoteRange(editor);holdRange=savedRange?savedRange.cloneRange():null;pointerId=e.pointerId;held=false;button.classList.add("holding");
         try{button.setPointerCapture(pointerId);}catch(_e){}
         holdTimer=setTimeout(()=>{holdTimer=null;held=true;button.classList.remove("holding");if(navigator.vibrate)navigator.vibrate(10);},480);
       });
@@ -6273,7 +6318,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     if(fore){
       const fresh=getIdeaItem(item.id); const current=ideaTextColorValue(fresh&&fresh.textColor)||getComputedStyle(editor).getPropertyValue("--stick-ink")||"#27303a";
       const ink=fore.querySelector(".idea-note-ink");if(ink)ink.style.color=current;
-      bindHoldAction(fore,(range)=>{const now=getIdeaItem(item.id);applyForeColor((now&&now.textColor)||"auto",range,false);},(range)=>openIdeaNoteForeColorPicker(getIdeaItem(item.id)||item,(value)=>applyForeColor(value,range,true)));
+      bindHoldAction(fore,(range)=>applyForeColor(lastForeColor||"auto",range,false),(range)=>openIdeaNoteForeColorPicker(Object.assign({},getIdeaItem(item.id)||item,{textColor:lastForeColor}),(value)=>applyForeColor(value,range,true)));
     }
     tools.addEventListener("pointerdown",(e)=>{e.stopPropagation();savedRange=captureIdeaNoteRange(editor);const button=e.target.closest("button");if(button&&button.dataset.ideaNoteCmd!=="hiliteColor"&&button.dataset.ideaNoteCmd!=="foreColor"){e.preventDefault();command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");}});
     tools.addEventListener("click",(e)=>{e.stopPropagation();const button=e.target.closest("button");if(button&&button.dataset.ideaNoteCmd!=="hiliteColor"&&button.dataset.ideaNoteCmd!=="foreColor"&&e.detail===0)command(button.dataset.ideaNoteCmd||"",button.dataset.ideaNoteValue||"");});
@@ -6705,6 +6750,20 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     scheduleIdeaSave(0); applyIdeaMultiSelectionClasses(); toast(axis==="x"?"가로 간격을 맞췄어요":"세로 간격을 맞췄어요");
   }
   function groupIdeaSelection() {
+    {
+      const selected=selectedIdeaItems(), lockedCount=selected.filter((i)=>ideaIsLocked(i)).length;
+      const items=selected.filter((i)=>!ideaIsLocked(i));
+      if(items.length<2){toast("잠금되지 않은 조각을 2개 이상 선택해 주세요");return;}
+      pushIdeaUndo();
+      const gid=uid();
+      items.forEach((it)=>{it.groupId=gid;});
+      scheduleIdeaSave(0);
+      renderIdeaBoard();
+      setIdeaMultiSelection(items.map((i)=>i.id));
+      toast("선택한 조각을 그룹화했어요");
+      if(lockedCount) setTimeout(()=>toast(`잠금 조각 ${lockedCount}개는 그룹에서 제외했어요`),120);
+      return;
+    }
     const items=selectedIdeaItems().filter((i)=>!ideaIsLocked(i)); if(items.length<2){toast("잠기지 않은 조각을 2개 이상 선택하세요");return;}
     pushIdeaUndo(); const gid=uid(); items.forEach((it)=>{it.groupId=gid;}); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(items.map((i)=>i.id)); toast("선택한 조각을 그룹화했어요");
   }
@@ -6907,16 +6966,32 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     if (ideaMultiSelectMode) {
       // 다중선택은 캡처 단계에서 먼저 잡습니다. video/audio/button 내부의 자체 핸들러가
       // 이벤트를 소비해도 조각 선택 토글이 빠지지 않도록 보장합니다.
+      let lastMultiToggleAt=0;
       const toggleFromMultiPointer=(e)=>{
         if(e.button!=null&&e.button!==0)return;
         if(isTransformControl(e.target))return;
+        if(Date.now()-lastMultiToggleAt<260)return;
+        lastMultiToggleAt=Date.now();
         e.preventDefault(); e.stopImmediatePropagation();
         toggleIdeaMultiItem(item.id);
       };
+      const toggleFromMultiTouch=(e)=>{
+        if(isTransformControl(e.target))return;
+        if(Date.now()-lastMultiToggleAt<260)return;
+        lastMultiToggleAt=Date.now();
+        e.preventDefault(); e.stopImmediatePropagation();
+        toggleIdeaMultiItem(item.id);
+      };
+      const toggleFromMultiClick=(e)=>{
+        if(isTransformControl(e.target))return;
+        if(Date.now()-lastMultiToggleAt>=320) toggleIdeaMultiItem(item.id);
+        e.preventDefault();e.stopImmediatePropagation();
+      };
       const blockMultiClick=(e)=>{e.preventDefault();e.stopImmediatePropagation();};
       el.addEventListener("pointerdown",toggleFromMultiPointer,true);
+      el.addEventListener("touchstart",toggleFromMultiTouch,{capture:true,passive:false});
       el.addEventListener("pointerup",blockMultiClick,true);
-      el.addEventListener("click",blockMultiClick,true);
+      el.addEventListener("click",toggleFromMultiClick,true);
       el.addEventListener("dblclick",blockMultiClick,true);
       return;
     }
@@ -7666,6 +7741,64 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     } catch(e) { console.warn("idea export",e); toast("아이디어 보드 HTML 내보내기에 실패했어요"); }
   }
   async function exportIdeaViewportPng(id) {
+    {
+      if(st.curNoteId===id) await flushIdeaBoard(false);
+      const n=getNote(id); if(!n || n.type!=="idea") return;
+      let svgText="", width=1, height=1;
+      try {
+        toast("현재 화면 이미지를 준비하고 있어요");
+        const payload = await buildIdeaBoardExportPayload(n);
+        const visual = await buildIdeaExportVisual(n, payload, "visible");
+        const css = (ideaExportBaseCss()+"\n"+ideaExportTightCss()+"\n"+await collectIdeaExportStyles()+"\nhtml,body{margin:0!important;padding:0!important;background:transparent!important;min-width:0!important}.idea-export{margin:0!important}.idea-export-head{display:none!important}").replace(/<\/style/gi,"");
+        width = Math.max(1, Math.round(visual.width));
+        height = Math.max(1, Math.round(visual.height));
+        const svgNs="http://www.w3.org/2000/svg";
+        const xhtmlNs="http://www.w3.org/1999/xhtml";
+        const svg=document.createElementNS(svgNs,"svg");
+        svg.setAttribute("xmlns",svgNs);
+        svg.setAttribute("width",String(width));
+        svg.setAttribute("height",String(height));
+        svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
+        const fo=document.createElementNS(svgNs,"foreignObject");
+        fo.setAttribute("width","100%");
+        fo.setAttribute("height","100%");
+        const root=document.createElementNS(xhtmlNs,"div");
+        root.setAttribute("xmlns",xhtmlNs);
+        const style=document.createElement("style");
+        style.textContent=css;
+        const main=document.createElement("main");
+        main.className="idea-export";
+        main.innerHTML=visual.stage;
+        root.appendChild(style);
+        root.appendChild(main);
+        fo.appendChild(root);
+        svg.appendChild(fo);
+        svgText=new XMLSerializer().serializeToString(svg);
+        const blob = new Blob([svgText], { type:"image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        await new Promise((resolve,reject)=>{ img.onload=resolve; img.onerror=reject; img.src=url; });
+        const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(scale,0,0,scale,0,0); ctx.drawImage(img,0,0,width,height);
+        URL.revokeObjectURL(url);
+        const png = await new Promise((resolve)=>canvas.toBlob(resolve,"image/png"));
+        if(!png) throw new Error("png encode failed");
+        downloadIdeaBlob(png,`${ideaExportSafeName(n.title)}-viewport.png`);
+        toast("현재 화면 이미지를 저장했어요");
+      } catch(e) {
+        console.warn("idea screenshot",e);
+        if(svgText) {
+          downloadIdeaBlob(new Blob([svgText],{type:"image/svg+xml;charset=utf-8"}),`${ideaExportSafeName(n.title)}-viewport.svg`);
+          toast("PNG 저장이 제한되어 SVG 스냅샷으로 저장했어요");
+        } else {
+          toast("현재 화면 이미지 저장에 실패했어요");
+        }
+      }
+      return;
+    }
     if(st.curNoteId===id) await flushIdeaBoard(false);
     const n=getNote(id); if(!n || n.type!=="idea") return;
     try {
