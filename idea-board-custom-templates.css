@@ -2153,3 +2153,61 @@
 /* 다중선택은 내부 video/audio/button 위에서도 선택 제스처가 우선됩니다. */
 .idea-multi-tools ~ .idea-canvas .idea-item,
 .idea-item.multi-selected { -webkit-tap-highlight-color:transparent; }
+
+
+/* ===================================================================
+ * v63.43 — 메모지 이중 잠금 · 4방향 핸들 · 링크 썸네일 안정화
+ * =================================================================== */
+/* 긴 메모도 스크롤은 유지하되 스크롤 막대는 노출하지 않습니다. */
+.idea-note-text { scrollbar-width:none; -ms-overflow-style:none; }
+.idea-note-text::-webkit-scrollbar { width:0; height:0; display:none; }
+
+/* 요소 잠금은 전체 보호와 같은 선택 표시를 쓰되, 배지 아이콘으로 의미를 구분합니다. */
+.idea-item.transform-locked.selected .idea-lock-badge::after,
+.idea-item.transform-locked.multi-selected .idea-lock-badge::after,
+.idea-item.transform-locked.group-selected .idea-lock-badge::after { content:""; }
+
+/* 상단 액션은 이동 → 메뉴 순서. 메뉴 왼쪽에서 이동을 바로 시작할 수 있습니다. */
+.idea-option-dot { left:50%; top:-38px; transform:translateX(-50%); }
+.idea-move-handle { left:calc(50% - 66px); top:-38px; }
+.idea-rotate-handle { left:calc(50% + 42px); top:-38px; transform:none; }
+.idea-rotate-handle::after { display:none; }
+/* 네 모서리의 짧고 두꺼운 손잡이: 어떤 코너에서도 크기 조절 가능 */
+.idea-resize-handle { width:28px; height:12px; border:0; border-radius:999px; background:var(--accent); box-shadow:0 2px 7px rgba(0,0,0,.20), inset 0 0 0 2px var(--surface); }
+.idea-resize-handle span { width:13px; height:3px; border-radius:999px; background:#fff; box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent); }
+.idea-resize-handle svg { display:none; }
+.idea-resize-handle.corner-tl { left:-8px; top:-6px; transform:rotate(45deg); cursor:nwse-resize; }
+.idea-resize-handle.corner-tr { right:-8px; top:-6px; bottom:auto; transform:rotate(-45deg); cursor:nesw-resize; }
+.idea-resize-handle.corner-bl { left:-8px; bottom:-6px; right:auto; top:auto; transform:rotate(-45deg); cursor:nesw-resize; }
+.idea-resize-handle.corner-br { right:-8px; bottom:-6px; left:auto; top:auto; transform:rotate(45deg); cursor:nwse-resize; }
+.idea-item.idea-tools-inset .idea-resize-handle.corner-tr { right:6px; top:6px; }
+.idea-item.idea-tools-inset .idea-resize-handle.corner-br { right:6px; bottom:6px; }
+.idea-item.idea-tools-inset .idea-resize-handle.corner-tl { left:6px; top:6px; }
+.idea-item.idea-tools-inset .idea-resize-handle.corner-bl { left:6px; bottom:6px; }
+.idea-item.locked .idea-resize-handle { display:none; }
+
+/* 프로젝트 선택 팝업의 썸네일은 프레임과 관계없이 고정 정사각형 안에서만 렌더합니다. */
+.idea-quote-project-thumb { position:relative; width:52px; height:52px; flex:0 0 52px; aspect-ratio:1; overflow:hidden; border-radius:12px; isolation:isolate; }
+.idea-quote-project-thumb > .thumb-media,
+.idea-quote-project-thumb > .proj-thumb-media,
+.idea-quote-project-thumb > .proj-icon { width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; }
+.idea-quote-project-thumb img,
+.idea-quote-project-thumb video,
+.idea-quote-project-thumb .thumb-media img,
+.idea-quote-project-thumb .proj-thumb-media img { width:100% !important; height:100% !important; object-fit:cover !important; display:block; }
+.idea-quote-project-thumb .frame { position:absolute; inset:0; z-index:3; pointer-events:none; overflow:visible; }
+.idea-quote-project-thumb .idea-frame-9slice { position:absolute; inset:-3px; }
+
+/* 색상 스튜디오의 화면 스포이드. 지원하지 않는 브라우저는 비활성 상태로 남습니다. */
+.ce-eye-btn { width:36px; min-width:36px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line)); border-radius:10px; background:linear-gradient(145deg,var(--accent-soft),var(--surface)); color:var(--accent); cursor:pointer; }
+.ce-eye-btn svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.ce-eye-btn:disabled,.ce-eye-btn.unsupported { opacity:.42; cursor:not-allowed; }
+
+/* 위쪽 공간이 부족한 조각에서도 이동 → 메뉴의 순서를 유지합니다. */
+.idea-item.idea-tools-below .idea-option-dot { top:calc(100% + 10px); left:50%; transform:translateX(-50%); }
+.idea-item.idea-tools-below .idea-move-handle { top:calc(100% + 10px); left:calc(50% - 66px); }
+.idea-item.idea-tools-below .idea-rotate-handle { top:calc(100% + 10px); left:calc(50% + 42px); transform:none; }
+@media (max-width:700px){
+  .idea-resize-handle { width:31px; height:13px; }
+  .idea-move-handle { left:calc(50% - 68px); }
+}

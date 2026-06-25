@@ -2654,6 +2654,12 @@
 
   @media(max-width:700px){.idea-workspace{height:calc(100vh - 54px - var(--safe-bottom));height:calc(100dvh - 54px - var(--safe-bottom));}.idea-toolbar{padding:8px;gap:6px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}.idea-toolbar::-webkit-scrollbar{display:none;}.idea-view-switch{position:sticky;left:0;z-index:3;box-shadow:8px 0 10px -6px var(--bar-bg);}.idea-tb-actions{gap:4px;}.idea-hint{display:none;}.idea-canvas{width:1180px;min-height:980px;}.idea-option-dot,.idea-rotate-handle,.idea-resize-handle{width:30px;height:30px;}.idea-zoom-range{display:none;}.idea-options-grid{grid-template-columns:1fr;}.idea-list-card{gap:9px;padding:10px;}.idea-list-act{width:31px;height:31px;}}
 
+
+  /* v63.43: 아이디어 보드·HTML 작업실 구분자는 현재 테마 기조에서 서로 다른 톤을 씁니다. */
+  .memo-tag.t-idea { background:color-mix(in srgb,var(--accent) 70%,#f0bc47); color:color-mix(in srgb,var(--ink) 72%,#fff); }
+  .memo-tag.t-html { background:color-mix(in srgb,var(--accent) 66%,#34c8bc); color:color-mix(in srgb,var(--ink) 76%,#fff); }
+  html[data-theme="dark"] .memo-tag.t-idea { color:#1d1820; }
+  html[data-theme="dark"] .memo-tag.t-html { color:#102a2c; }
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
 </head>

@@ -1,3 +1,7 @@
+# Lumi Ink v63.43
+
+최신 변경: 메모지 이중 잠금, 4방향 리사이즈 핸들, 색상 스포이드, 메모 링크 썸네일 보정.
+
 # Lumi Ink v63.41 — Note Menu Cleanup & Board Selection Stability
 
 - 메모 내부 선택 메뉴 제거, 보드 다중선택 캡처 처리, 타입 마크 색상, 메모지 글자색 스튜디오/글자 크기 단계 정리

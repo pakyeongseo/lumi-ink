@@ -1216,11 +1216,12 @@
     const opts = Object.assign({ saved: true, save: true }, options || {});
     const palette = COLOR_PALETTE.map((c) => `<button type="button" class="ce-sw" data-${prefix}-preset="${c}" style="background:${c}" aria-label="${c}" title="${c}"></button>`).join("");
     const save = opts.save ? `<button class="ce-addbtn" id="${prefix}Save" type="button">저장</button>` : "";
+    const eyedropper = `<button class="ce-eye-btn" id="${prefix}Eyedropper" type="button" aria-label="화면에서 색상 추출" title="화면에서 색상 추출"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.2 4.1 5.7 5.7-2.2 2.2-1.4-1.4-7.1 7.1a2.8 2.8 0 0 1-4 0l-.8-.8a2.8 2.8 0 0 1 0-4l7.1-7.1-1.4-1.4 2.2-2.2 1.9 1.9Z"/><path d="m3.5 20.5 4.2-4.2"/></svg></button>`;
     const saved = opts.saved ? `<div class="ce-section-label">내 색상</div><div id="${prefix}Saved"></div>` : "";
     return `<div class="ce-studio" data-color-studio="${prefix}">`
       + `<div class="ce-square" id="${prefix}Square" role="slider" aria-label="채도와 명도 선택"><span class="ce-square-cursor" id="${prefix}SquareCursor"></span></div>`
       + `<input class="ce-hue" id="${prefix}Hue" type="range" min="0" max="360" step="1" aria-label="색조">`
-      + `<div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="색상 선택기"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}</div>`
+      + `<div class="ce-custom-row"><input type="color" class="ce-native" id="${prefix}Native" aria-label="색상 선택기"><input class="ce-hex" id="${prefix}Hex" maxlength="7" spellcheck="false" placeholder="#000000" aria-label="HEX 코드">${save}${eyedropper}</div>`
       + colorStudioRgbFields(prefix)
       + `<div class="ce-section-label">기본 색상</div><div class="ce-swatches" id="${prefix}Palette">${palette}</div>`
       + saved
@@ -1276,6 +1277,18 @@
     };
     const save = node("Save");
     if (save) save.addEventListener("click", () => { const colors = getSavedColors().filter((color) => color !== current); colors.unshift(current); setSavedColors(colors); drawSaved(); if (typeof opts.onSave === "function") opts.onSave(current); else toast("색을 저장했어요"); });
+    const eyedropper = node("Eyedropper");
+    if (eyedropper) {
+      const supported = !!(window.isSecureContext && typeof window.EyeDropper === "function");
+      eyedropper.disabled = !supported;
+      eyedropper.classList.toggle("unsupported", !supported);
+      if (!supported) eyedropper.title = "이 브라우저에서는 화면 색상 추출을 지원하지 않아요";
+      eyedropper.addEventListener("click", async () => {
+        if (!supported) { toast("화면 색상 추출은 HTTPS 환경의 지원 브라우저에서 사용할 수 있어요"); return; }
+        try { const result = await new window.EyeDropper().open(); if (result && result.sRGBHex) setCurrent(result.sRGBHex); }
+        catch (e) { /* 사용자가 취소한 경우도 포함합니다. */ }
+      });
+    }
     sync(); if (opts.saved) drawSaved();
     return { get current() { return current; }, setCurrent };
   }
@@ -5860,6 +5873,7 @@ ${gallery}
     if (kind === "quote" && normalizedW === 310 && normalizedH === 170) { normalizedW = 300; normalizedH = 62; }
     if (kind === "file" && normalizedW === 300 && normalizedH === 86) { normalizedH = 62; }
     const legacyLinkedFrame = item.frameLinked === true || (item.useProjectFrame === true && !frameById(item.frame));
+    const lockMode = item.lockMode === "transform" ? "transform" : item.locked === true ? "full" : null;
     delete item.frameLinked; delete item.useProjectFrame;
     return Object.assign(item, {
       id: typeof item.id === "string" ? item.id : uid(), kind,
@@ -5890,7 +5904,8 @@ ${gallery}
       videoDecor: item.videoDecor !== false,
       videoDecorColor: normalizeIdeaColorValue(item.videoDecorColor, isIdeaColorValue(item.color) ? item.color : ideaPreferredColor()),
       shadow: item.shadow !== false
-      , locked: item.locked === true
+      , locked: lockMode === "full"
+      , lockMode
       , groupId: typeof item.groupId === "string" && item.groupId ? item.groupId : null
       , vAlign: kind === "note" && item.vAlign === "center" ? "center" : "top"
     });
@@ -5916,9 +5931,18 @@ ${gallery}
     const min=ideaItemMinSize(kind);
     return { w:Math.max(min.w,Math.min(1400,Math.round(Number(w)||min.w))), h:Math.max(min.h,Math.min(1100,Math.round(Number(h)||min.h))) };
   }
+  function ideaLockMode(item) { return item && item.lockMode === "transform" ? "transform" : item && item.locked === true ? "full" : null; }
+  function ideaIsLocked(item) { return !!ideaLockMode(item); }
+  function ideaIsFullyLocked(item) { return ideaLockMode(item) === "full"; }
+  function setIdeaLockMode(item, mode) {
+    if (!item) return;
+    const next = mode === "transform" ? "transform" : mode === "full" ? "full" : null;
+    item.lockMode = next;
+    item.locked = next === "full";
+  }
   function ideaCanEditItem(item, message) {
-    if (!item || !item.locked) return true;
-    if (message !== false) toast("잠긴 조각입니다. 먼저 잠금을 풀어주세요.");
+    if (!item || !ideaIsLocked(item)) return true;
+    if (message !== false) toast(ideaIsFullyLocked(item) ? "전체 보호 잠금 상태입니다. 먼저 잠금을 풀어주세요." : "요소 잠금 상태입니다. 메모 내용만 편집할 수 있어요.");
     return false;
   }
   function normalizeImportedIdeaBoardData(raw) {
@@ -6023,7 +6047,9 @@ ${gallery}
     el.style.setProperty("--idea-frame-outset", Math.round(Math.max(6, Math.min(14, cap * .34))) + "px");
     el.classList.toggle("has-media-frame", !!frame);
     el.classList.toggle("flipped-x", !!item.flipX);
-    el.classList.toggle("locked", item.locked === true);
+    el.classList.toggle("locked", ideaIsLocked(item));
+    el.classList.toggle("transform-locked", ideaLockMode(item) === "transform");
+    el.classList.toggle("fully-locked", ideaIsFullyLocked(item));
     el.classList.toggle("grouped", !!item.groupId);
     el.dataset.flipX = item.flipX ? "true" : "";
     if (el.classList.contains("selected")) positionIdeaTransformControls(el, item);
@@ -6079,8 +6105,8 @@ ${gallery}
     setIdeaItemGeometry(el, item);
     if (item.kind === "note") {
       const noteHtml=ideaNoteHtml(item);
-      el.innerHTML = `<div class="idea-note-rich-tools" role="toolbar" aria-label="메모지 서식"><button type="button" data-idea-note-cmd="bold" aria-label="굵게" title="굵게"><b>B</b></button><button type="button" data-idea-note-cmd="italic" aria-label="기울기" title="기울기"><i>I</i></button><button type="button" data-idea-note-cmd="underline" aria-label="밑줄" title="밑줄"><u>U</u></button><button type="button" data-idea-note-cmd="strikeThrough" aria-label="취소선" title="취소선"><s>S</s></button><button type="button" data-idea-note-cmd="foreColor" aria-label="글자색" title="글자색"><span class="idea-note-ink" style="--idea-note-fore-color:${esc(ideaTextColorValue(item.textColor)||"#27303a")}">A</span></button><button type="button" data-idea-note-cmd="hiliteColor" aria-label="형광펜" title="형광펜"><span class="idea-note-hi">H</span></button><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="justifyLeft" aria-label="왼쪽 정렬" title="왼쪽 정렬">≡</button><button type="button" data-idea-note-cmd="justifyCenter" aria-label="가운데 정렬" title="가운데 정렬">≡</button><button type="button" data-idea-note-cmd="justifyRight" aria-label="오른쪽 정렬" title="오른쪽 정렬">≡</button><select class="idea-note-font-size" aria-label="글자 크기" title="글자 크기"><option value="2">A--</option><option value="3">A-</option><option value="4" selected>A</option><option value="5">A+</option><option value="6">A++</option><option value="7">A+++</option></select><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="removeFormat" aria-label="서식 지우개" title="서식 지우개">Tx</button></div><div class="idea-note-text" contenteditable="${readOnly || item.locked ? "false" : "true"}" spellcheck="true" tabindex="-1" aria-label="메모지 내용" data-placeholder="메모지를 적어보세요…">${noteHtml}</div>`;
-      if (!readOnly && !item.locked) bindIdeaNoteRichEditor(el, item, el.querySelector(".idea-note-text"));
+      el.innerHTML = `<div class="idea-note-rich-tools" role="toolbar" aria-label="메모지 서식"><button type="button" data-idea-note-cmd="bold" aria-label="굵게" title="굵게"><b>B</b></button><button type="button" data-idea-note-cmd="italic" aria-label="기울기" title="기울기"><i>I</i></button><button type="button" data-idea-note-cmd="underline" aria-label="밑줄" title="밑줄"><u>U</u></button><button type="button" data-idea-note-cmd="strikeThrough" aria-label="취소선" title="취소선"><s>S</s></button><button type="button" data-idea-note-cmd="foreColor" aria-label="글자색" title="글자색"><span class="idea-note-ink" style="--idea-note-fore-color:${esc(ideaTextColorValue(item.textColor)||"#27303a")}">A</span></button><button type="button" data-idea-note-cmd="hiliteColor" aria-label="형광펜" title="형광펜"><span class="idea-note-hi">H</span></button><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="justifyLeft" aria-label="왼쪽 정렬" title="왼쪽 정렬">≡</button><button type="button" data-idea-note-cmd="justifyCenter" aria-label="가운데 정렬" title="가운데 정렬">≡</button><button type="button" data-idea-note-cmd="justifyRight" aria-label="오른쪽 정렬" title="오른쪽 정렬">≡</button><select class="idea-note-font-size" aria-label="글자 크기" title="글자 크기"><option value="2">A--</option><option value="3">A-</option><option value="4" selected>A</option><option value="5">A+</option><option value="6">A++</option><option value="7">A+++</option></select><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="removeFormat" aria-label="서식 지우개" title="서식 지우개">Tx</button></div><div class="idea-note-text" contenteditable="${readOnly || ideaIsFullyLocked(item) ? "false" : "true"}" spellcheck="true" tabindex="-1" aria-label="메모지 내용" data-placeholder="메모지를 적어보세요…">${noteHtml}</div>`;
+      if (!readOnly && !ideaIsFullyLocked(item)) bindIdeaNoteRichEditor(el, item, el.querySelector(".idea-note-text"));
     } else if (item.kind === "quote") {
       const ref = getNote(item.noteId);
       const typeLabel = ref ? noteTypeShortLabel(ref) : "메모 없음";
@@ -6112,7 +6138,7 @@ ${gallery}
     }
     // 모든 조각이 동일한 독립 프레임 레이어를 공유합니다.
     refreshIdeaMediaFrame(el, item);
-    if (item.locked) el.insertAdjacentHTML("beforeend", `<span class="idea-lock-badge" aria-label="잠김">🔒</span>`);
+    if (ideaIsLocked(item)) el.insertAdjacentHTML("beforeend", `<span class="idea-lock-badge" aria-label="${ideaIsFullyLocked(item) ? "전체 보호 잠금" : "요소 잠금"}">${ideaIsFullyLocked(item) ? "🔒" : "✎"}</span>`);
     bindIdeaItemInteractions(el, item);
     return el;
   }
@@ -6477,7 +6503,7 @@ ${gallery}
     const n=currentIdeaNote(), d=currentIdeaData(), src=getIdeaItem(id); if(!n||!d||!src) return null;
     if (!ideaCanEditItem(src)) return null;
     pushIdeaUndo();
-    const clone=normalizeIdeaItem(Object.assign({}, src, { id:uid(), groupId:null, locked:false, z:nextIdeaZ(d),
+    const clone=normalizeIdeaItem(Object.assign({}, src, { id:uid(), groupId:null, locked:false, lockMode:null, z:nextIdeaZ(d),
       x:Math.max(0,Math.min(d.canvas.width-(src.w||120), (Number(src.x)||0)+24)),
       y:Math.max(0,Math.min(d.canvas.height-(src.h||60), (Number(src.y)||0)+24)) }));
     d.items.push(clone); renderIdeaBoard(); scheduleIdeaSave(0);
@@ -6561,7 +6587,7 @@ ${gallery}
     if(!ideaMultiSelectMode || isIdeaReadonly())return;
     const count=ideaSelectedIds.size, all=allIdeaItemsSelected(), canArrange=count>=2, canSpace=count>=3;
     const hasGroup=selectionHasGroupedItem();
-    const lockLabel=count && selectedIdeaItems().every((item)=>item.locked)?"잠금 해제":"잠금";
+    const lockLabel=count && selectedIdeaItems().every((item)=>ideaIsLocked(item))?"잠금 해제":"잠금";
     const alignOpen=ideaMultiToolsExpanded==="align", groupOpen=ideaMultiToolsExpanded==="group";
     const tools=document.createElement("div"); tools.className="idea-multi-tools";
     tools.innerHTML=`
@@ -6613,13 +6639,13 @@ ${gallery}
     setIdeaMultiSelection(allIdeaItemsSelected()?[]:d.items.map((i)=>i.id));
   }
   function alignIdeaSelection(type) {
-    const items=selectedIdeaItems().filter((i)=>!i.locked); if(items.length<2){toast("잠기지 않은 조각을 2개 이상 선택하세요");return;}
+    const items=selectedIdeaItems().filter((i)=>!ideaIsLocked(i)); if(items.length<2){toast("잠기지 않은 조각을 2개 이상 선택하세요");return;}
     const b=ideaItemsBounds(items); if(!b)return; pushIdeaUndo();
     items.forEach((it)=>{ if(type==="left")it.x=b.x; else if(type==="right")it.x=b.right-it.w; else if(type==="cx")it.x=b.x+(b.w-it.w)/2; else if(type==="top")it.y=b.y; else if(type==="bottom")it.y=b.bottom-it.h; else if(type==="cy")it.y=b.y+(b.h-it.h)/2; it.x=Math.round(it.x); it.y=Math.round(it.y); const el=ideaItemElement(it.id); if(el)setIdeaItemGeometry(el,it); });
     scheduleIdeaSave(0); applyIdeaMultiSelectionClasses(); toast("정렬했어요");
   }
   function distributeIdeaSelection(axis) {
-    const items=selectedIdeaItems().filter((i)=>!i.locked); if(items.length<3){toast("간격맞춤은 잠기지 않은 조각 3개 이상에서 사용할 수 있어요");return;}
+    const items=selectedIdeaItems().filter((i)=>!ideaIsLocked(i)); if(items.length<3){toast("간격맞춤은 잠기지 않은 조각 3개 이상에서 사용할 수 있어요");return;}
     const key=axis==="x"?"x":"y", sizeKey=axis==="x"?"w":"h";
     const ordered=items.slice().sort((a,b)=>(a[key]-b[key])||((a.z||0)-(b.z||0)));
     const first=ordered[0], last=ordered[ordered.length-1];
@@ -6630,24 +6656,24 @@ ${gallery}
     scheduleIdeaSave(0); applyIdeaMultiSelectionClasses(); toast(axis==="x"?"가로 간격을 맞췄어요":"세로 간격을 맞췄어요");
   }
   function groupIdeaSelection() {
-    const items=selectedIdeaItems().filter((i)=>!i.locked); if(items.length<2){toast("잠기지 않은 조각을 2개 이상 선택하세요");return;}
+    const items=selectedIdeaItems().filter((i)=>!ideaIsLocked(i)); if(items.length<2){toast("잠기지 않은 조각을 2개 이상 선택하세요");return;}
     pushIdeaUndo(); const gid=uid(); items.forEach((it)=>{it.groupId=gid;}); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(items.map((i)=>i.id)); toast("선택한 조각을 그룹화했어요");
   }
   function ungroupIdeaSelection() {
-    const items=selectedIdeaItems().filter((i)=>!i.locked&&i.groupId); if(!items.length){toast("해제할 그룹이 없어요");return;}
+    const items=selectedIdeaItems().filter((i)=>!ideaIsLocked(i)&&i.groupId); if(!items.length){toast("해제할 그룹이 없어요");return;}
     pushIdeaUndo(); items.forEach((it)=>{it.groupId=null;}); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(items.map((i)=>i.id)); toast("그룹을 풀었어요");
   }
   function toggleLockIdeaSelection() {
-    const items=selectedIdeaItems(); if(!items.length)return; pushIdeaUndo(); const lock=items.some((it)=>!it.locked); items.forEach((it)=>{it.locked=lock;}); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(items.map((i)=>i.id)); toast(lock?"선택 조각을 잠갔어요":"선택 조각 잠금을 해제했어요");
+    const items=selectedIdeaItems(); if(!items.length)return; pushIdeaUndo(); const lock=items.some((it)=>!ideaIsLocked(it)); items.forEach((it)=>{setIdeaLockMode(it,lock?"full":null);}); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(items.map((i)=>i.id)); toast(lock?"선택 조각을 잠갔어요":"선택 조각 잠금을 해제했어요");
   }
   function duplicateIdeaSelection() {
     const d=currentIdeaData(), items=selectedIdeaItems(); if(!d||!items.length)return;
     pushIdeaUndo();
-    const clones=items.map((src,index)=>normalizeIdeaItem(Object.assign({},src,{id:uid(),groupId:null,locked:false,z:nextIdeaZ(d)+index,x:Math.max(0,Math.min(d.canvas.width-(src.w||90),(Number(src.x)||0)+24)),y:Math.max(0,Math.min(d.canvas.height-(src.h||40),(Number(src.y)||0)+24))})));
+    const clones=items.map((src,index)=>normalizeIdeaItem(Object.assign({},src,{id:uid(),groupId:null,locked:false,lockMode:null,z:nextIdeaZ(d)+index,x:Math.max(0,Math.min(d.canvas.width-(src.w||90),(Number(src.x)||0)+24)),y:Math.max(0,Math.min(d.canvas.height-(src.h||40),(Number(src.y)||0)+24))})));
     d.items.push(...clones); scheduleIdeaSave(0); renderIdeaBoard(); setIdeaMultiSelection(clones.map((item)=>item.id)); toast(`${clones.length}개 조각을 복제했어요`);
   }
   function deleteIdeaSelection() {
-    const d=currentIdeaData(), items=selectedIdeaItems().filter((item)=>!item.locked); if(!d||!items.length){toast("잠긴 조각은 먼저 잠금을 해제하세요");return;}
+    const d=currentIdeaData(), items=selectedIdeaItems().filter((item)=>!ideaIsLocked(item)); if(!d||!items.length){toast("잠긴 조각은 먼저 잠금을 해제하세요");return;}
     confirmModal("선택 조각 삭제", `${items.length}개 조각을 보드에서 삭제할까요?`, "삭제", true, ()=>{
       pushIdeaUndo(); const ids=new Set(items.map((item)=>item.id));
       const removedFileIds=items.map((item)=>item.fileId).filter(Boolean);
@@ -6670,12 +6696,13 @@ ${gallery}
     $("ideaCanvas").querySelector(".idea-group-box")?.remove();
     if(item.groupId){ mountIdeaGroupTransformControls(item.groupId); return; }
     el.classList.add("selected"); positionIdeaTransformControls(el,item);
-    const tools=document.createElement("div"); tools.className="idea-transform-tools"; tools.innerHTML=`<button type="button" class="idea-option-dot" aria-label="조각 옵션"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button><button type="button" class="idea-move-handle" aria-label="이동"><svg viewBox="0 0 24 24"><path d="M12 3v18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3"/><path d="M3 12h18M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button><button type="button" class="idea-rotate-handle" aria-label="회전"><svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 1 1-2.1-5.4"/><path d="M20.5 3.5v4h-4"/></svg></button><button type="button" class="idea-resize-handle" aria-label="크기 조절"><svg viewBox="0 0 24 24"><path d="M14 20h6v-6"/><path d="M20 20l-8.5-8.5"/></svg></button>`;
+    const grip=(corner,label)=>`<button type="button" class="idea-resize-handle corner-${corner}" data-corner="${corner}" aria-label="${label} 크기 조절"><span></span></button>`;
+    const tools=document.createElement("div"); tools.className="idea-transform-tools"; tools.innerHTML=`<button type="button" class="idea-move-handle" aria-label="이동"><svg viewBox="0 0 24 24"><path d="M12 3v18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3"/><path d="M3 12h18M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button><button type="button" class="idea-option-dot" aria-label="조각 옵션"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button><button type="button" class="idea-rotate-handle" aria-label="회전"><svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 1 1-2.1-5.4"/><path d="M20.5 3.5v4h-4"/></svg></button>${grip("tl","왼쪽 위")}${grip("tr","오른쪽 위")}${grip("bl","왼쪽 아래")}${grip("br","오른쪽 아래")}`;
     el.appendChild(tools);
     tools.querySelector(".idea-option-dot").addEventListener("pointerdown",(e)=>e.stopPropagation());
     tools.querySelector(".idea-option-dot").addEventListener("click",(e)=>{e.stopPropagation();openIdeaItemOptions(id);});
     bindIdeaMoveHandle(tools.querySelector(".idea-move-handle"),item,el);
-    bindIdeaResizeHandle(tools.querySelector(".idea-resize-handle"),item,el);
+    tools.querySelectorAll(".idea-resize-handle").forEach((handle)=>bindIdeaResizeHandle(handle,item,el,handle.dataset.corner||"br"));
     bindIdeaRotateHandle(tools.querySelector(".idea-rotate-handle"),item,el);
   }
   function ideaGroupItems(groupId) { const d=currentIdeaData(); return d && groupId ? d.items.filter((it)=>it.groupId===groupId) : []; }
@@ -6701,7 +6728,7 @@ ${gallery}
     handle.addEventListener("pointerdown",(e)=>{
       if(e.button!=null&&e.button!==0)return;e.preventDefault();e.stopPropagation();
       const d=currentIdeaData(), items=ideaGroupItems(groupId); if(!d||!items.length)return;
-      if(items.some((it)=>it.locked)){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
+      if(items.some((it)=>ideaIsLocked(it))){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
       const start={x:e.clientX,y:e.clientY,items:items.map((it)=>({id:it.id,x:it.x,y:it.y}))}; const snap=ideaSnapshot(); let pushed=false;
       try{handle.setPointerCapture(e.pointerId);}catch(_e){}
       const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(Math.max(0,Math.min(d.canvas.width-it.w,row.x+delta.x)));it.y=Math.round(Math.max(0,Math.min(d.canvas.height-it.h,row.y+delta.y)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});updateIdeaGroupBoxGeometry(box,groupId);ev.preventDefault();};
@@ -6713,7 +6740,7 @@ ${gallery}
     handle.addEventListener("pointerdown",(e)=>{
       if(e.button!=null&&e.button!==0)return;e.preventDefault();e.stopPropagation();
       const d=currentIdeaData(),items=ideaGroupItems(groupId); if(!d||!items.length)return;
-      if(items.some((it)=>it.locked)){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
+      if(items.some((it)=>ideaIsLocked(it))){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
       const b=ideaItemsBounds(items); if(!b)return;
       const start={x:e.clientX,y:e.clientY,b,items:items.map((it)=>({id:it.id,x:it.x,y:it.y,w:it.w,h:it.h}))}; const snap=ideaSnapshot(); let pushed=false;
       const minScaleX=Math.max(...start.items.map((row)=>ideaItemMinSize((d.items.find((it)=>it.id===row.id)||{}).kind||"note").w/Math.max(1,row.w)));
@@ -6725,12 +6752,12 @@ ${gallery}
     });
   }
   function openIdeaGroupOptions(groupId) {
-    const items=ideaGroupItems(groupId); if(!items.length)return; const locked=items.every((it)=>it.locked);
+    const items=ideaGroupItems(groupId); if(!items.length)return; const locked=items.every((it)=>ideaIsLocked(it));
     openModal(`<h3>그룹 옵션</h3><p class="m-sub">${items.length}개 조각 그룹입니다.</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaGroupLock"><b>${locked?"그룹 잠금 해제":"그룹 잠금"}</b><small>그룹 안의 모든 조각 잠금 전환</small></button><button class="idea-options-action" id="ideaGroupMove"><b>그룹 이동</b><small>그룹 박스의 이동 핸들 사용</small></button><button class="idea-options-action" id="ideaGroupUngroup"><b>그룹 풀기</b><small>조각을 다시 개별 요소로 분리</small></button></div><div class="m-row"><button class="m-btn" id="ideaGroupClose">닫기</button></div>`);
     $on("ideaGroupClose","click",closeModal);
-    $on("ideaGroupLock","click",()=>{pushIdeaUndo();items.forEach((it)=>{it.locked=!locked;});scheduleIdeaSave(0);closeModal();renderIdeaBoard();});
+    $on("ideaGroupLock","click",()=>{pushIdeaUndo();items.forEach((it)=>{setIdeaLockMode(it,!locked?"full":null);});scheduleIdeaSave(0);closeModal();renderIdeaBoard();});
     $on("ideaGroupMove","click",()=>{closeModal();ideaEditState={itemId:items[0].id,groupId,mode:"move"};mountIdeaGroupTransformControls(groupId);});
-    $on("ideaGroupUngroup","click",()=>{if(items.some((it)=>it.locked)){toast("잠긴 그룹은 먼저 잠금을 해제하세요.");return;}pushIdeaUndo();items.forEach((it)=>{it.groupId=null;});scheduleIdeaSave(0);closeModal();renderIdeaBoard();});
+    $on("ideaGroupUngroup","click",()=>{if(items.some((it)=>ideaIsLocked(it))){toast("잠긴 그룹은 먼저 잠금을 해제하세요.");return;}pushIdeaUndo();items.forEach((it)=>{it.groupId=null;});scheduleIdeaSave(0);closeModal();renderIdeaBoard();});
   }
   function bindIdeaMoveHandle(handle,item,el) {
     handle.addEventListener("pointerdown",(e)=>{
@@ -6745,15 +6772,29 @@ ${gallery}
       document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end); handle.addEventListener("lostpointercapture", end, { once:true });
     });
   }
-  function bindIdeaResizeHandle(handle,item,el) {
+  function bindIdeaResizeHandle(handle,item,el,corner) {
     let lastTapAt = 0;
+    const isLeft=()=>String(corner||"br").includes("l"), isTop=()=>String(corner||"br").includes("t");
     handle.addEventListener("pointerdown",(e)=>{
-      e.preventDefault();e.stopPropagation(); const d=currentIdeaData(), fresh=d&&d.items.find((it)=>it.id===item.id);if(!fresh||!d)return;if(!ideaCanEditItem(fresh))return; const start={cx:e.clientX,cy:e.clientY,w:fresh.w,h:fresh.h,x:fresh.x,y:fresh.y,rot:fresh.rotation||0,aspect:fresh.aspect||fresh.w/fresh.h,lock:fresh.lockAspect}; const rzPreSnap=ideaSnapshot(); let rzPushed=false;
+      if(e.button!=null&&e.button!==0)return;
+      e.preventDefault();e.stopPropagation(); const d=currentIdeaData(), fresh=d&&d.items.find((it)=>it.id===item.id);if(!fresh||!d)return;if(!ideaCanEditItem(fresh))return;
+      const start={cx:e.clientX,cy:e.clientY,w:fresh.w,h:fresh.h,x:fresh.x,y:fresh.y,rot:fresh.rotation||0,aspect:fresh.aspect||fresh.w/fresh.h,lock:fresh.lockAspect}; const rzPreSnap=ideaSnapshot(); let rzPushed=false;
       try{handle.setPointerCapture(e.pointerId)}catch(_e){}
       let moved=false;
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!rzPushed){pushIdeaUndo(rzPreSnap);rzPushed=true;}moved=true;const delta=boardDeltaFromEvent(ev.clientX-start.cx,ev.clientY-start.cy);const rad=-start.rot*Math.PI/180, lx=delta.x*Math.cos(rad)-delta.y*Math.sin(rad), ly=delta.x*Math.sin(rad)+delta.y*Math.cos(rad);let w=start.w+lx,h=start.h+ly;if(start.lock){if(Math.abs(lx)>Math.abs(ly*start.aspect))h=w/start.aspect;else w=h*start.aspect;}const clamped=ideaClampItemSize(fresh.kind,w,h);fresh.w=clamped.w;fresh.h=clamped.h;if(ideaSnapOn){ideaSnapResize(fresh,d,start);}else{clearIdeaSnapGuides();}setIdeaItemGeometry(el,fresh);scheduleIdeaSave(220);ev.preventDefault();};
+      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!rzPushed){pushIdeaUndo(rzPreSnap);rzPushed=true;}moved=true;
+        const delta=boardDeltaFromEvent(ev.clientX-start.cx,ev.clientY-start.cy);const rad=-start.rot*Math.PI/180, lx=delta.x*Math.cos(rad)-delta.y*Math.sin(rad), ly=delta.x*Math.sin(rad)+delta.y*Math.cos(rad);
+        let dw=(isLeft()?-1:1)*lx, dh=(isTop()?-1:1)*ly; let w=start.w+dw,h=start.h+dh;
+        if(start.lock){if(Math.abs(dw)>Math.abs(dh*start.aspect))h=w/start.aspect;else w=h*start.aspect;}
+        const clamped=ideaClampItemSize(fresh.kind,w,h);w=clamped.w;h=clamped.h;
+        fresh.w=w;fresh.h=h;
+        if(isLeft()) fresh.x=Math.round(start.x+(start.w-w)); else fresh.x=start.x;
+        if(isTop()) fresh.y=Math.round(start.y+(start.h-h)); else fresh.y=start.y;
+        fresh.x=Math.max(0,Math.min(d.canvas.width-fresh.w,fresh.x));fresh.y=Math.max(0,Math.min(d.canvas.height-fresh.h,fresh.y));
+        if(ideaSnapOn){ideaSnapResize(fresh,d,start);}else{clearIdeaSnapGuides();}
+        setIdeaItemGeometry(el,fresh);scheduleIdeaSave(220);ev.preventDefault();
+      };
       const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);const at=Date.now();if(!moved&&at-lastTapAt<340){lastTapAt=0;openIdeaSizeModal(item.id);}else{lastTapAt=moved?0:at;if(moved)scheduleIdeaSave(0);}};
-      document.addEventListener("pointermove",move);document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end); handle.addEventListener("lostpointercapture", end, { once:true });
+      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end); handle.addEventListener("lostpointercapture", end, { once:true });
     });
   }
   function openIdeaSizeModal(id) {
@@ -6830,9 +6871,9 @@ ${gallery}
       el.addEventListener("dblclick",blockMultiClick,true);
       return;
     }
-    if (item.locked) {
-      el.addEventListener("pointerdown",(e)=>{if(e.button!=null&&e.button!==0)return;if(isTransformControl(e.target)||nativeControl(e.target))return;selectIdeaItem(item.id,null);});
-      el.addEventListener("dblclick",(e)=>{if(nativeControl(e.target))return;e.preventDefault();openIdeaItemOptions(item.id);});
+    if (ideaIsLocked(item)) {
+      el.addEventListener("pointerdown",(e)=>{if(e.button!=null&&e.button!==0)return;if(isTransformControl(e.target)||nativeControl(e.target))return;if(ideaLockMode(item)==="transform" && textEditor(e.target))return;selectIdeaItem(item.id,null);});
+      el.addEventListener("dblclick",(e)=>{if(nativeControl(e.target)|| (ideaLockMode(item)==="transform" && textEditor(e.target)))return;e.preventDefault();openIdeaItemOptions(item.id);});
       el.addEventListener("contextmenu",(e)=>{if(nativeControl(e.target))return;e.preventDefault();openIdeaItemOptions(item.id);});
       return;
     }
@@ -6923,12 +6964,22 @@ ${gallery}
     return `<button type="button" class="idea-template-choice idea-template-card${selected ? " active" : ""}" ${attr} aria-pressed="${selected ? "true" : "false"}">${preview}<span class="idea-template-copy"><b>${esc(template.label)}</b><small>${esc(template.desc || "사용자 템플릿")}</small></span><span class="idea-template-state">${selected ? "선택됨" : "선택"}</span></button>`;
   }
 
+  function openIdeaNoteLockPicker(id) {
+    const item=getIdeaItem(id); if(!item || item.kind!=="note") return;
+    const mode=ideaLockMode(item);
+    openModal(`<h3>메모지 잠금</h3><p class="m-sub">요소 잠금은 배치·크기·디자인 변경을 막지만 메모 내용은 계속 편집할 수 있습니다. 전체 보호 잠금은 메모 내용까지 모두 보호합니다.</p><div class="idea-options-grid"><button class="idea-options-action" data-idea-note-lock="transform"><b>요소만 잠금</b><small>${mode==="transform"?"현재 적용됨":"이동·크기·회전·디자인 변경만 막기"}</small></button><button class="idea-options-action" data-idea-note-lock="full"><b>전체 보호 잠금</b><small>${mode==="full"?"현재 적용됨":"메모 내용과 모든 조작을 보호"}</small></button>${mode?`<button class="idea-options-action" data-idea-note-lock=""><b>잠금 해제</b><small>메모지의 모든 편집을 다시 허용</small></button>`:""}</div><div class="m-row"><button class="m-btn" id="ideaNoteLockCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll("[data-idea-note-lock]").forEach((button)=>button.addEventListener("click",()=>{const fresh=getIdeaItem(id);if(!fresh)return;pushIdeaUndo();setIdeaLockMode(fresh,button.dataset.ideaNoteLock||null);scheduleIdeaSave(0);closeModal();renderIdeaBoard();requestAnimationFrame(()=>openIdeaItemOptions(id));}));
+    $on("ideaNoteLockCancel","click",closeModal);
+  }
+
   function openIdeaItemOptions(id) {
     if (isIdeaReadonly()) { openIdeaArtifactPreview(id); return; }
     const n=currentIdeaNote(), item=getIdeaItem(id);if(!n||!item)return;selectIdeaItem(id,null);
     const supportsAspect=["image","video"].includes(item.kind);
     const isColorable=["note","audio","quote","file"].includes(item.kind);
     const blocked=()=>!ideaCanEditItem(item);
+    const noteLockMode=ideaLockMode(item);
+    const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
@@ -6939,11 +6990,11 @@ ${gallery}
     const videoDecorAction=item.kind==="video"?`<button class="idea-options-action" id="ideaOptVideoDecor"><b>${item.videoDecor===false?"영상 장식 꺼짐":"영상 장식 켜짐"}</b><small>PLAY 배지·별 장식의 표시와 색상 조절</small></button>`:"";
     const replaceAction=["image","audio","video","file","quote"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptReplace"><b>교체</b><small>${item.kind==="quote"?"연결할 메모를 새로 고르기":"현재 위치·크기·테마를 유지하고 새 파일로 교체"}</small></button>`:"";
     const flipAction=["note","image"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFlipX"><b>${item.flipX?"좌우 반전 켜짐":"좌우 반전 꺼짐"}</b><small>${item.kind==="note"?"메모지 디자인만 뒤집고 글자는 유지":"이미지를 좌우로 뒤집기"}</small></button>`:"";
-    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">${item.locked?"잠긴 조각입니다. 편집하려면 먼저 잠금을 해제하세요.":"길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요."}</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaOptLock"><b>${item.locked?"잠금 해제":"잠금"}</b><small>${item.locked?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button><button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${flipAction}${frameAction}${videoDecorAction}${replaceAction}${renameAction}${audioTitleAction}${audioModeAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}${emptyFrameOptions}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
+    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">${ideaIsFullyLocked(item)?"전체 보호 잠금 상태입니다. 잠금 해제 후 모든 편집이 가능합니다.":ideaLockMode(item)==="transform"?"요소 잠금 상태입니다. 메모 내용은 편집할 수 있지만 조각 조작은 보호됩니다.":"길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요."}</p><div class="idea-options-grid">${lockAction}<button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${flipAction}${frameAction}${videoDecorAction}${replaceAction}${renameAction}${audioTitleAction}${audioModeAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}${emptyFrameOptions}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
     $on("ideaOptClose","click",closeModal);
-    $on("ideaOptLock","click",()=>{pushIdeaUndo();item.locked=!item.locked;renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
+    $on("ideaOptLock","click",()=>{if(item.kind==="note"){openIdeaNoteLockPicker(id);return;}pushIdeaUndo();setIdeaLockMode(item,ideaIsLocked(item)?null:"full");renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
     $on("ideaOptMove","click",()=>{if(blocked())return;closeModal();selectIdeaItem(id,"move");toast("이동 모드: 조각을 드래그해 배치하세요");});
-    $on("ideaOptAdjust","click",()=>{if(blocked())return;closeModal();selectIdeaItem(id,"transform");toast("모서리 ↘로 크기, ↻로 회전을 조절하세요");});
+    $on("ideaOptAdjust","click",()=>{if(blocked())return;closeModal();selectIdeaItem(id,"transform");toast("네 모서리 손잡이로 크기, ↻로 회전을 조절하세요");});
     if(supportsAspect)$on("ideaOptAspect","click",()=>{if(blocked())return;pushIdeaUndo();item.lockAspect=!item.lockAspect;scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     if(["note","image"].includes(item.kind))$on("ideaOptFlipX","click",()=>{if(blocked())return;pushIdeaUndo();item.flipX=!item.flipX;const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,item);scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     if(["quote","file","audio"].includes(item.kind))$on("ideaOptRename","click",()=>{if(blocked())return;renameIdeaItemTitle(id);});
@@ -7158,7 +7209,7 @@ ${gallery}
     const projectName=(pid)=>{const p=getProject(pid);return p?p.name:"프로젝트 없음";};
     const pick=(id)=>{const ref=getNote(id);closeModal();if(!ref)return;if(replaceItemId)replaceIdeaQuote(replaceItemId,ref.id);else addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});};
     const noteRows=(list)=>list.length?list.map((n)=>`<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-idea-quote="${esc(n.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><b>${esc(n.title||"제목 없는 메모")}</b></span><small>${esc(projectName(n.projectId))} · ${esc(noteTypeShortLabel(n))} · ${esc(n.type==="idea"?ideaBoardSummary(n):preview(noteHtml(n))||"내용 없음")}</small></button></div>`).join(""):'<div class="log-template-empty">검색 결과가 없어요.</div>';
-    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;const framed=frameById(p.frame);const thumb=`<span class="idea-quote-project-thumb${framed?" has-frame":""}">${projectThumbMedia(p)}${framed?`<span class="frame">${frameInner(p)}</span>`:""}</span>`;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
+    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;const framed=frameById(p.frame);const thumb=`<span class="idea-quote-project-thumb${framed?" has-frame":""}">${projectThumbMedia(p)}${framed?`<span class="frame">${frameNineSliceMarkup(p.frame,p.frameColor||"#d4af37")}</span>`:""}</span>`;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
     openModal(`<div class="log-template-manager idea-quote-manager"><h3>${replaceItemId?"메모 링크 교체":"내 메모 링크"}</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="log-template-tabs" role="tablist" aria-label="내 메모 링크 구분"><button data-idea-quote-tab="all" role="tab">전체보기 <small></small></button><button data-idea-quote-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="ideaQuoteSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"></div><div class="log-template-list idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteProjectBack" type="button" hidden>← 뒤로가기</button><button class="m-btn" id="ideaQuoteCancel">닫기</button></div></div>`);
     $("modalBox").classList.add("log-template-modal","idea-quote-modal");
     $("modalScrim").classList.add("log-template-open");
@@ -7449,7 +7500,7 @@ ${gallery}
   function renderIdeaExportItem(item,n,fileMap) {
     const colorStyle=(["note","audio","quote","file"].includes(item.kind) ? ideaColorStyleAttr(item.color, item.textColor) : "");
     const base=`left:${Math.round(item.x)}px;top:${Math.round(item.y)}px;width:${Math.round(item.w)}px;height:${Math.round(item.h)}px;z-index:${Math.round(item.z)};--idea-rot:${Math.round(item.rotation || 0)}deg;${colorStyle}`;
-    const cls=`idea-item idea-${esc(item.kind)}${item.kind==="note" ? " idea-sticky" : ""}${item.flipX ? " flipped-x" : ""}${item.shadow===false ? " no-shadow" : ""}${item.locked ? " locked" : ""}`;
+    const cls=`idea-item idea-${esc(item.kind)}${item.kind==="note" ? " idea-sticky" : ""}${item.flipX ? " flipped-x" : ""}${item.shadow===false ? " no-shadow" : ""}${ideaIsLocked(item) ? " locked" : ""}`;
     if(item.kind==="note") { const noteFrame=ideaMediaFrameConfig(item), noteMarkup=noteFrame?`<div class="idea-media-frame idea-item-frame">${frameNineSliceMarkup(noteFrame.id,noteFrame.color)}</div>`:"", noteStyle=noteFrame?`--idea-frame-cap:${Math.round(Math.max(16,Math.min(44,Math.min(Number(item.w)||110,Number(item.h)||54)*.16)))}px;--idea-frame-outset:10px;`:""; return `<article class="${cls}${noteFrame?" has-media-frame":""}" data-note-style="${esc(item.noteStyle)}" data-v-align="${esc(item.vAlign==="center"?"center":"top")}" data-color="${esc(item.color)}" style="${esc(base+noteStyle)}"><div class="idea-note-text">${ideaNoteHtml(item)}</div>${noteMarkup}</article>`; }
     const source=fileMap.get(item.fileId) || "", title=ideaItemTitle(item,n);
     const frameConfig=ideaMediaFrameConfig(item);
