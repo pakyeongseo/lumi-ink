@@ -1,3 +1,9 @@
+# Lumi Ink v63.41 — Note Menu Cleanup & Board Selection Stability
+
+- 메모 내부 선택 메뉴 제거, 보드 다중선택 캡처 처리, 타입 마크 색상, 메모지 글자색 스튜디오/글자 크기 단계 정리
+- 릴리즈 노트: `Lumi_Ink_v63.41_Release_Notes.md`
+- 서비스워커 캐시: `ink-memo-v63.41-note-menu-multiselect`
+
 # Lumi Ink v63.40 — Board Interaction & Replacement
 
 루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 패키지는 배포 전 정리본이며, 현재 앱 본체와 최신 매뉴얼, 최신 릴리즈 노트를 기준 파일로 유지합니다.

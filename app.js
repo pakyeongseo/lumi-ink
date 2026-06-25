@@ -1070,7 +1070,6 @@
   }
   function openHtmlSheet(n) {
     openSheet(n.title, [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("HTML 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
@@ -1983,7 +1982,6 @@
   }
   function openLoreSheet(n) {
     openSheet(n.title, [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("로어북 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveLore(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
@@ -2362,7 +2360,6 @@
   }
   function openLogSheet(n) {
     openSheet(n.title, [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("로그 이름", n.title, async (value) => { if (value) { n.title = value; n.titleLocked = true; await saveLog(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
@@ -2693,7 +2690,6 @@
   }
   function openPersonaSheet(n) {
     openSheet(n.title, [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("페르소나 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await savePersona(n, true); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
@@ -3293,7 +3289,6 @@
     const d = ensureCharacterData(n), single = d.mode === "single";
     const kind = single ? "페르소나" : "캐릭터 모음";
     const items = [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", n.id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "메모 이름 바꾸기", fn: () => renameModal(`${kind} 이름`, n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveCharacter(n, true); render(); } }) },
       { icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5L5 21"/></svg>', label: "대표 썸네일 지정", fn: () => chooseCharacterCover(n) },
@@ -3612,7 +3607,6 @@
     if (n.type === "idea") { openIdeaBoardSheet(n); return; }
     if (n.type === "html") { openHtmlSheet(n); return; }
     openSheet(n.title, [
-      { icon: IC.select, label: "선택", fn: () => enterSelMode("note", id) },
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(id) },
@@ -6002,7 +5996,7 @@ ${gallery}
     if (readOnly) { if (ideaEditState.itemId) ideaEditState = { itemId: null, groupId:null, mode: null }; ideaMultiSelectMode=false; ideaSelectedIds.clear(); }
     $("ideaTitle").textContent = n.title || "아이디어 보드"; if (!ideaDirty) setIdeaSaver("");
     const screen = $("screen-idea"); screen.classList.toggle("idea-board-mode", boardLike); screen.classList.toggle("idea-list-mode", ideaViewMode === "list"); screen.classList.toggle("idea-readonly-mode", readOnly);
-    $("ideaBoardMode").classList.toggle("active", ideaViewMode !== "list"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list"); updateIdeaTopViewToggle(); updateIdeaSnapButton();
+    $("ideaBoardMode").classList.toggle("active", ideaViewMode !== "list"); $("ideaListMode").classList.toggle("active", ideaViewMode === "list"); const multiToggle=$("ideaMultiToggle"); if(multiToggle) multiToggle.hidden=readOnly; updateIdeaTopViewToggle(); updateIdeaSnapButton();
     const canvas = $("ideaCanvas"), sizer = $("ideaCanvasSizer");
     if (sizer) { sizer.style.width = d.canvas.width + "px"; sizer.style.height = d.canvas.height + "px"; }
     canvas.style.width = d.canvas.width + "px"; canvas.style.minHeight = d.canvas.height + "px"; applyIdeaCanvasAppearance(canvas, d); canvas.innerHTML = "";
@@ -6085,7 +6079,7 @@ ${gallery}
     setIdeaItemGeometry(el, item);
     if (item.kind === "note") {
       const noteHtml=ideaNoteHtml(item);
-      el.innerHTML = `<div class="idea-note-rich-tools" role="toolbar" aria-label="메모지 서식"><button type="button" data-idea-note-cmd="bold" aria-label="굵게" title="굵게"><b>B</b></button><button type="button" data-idea-note-cmd="italic" aria-label="기울기" title="기울기"><i>I</i></button><button type="button" data-idea-note-cmd="underline" aria-label="밑줄" title="밑줄"><u>U</u></button><button type="button" data-idea-note-cmd="strikeThrough" aria-label="취소선" title="취소선"><s>S</s></button><button type="button" data-idea-note-cmd="foreColor" aria-label="글자색" title="글자색"><span class="idea-note-ink" style="--idea-note-fore-color:${esc(ideaTextColorValue(item.textColor)||"#27303a")}">A</span></button><button type="button" data-idea-note-cmd="hiliteColor" aria-label="형광펜" title="형광펜"><span class="idea-note-hi">H</span></button><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="justifyLeft" aria-label="왼쪽 정렬" title="왼쪽 정렬">≡</button><button type="button" data-idea-note-cmd="justifyCenter" aria-label="가운데 정렬" title="가운데 정렬">≡</button><button type="button" data-idea-note-cmd="justifyRight" aria-label="오른쪽 정렬" title="오른쪽 정렬">≡</button><select class="idea-note-font-size" aria-label="글자 크기" title="글자 크기"><option value="2">A−</option><option value="3" selected>A</option><option value="5">A+</option><option value="6">A++</option></select><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="removeFormat" aria-label="서식 지우개" title="서식 지우개">Tx</button></div><div class="idea-note-text" contenteditable="${readOnly || item.locked ? "false" : "true"}" spellcheck="true" tabindex="-1" aria-label="메모지 내용" data-placeholder="메모지를 적어보세요…">${noteHtml}</div>`;
+      el.innerHTML = `<div class="idea-note-rich-tools" role="toolbar" aria-label="메모지 서식"><button type="button" data-idea-note-cmd="bold" aria-label="굵게" title="굵게"><b>B</b></button><button type="button" data-idea-note-cmd="italic" aria-label="기울기" title="기울기"><i>I</i></button><button type="button" data-idea-note-cmd="underline" aria-label="밑줄" title="밑줄"><u>U</u></button><button type="button" data-idea-note-cmd="strikeThrough" aria-label="취소선" title="취소선"><s>S</s></button><button type="button" data-idea-note-cmd="foreColor" aria-label="글자색" title="글자색"><span class="idea-note-ink" style="--idea-note-fore-color:${esc(ideaTextColorValue(item.textColor)||"#27303a")}">A</span></button><button type="button" data-idea-note-cmd="hiliteColor" aria-label="형광펜" title="형광펜"><span class="idea-note-hi">H</span></button><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="justifyLeft" aria-label="왼쪽 정렬" title="왼쪽 정렬">≡</button><button type="button" data-idea-note-cmd="justifyCenter" aria-label="가운데 정렬" title="가운데 정렬">≡</button><button type="button" data-idea-note-cmd="justifyRight" aria-label="오른쪽 정렬" title="오른쪽 정렬">≡</button><select class="idea-note-font-size" aria-label="글자 크기" title="글자 크기"><option value="2">A--</option><option value="3">A-</option><option value="4" selected>A</option><option value="5">A+</option><option value="6">A++</option><option value="7">A+++</option></select><span class="idea-note-tool-sep"></span><button type="button" data-idea-note-cmd="removeFormat" aria-label="서식 지우개" title="서식 지우개">Tx</button></div><div class="idea-note-text" contenteditable="${readOnly || item.locked ? "false" : "true"}" spellcheck="true" tabindex="-1" aria-label="메모지 내용" data-placeholder="메모지를 적어보세요…">${noteHtml}</div>`;
       if (!readOnly && !item.locked) bindIdeaNoteRichEditor(el, item, el.querySelector(".idea-note-text"));
     } else if (item.kind === "quote") {
       const ref = getNote(item.noteId);
@@ -6138,10 +6132,15 @@ ${gallery}
   }
   function openIdeaNoteForeColorPicker(item, onPick) {
     const selected = item && item.textColor ? item.textColor : "auto";
-    openModal(`<h3>메모지 글자색</h3><p class="m-sub">선택한 글자만 바꾸거나, 선택 영역이 없으면 이 메모지 본문 전체에 적용합니다.</p><div class="idea-color-grid palette-grid">${ideaTextColorChoicesMarkup(selected,"data-idea-note-fore-color",true)}</div><div class="m-row"><button class="m-btn" id="ideaForeColorCancel">취소</button></div>`);
-    $("modalBox").querySelectorAll("[data-idea-note-fore-color]").forEach((btn)=>btn.addEventListener("click",()=>{const value=btn.dataset.ideaNoteForeColor;closeModal();if(typeof onPick==="function")onPick(value);}));
-    $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-note-fore-color"]').forEach((btn)=>btn.addEventListener("click",()=>{openIdeaCustomColorPicker("메모지 글자색 직접 선택",ideaTextColorValue(selected)||"#27303a",(value)=>{closeModal();if(typeof onPick==="function")onPick(value);});}));
-    $on("ideaForeColorCancel","click",closeModal);
+    const initial = ideaTextColorValue(selected) || "#27303a";
+    openAdvancedColorPicker("메모지 글자색", initial, (value)=>{
+      if(typeof onPick === "function") onPick(value);
+    }, {
+      prefix:"ideaNoteForeStudio",
+      saved:true,
+      save:true,
+      intro:"자유메모의 글자색 편집기와 같은 색상판입니다. 정사각형 안을 터치하거나 HEX·RGB 값으로 글자색을 정확히 맞출 수 있어요."
+    });
   }
 
   function bindIdeaNoteRichEditor(el,item,editor) {
@@ -6816,10 +6815,19 @@ ${gallery}
       return;
     }
     if (ideaMultiSelectMode) {
-      // 다중선택에서는 본문·미디어 내부를 포함한 조각 전체를 선택 토글 영역으로 취급합니다.
-      // 기본 링크 이동/다운로드/재생 click까지 차단해 단일 조각 동작으로 빠지지 않게 합니다.
-      el.addEventListener("pointerdown",(e)=>{if(e.button!=null&&e.button!==0)return;if(isTransformControl(e.target))return;e.preventDefault();e.stopPropagation();toggleIdeaMultiItem(item.id);});
-      el.addEventListener("click",(e)=>{e.preventDefault();e.stopImmediatePropagation();},true);
+      // 다중선택은 캡처 단계에서 먼저 잡습니다. video/audio/button 내부의 자체 핸들러가
+      // 이벤트를 소비해도 조각 선택 토글이 빠지지 않도록 보장합니다.
+      const toggleFromMultiPointer=(e)=>{
+        if(e.button!=null&&e.button!==0)return;
+        if(isTransformControl(e.target))return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        toggleIdeaMultiItem(item.id);
+      };
+      const blockMultiClick=(e)=>{e.preventDefault();e.stopImmediatePropagation();};
+      el.addEventListener("pointerdown",toggleFromMultiPointer,true);
+      el.addEventListener("pointerup",blockMultiClick,true);
+      el.addEventListener("click",blockMultiClick,true);
+      el.addEventListener("dblclick",blockMultiClick,true);
       return;
     }
     if (item.locked) {
@@ -7511,7 +7519,6 @@ ${gallery}
 
   function openIdeaBoardSheet(n) {
     const items=[
-      {icon:IC.select,label:"선택",fn:()=>enterSelMode("note",n.id)},
       {icon:IC.color,label:"보드 배경",fn:()=>openIdeaBoardBackgroundPicker(n)},
       {icon:IC.save,label:"꾸며진 HTML로 내보내기",fn:()=>void exportIdeaBoardHtml(n.id)},
       {icon:IC.rename,label:"보드 이름 바꾸기",fn:()=>renameModal("아이디어 보드 이름",n.title,async(v)=>{if(v){n.title=v;n.titleLocked=true;await saveNote(n);render();}})},

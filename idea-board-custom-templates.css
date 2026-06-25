@@ -2131,3 +2131,25 @@
 /* 그룹 박스를 제거/재생성하지 않고 같은 좌표계에서 갱신해 제스처 흔들림을 막습니다. */
 .idea-group-box { touch-action:none; will-change:left,top,width,height; }
 .idea-group-box .idea-transform-tools { will-change:transform; }
+
+/* ===================================================================
+ * v63.41 — note menu cleanup, themed type markers, multi-select input
+ * =================================================================== */
+/* 보기 모드에서는 다중선택 진입 자체가 의미 없으므로 버튼도 숨김 */
+.idea-readonly-mode #ideaMultiToggle { display:none !important; }
+
+/* 아이디어 보드 / HTML 작업실 구분자 마크: 현재 테마를 바탕으로 서로 다른 온도를 배정 */
+.memo-tag.t-idea {
+  background:color-mix(in srgb,var(--accent) 54%,#f59e0b);
+  color:#fff;
+  text-shadow:0 1px 2px rgba(42,28,6,.34);
+}
+.memo-tag.t-html {
+  background:color-mix(in srgb,var(--accent) 52%,#00a6c7);
+  color:#fff;
+  text-shadow:0 1px 2px rgba(4,31,39,.34);
+}
+
+/* 다중선택은 내부 video/audio/button 위에서도 선택 제스처가 우선됩니다. */
+.idea-multi-tools ~ .idea-canvas .idea-item,
+.idea-item.multi-selected { -webkit-tap-highlight-color:transparent; }
