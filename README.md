@@ -75,18 +75,20 @@
 - `idea-board-templates.js`
 - `idea-board-custom-templates.css`
 - `idea-board-backgrounds/`
+- `html2canvas.min.js` (아이디어 보드 PNG 캡처용)
 
 문서·가이드:
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v63.45_Release_Notes.md`
+- `Lumi_Ink_v63.46_Release_Notes.md`
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
 - `idea-board-template-registry-guide.md`
 - `idea-divider-template-guide.md`
 
-## v63.45 검수 기준
+## v63.46 검수 기준
 
 - JavaScript 문법 검사 통과
 - 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
@@ -94,5 +96,12 @@
 - HTML 중복 ID 확인
 - 다중선택 터치 fallback 확인
 - 메모지 선택 글자색 적용 경로 확인
-- 스크린샷 PNG/SVG fallback 구조 확인
+- 화면 DOM 직접 PNG 래스터화 경로 확인
+- SVG 대체 저장 분기 제거 확인
+- 그룹 이동·리사이즈 스냅 경로 확인
 
+
+
+## Third-party
+
+- `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
