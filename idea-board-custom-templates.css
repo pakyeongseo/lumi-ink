@@ -1710,7 +1710,7 @@
 }
 .idea-item.has-media-frame .idea-note-rich-tools { z-index:10020; }
 
-/* v63.36: quote picker search and read-only idea board mode */
+/* Recent board editing: quote search, read-only mode and expanded board editing */
 .idea-quote-search { margin:8px 0 10px; }
 .idea-quote-results { max-height:min(50dvh,420px); overflow:auto; overscroll-behavior:auto; padding-right:2px; }
 .idea-readonly-mode #ideaAdd,
@@ -1722,6 +1722,84 @@
 .idea-readonly-mode .idea-transform-tools { display:none !important; }
 .idea-readonly-mode .idea-item { cursor:default; }
 .idea-readonly-mode .idea-note-text { user-select:text; }
+
+/* v63.37: lock, multi-select, grouping and empty frame elements */
+.idea-item { min-width:24px; min-height:24px; }
+.idea-note-ink { display:block; color:var(--stick-ink,#27303a); font-weight:950; border-bottom:3px solid currentColor; line-height:.8; padding-bottom:2px; }
+.idea-sticky[data-v-align="center"] .idea-note-text,
+.idea-preview-note[data-v-align="center"] .idea-note-text {
+  min-height:100%;
+  display:grid;
+  align-content:center;
+}
+.idea-item.locked {
+  outline:1.5px dashed color-mix(in srgb,var(--accent) 58%,transparent);
+  outline-offset:4px;
+}
+.idea-lock-badge {
+  position:absolute; right:-9px; top:-9px; z-index:10030;
+  width:22px; height:22px; border-radius:999px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--surface),var(--surface-2));
+  color:color-mix(in srgb,var(--accent) 78%,var(--ink));
+  border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line));
+  box-shadow:0 5px 12px rgba(0,0,0,.16);
+  font-size:12px; pointer-events:none;
+}
+.idea-item.locked .idea-move-handle,
+.idea-item.locked .idea-rotate-handle,
+.idea-item.locked .idea-resize-handle { display:none; }
+.idea-item.multi-selected,
+.idea-item.group-selected {
+  outline:2px solid color-mix(in srgb,var(--accent) 74%,white);
+  outline-offset:5px;
+}
+.idea-selection-box {
+  position:absolute; z-index:10040; pointer-events:none;
+  border:1.5px dashed color-mix(in srgb,var(--accent) 86%,white);
+  background:color-mix(in srgb,var(--accent) 16%,transparent);
+  border-radius:10px;
+}
+.idea-stage-wrap { position:relative; }
+.idea-multi-tools {
+  position:sticky; left:10px; bottom:10px; z-index:20000;
+  display:flex; align-items:center; flex-wrap:wrap; gap:5px;
+  width:max-content; max-width:calc(100% - 20px);
+  margin:0 0 10px 10px; padding:7px;
+  border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));
+  border-radius:14px;
+  background:color-mix(in srgb,var(--surface) 94%,white);
+  box-shadow:0 10px 26px rgba(0,0,0,.18);
+}
+.idea-multi-tools span { padding:0 6px; font-size:11px; font-weight:900; color:color-mix(in srgb,var(--accent) 76%,var(--ink)); }
+.idea-multi-tools button {
+  border:0; border-radius:10px; padding:7px 9px;
+  background:color-mix(in srgb,var(--accent-soft) 54%,var(--surface-2));
+  color:color-mix(in srgb,var(--accent) 82%,var(--ink));
+  font:850 11px/1 var(--user-font,inherit); cursor:pointer;
+}
+.idea-multi-tools button:disabled { opacity:.38; cursor:not-allowed; }
+.idea-group-box {
+  position:absolute; z-index:10025; pointer-events:none;
+  border:2px dashed color-mix(in srgb,var(--accent) 72%,white);
+  border-radius:14px;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+.idea-group-box .idea-transform-tools { display:flex; pointer-events:auto; }
+.idea-empty-frame-body {
+  position:absolute; inset:0;
+  border:1.5px dashed color-mix(in srgb,var(--idea-color-b,#7b9bff) 50%,rgba(255,255,255,.65));
+  border-radius:16px;
+  background:color-mix(in srgb,var(--idea-color-a,#7b9bff) 7%,transparent);
+  display:grid; place-items:center;
+  color:color-mix(in srgb,var(--idea-chip-ink,#27303a) 48%,transparent);
+  font:850 12px/1 var(--user-font,inherit);
+  letter-spacing:.08em;
+}
+.idea-frame.has-media-frame .idea-empty-frame-body { border-color:transparent; background:transparent; }
+@media(max-width:700px){
+  .idea-multi-tools { max-width:calc(100% - 16px); margin-left:8px; bottom:8px; padding:6px; }
+  .idea-multi-tools button { padding:7px 8px; font-size:10.5px; }
+}
 
 /* 상단 비율 직접 입력 */
 .idea-tb-zoominput {
