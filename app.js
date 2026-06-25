@@ -1279,26 +1279,41 @@
     if (save) save.addEventListener("click", () => { const colors = getSavedColors().filter((color) => color !== current); colors.unshift(current); setSavedColors(colors); drawSaved(); if (typeof opts.onSave === "function") opts.onSave(current); else toast("색을 저장했어요"); });
     const eyedropper = node("Eyedropper");
     if (eyedropper) {
-      const supported = typeof window.EyeDropper === "function";
-      eyedropper.disabled = !supported;
+      // 일부 브라우저/PWA에서는 EyeDropper가 없거나 중복 click 바인딩 때문에
+      // open()이 두 번 호출되어 즉시 취소될 수 있었습니다. 한 번의 경로만 유지합니다.
+      const EyeDropperCtor = (typeof window !== "undefined" && window.EyeDropper) || (typeof globalThis !== "undefined" && globalThis.EyeDropper);
+      const supported = typeof EyeDropperCtor === "function";
+      const nativeFallback = node("Native");
+      eyedropper.disabled = false;
       eyedropper.classList.toggle("unsupported", !supported);
-      eyedropper.title = supported ? "화면에서 색상 추출" : "이 브라우저에서는 화면 색상 추출을 지원하지 않아요";
+      eyedropper.setAttribute("aria-disabled", supported ? "false" : "true");
+      eyedropper.title = supported ? "화면에서 색상 추출" : "이 브라우저에서는 기본 색상 선택기로 전환합니다";
+      let sampling = false;
       eyedropper.addEventListener("click", async (event) => {
         event.preventDefault();
         event.stopImmediatePropagation();
-        if (!supported) { toast("이 브라우저에서는 스포이드를 지원하지 않아요. 색상판이나 HEX/RGB 입력을 사용해 주세요."); return; }
+        if (sampling) return;
+        if (!supported) {
+          if (nativeFallback) {
+            try { nativeFallback.focus({ preventScroll:true }); nativeFallback.click(); } catch (e) {}
+            toast("이 브라우저에서는 기본 색상 선택기를 열었어요.");
+          } else toast("이 브라우저에서는 화면 스포이드를 지원하지 않아요.");
+          return;
+        }
+        sampling = true;
+        eyedropper.classList.add("is-sampling");
         try {
-          const result = await new window.EyeDropper().open();
-          if (result && result.sRGBHex) { setCurrent(result.sRGBHex); toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다."); }
+          const result = await new EyeDropperCtor().open();
+          if (result && result.sRGBHex) {
+            setCurrent(result.sRGBHex);
+            toast("스포이드 색상을 가져왔어요. 적용을 누르면 반영됩니다.");
+          }
         } catch (e) {
           if (e && e.name !== "AbortError") toast("스포이드를 실행하지 못했어요. HTTPS/지원 브라우저인지 확인해 주세요.");
+        } finally {
+          sampling = false;
+          eyedropper.classList.remove("is-sampling");
         }
-      }, true);
-      if (!supported) eyedropper.title = "이 브라우저에서는 화면 색상 추출을 지원하지 않아요";
-      eyedropper.addEventListener("click", async () => {
-        if (!supported) { toast("화면 색상 추출은 HTTPS 환경의 지원 브라우저에서 사용할 수 있어요"); return; }
-        try { const result = await new window.EyeDropper().open(); if (result && result.sRGBHex) setCurrent(result.sRGBHex); }
-        catch (e) { /* 사용자가 취소한 경우도 포함합니다. */ }
       });
     }
     sync(); if (opts.saved) drawSaved();
@@ -6525,35 +6540,67 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const rng = $("ideaZoomRange"); if (rng) rng.value = String(Math.round(ideaZoom * 100));
     toast("화면에 맞췄어요 (" + Math.round(ideaZoom * 100) + "%)");
   }
-  function ideaSnapPosition(fresh, d) {
-    if (!ideaSnapOn) return null;
-    const TH = 8 / Math.max(ideaZoom || 1, IDEA_ZOOM_MIN), targetsX = [d.canvas.width / 2], targetsY = [d.canvas.height / 2];
-    d.items.forEach((it) => { if (it.id === fresh.id) return; targetsX.push(it.x, it.x + it.w / 2, it.x + it.w); targetsY.push(it.y, it.y + it.h / 2, it.y + it.h); });
-    const edgesX = [fresh.x, fresh.x + fresh.w / 2, fresh.x + fresh.w], edgesY = [fresh.y, fresh.y + fresh.h / 2, fresh.y + fresh.h];
-    let bestX = null, bestY = null, guideX = null, guideY = null;
-    edgesX.forEach((ex) => targetsX.forEach((t) => { const diff = t - ex; if (Math.abs(diff) <= TH && (bestX === null || Math.abs(diff) < Math.abs(bestX))) { bestX = diff; guideX = t; } }));
-    edgesY.forEach((ey) => targetsY.forEach((t) => { const diff = t - ey; if (Math.abs(diff) <= TH && (bestY === null || Math.abs(diff) < Math.abs(bestY))) { bestY = diff; guideY = t; } }));
-    return { dx: bestX || 0, dy: bestY || 0, guideX, guideY };
-  }
-  function ideaSnapResize(fresh, d, start) {
-    if (!ideaSnapOn || !fresh || !d) return;
-    const TH = 8 / Math.max(ideaZoom || 1, IDEA_ZOOM_MIN);
+  function ideaSnapTargets(d, excludedIds) {
+    const excluded = new Set(excludedIds || []);
     const targetsX = [d.canvas.width / 2], targetsY = [d.canvas.height / 2];
-    d.items.forEach((it)=>{ if(!it || it.id===fresh.id) return; targetsX.push(it.x, it.x + it.w / 2, it.x + it.w); targetsY.push(it.y, it.y + it.h / 2, it.y + it.h); });
-    let bestX=null,bestY=null,guideX=null,guideY=null;
-    const edgesX=[fresh.x+fresh.w/2,fresh.x+fresh.w], edgesY=[fresh.y+fresh.h/2,fresh.y+fresh.h];
-    edgesX.forEach((edge)=>targetsX.forEach((t)=>{const diff=t-edge;if(Math.abs(diff)<=TH&&(bestX===null||Math.abs(diff)<Math.abs(bestX))){bestX=diff;guideX=t;}}));
-    edgesY.forEach((edge)=>targetsY.forEach((t)=>{const diff=t-edge;if(Math.abs(diff)<=TH&&(bestY===null||Math.abs(diff)<Math.abs(bestY))){bestY=diff;guideY=t;}}));
-    if(bestX!=null || bestY!=null){
+    d.items.forEach((it) => {
+      if (!it || excluded.has(it.id)) return;
+      targetsX.push(it.x, it.x + it.w / 2, it.x + it.w);
+      targetsY.push(it.y, it.y + it.h / 2, it.y + it.h);
+    });
+    return { targetsX, targetsY };
+  }
+  function ideaSnapBounds(bounds, d, excludedIds) {
+    if (!ideaSnapOn || !bounds || !d) return null;
+    const TH = 8 / Math.max(ideaZoom || 1, IDEA_ZOOM_MIN);
+    const { targetsX, targetsY } = ideaSnapTargets(d, excludedIds);
+    const edgesX = [bounds.x, bounds.x + bounds.w / 2, bounds.x + bounds.w];
+    const edgesY = [bounds.y, bounds.y + bounds.h / 2, bounds.y + bounds.h];
+    let bestX = null, bestY = null, guideX = null, guideY = null;
+    edgesX.forEach((edge) => targetsX.forEach((target) => {
+      const diff = target - edge;
+      if (Math.abs(diff) <= TH && (bestX === null || Math.abs(diff) < Math.abs(bestX))) { bestX = diff; guideX = target; }
+    }));
+    edgesY.forEach((edge) => targetsY.forEach((target) => {
+      const diff = target - edge;
+      if (Math.abs(diff) <= TH && (bestY === null || Math.abs(diff) < Math.abs(bestY))) { bestY = diff; guideY = target; }
+    }));
+    return { dx:bestX || 0, dy:bestY || 0, guideX, guideY };
+  }
+  function ideaSnapResizeBounds(bounds, d, excludedIds) {
+    if (!ideaSnapOn || !bounds || !d) return null;
+    const TH = 8 / Math.max(ideaZoom || 1, IDEA_ZOOM_MIN);
+    const { targetsX, targetsY } = ideaSnapTargets(d, excludedIds);
+    const edgesX = [bounds.x + bounds.w / 2, bounds.x + bounds.w];
+    const edgesY = [bounds.y + bounds.h / 2, bounds.y + bounds.h];
+    let bestX = null, bestY = null, guideX = null, guideY = null;
+    edgesX.forEach((edge) => targetsX.forEach((target) => {
+      const diff = target - edge;
+      if (Math.abs(diff) <= TH && (bestX === null || Math.abs(diff) < Math.abs(bestX))) { bestX = diff; guideX = target; }
+    }));
+    edgesY.forEach((edge) => targetsY.forEach((target) => {
+      const diff = target - edge;
+      if (Math.abs(diff) <= TH && (bestY === null || Math.abs(diff) < Math.abs(bestY))) { bestY = diff; guideY = target; }
+    }));
+    return { dw:bestX || 0, dh:bestY || 0, guideX, guideY, snapped:bestX !== null || bestY !== null };
+  }
+  function ideaSnapPosition(fresh, d) {
+    if (!fresh) return null;
+    return ideaSnapBounds({ x:fresh.x, y:fresh.y, w:fresh.w, h:fresh.h }, d, [fresh.id]);
+  }
+  function ideaSnapResize(fresh, d, start, excludedIds) {
+    if (!ideaSnapOn || !fresh || !d) return;
+    const snap = ideaSnapResizeBounds({ x:fresh.x, y:fresh.y, w:fresh.w, h:fresh.h }, d, excludedIds || [fresh.id]);
+    if (snap && snap.snapped) {
       const lock=!!fresh.lockAspect, aspect=(start&&start.aspect)||fresh.aspect||fresh.w/fresh.h;
-      let w=fresh.w+(bestX||0), h=fresh.h+(bestY||0);
+      let w=fresh.w+snap.dw, h=fresh.h+snap.dh;
       if(lock){
-        if(bestX!=null && bestY==null) h=w/aspect;
-        else if(bestY!=null && bestX==null) w=h*aspect;
+        if(snap.dw && !snap.dh) h=w/aspect;
+        else if(snap.dh && !snap.dw) w=h*aspect;
       }
       const size=ideaClampItemSize(fresh.kind,w,h);
       fresh.w=size.w; fresh.h=size.h;
-      showIdeaSnapGuides(guideX, guideY);
+      showIdeaSnapGuides(snap.guideX, snap.guideY);
     } else clearIdeaSnapGuides();
   }
   function showIdeaSnapGuides(guideX, guideY) {
@@ -6672,7 +6719,11 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const canvas=$("ideaCanvas"); if(!canvas)return;
     const d=currentIdeaData(), valid=new Set(d?d.items.map((i)=>i.id):[]);
     [...ideaSelectedIds].forEach((id)=>{if(!valid.has(id))ideaSelectedIds.delete(id);});
-    canvas.querySelectorAll(".idea-item").forEach((el)=>el.classList.toggle("multi-selected",ideaSelectedIds.has(el.dataset.itemId)));
+    canvas.querySelectorAll(".idea-item").forEach((el)=>{
+      const selected=ideaSelectedIds.has(el.dataset.itemId);
+      el.classList.toggle("multi-selected",selected);
+      el.setAttribute("aria-selected",selected?"true":"false");
+    });
   }
   function selectionHasGroupedItem() { return selectedIdeaItems().some((item)=>!!item.groupId); }
   function allIdeaItemsSelected() { const d=currentIdeaData(); return !!(d && d.items.length && d.items.every((item)=>ideaSelectedIds.has(item.id))); }
@@ -6837,10 +6888,28 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       if(e.button!=null&&e.button!==0)return;e.preventDefault();e.stopPropagation();
       const d=currentIdeaData(), items=ideaGroupItems(groupId); if(!d||!items.length)return;
       if(items.some((it)=>ideaIsLocked(it))){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
-      const start={x:e.clientX,y:e.clientY,items:items.map((it)=>({id:it.id,x:it.x,y:it.y}))}; const snap=ideaSnapshot(); let pushed=false;
+      const bounds=ideaItemsBounds(items); if(!bounds)return;
+      const memberIds=new Set(items.map((it)=>it.id));
+      const start={x:e.clientX,y:e.clientY,bounds,items:items.map((it)=>({id:it.id,x:it.x,y:it.y}))}; const snap=ideaSnapshot(); let pushed=false;
+      const limitX=(value)=>Math.max(-start.bounds.x,Math.min(d.canvas.width-start.bounds.right,value));
+      const limitY=(value)=>Math.max(-start.bounds.y,Math.min(d.canvas.height-start.bounds.bottom,value));
+      const apply=(dx,dy)=>items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(row.x+dx);it.y=Math.round(row.y+dy);const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});
       try{handle.setPointerCapture(e.pointerId);}catch(_e){}
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(Math.max(0,Math.min(d.canvas.width-it.w,row.x+delta.x)));it.y=Math.round(Math.max(0,Math.min(d.canvas.height-it.h,row.y+delta.y)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});updateIdeaGroupBoxGeometry(box,groupId);ev.preventDefault();};
-      const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);scheduleIdeaSave(0);};
+      const move=(ev)=>{
+        if(ev.pointerId!==e.pointerId)return;
+        if(!pushed){pushIdeaUndo(snap);pushed=true;}
+        const raw=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);
+        let dx=limitX(raw.x),dy=limitY(raw.y);
+        if(ideaSnapOn){
+          const snapped=ideaSnapBounds({x:start.bounds.x+dx,y:start.bounds.y+dy,w:start.bounds.w,h:start.bounds.h},d,memberIds);
+          if(snapped){
+            dx=limitX(dx+snapped.dx);dy=limitY(dy+snapped.dy);
+            showIdeaSnapGuides(snapped.guideX,snapped.guideY);
+          }
+        } else clearIdeaSnapGuides();
+        apply(dx,dy);updateIdeaGroupBoxGeometry(box,groupId);scheduleIdeaSave(220);ev.preventDefault();
+      };
+      const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);clearIdeaSnapGuides();scheduleIdeaSave(0);};
       document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);handle.addEventListener("lostpointercapture",end,{once:true});
     });
   }
@@ -6850,12 +6919,32 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       const d=currentIdeaData(),items=ideaGroupItems(groupId); if(!d||!items.length)return;
       if(items.some((it)=>ideaIsLocked(it))){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
       const b=ideaItemsBounds(items); if(!b)return;
+      const memberIds=new Set(items.map((it)=>it.id));
       const start={x:e.clientX,y:e.clientY,b,items:items.map((it)=>({id:it.id,x:it.x,y:it.y,w:it.w,h:it.h}))}; const snap=ideaSnapshot(); let pushed=false;
       const minScaleX=Math.max(...start.items.map((row)=>ideaItemMinSize((d.items.find((it)=>it.id===row.id)||{}).kind||"note").w/Math.max(1,row.w)));
       const minScaleY=Math.max(...start.items.map((row)=>ideaItemMinSize((d.items.find((it)=>it.id===row.id)||{}).kind||"note").h/Math.max(1,row.h)));
+      const apply=(nw,nh)=>{
+        const sx=nw/start.b.w,sy=nh/start.b.h;
+        items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(start.b.x+(row.x-start.b.x)*sx);it.y=Math.round(start.b.y+(row.y-start.b.y)*sy);it.w=Math.round(row.w*sx);it.h=Math.round(row.h*sy);it.aspect=Math.max(.08,Math.min(20,it.w/Math.max(1,it.h)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});
+      };
       try{handle.setPointerCapture(e.pointerId);}catch(_e){}
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);const nw=Math.max(start.b.w*minScaleX,Math.min(d.canvas.width-start.b.x,start.b.w+delta.x)),nh=Math.max(start.b.h*minScaleY,Math.min(d.canvas.height-start.b.y,start.b.h+delta.y)),sx=nw/start.b.w,sy=nh/start.b.h;items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(start.b.x+(row.x-start.b.x)*sx);it.y=Math.round(start.b.y+(row.y-start.b.y)*sy);it.w=Math.round(row.w*sx);it.h=Math.round(row.h*sy);it.aspect=Math.max(.08,Math.min(20,it.w/Math.max(1,it.h)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});updateIdeaGroupBoxGeometry(box,groupId);scheduleIdeaSave(220);ev.preventDefault();};
-      const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);scheduleIdeaSave(0);};
+      const move=(ev)=>{
+        if(ev.pointerId!==e.pointerId)return;
+        if(!pushed){pushIdeaUndo(snap);pushed=true;}
+        const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);
+        let nw=Math.max(start.b.w*minScaleX,Math.min(d.canvas.width-start.b.x,start.b.w+delta.x));
+        let nh=Math.max(start.b.h*minScaleY,Math.min(d.canvas.height-start.b.y,start.b.h+delta.y));
+        if(ideaSnapOn){
+          const snapped=ideaSnapResizeBounds({x:start.b.x,y:start.b.y,w:nw,h:nh},d,memberIds);
+          if(snapped && snapped.snapped){
+            nw=Math.max(start.b.w*minScaleX,Math.min(d.canvas.width-start.b.x,nw+snapped.dw));
+            nh=Math.max(start.b.h*minScaleY,Math.min(d.canvas.height-start.b.y,nh+snapped.dh));
+            showIdeaSnapGuides(snapped.guideX,snapped.guideY);
+          }
+        } else clearIdeaSnapGuides();
+        apply(nw,nh);updateIdeaGroupBoxGeometry(box,groupId);scheduleIdeaSave(220);ev.preventDefault();
+      };
+      const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);clearIdeaSnapGuides();scheduleIdeaSave(0);};
       document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);handle.addEventListener("lostpointercapture",end,{once:true});
     });
   }
@@ -7343,7 +7432,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const projectName=(pid)=>{const p=getProject(pid);return p?p.name:"프로젝트 없음";};
     const pick=(id)=>{const ref=getNote(id);closeModal();if(!ref)return;if(replaceItemId)replaceIdeaQuote(replaceItemId,ref.id);else addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});};
     const noteRows=(list)=>list.length?list.map((n)=>`<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-idea-quote="${esc(n.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><b>${esc(n.title||"제목 없는 메모")}</b></span><small>${esc(projectName(n.projectId))} · ${esc(noteTypeShortLabel(n))} · ${esc(n.type==="idea"?ideaBoardSummary(n):preview(noteHtml(n))||"내용 없음")}</small></button></div>`).join(""):'<div class="log-template-empty">검색 결과가 없어요.</div>';
-    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;const framed=frameById(p.frame);const thumb=`<span class="idea-quote-project-thumb${framed?" has-frame":""}">${projectThumbMedia(p)}${framed?`<span class="frame">${frameNineSliceMarkup(p.frame,p.frameColor||"#d4af37")}</span>`:""}</span>`;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
+    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;const framed=frameById(p.frame);const thumb=`<span class="idea-quote-project-thumb${framed?" has-frame":""}">${projectThumbMedia(p)}${framed?`<span class="frame">${frameInner(p)}</span>`:""}</span>`;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
     openModal(`<div class="log-template-manager idea-quote-manager"><h3>${replaceItemId?"메모 링크 교체":"내 메모 링크"}</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="log-template-tabs" role="tablist" aria-label="내 메모 링크 구분"><button data-idea-quote-tab="all" role="tab">전체보기 <small></small></button><button data-idea-quote-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="ideaQuoteSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"></div><div class="log-template-list idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteProjectBack" type="button" hidden>← 뒤로가기</button><button class="m-btn" id="ideaQuoteCancel">닫기</button></div></div>`);
     $("modalBox").classList.add("log-template-modal","idea-quote-modal");
     $("modalScrim").classList.add("log-template-open");
@@ -7740,91 +7829,70 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       toast(`아이디어 보드 HTML을 저장했어요 · ${visual.label}`);
     } catch(e) { console.warn("idea export",e); toast("아이디어 보드 HTML 내보내기에 실패했어요"); }
   }
+  async function waitForIdeaPngAssets(root) {
+    if (!root) return;
+    const waits=[];
+    if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready.catch(() => {}));
+    root.querySelectorAll("img").forEach((img)=>{
+      if (img.complete && img.naturalWidth) return;
+      waits.push(new Promise((resolve)=>{ img.addEventListener("load",resolve,{once:true}); img.addEventListener("error",resolve,{once:true}); }));
+    });
+    root.querySelectorAll("video").forEach((video)=>{
+      if (video.readyState >= 2) return;
+      waits.push(new Promise((resolve)=>{ video.addEventListener("loadeddata",resolve,{once:true}); video.addEventListener("error",resolve,{once:true}); }));
+    });
+    await Promise.all(waits);
+    await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  }
   async function exportIdeaViewportPng(id) {
-    {
-      if(st.curNoteId===id) await flushIdeaBoard(false);
-      const n=getNote(id); if(!n || n.type!=="idea") return;
-      let svgText="", width=1, height=1;
-      try {
-        toast("현재 화면 이미지를 준비하고 있어요");
-        const payload = await buildIdeaBoardExportPayload(n);
-        const visual = await buildIdeaExportVisual(n, payload, "visible");
-        const css = (ideaExportBaseCss()+"\n"+ideaExportTightCss()+"\n"+await collectIdeaExportStyles()+"\nhtml,body{margin:0!important;padding:0!important;background:transparent!important;min-width:0!important}.idea-export{margin:0!important}.idea-export-head{display:none!important}").replace(/<\/style/gi,"");
-        width = Math.max(1, Math.round(visual.width));
-        height = Math.max(1, Math.round(visual.height));
-        const svgNs="http://www.w3.org/2000/svg";
-        const xhtmlNs="http://www.w3.org/1999/xhtml";
-        const svg=document.createElementNS(svgNs,"svg");
-        svg.setAttribute("xmlns",svgNs);
-        svg.setAttribute("width",String(width));
-        svg.setAttribute("height",String(height));
-        svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
-        const fo=document.createElementNS(svgNs,"foreignObject");
-        fo.setAttribute("width","100%");
-        fo.setAttribute("height","100%");
-        const root=document.createElementNS(xhtmlNs,"div");
-        root.setAttribute("xmlns",xhtmlNs);
-        const style=document.createElement("style");
-        style.textContent=css;
-        const main=document.createElement("main");
-        main.className="idea-export";
-        main.innerHTML=visual.stage;
-        root.appendChild(style);
-        root.appendChild(main);
-        fo.appendChild(root);
-        svg.appendChild(fo);
-        svgText=new XMLSerializer().serializeToString(svg);
-        const blob = new Blob([svgText], { type:"image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const img = new Image();
-        await new Promise((resolve,reject)=>{ img.onload=resolve; img.onerror=reject; img.src=url; });
-        const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
-        const ctx = canvas.getContext("2d");
-        ctx.setTransform(scale,0,0,scale,0,0); ctx.drawImage(img,0,0,width,height);
-        URL.revokeObjectURL(url);
-        const png = await new Promise((resolve)=>canvas.toBlob(resolve,"image/png"));
-        if(!png) throw new Error("png encode failed");
-        downloadIdeaBlob(png,`${ideaExportSafeName(n.title)}-viewport.png`);
-        toast("현재 화면 이미지를 저장했어요");
-      } catch(e) {
-        console.warn("idea screenshot",e);
-        if(svgText) {
-          downloadIdeaBlob(new Blob([svgText],{type:"image/svg+xml;charset=utf-8"}),`${ideaExportSafeName(n.title)}-viewport.svg`);
-          toast("PNG 저장이 제한되어 SVG 스냅샷으로 저장했어요");
-        } else {
-          toast("현재 화면 이미지 저장에 실패했어요");
-        }
-      }
-      return;
-    }
     if(st.curNoteId===id) await flushIdeaBoard(false);
     const n=getNote(id); if(!n || n.type!=="idea") return;
+    const d=ensureIdeaBoardData(n), source=$("ideaCanvas");
+    if(!source || st.curNoteId!==id){ toast("현재 열린 보드 화면에서만 장면을 PNG로 저장할 수 있어요."); return; }
+    if(typeof window.html2canvas!=="function"){ toast("PNG 캡처 도구를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요."); return; }
+    const crop=ideaVisibleBoardRect(d,n.id);
+    const host=document.createElement("div");
+    host.className="idea-png-capture-viewport";
+    host.setAttribute("aria-hidden","true");
+    host.style.cssText=`position:fixed;left:-100000px;top:0;width:${Math.max(1,Math.round(crop.w))}px;height:${Math.max(1,Math.round(crop.h))}px;overflow:hidden;pointer-events:none;z-index:-1;contain:layout paint style;`;
+    const clone=source.cloneNode(true);
+    clone.removeAttribute("id");
+    clone.classList.add("idea-png-capture-canvas");
+    clone.querySelectorAll(".idea-transform-tools,.idea-note-rich-tools,.idea-snap-guide,.idea-selection-box,.idea-lock-badge").forEach((node)=>node.remove());
+    clone.style.transformOrigin="0 0";
+    clone.style.transform=`translate(${-Math.round(crop.x)}px,${-Math.round(crop.y)}px)`;
+    clone.style.width=`${d.canvas.width}px`;
+    clone.style.height=`${d.canvas.height}px`;
+    clone.style.minHeight=`${d.canvas.height}px`;
+    host.appendChild(clone);
+    document.body.appendChild(host);
     try {
-      toast("현재 화면 이미지를 준비하고 있어요");
-      const payload = await buildIdeaBoardExportPayload(n);
-      const visual = await buildIdeaExportVisual(n, payload, "visible");
-      const css = (ideaExportBaseCss()+"\n"+ideaExportTightCss()+"\n"+await collectIdeaExportStyles()+"\nhtml,body{margin:0!important;padding:0!important;background:transparent!important;min-width:0!important}.idea-export{margin:0!important}.idea-export-head{display:none!important}").replace(/<\/style/gi,"");
-      const width = Math.max(1, Math.round(visual.width));
-      const height = Math.max(1, Math.round(visual.height));
-      const html = `<html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"/><style>${css}</style></head><body><main class="idea-export">${visual.stage}</main></body></html>`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><foreignObject width="100%" height="100%">${html}</foreignObject></svg>`;
-      const blob = new Blob([svg], { type:"image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      await new Promise((resolve,reject)=>{ img.onload=resolve; img.onerror=reject; img.src=url; });
-      const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
-      const ctx = canvas.getContext("2d");
-      ctx.setTransform(scale,0,0,scale,0,0); ctx.drawImage(img,0,0,width,height);
-      URL.revokeObjectURL(url);
-      const png = await new Promise((resolve)=>canvas.toBlob(resolve,"image/png"));
+      toast("현재 장면 PNG를 준비하고 있어요");
+      await waitForIdeaPngAssets(host);
+      const scale=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+      const bitmap=await window.html2canvas(host,{
+        backgroundColor:null,
+        scale,
+        logging:false,
+        useCORS:true,
+        allowTaint:false,
+        width:Math.max(1,Math.round(crop.w)),
+        height:Math.max(1,Math.round(crop.h)),
+        windowWidth:Math.max(1,Math.round(crop.w)),
+        windowHeight:Math.max(1,Math.round(crop.h)),
+        scrollX:0,
+        scrollY:0
+      });
+      const png=await new Promise((resolve)=>bitmap.toBlob(resolve,"image/png"));
       if(!png) throw new Error("png encode failed");
       downloadIdeaBlob(png,`${ideaExportSafeName(n.title)}-viewport.png`);
-      toast("현재 화면 이미지를 저장했어요");
-    } catch(e) { console.warn("idea screenshot",e); toast("현재 화면 이미지 저장에 실패했어요"); }
+      toast("현재 장면을 PNG로 저장했어요");
+    } catch(e) {
+      console.warn("idea png screenshot",e);
+      toast("PNG 저장에 실패했어요. 이미지 배경 또는 첨부 파일을 다시 불러온 뒤 재시도해 주세요.");
+    } finally {
+      host.remove();
+    }
   }
   function isIdeaBoardExportPayload(payload) { return !!(payload && payload.app==="lumink" && payload.kind==="idea" && Number(payload.schemaVersion)===1 && payload.data && typeof payload.data==="object"); }
   async function importIdeaBoardHtmlPayload(payload,pid,file) {
