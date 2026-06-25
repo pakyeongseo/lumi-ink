@@ -1704,8 +1704,24 @@
 .idea-item.has-media-frame > .idea-media-frame.idea-item-frame {
   position:absolute; inset:calc(var(--idea-frame-outset, 10px) * -1); z-index:16;
 }
-.idea-item.idea-sticky.has-media-frame > .idea-media-frame.idea-item-frame { border-radius:inherit; }
+.idea-item.idea-sticky.has-media-frame > .idea-media-frame.idea-item-frame {
+  inset:calc(var(--idea-frame-outset, 10px) * -.5);
+  border-radius:inherit;
+}
 .idea-item.has-media-frame .idea-note-rich-tools { z-index:10020; }
+
+/* v63.36: quote picker search and read-only idea board mode */
+.idea-quote-search { margin:8px 0 10px; }
+.idea-quote-results { max-height:min(50dvh,420px); overflow:auto; overscroll-behavior:auto; padding-right:2px; }
+.idea-readonly-mode #ideaAdd,
+.idea-readonly-mode #ideaSave,
+.idea-readonly-mode #ideaSnapToggle,
+.idea-readonly-mode #ideaUndo,
+.idea-readonly-mode #ideaRedo { display:none !important; }
+.idea-readonly-mode .idea-note-rich-tools,
+.idea-readonly-mode .idea-transform-tools { display:none !important; }
+.idea-readonly-mode .idea-item { cursor:default; }
+.idea-readonly-mode .idea-note-text { user-select:text; }
 
 /* 상단 비율 직접 입력 */
 .idea-tb-zoominput {
