@@ -449,7 +449,7 @@
   }
   async function togglePinProject(id) {
     const p = getProject(id); if (!p) return;
-    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 3) { toast("프로젝트는 최대 3개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
+    if (!p.pinned) { if (st.projects.filter((x) => x.pinned).length >= 4) { toast("프로젝트는 최대 4개까지 고정돼요"); return; } p.pinned = true; p.pinnedAt = now(); }
     else { p.pinned = false; delete p.pinnedAt; }
     await put("projects", p); render(); renderSidebar(); toast(p.pinned ? "상단에 고정했어요" : "고정을 해제했어요");
   }
@@ -5381,8 +5381,8 @@ ${gallery}
     });
     $on("ideaBoardMode", "click", () => setIdeaView("board"));
     $on("ideaListMode", "click", () => setIdeaView("list"));
-    $on("ideaMediaInput", "change", (e) => { const f=e.target.files&&e.target.files[0],kind=e.target.dataset.ideaKind||"image"; e.target.value="";delete e.target.dataset.ideaKind;if(f)void addIdeaMediaFile(f,kind); });
-    $on("ideaFileInput", "change", (e) => { const f=e.target.files&&e.target.files[0];e.target.value="";if(f)void addIdeaMediaFile(f,"file"); });
+    $on("ideaMediaInput", "change", (e) => { const f=e.target.files&&e.target.files[0],kind=e.target.dataset.ideaKind||"image",replaceId=e.target.dataset.ideaReplaceId||""; e.target.value="";delete e.target.dataset.ideaKind;delete e.target.dataset.ideaReplaceId;if(f){if(replaceId)void replaceIdeaMediaFile(replaceId,f,kind);else void addIdeaMediaFile(f,kind);} });
+    $on("ideaFileInput", "change", (e) => { const f=e.target.files&&e.target.files[0],replaceId=e.target.dataset.ideaReplaceId||"";e.target.value="";delete e.target.dataset.ideaReplaceId;if(f){if(replaceId)void replaceIdeaMediaFile(replaceId,f,"file");else void addIdeaMediaFile(f,"file");} });
     $on("ideaCanvasBgInput", "change", (e) => { const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) void addIdeaCanvasBackgroundImage(f); });
     bindIdeaCanvasLongPress();
 
@@ -5758,7 +5758,7 @@ ${gallery}
   let ideaUndoStack = [], ideaRedoStack = [], ideaHistoryBoardId = null, ideaRemovedBlobIds = new Set();
   let ideaKeyMoveActive = false, ideaKeyMoveTimer = null;
   const IDEA_HISTORY_MAX = 20;
-  const IDEA_KIND_LABEL = { note:"메모지", image:"이미지", audio:"음악", video:"영상", file:"파일", quote:"링크", frame:"빈 프레임" };
+  const IDEA_KIND_LABEL = { note:"메모지", image:"이미지", audio:"음악", video:"영상", file:"파일", quote:"링크", frame:"프레임" };
   let ideaMultiSelectMode = false, ideaSelectedIds = new Set(), ideaMultiToolsExpanded = null;
   const IDEA_EYE_SVG = '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="3"/></svg>';
   const IDEA_PENCIL_SVG = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
@@ -5885,7 +5885,8 @@ ${gallery}
       noteStyle: Object.prototype.hasOwnProperty.call(IDEA_NOTE_TEMPLATES, item.noteStyle) ? item.noteStyle : "marker",
       fileId: typeof item.fileId === "string" ? item.fileId : null,
       noteId: typeof item.noteId === "string" ? item.noteId : null,
-      title: typeof item.title === "string" ? item.title.slice(0, 240) : "",
+      // 빈 프레임은 표시 제목을 갖지 않습니다. 예전 "빈 프레임" 텍스트도 열 때 정리합니다.
+      title: kind === "frame" ? "" : (typeof item.title === "string" ? item.title.slice(0, 240) : ""),
       showTitle: item.showTitle !== false,
       audioMode: kind === "audio" && item.audioMode === "light" ? "light" : "dark",
       flipX: (kind === "note" || kind === "image") && item.flipX === true,
@@ -5934,7 +5935,7 @@ ${gallery}
   function ideaBoardSummary(n) {
     const d = ensureIdeaBoardData(n), counts = {};
     d.items.forEach((item) => { counts[item.kind] = (counts[item.kind] || 0) + 1; });
-    const labels = { note: "메모지", image: "이미지", audio: "음악", video: "영상", file: "파일", quote: "링크", frame:"빈 프레임" };
+    const labels = { note: "메모지", image: "이미지", audio: "음악", video: "영상", file: "파일", quote: "링크", frame:"프레임" };
     return Object.keys(counts).slice(0, 3).map((k) => `${labels[k]} ${counts[k]}`).join(" · ") || "빈 캔버스";
   }
   function currentIdeaNote() { const n = getNote(st.curNoteId); return n && n.type === "idea" ? n : null; }
@@ -5988,7 +5989,7 @@ ${gallery}
   function ideaItemTitle(item, n) {
     if (item.kind === "note") return (item.text || "새 메모지").replace(/\s+/g, " ").trim().slice(0, 46) || "새 메모지";
     if (item.kind === "quote") { const ref = getNote(item.noteId); return item.title || (ref ? (ref.title || "제목 없는 메모") : "연결된 메모"); }
-    if (item.kind === "frame") return item.title || "빈 프레임";
+    if (item.kind === "frame") return "프레임";
     const a = itemAttachment(n, item.fileId); return item.title || (a && a.name) || "첨부 조각";
   }
   function renderIdeaBoard() {
@@ -6106,7 +6107,8 @@ ${gallery}
       el.innerHTML = `<div class="idea-audio-shell${titleClass}${audioModeClass}" aria-label="음악 플레이어"><div class="idea-audio-head"><span class="idea-audio-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V6.2l9-2V15" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.4" cy="17.3" r="2.7" fill="#fff"/><circle cx="15.4" cy="15.3" r="2.7" fill="#fff"/></svg></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(trackName)}</span></span><span class="idea-audio-spark" aria-hidden="true">✦</span></div><div class="idea-media-content"><div class="idea-media-loading">불러오는 중…</div></div></div>`;
       hydrateIdeaMedia(el, item, att);
     } else if (item.kind === "frame") {
-      el.innerHTML = `<div class="idea-empty-frame-body" aria-hidden="true"><span>빈 프레임</span></div>`;
+      // 프레임 조각은 장식만 남기고 캔버스/목록에 제목을 표시하지 않습니다.
+      el.innerHTML = `<div class="idea-empty-frame-body" aria-hidden="true"></div>`;
     } else {
       const needsFrame = item.kind === "image" || item.kind === "video";
       const videoDecor = item.kind === "video" ? ideaVideoDecorMarkup(item) : "";
@@ -6285,7 +6287,11 @@ ${gallery}
     d.items.slice().sort((a,b) => b.z-a.z).forEach((item) => {
       const card = document.createElement("div"); card.className = "idea-list-card"; const att = itemAttachment(n, item.fileId);
       const icon = item.kind === "note" ? "✦" : item.kind === "image" ? "▧" : item.kind === "audio" ? "♫" : item.kind === "video" ? "▶" : item.kind === "quote" ? "↗" : item.kind === "frame" ? "□" : "⌁";
-      card.innerHTML = `<div class="idea-list-thumb">${icon}</div><div class="idea-list-copy"><div class="idea-list-kind">${esc({note:"MEMO",image:"IMAGE",audio:"AUDIO",video:"VIDEO",file:"FILE",quote:"MEMO LINK",frame:"EMPTY FRAME"}[item.kind]||"ITEM")}</div><div class="idea-list-title">${esc(ideaItemTitle(item,n))}</div><div class="idea-list-sub">${esc(item.kind === "note" ? (item.text || "내용 없음").replace(/\s+/g," ").slice(0,70) : item.kind === "quote" ? "연결된 메모 열기" : item.kind === "frame" ? "빈 프레임" : (att ? `${att.type || "file"} · ${fmtSize(att.size)}` : "파일 없음"))}</div></div><button class="idea-list-act" type="button" title="미리보기">◉</button><button class="idea-list-act" type="button" title="보드에서 보기">⌖</button><button class="idea-list-act danger" type="button" title="삭제">×</button>`;
+      const isEmptyFrame=item.kind === "frame";
+      const listCopy=isEmptyFrame
+        ? `<div class="idea-list-copy idea-list-copy-frame"><div class="idea-list-kind">FRAME</div></div>`
+        : `<div class="idea-list-copy"><div class="idea-list-kind">${esc({note:"MEMO",image:"IMAGE",audio:"AUDIO",video:"VIDEO",file:"FILE",quote:"MEMO LINK"}[item.kind]||"ITEM")}</div><div class="idea-list-title">${esc(ideaItemTitle(item,n))}</div><div class="idea-list-sub">${esc(item.kind === "note" ? (item.text || "내용 없음").replace(/\s+/g," ").slice(0,70) : item.kind === "quote" ? "연결된 메모 열기" : (att ? `${att.type || "file"} · ${fmtSize(att.size)}` : "파일 없음"))}</div></div>`;
+      card.innerHTML = `<div class="idea-list-thumb">${icon}</div>${listCopy}<button class="idea-list-act" type="button" title="미리보기">◉</button><button class="idea-list-act" type="button" title="보드에서 보기">⌖</button><button class="idea-list-act danger" type="button" title="삭제">×</button>`;
       const actions = card.querySelectorAll("button");
       actions[0].addEventListener("click", () => openIdeaArtifactPreview(item.id));
       actions[1].addEventListener("click", () => focusIdeaItem(item.id));
@@ -6305,7 +6311,7 @@ ${gallery}
     if (item.kind === "note") body = `<div class="idea-preview-note idea-sticky${item.flipX ? " flipped-x" : ""}" data-color="${esc(item.color)}" data-note-style="${esc(item.noteStyle)}" data-v-align="${esc(item.vAlign==="center"?"center":"top")}" style="${ideaColorStyleAttr(item.color, item.textColor)}"><div class="idea-note-text">${ideaNoteHtml(item) || "내용 없는 메모지"}</div></div>`;
     else if (item.kind === "quote") body = `<div class="idea-preview-quote idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>↗ ${esc(title)}</b><button class="m-btn primary" id="ideaPreviewOpenQuote">메모 열기</button></div>`;
     else if (item.kind === "file") body = `<div class="idea-preview-file idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><div>${fileIconSvg((itemAttachment(n,item.fileId)||{}).type||"")}</div><b>${esc(title)}</b><button class="m-btn primary" id="ideaPreviewDownload">파일 다운로드</button></div>`;
-    else if (item.kind === "frame") body = `<div class="idea-preview-file idea-preview-chip idea-preview-frame" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>□ ${esc(title)}</b><small>${esc(ideaMediaFrameLabel(item))}</small></div>`;
+    else if (item.kind === "frame") body = `<div class="idea-preview-file idea-preview-chip idea-preview-frame" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>□</b><small>${esc(ideaMediaFrameLabel(item))}</small></div>`;
     else body = `<div class="idea-preview-media${item.kind === "audio" ? ` idea-preview-audio ${item.audioMode === "light" ? "is-player-light" : "is-player-dark"}` : ""}${item.kind === "image" && item.flipX ? " flipped-x" : ""}" id="ideaPreviewMedia" style="${item.kind === "audio" ? ideaColorStyleAttr(item.color) : ""}"><div class="idea-media-loading">불러오는 중…</div></div>`;
     openModal(`<h3>${esc(title)}</h3><div class="idea-preview-wrap">${body}</div><div class="m-row"><button class="m-btn" id="ideaPreviewClose">닫기</button></div>`);
     $on("ideaPreviewClose", "click", closeModal);
@@ -6504,6 +6510,14 @@ ${gallery}
     mountIdeaTransformControls(id);
   }
   function clearIdeaSelection() { ideaEditState={itemId:null,groupId:null,mode:null}; const c=$("ideaCanvas"); if(c)c.querySelectorAll(".idea-item.selected,.idea-item.group-selected").forEach((x)=>x.classList.remove("selected","group-selected","move-mode")); c&&c.querySelector(".idea-transform-tools")?.remove(); c&&c.querySelector(".idea-group-box")?.remove(); }
+  function expandIdeaGroupSelectionIds(ids) {
+    const d=currentIdeaData(), requested=new Set((ids||[]).filter(Boolean));
+    if(!d) return requested;
+    const groupIds=new Set();
+    d.items.forEach((item)=>{ if(requested.has(item.id) && item.groupId) groupIds.add(item.groupId); });
+    if(groupIds.size) d.items.forEach((item)=>{ if(item.groupId && groupIds.has(item.groupId)) requested.add(item.id); });
+    return requested;
+  }
   function selectedIdeaItems() { const d=currentIdeaData(); return d ? d.items.filter((item)=>ideaSelectedIds.has(item.id)) : []; }
   function ideaItemsBounds(items) {
     const list=(items||[]).filter(Boolean); if(!list.length)return null;
@@ -6524,8 +6538,17 @@ ${gallery}
     renderIdeaBoard();
     toast(ideaMultiSelectMode?"다중선택 ON":"다중선택 OFF");
   }
-  function setIdeaMultiSelection(ids) { ideaSelectedIds=new Set((ids||[]).filter(Boolean)); applyIdeaMultiSelectionClasses(); renderIdeaMultiTools(); }
-  function toggleIdeaMultiItem(id) { if(!id)return; if(ideaSelectedIds.has(id))ideaSelectedIds.delete(id); else ideaSelectedIds.add(id); applyIdeaMultiSelectionClasses(); renderIdeaMultiTools(); }
+  function setIdeaMultiSelection(ids) { ideaSelectedIds=expandIdeaGroupSelectionIds(ids); applyIdeaMultiSelectionClasses(); renderIdeaMultiTools(); }
+  function toggleIdeaMultiItem(id) {
+    if(!id)return;
+    const d=currentIdeaData(), item=d&&d.items.find((it)=>it.id===id);
+    if(!item)return;
+    const memberIds=item.groupId ? d.items.filter((it)=>it.groupId===item.groupId).map((it)=>it.id) : [id];
+    const allSelected=memberIds.every((memberId)=>ideaSelectedIds.has(memberId));
+    memberIds.forEach((memberId)=>{ if(allSelected)ideaSelectedIds.delete(memberId); else ideaSelectedIds.add(memberId); });
+    ideaSelectedIds=expandIdeaGroupSelectionIds(ideaSelectedIds);
+    applyIdeaMultiSelectionClasses(); renderIdeaMultiTools();
+  }
   function applyIdeaMultiSelectionClasses() {
     const canvas=$("ideaCanvas"); if(!canvas)return;
     const d=currentIdeaData(), valid=new Set(d?d.items.map((i)=>i.id):[]);
@@ -6669,26 +6692,37 @@ ${gallery}
     bindIdeaGroupMoveHandle(tools.querySelector(".idea-move-handle"),groupId,box);
     bindIdeaGroupResizeHandle(tools.querySelector(".idea-resize-handle"),groupId,box);
   }
+  function updateIdeaGroupBoxGeometry(box,groupId) {
+    if(!box)return;
+    const items=ideaGroupItems(groupId), b=ideaItemsBounds(items); if(!b)return;
+    box.style.left=b.x+"px"; box.style.top=b.y+"px"; box.style.width=b.w+"px"; box.style.height=b.h+"px";
+    box.style.zIndex=Math.max(...items.map((it)=>it.z||1))+2;
+  }
   function bindIdeaGroupMoveHandle(handle,groupId,box) {
     handle.addEventListener("pointerdown",(e)=>{
       if(e.button!=null&&e.button!==0)return;e.preventDefault();e.stopPropagation();
       const d=currentIdeaData(), items=ideaGroupItems(groupId); if(!d||!items.length)return;
       if(items.some((it)=>it.locked)){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
       const start={x:e.clientX,y:e.clientY,items:items.map((it)=>({id:it.id,x:it.x,y:it.y}))}; const snap=ideaSnapshot(); let pushed=false;
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);items.forEach((it)=>{const s=start.items.find((x)=>x.id===it.id);it.x=Math.round(Math.max(0,Math.min(d.canvas.width-it.w,s.x+delta.x)));it.y=Math.round(Math.max(0,Math.min(d.canvas.height-it.h,s.y+delta.y)));const el=ideaItemElement(it.id);if(el)setIdeaItemGeometry(el,it);});mountIdeaGroupTransformControls(groupId);ev.preventDefault();};
+      try{handle.setPointerCapture(e.pointerId);}catch(_e){}
+      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(Math.max(0,Math.min(d.canvas.width-it.w,row.x+delta.x)));it.y=Math.round(Math.max(0,Math.min(d.canvas.height-it.h,row.y+delta.y)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});updateIdeaGroupBoxGeometry(box,groupId);ev.preventDefault();};
       const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);scheduleIdeaSave(0);};
-      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);
+      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);handle.addEventListener("lostpointercapture",end,{once:true});
     });
   }
   function bindIdeaGroupResizeHandle(handle,groupId,box) {
     handle.addEventListener("pointerdown",(e)=>{
       if(e.button!=null&&e.button!==0)return;e.preventDefault();e.stopPropagation();
-      const items=ideaGroupItems(groupId); if(!items.length)return;
+      const d=currentIdeaData(),items=ideaGroupItems(groupId); if(!d||!items.length)return;
       if(items.some((it)=>it.locked)){toast("잠긴 조각이 포함된 그룹입니다. 먼저 그룹 잠금을 해제하세요.");return;}
-      const b=ideaItemsBounds(items); if(!b)return; const start={x:e.clientX,y:e.clientY,b,items:items.map((it)=>({id:it.id,x:it.x,y:it.y,w:it.w,h:it.h}))}; const snap=ideaSnapshot(); let pushed=false;
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);const nw=Math.max(40,start.b.w+delta.x),nh=Math.max(40,start.b.h+delta.y),sx=nw/start.b.w,sy=nh/start.b.h;items.forEach((it)=>{const s=start.items.find((x)=>x.id===it.id), size=ideaClampItemSize(it.kind,s.w*sx,s.h*sy);it.x=Math.round(start.b.x+(s.x-start.b.x)*sx);it.y=Math.round(start.b.y+(s.y-start.b.y)*sy);it.w=size.w;it.h=size.h;it.aspect=Math.max(.08,Math.min(20,it.w/it.h));const el=ideaItemElement(it.id);if(el)setIdeaItemGeometry(el,it);});mountIdeaGroupTransformControls(groupId);ev.preventDefault();};
+      const b=ideaItemsBounds(items); if(!b)return;
+      const start={x:e.clientX,y:e.clientY,b,items:items.map((it)=>({id:it.id,x:it.x,y:it.y,w:it.w,h:it.h}))}; const snap=ideaSnapshot(); let pushed=false;
+      const minScaleX=Math.max(...start.items.map((row)=>ideaItemMinSize((d.items.find((it)=>it.id===row.id)||{}).kind||"note").w/Math.max(1,row.w)));
+      const minScaleY=Math.max(...start.items.map((row)=>ideaItemMinSize((d.items.find((it)=>it.id===row.id)||{}).kind||"note").h/Math.max(1,row.h)));
+      try{handle.setPointerCapture(e.pointerId);}catch(_e){}
+      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!pushed){pushIdeaUndo(snap);pushed=true;}const delta=boardDeltaFromEvent(ev.clientX-start.x,ev.clientY-start.y);const nw=Math.max(start.b.w*minScaleX,Math.min(d.canvas.width-start.b.x,start.b.w+delta.x)),nh=Math.max(start.b.h*minScaleY,Math.min(d.canvas.height-start.b.y,start.b.h+delta.y)),sx=nw/start.b.w,sy=nh/start.b.h;items.forEach((it)=>{const row=start.items.find((x)=>x.id===it.id);it.x=Math.round(start.b.x+(row.x-start.b.x)*sx);it.y=Math.round(start.b.y+(row.y-start.b.y)*sy);it.w=Math.round(row.w*sx);it.h=Math.round(row.h*sy);it.aspect=Math.max(.08,Math.min(20,it.w/Math.max(1,it.h)));const node=ideaItemElement(it.id);if(node)setIdeaItemGeometry(node,it);});updateIdeaGroupBoxGeometry(box,groupId);scheduleIdeaSave(220);ev.preventDefault();};
       const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);scheduleIdeaSave(0);};
-      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);
+      document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);handle.addEventListener("lostpointercapture",end,{once:true});
     });
   }
   function openIdeaGroupOptions(groupId) {
@@ -6715,10 +6749,10 @@ ${gallery}
   function bindIdeaResizeHandle(handle,item,el) {
     let lastTapAt = 0;
     handle.addEventListener("pointerdown",(e)=>{
-      e.preventDefault();e.stopPropagation(); const fresh=getIdeaItem(item.id);if(!fresh)return;if(!ideaCanEditItem(fresh))return; const start={cx:e.clientX,cy:e.clientY,w:fresh.w,h:fresh.h,x:fresh.x,y:fresh.y,rot:fresh.rotation||0,aspect:fresh.aspect||fresh.w/fresh.h,lock:fresh.lockAspect}; const rzPreSnap=ideaSnapshot(); let rzPushed=false;
+      e.preventDefault();e.stopPropagation(); const d=currentIdeaData(), fresh=d&&d.items.find((it)=>it.id===item.id);if(!fresh||!d)return;if(!ideaCanEditItem(fresh))return; const start={cx:e.clientX,cy:e.clientY,w:fresh.w,h:fresh.h,x:fresh.x,y:fresh.y,rot:fresh.rotation||0,aspect:fresh.aspect||fresh.w/fresh.h,lock:fresh.lockAspect}; const rzPreSnap=ideaSnapshot(); let rzPushed=false;
       try{handle.setPointerCapture(e.pointerId)}catch(_e){}
       let moved=false;
-      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!rzPushed){pushIdeaUndo(rzPreSnap);rzPushed=true;}moved=true;const delta=boardDeltaFromEvent(ev.clientX-start.cx,ev.clientY-start.cy);const rad=-start.rot*Math.PI/180, lx=delta.x*Math.cos(rad)-delta.y*Math.sin(rad), ly=delta.x*Math.sin(rad)+delta.y*Math.cos(rad);let w=start.w+lx,h=start.h+ly;if(start.lock){if(Math.abs(lx)>Math.abs(ly*start.aspect))h=w/start.aspect;else w=h*start.aspect;}const clamped=ideaClampItemSize(fresh.kind,w,h);fresh.w=clamped.w;fresh.h=clamped.h;if(ideaSnapOn){ideaSnapResize(fresh,d,start);}setIdeaItemGeometry(el,fresh);ev.preventDefault();};
+      const move=(ev)=>{if(ev.pointerId!==e.pointerId)return;if(!rzPushed){pushIdeaUndo(rzPreSnap);rzPushed=true;}moved=true;const delta=boardDeltaFromEvent(ev.clientX-start.cx,ev.clientY-start.cy);const rad=-start.rot*Math.PI/180, lx=delta.x*Math.cos(rad)-delta.y*Math.sin(rad), ly=delta.x*Math.sin(rad)+delta.y*Math.cos(rad);let w=start.w+lx,h=start.h+ly;if(start.lock){if(Math.abs(lx)>Math.abs(ly*start.aspect))h=w/start.aspect;else w=h*start.aspect;}const clamped=ideaClampItemSize(fresh.kind,w,h);fresh.w=clamped.w;fresh.h=clamped.h;if(ideaSnapOn){ideaSnapResize(fresh,d,start);}else{clearIdeaSnapGuides();}setIdeaItemGeometry(el,fresh);scheduleIdeaSave(220);ev.preventDefault();};
       const end=(ev)=>{if(ev&&ev.pointerId!=null&&ev.pointerId!==e.pointerId)return;document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",end);document.removeEventListener("pointercancel",end);const at=Date.now();if(!moved&&at-lastTapAt<340){lastTapAt=0;openIdeaSizeModal(item.id);}else{lastTapAt=moved?0:at;if(moved)scheduleIdeaSave(0);}};
       document.addEventListener("pointermove",move);document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end); handle.addEventListener("lostpointercapture", end, { once:true });
     });
@@ -6727,14 +6761,14 @@ ${gallery}
     const item=getIdeaItem(id); if(!item)return;if(!ideaCanEditItem(item))return;
     const ratio=Math.max(.08,Math.min(20,(Number(item.w)||110)/Math.max(1,Number(item.h)||54)));
     const defaultLocked=(item.kind === "image" || item.kind === "video") ? item.lockAspect !== false : item.lockAspect === true;
-    const lockControl=`<label class="idea-size-lock"><input type="checkbox" id="ideaSizeLock" ${defaultLocked?"checked":""}><span>비율 고정</span><small>가로 또는 세로를 바꾸면 현재 비율로 함께 계산합니다. 메모지·음악·첨부·링크는 기본값이 해제입니다.</small></label>`;
+    const lockControl=["image","video"].includes(item.kind)?`<label class="idea-size-lock"><input type="checkbox" id="ideaSizeLock" ${defaultLocked?"checked":""}><span>비율 고정</span><small>가로 또는 세로를 바꾸면 현재 비율로 함께 계산합니다.</small></label>`:"";
     const min=ideaItemMinSize(item.kind);
     openModal(`<h3>조각 크기 입력</h3><p class="m-sub">정확한 픽셀 수치를 입력해 크기를 맞춥니다.</p><div class="m-row"><input class="m-input" id="ideaSizeW" inputmode="numeric" type="number" min="${min.w}" max="1400" value="${Math.round(item.w)}" aria-label="너비"><input class="m-input" id="ideaSizeH" inputmode="numeric" type="number" min="${min.h}" max="1100" value="${Math.round(item.h)}" aria-label="높이"></div>${lockControl}<div class="m-row"><button class="m-btn" id="ideaSizeCancel">취소</button><button class="m-btn primary" id="ideaSizeApply">적용</button></div>`);
     const sync=(source)=>{const lock=$("ideaSizeLock");if(!lock||!lock.checked)return;const w=Math.max(min.w,Number($("ideaSizeW").value)||item.w),h=Math.max(min.h,Number($("ideaSizeH").value)||item.h);if(source==="w")$("ideaSizeH").value=String(Math.max(min.h,Math.min(1100,Math.round(w/ratio))));else $("ideaSizeW").value=String(Math.max(min.w,Math.min(1400,Math.round(h*ratio))));};
     $on("ideaSizeW","input",()=>sync("w"));$on("ideaSizeH","input",()=>sync("h"));
     setTimeout(()=>{const input=$("ideaSizeW");if(input){input.focus();input.select();}},80);
     $on("ideaSizeCancel","click",closeModal);
-    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh||!ideaCanEditItem(fresh))return;let w=Number($("ideaSizeW").value)||fresh.w,h=Number($("ideaSizeH").value)||fresh.h;const locked=$("ideaSizeLock") && $("ideaSizeLock").checked;if(locked)h=w/ratio;const clamped=ideaClampItemSize(fresh.kind,w,h);pushIdeaUndo();fresh.w=clamped.w;fresh.h=clamped.h;fresh.lockAspect=!!locked;fresh.aspect=Math.max(.08,Math.min(20,fresh.w/fresh.h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${fresh.w}×${fresh.h}px로 맞췄어요`);});
+    $on("ideaSizeApply","click",()=>{const fresh=getIdeaItem(id);if(!fresh||!ideaCanEditItem(fresh))return;let w=Number($("ideaSizeW").value)||fresh.w,h=Number($("ideaSizeH").value)||fresh.h;const locked=["image","video"].includes(fresh.kind) && $("ideaSizeLock") && $("ideaSizeLock").checked;if(locked)h=w/ratio;const clamped=ideaClampItemSize(fresh.kind,w,h);pushIdeaUndo();fresh.w=clamped.w;fresh.h=clamped.h;if(["image","video"].includes(fresh.kind))fresh.lockAspect=!!locked;else fresh.lockAspect=false;fresh.aspect=Math.max(.08,Math.min(20,fresh.w/fresh.h));const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,fresh);scheduleIdeaSave(0);closeModal();toast(`크기를 ${fresh.w}×${fresh.h}px로 맞췄어요`);});
   }
   function bindIdeaRotateHandle(handle,item,el) {
     let lastTapAt = 0;
@@ -6885,27 +6919,32 @@ ${gallery}
     if (isIdeaReadonly()) { openIdeaArtifactPreview(id); return; }
     const n=currentIdeaNote(), item=getIdeaItem(id);if(!n||!item)return;selectIdeaItem(id,null);
     const supportsAspect=["image","video"].includes(item.kind);
-    const isColorable=["note","audio","quote","file","frame"].includes(item.kind);
+    const isColorable=["note","audio","quote","file"].includes(item.kind);
     const blocked=()=>!ideaCanEditItem(item);
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
-    const renameAction=["quote","file","audio","frame"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
+    const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
+    const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
     const audioTitleAction=item.kind==="audio"?`<button class="idea-options-action" id="ideaOptAudioTitle"><b>${item.showTitle===false?"제목 표시 끔":"제목 표시 켬"}</b><small>플레이어 상단 제목 보이기/숨기기</small></button>`:"";
     const audioModeAction=item.kind==="audio"?`<button class="idea-options-action" id="ideaOptAudioMode"><b>플레이어 ${item.audioMode==="light"?"라이트":"다크"}</b><small>안쪽 오디오 바의 밝은/어두운 모드 전환</small></button>`:"";
-    const frameAction=["note","image","audio","video","file","quote","frame"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFrame"><b>${esc(ideaMediaFrameLabel(item))}</b><small>전체 프레임·색상 라이브러리를 이 조각에 적용</small></button>`:"";
+    const frameAction=["note","image","audio","video","file","quote"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFrame"><b>${esc(ideaMediaFrameLabel(item))}</b><small>전체 프레임·색상 라이브러리를 이 조각에 적용</small></button>`:"";
     const videoDecorAction=item.kind==="video"?`<button class="idea-options-action" id="ideaOptVideoDecor"><b>${item.videoDecor===false?"영상 장식 꺼짐":"영상 장식 켜짐"}</b><small>PLAY 배지·별 장식의 표시와 색상 조절</small></button>`:"";
+    const replaceAction=["image","audio","video","file","quote"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptReplace"><b>교체</b><small>${item.kind==="quote"?"연결할 메모를 새로 고르기":"현재 위치·크기·테마를 유지하고 새 파일로 교체"}</small></button>`:"";
     const flipAction=["note","image"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptFlipX"><b>${item.flipX?"좌우 반전 켜짐":"좌우 반전 꺼짐"}</b><small>${item.kind==="note"?"메모지 디자인만 뒤집고 글자는 유지":"이미지를 좌우로 뒤집기"}</small></button>`:"";
-    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">${item.locked?"잠긴 조각입니다. 편집하려면 먼저 잠금을 해제하세요.":"길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요."}</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaOptLock"><b>${item.locked?"잠금 해제":"잠금"}</b><small>${item.locked?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button><button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${flipAction}${frameAction}${videoDecorAction}${renameAction}${audioTitleAction}${audioModeAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
+    openModal(`<h3>${esc(item.kind === "audio" ? "음악 플레이어" : ideaItemTitle(item,n))}</h3><p class="m-sub">${item.locked?"잠긴 조각입니다. 편집하려면 먼저 잠금을 해제하세요.":"길게 누르면 이동하고, 선택된 조각의 핸들로 직접 조절할 수 있어요."}</p><div class="idea-options-grid"><button class="idea-options-action" id="ideaOptLock"><b>${item.locked?"잠금 해제":"잠금"}</b><small>${item.locked?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button><button class="idea-options-action" id="ideaOptMove"><b>이동 모드</b><small>한 번 눌러 바로 드래그</small></button><button class="idea-options-action" id="ideaOptAdjust"><b>크기 · 회전</b><small>조절 핸들 표시</small></button>${supportsAspect?`<button class="idea-options-action" id="ideaOptAspect"><b>${item.lockAspect?"비율 고정됨":"자유 비율"}</b><small>이미지·영상 비율 전환</small></button>`:""}${flipAction}${frameAction}${videoDecorAction}${replaceAction}${renameAction}${audioTitleAction}${audioModeAction}<button class="idea-options-action" id="ideaOptShadow"><b>${item.shadow===false?"그림자 꺼짐":"그림자 켜짐"}</b><small>조각 그림자 표시 전환</small></button><button class="idea-options-action" id="ideaOptPreview"><b>미리보기</b><small>이 조각만 크게 보기</small></button><button class="idea-options-action" id="ideaOptDuplicate"><b>복제</b><small>같은 조각 하나 더 · Ctrl+D</small></button><button class="idea-options-action" id="ideaOptFront"><b>맨 앞으로</b><small>다른 조각 위로 · ]</small></button><button class="idea-options-action" id="ideaOptBack"><b>맨 뒤로</b><small>다른 조각 아래로 · [</small></button><button class="idea-options-action danger" id="ideaOptDelete"><b>조각 삭제</b><small>보드에서 제거</small></button></div>${noteOptions}${colorOption}${emptyFrameOptions}<div class="m-row"><button class="m-btn" id="ideaOptClose">닫기</button></div>`);
     $on("ideaOptClose","click",closeModal);
     $on("ideaOptLock","click",()=>{pushIdeaUndo();item.locked=!item.locked;renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
     $on("ideaOptMove","click",()=>{if(blocked())return;closeModal();selectIdeaItem(id,"move");toast("이동 모드: 조각을 드래그해 배치하세요");});
     $on("ideaOptAdjust","click",()=>{if(blocked())return;closeModal();selectIdeaItem(id,"transform");toast("모서리 ↘로 크기, ↻로 회전을 조절하세요");});
     if(supportsAspect)$on("ideaOptAspect","click",()=>{if(blocked())return;pushIdeaUndo();item.lockAspect=!item.lockAspect;scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     if(["note","image"].includes(item.kind))$on("ideaOptFlipX","click",()=>{if(blocked())return;pushIdeaUndo();item.flipX=!item.flipX;const el=ideaItemElement(id);if(el)setIdeaItemGeometry(el,item);scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
-    if(["quote","file","audio","frame"].includes(item.kind))$on("ideaOptRename","click",()=>{if(blocked())return;renameIdeaItemTitle(id);});
+    if(["quote","file","audio"].includes(item.kind))$on("ideaOptRename","click",()=>{if(blocked())return;renameIdeaItemTitle(id);});
     if(item.kind==="audio")$on("ideaOptAudioTitle","click",()=>{if(blocked())return;pushIdeaUndo();item.showTitle=item.showTitle===false;renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
     if(item.kind==="audio")$on("ideaOptAudioMode","click",()=>{if(blocked())return;pushIdeaUndo();item.audioMode=item.audioMode==="light"?"dark":"light";renderIdeaBoard();scheduleIdeaSave(0);closeModal();requestAnimationFrame(()=>openIdeaItemOptions(id));});
-    if(["note","image","audio","video","file","quote","frame"].includes(item.kind))$on("ideaOptFrame","click",()=>{if(blocked())return;openIdeaMediaFramePicker(id);});
+    if(["note","image","audio","video","file","quote"].includes(item.kind))$on("ideaOptFrame","click",()=>{if(blocked())return;openIdeaMediaFramePicker(id);});
+    if(item.kind==="frame")$on("ideaOptFrameType","click",()=>{if(blocked())return;openIdeaMediaFramePicker(id);});
+    if(item.kind==="frame")$on("ideaOptFrameColor","click",()=>{if(blocked())return; if(item.frame)openIdeaMediaFrameColorPicker(id,item.frame,item.frameColor);else openIdeaMediaFramePicker(id);});
+    if(["image","audio","video","file","quote"].includes(item.kind))$on("ideaOptReplace","click",()=>{if(blocked())return;openIdeaItemReplacePicker(id);});
     if(item.kind==="video")$on("ideaOptVideoDecor","click",()=>{if(blocked())return;openIdeaVideoDecorPicker(id);});
     $on("ideaOptShadow","click",()=>{if(blocked())return;pushIdeaUndo();item.shadow=item.shadow===false;const el=ideaItemElement(id);if(el)el.classList.toggle("no-shadow",item.shadow===false);scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);});
     $on("ideaOptPreview","click",()=>{closeModal();openIdeaArtifactPreview(id);});
@@ -6927,9 +6966,10 @@ ${gallery}
     const item=getIdeaItem(id); if(!item || !["note","image","audio","video","file","quote","frame"].includes(item.kind) || !ideaCanEditItem(item)) return;
     const p=getProject(st.curProjectId), config=ideaMediaFrameConfig(item);
     const activeId=config && config.id, activeColor=config ? config.color : "#d4af37";
-    const none=`<button type="button" class="frame-opt${!config ? " sel" : ""}" data-idea-frame=""><div class="idea-frame-select-preview">${frameThumbInner(p || {})}</div><span>없음</span></button>`;
+    const allowNone=item.kind !== "frame";
+    const none=allowNone?`<button type="button" class="frame-opt${!config ? " sel" : ""}" data-idea-frame=""><div class="idea-frame-select-preview">${frameThumbInner(p || {})}</div><span>없음</span></button>`:"";
     const grid=FRAMES.map((f)=>`<button type="button" class="frame-opt${activeId===f.id ? " sel" : ""}" data-idea-frame="${esc(f.id)}">${ideaFramePreviewMarkup(f.id, activeId===f.id ? activeColor : "#d4af37", p)}<span>${esc(f.name)}</span></button>`).join("");
-    openModal(`<h3>조각 프레임</h3><p class="m-sub">프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임 값은 이 조각 안에만 독립 저장됩니다.</p><div class="frame-grid idea-media-frame-grid">${none}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
+    openModal(`<h3>${item.kind==="frame"?"프레임 종류":"조각 프레임"}</h3><p class="m-sub">${item.kind==="frame"?"빈 프레임의 종류를 고릅니다. 다음 화면에서 프레임 컬러를 정할 수 있어요.":`프로젝트 썸네일과 같은 ${FRAMES.length}종 프레임과 색상 환경을 사용합니다. 프레임 값은 이 조각 안에만 독립 저장됩니다.`}</p><div class="frame-grid idea-media-frame-grid">${none}${grid}</div><div class="m-row"><button class="m-btn" id="ideaFramePickerClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-idea-frame]").forEach((button)=>button.addEventListener("click",()=>{
       const fid=button.dataset.ideaFrame;
       if(!fid){ pushIdeaUndo(); item.frame=null; item.frameColor=null; renderIdeaBoard(); scheduleIdeaSave(0); closeModal(); toast("프레임을 제거했어요"); return; }
@@ -7058,14 +7098,49 @@ ${gallery}
     canvas.addEventListener("contextmenu",(e)=>{if(isIdeaReadonly())return;if(e.target!==canvas&&!e.target.closest(".idea-canvas-empty"))return;e.preventDefault();const p=boardPointFromEvent(e);ideaPendingPos=p;openIdeaAddMenu(p,true);});
     canvas.addEventListener("pointerdown",(e)=>{if(e.target===canvas&&ideaEditState.itemId)clearIdeaSelection();});
   }
+  function itemHasCustomDisplayTitle(item, n) {
+    if(!item || !item.title) return false;
+    if(item.kind === "quote") return item.title !== ((getNote(item.noteId)||{}).title || "연결된 메모");
+    const att=itemAttachment(n,item.fileId); return !!(att && att.name && item.title !== att.name);
+  }
+  async function replaceIdeaMediaFile(id,file,kind) {
+    const n=currentIdeaNote(), item=getIdeaItem(id); if(!n||!item||!file||item.kind!==kind||!ideaCanEditItem(item))return;
+    if(kind==="video"&&file.size>IDEA_MAX_VIDEO){toast("동영상은 30MB 이하만 붙일 수 있어요");return;}
+    if(file.size>IDEA_MAX_MEDIA){toast("미디어 파일은 30MB 이하만 붙일 수 있어요");return;}
+    const expected={image:"image/",audio:"audio/",video:"video/"}[kind];
+    if(expected && !String(file.type||"").startsWith(expected)){toast(`${kind==="image"?"이미지":kind==="audio"?"오디오":"동영상"} 파일만 교체할 수 있어요`);return;}
+    const d=ensureIdeaBoardData(n), oldId=item.fileId, customTitle=itemHasCustomDisplayTitle(item,n), newId=uid();
+    try{
+      await put("files",{id:newId,noteId:n.id,name:file.name||"미디어",type:file.type||"application/octet-stream",size:file.size,blob:file,createdAt:now()});
+      pushIdeaUndo();
+      d.attachments.push({id:newId,name:file.name||"미디어",type:file.type||"",size:file.size});
+      item.fileId=newId;
+      if(!customTitle)item.title=file.name||"미디어";
+      if(oldId && !d.items.some((it)=>it.id!==item.id&&it.fileId===oldId)) { d.attachments=d.attachments.filter((a)=>a.id!==oldId); ideaRemovedBlobIds.add(oldId); const url=ideaObjectUrls.get(oldId);if(url){try{URL.revokeObjectURL(url);}catch(e){}ideaObjectUrls.delete(oldId);} }
+      renderIdeaBoard(); scheduleIdeaSave(0); toast("조각을 새 파일로 교체했어요");
+    }catch(e){toast("파일을 교체하지 못했어요");}
+  }
+  function replaceIdeaQuote(id, noteId) {
+    const n=currentIdeaNote(), item=getIdeaItem(id), ref=getNote(noteId); if(!n||!item||item.kind!=="quote"||!ref||!ideaCanEditItem(item))return;
+    const customTitle=itemHasCustomDisplayTitle(item,n);
+    pushIdeaUndo(); item.noteId=ref.id; if(!customTitle)item.title=ref.title||"연결된 메모";
+    renderIdeaBoard(); scheduleIdeaSave(0); toast("연결 메모를 교체했어요");
+  }
+  function openIdeaItemReplacePicker(id) {
+    const item=getIdeaItem(id); if(!item)return;
+    if(item.kind==="quote"){openIdeaQuotePicker(null,id);return;}
+    const input=$(item.kind==="file"?"ideaFileInput":"ideaMediaInput"); if(!input)return;
+    input.dataset.ideaKind=item.kind; input.dataset.ideaReplaceId=id; input.click();
+  }
+
   function openIdeaAddMenu(pos, anchored) {
     if (isIdeaReadonly()) return;
     const target=pos||(()=>{const d=currentIdeaData();return d?findIdeaDropPosition(d,ideaItemDefaults("note")):{x:42,y:42};})();ideaPendingPos=target;
     openModal(`<h3>${anchored?"여기에 추가하기":"아이디어 추가"}</h3><p class="m-sub">원하는 조각을 캔버스에 붙여보세요.</p><div class="idea-add-menu"><button class="idea-add-choice" data-idea-add="note"><span class="iac-ico">✦</span><span><b>메모지</b><small>짧은 문장과 러프 아이디어</small></span></button><button class="idea-add-choice" data-idea-add="image"><span class="iac-ico">▧</span><span><b>이미지 · GIF</b><small>원본 비율을 살려 붙여요</small></span></button><button class="idea-add-choice" data-idea-add="audio"><span class="iac-ico">♫</span><span><b>음악 · 오디오</b><small>제목과 플레이어만 깔끔하게</small></span></button><button class="idea-add-choice" data-idea-add="video"><span class="iac-ico">▶</span><span><b>동영상</b><small>30MB 이하 · 원본 비율 유지</small></span></button><button class="idea-add-choice" data-idea-add="quote"><span class="iac-ico">↗</span><span><b>메모 인용 링크</b><small>작성한 다른 메모로 바로 이동</small></span></button><button class="idea-add-choice" data-idea-add="file"><span class="iac-ico">⌁</span><span><b>첨부파일</b><small>파일 조각을 자유 위치에 배치</small></span></button><button class="idea-add-choice" data-idea-add="frame"><span class="iac-ico">□</span><span><b>빈 프레임</b><small>장식용 프레임만 캔버스에 배치</small></span></button></div><div class="m-row"><button class="m-btn" id="ideaAddCancel">취소</button></div>`);
-    $("modalBox").querySelectorAll("[data-idea-add]").forEach((button)=>button.addEventListener("click",()=>{const kind=button.dataset.ideaAdd;closeModal();if(kind==="note"){const item=addIdeaItem("note",ideaPendingPos);setTimeout(()=>{const el=item&&ideaItemElement(item.id);if(el)el.querySelector(".idea-note-text")?.focus();},50);}else if(kind==="frame"){addIdeaItem("frame",ideaPendingPos,{title:"빈 프레임",frame:(FRAMES[0]&&FRAMES[0].id)||null,frameColor:"#d4af37"});}else if(kind==="quote")openIdeaQuotePicker(ideaPendingPos);else{const inp=$(kind==="file"?"ideaFileInput":"ideaMediaInput");inp.dataset.ideaKind=kind;inp.click();}}));
+    $("modalBox").querySelectorAll("[data-idea-add]").forEach((button)=>button.addEventListener("click",()=>{const kind=button.dataset.ideaAdd;closeModal();if(kind==="note"){const item=addIdeaItem("note",ideaPendingPos);setTimeout(()=>{const el=item&&ideaItemElement(item.id);if(el)el.querySelector(".idea-note-text")?.focus();},50);}else if(kind==="frame"){addIdeaItem("frame",ideaPendingPos,{frame:(FRAMES[0]&&FRAMES[0].id)||null,frameColor:"#d4af37"});}else if(kind==="quote")openIdeaQuotePicker(ideaPendingPos);else{const inp=$(kind==="file"?"ideaFileInput":"ideaMediaInput");inp.dataset.ideaKind=kind;inp.click();}}));
     $on("ideaAddCancel","click",closeModal);
   }
-  function openIdeaQuotePicker(pos) {
+  function openIdeaQuotePicker(pos, replaceItemId) {
     if (isIdeaReadonly()) return;
     const cur=currentIdeaNote();if(!cur)return;
     const candidates=st.notes.filter((n)=>n.id!==cur.id&&["free","html","lorebook","log","idea","character"].includes(n.type));
@@ -7073,10 +7148,10 @@ ${gallery}
     const searchText=(n)=>[n.title||"",noteTypeShortLabel(n),noteTypeLabel(n),TYPE_TAG[visualMemoType(n)]||"",n.type==="idea"?ideaBoardSummary(n):bodyText(n)].join(" ").toLowerCase();
     let tab="all", selectedProjectId=null, query="";
     const projectName=(pid)=>{const p=getProject(pid);return p?p.name:"프로젝트 없음";};
-    const pick=(id)=>{const ref=getNote(id);closeModal();if(ref)addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});};
+    const pick=(id)=>{const ref=getNote(id);closeModal();if(!ref)return;if(replaceItemId)replaceIdeaQuote(replaceItemId,ref.id);else addIdeaItem("quote",pos,{noteId:ref.id,title:ref.title||"연결된 메모"});};
     const noteRows=(list)=>list.length?list.map((n)=>`<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-idea-quote="${esc(n.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(n)}">${TYPE_TAG[visualMemoType(n)]||"?"}</span><b>${esc(n.title||"제목 없는 메모")}</b></span><small>${esc(projectName(n.projectId))} · ${esc(noteTypeShortLabel(n))} · ${esc(n.type==="idea"?ideaBoardSummary(n):preview(noteHtml(n))||"내용 없음")}</small></button></div>`).join(""):'<div class="log-template-empty">검색 결과가 없어요.</div>';
-    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
-    openModal(`<div class="log-template-manager idea-quote-manager"><h3>내 메모 링크</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="log-template-tabs" role="tablist" aria-label="내 메모 링크 구분"><button data-idea-quote-tab="all" role="tab">전체보기 <small></small></button><button data-idea-quote-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="ideaQuoteSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"><button class="m-btn" id="ideaQuoteProjectBack" type="button" hidden>프로젝트</button></div><div class="log-template-list idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteCancel">닫기</button></div></div>`);
+    const projectRows=(list)=>list.length?list.map((p)=>{const count=candidates.filter((n)=>n.projectId===p.id).length;const framed=frameById(p.frame);const thumb=`<span class="idea-quote-project-thumb${framed?" has-frame":""}">${projectThumbMedia(p)}${framed?`<span class="frame">${frameInner(p)}</span>`:""}</span>`;return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-idea-quote-project="${esc(p.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(p.name||"이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;}).join(""):'<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
+    openModal(`<div class="log-template-manager idea-quote-manager"><h3>${replaceItemId?"메모 링크 교체":"내 메모 링크"}</h3><p class="m-sub">보드에서 바로 열 수 있는 메모 조각을 선택하세요.</p><div class="log-template-tabs" role="tablist" aria-label="내 메모 링크 구분"><button data-idea-quote-tab="all" role="tab">전체보기 <small></small></button><button data-idea-quote-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="ideaQuoteSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"></div><div class="log-template-list idea-quote-results" id="ideaQuoteResults"></div><div class="m-row"><button class="m-btn" id="ideaQuoteProjectBack" type="button" hidden>← 뒤로가기</button><button class="m-btn" id="ideaQuoteCancel">닫기</button></div></div>`);
     $("modalBox").classList.add("log-template-modal","idea-quote-modal");
     $("modalScrim").classList.add("log-template-open");
     const draw=()=>{
@@ -7085,7 +7160,7 @@ ${gallery}
       if(!box)return;
       if(input&&document.activeElement!==input)input.value=query;
       const q=query.trim().toLocaleLowerCase("ko");
-      if(tab==="project" && back) back.hidden=!selectedProjectId;
+      if(back) back.hidden=!(tab==="project" && selectedProjectId);
       if(tab==="project" && selectedProjectId==null) {
         if(input)input.placeholder="프로젝트 이름 검색";
         const projects=st.projects.filter((p)=>!q||String(p.name||"").toLocaleLowerCase("ko").includes(q)).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ko"));
@@ -7378,7 +7453,7 @@ ${gallery}
     const genericBase=base+frameStyle;
     if(item.kind==="audio") { const aTitleCls=item.showTitle===false?" is-title-hidden":"", aModeCls=item.audioMode==="light"?" is-player-light":" is-player-dark"; return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-audio-shell${aTitleCls}${aModeCls}"><div class="idea-audio-head"><span class="idea-audio-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V6.2l9-2V15" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.4" cy="17.3" r="2.7" fill="#fff"/><circle cx="15.4" cy="15.3" r="2.7" fill="#fff"/></svg></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(title)}</span></span><span class="idea-audio-spark">✦</span></div><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div>${genericFrame}</article>`; }
     if(item.kind==="quote") { const ref=getNote(item.noteId), typeLabel=ref?noteTypeShortLabel(ref):"메모 없음"; return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-preview">${esc(typeLabel)}</span></span><span class="idea-quote-go">연결 메모</span></div>${genericFrame}</article>`; }
-    if(item.kind==="frame") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-empty-frame-body"><span>${esc(title)}</span></div>${genericFrame}</article>`;
+    if(item.kind==="frame") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-empty-frame-body"></div>${genericFrame}</article>`;
     return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}">${source?`<a class="idea-file-body" href="${esc(source)}" download="${esc(title)}"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">받기</span></a>`:`<div class="idea-file-body"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">파일 없음</span></div>`}${genericFrame}</article>`;
   }
   async function exportIdeaBoardHtml(id) {

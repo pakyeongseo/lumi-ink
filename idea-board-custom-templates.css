@@ -2087,3 +2087,47 @@
   .idea-multi-tools button { padding:8px 6px; font-size:10px; }
   .idea-multi-popover { gap:4px; }
 }
+
+/* ===================================================================
+ * v63.40 — snap/group/replacement/link-frame workflow
+ * =================================================================== */
+/* 빈 프레임은 장식만 남기고 내부 안내 문구를 표시하지 않습니다. */
+.idea-empty-frame-body { display:block; }
+.idea-list-copy-frame { justify-content:center; }
+.idea-list-copy-frame .idea-list-kind { margin:0; letter-spacing:.14em; }
+.idea-empty-frame-options { margin-top:12px; }
+.idea-options-help { margin:0 0 9px; color:var(--muted); font-size:11px; line-height:1.45; }
+
+/* 메모 링크: 프로젝트 단계에서 썸네일을 좌측에 함께 표시 */
+.idea-quote-project-item .log-template-main {
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+.idea-quote-project-thumb {
+  position:relative;
+  width:46px;
+  height:46px;
+  flex:0 0 46px;
+  display:block;
+  overflow:hidden;
+  border-radius:13px;
+  background:var(--surface-2);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 78%,transparent);
+}
+.idea-quote-project-thumb > img,
+.idea-quote-project-thumb > video,
+.idea-quote-project-thumb .proj-thumb-media,
+.idea-quote-project-thumb .proj-icon {
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+.idea-quote-project-thumb .frame {
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+}
+.idea-quote-project-thumb .frame svg { width:100%; height:100%; display:block; }
+.idea-quote-project-copy { min-width:0; display:flex; flex:1; flex-direction:column; gap:3px; }
+.idea-quote-project-copy .log-template-title { min-width:0; }
+
+/* 그룹 박스를 제거/재생성하지 않고 같은 좌표계에서 갱신해 제스처 흔들림을 막습니다. */
+.idea-group-box { touch-action:none; will-change:left,top,width,height; }
+.idea-group-box .idea-transform-tools { will-change:transform; }
