@@ -82,14 +82,20 @@
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v63.45_Release_Notes.md`
 - `Lumi_Ink_v63.46_Release_Notes.md`
+- `Lumi_Ink_v64.1_Release_Notes.md`
+- `Lumi_Ink_v64.2_Release_Notes.md`
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
 - `idea-board-template-registry-guide.md`
 - `idea-divider-template-guide.md`
 
-## v63.46 검수 기준
+## v64.2 검수 기준
 
+- JavaScript 문법 검사 통과
+- 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
+- 새 메모 3탭 생성 경로와 빠른 자유 메모 경로 확인
+- 자동 백업 보관 수 1–15 정규화 및 즉시 정리 경로 확인
 - JavaScript 문법 검사 통과
 - 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
 - manifest JSON 파싱 확인

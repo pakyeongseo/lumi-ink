@@ -3604,59 +3604,95 @@
   function closeModal() { $("modalScrim").classList.remove("open"); }
   $on("modalScrim", "click", (e) => { if (e.target === $("modalScrim")) closeModal(); });
 
+  function newNoteScreen(type) {
+    if (type === "html") return "html";
+    if (type === "lorebook") return "lore";
+    if (type === "log") return "log";
+    if (type === "character" || type === "persona") return "character";
+    if (type === "idea") return "idea";
+    return "editor";
+  }
+  function openCreatedNote(type) {
+    closeModal();
+    if (type === "character" || type === "persona") st.charEdit = true;
+    if (type === "log") logEditMode = true;
+    go({ s: newNoteScreen(type) });
+  }
+  function typePickerOptions(button) {
+    const type = button.dataset.createType || button.dataset.t;
+    const mode = button.dataset.characterMode === "single" ? "single" : "collection";
+    return { type, options: (type === "character" || type === "persona") ? { characterMode: mode } : null };
+  }
   function showTypePicker(presetPid) {
+    const icon = (paths) => `<svg viewBox="0 0 24 24">${paths}</svg>`;
+    const card = (type, mode, title, desc, ico) => `
+      <button type="button" class="type-card" data-create-type="${type}"${mode ? ` data-character-mode="${mode}"` : ""}>
+        <div class="tc-ico">${ico}</div><div><div class="tc-name">${title}</div><div class="tc-desc">${desc}</div></div>
+      </button>`;
+    const icons = {
+      persona: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+      people: icon('<circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/>'),
+      lore: icon('<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/>'),
+      html: icon('<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/>'),
+      free: icon('<path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>'),
+      log: icon('<path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/>'),
+      idea: icon('<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 16.5l2.4-5.8 2.3 4.2 1.5-2.2 2.8 3.8"/><circle cx="15.8" cy="8.2" r="1.5"/><path d="M7 7.5h4"/>')
+    };
     openModal(`
-      <h3>새 메모</h3><p class="m-sub">메모 유형을 선택하세요.</p>
-      <div class="type-card" data-t="free">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
-        <div><div class="tc-name">자유 메모</div><div class="tc-desc">서식 보존 · 코드 보기 지원</div></div>
+      <div class="type-picker-modal">
+        <h3>새 메모</h3><p class="m-sub">만들 작업을 고르거나, 바로 자유롭게 적어 보세요.</p>
+        <button type="button" class="type-quick-free" data-create-type="free" aria-label="그라데이션 자유 메모 만들기">
+          <span class="tqf-icon">${icons.free}</span>
+          <span class="tqf-copy"><span class="tqf-eyebrow">QUICK NOTE</span><span class="tqf-title">그라데이션 자유 메모</span><span class="tqf-sub">서식 보존 편집기로 바로 시작하기</span></span>
+          <span class="tqf-arrow">${icon('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>
+        </button>
+        <div class="type-picker-tabs" role="tablist" aria-label="새 메모 분류">
+          <button type="button" class="type-picker-tab active" data-type-tab="character" role="tab" aria-selected="true">캐릭터</button>
+          <button type="button" class="type-picker-tab" data-type-tab="studio" role="tab" aria-selected="false">작업실</button>
+          <button type="button" class="type-picker-tab" data-type-tab="atelier" role="tab" aria-selected="false">아뜰리에</button>
+        </div>
+        <div class="type-picker-pane active" data-type-pane="character" role="tabpanel">
+          <div class="type-pane-caption">Persona &amp; Character</div>
+          ${card("persona", "single", "페르소나", "한 명의 나를 위한 페르소나 카드", icons.persona)}
+          ${card("persona", "collection", "다인 페르소나", "여러 페르소나를 한 카드 묶음으로 관리", icons.people)}
+          ${card("character", "single", "캐릭터", "단일 캐릭터 카드 · 국문/영문 · 이미지", icons.persona)}
+          ${card("character", "collection", "다인 캐릭터", "여러 캐릭터를 하나의 카드 묶음으로 관리", icons.people)}
+        </div>
+        <div class="type-picker-pane" data-type-pane="studio" role="tabpanel" hidden>
+          <div class="type-pane-caption">Writing tools</div>
+          ${card("lorebook", "", "로어북", "마크다운 · 키워드 · 토큰 · World Info 내보내기", icons.lore)}
+          ${card("html", "", "HTML 작업실", "원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기", icons.html)}
+        </div>
+        <div class="type-picker-pane" data-type-pane="atelier" role="tabpanel" hidden>
+          <div class="type-pane-caption">Creative atelier</div>
+          ${card("free", "", "자유 메모", "서식 보존 · 이미지 · 코드 보기 지원", icons.free)}
+          ${card("log", "", "로그 저장", "대화 로그 · 이름 가림 · 게시용 HTML 내보내기", icons.log)}
+          ${card("idea", "", "아이디어 보드", "캔버스에 요소를 배치해 자유롭게 꾸미기", icons.idea)}
+        </div>
+        <div class="m-row"><button class="m-btn" data-x="cancel">취소</button></div>
       </div>
-      <div class="type-card" data-t="html">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div>
-        <div><div class="tc-name">HTML 작업실</div><div class="tc-desc">원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기</div></div>
-      </div>
-      <div class="type-card" data-t="lorebook">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></div>
-        <div><div class="tc-name">로어북</div><div class="tc-desc">마크다운 · 키워드 · 토큰 · World Info 내보내기</div></div>
-      </div>
-      <div class="type-card" data-t="log">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/></svg></div>
-        <div><div class="tc-name">로그 저장</div><div class="tc-desc">대화 로그를 저장하고 꾸미는 타입 · 이름 가림 · 게시용 HTML 내보내기</div></div>
-      </div>
-      <div class="type-card" data-t="idea">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 16.5l2.4-5.8 2.3 4.2 1.5-2.2 2.8 3.8"/><circle cx="15.8" cy="8.2" r="1.5"/><path d="M7 7.5h4"/></svg></div>
-        <div><div class="tc-name">아이디어 보드</div><div class="tc-desc">캔버스 안에 다양한 요소를 배치하여 자유롭게 꾸미는 타입</div></div>
-      </div>
-      <div class="type-card" data-t="persona" data-character-mode="single">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-        <div><div class="tc-name">페르소나</div><div class="tc-desc">페르소나 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
-      </div>
-      <div class="type-card" data-t="character" data-character-mode="single">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-        <div><div class="tc-name">단일 캐릭터</div><div class="tc-desc">캐릭터 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
-      </div>
-      <div class="type-card" data-t="character" data-character-mode="collection">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/></svg></div>
-        <div><div class="tc-name">캐릭터</div><div class="tc-desc">캐릭터 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
-      </div>
-      <div class="m-row"><button class="m-btn" data-x="cancel">취소</button></div>
     `);
-    $("modalBox").querySelectorAll(".type-card").forEach((card) => {
-      card.addEventListener("click", () => {
-        if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
-        const t = card.dataset.t;
-        const options = (t === "character" || t === "persona") ? { characterMode: card.dataset.characterMode === "single" ? "single" : "collection" } : null;
-        const openCreated = () => {
-          closeModal();
-          if (t === "character" || t === "persona") st.charEdit = true;
-          if (t === "log") logEditMode = true;
-          go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : (t === "character" || t === "persona") ? "character" : t === "idea" ? "idea" : "editor" });
-        };
-        if (presetPid) createNote(t, presetPid, options).then(openCreated);
-        else showProjectPicker(t, options);
+    const box = $("modalBox");
+    const selectTab = (name) => {
+      box.querySelectorAll(".type-picker-tab").forEach((tab) => {
+        const active = tab.dataset.typeTab === name;
+        tab.classList.toggle("active", active); tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      box.querySelectorAll(".type-picker-pane").forEach((pane) => {
+        const active = pane.dataset.typePane === name;
+        pane.classList.toggle("active", active); pane.hidden = !active;
+      });
+    };
+    box.querySelectorAll(".type-picker-tab").forEach((tab) => tab.addEventListener("click", () => selectTab(tab.dataset.typeTab)));
+    box.querySelectorAll("[data-create-type]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const { type, options } = typePickerOptions(button);
+        const openCreated = () => openCreatedNote(type);
+        if (presetPid) createNote(type, presetPid, options).then(openCreated);
+        else showProjectPicker(type, options);
       });
     });
-    $("modalBox").querySelector('[data-x="cancel"]').addEventListener("click", closeModal);
+    box.querySelector('[data-x="cancel"]').addEventListener("click", closeModal);
   }
 
   function showProjectPicker(type, options) {
@@ -3674,7 +3710,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type, options); }));
     $on("pickCancel", "click", closeModal);
-    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid, options).then(() => { closeModal(); if (type === "character" || type === "persona") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "html" ? "html" : type === "lorebook" ? "lore" : type === "log" ? "log" : (type === "character" || type === "persona") ? "character" : type === "idea" ? "idea" : "editor" }); }); });
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid, options).then(() => openCreatedNote(type)); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -4016,10 +4052,10 @@
         const est = await navigator.storage.estimate();
         const usage = Number(est.usage) || 0, quota = Number(est.quota) || 0;
         value.textContent = quota ? `${fmtSize(usage)} / ${fmtSize(quota)}` : fmtSize(usage);
-        sub.textContent = `첨부 ${files.length}개 · ${fmtSize(attachmentBytes)} · 자동 백업 ${backups.length}개`;
+        sub.textContent = `첨부 ${files.length}개 · ${fmtSize(attachmentBytes)} · 자동 백업 ${backups.length}/${getAutoBackupLimit()}개`;
       } else {
         value.textContent = fmtSize(attachmentBytes);
-        sub.textContent = `첨부 ${files.length}개 · 자동 백업 ${backups.length}개 · 브라우저 전체 용량은 확인 불가`;
+        sub.textContent = `첨부 ${files.length}개 · 자동 백업 ${backups.length}/${getAutoBackupLimit()}개 · 브라우저 전체 용량은 확인 불가`;
       }
     } catch (e) { value.textContent = "확인 불가"; sub.textContent = "브라우저 저장공간 정보를 읽지 못했어요"; }
   }
@@ -4029,6 +4065,9 @@
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
     const av = $("setAccentVal"); if (av && ACCENTS[st.accent || "blue"]) av.innerHTML = `<span class="accent-dot"></span>${ACCENTS[st.accent || "blue"].name}`;
     const toolbar = $("setToolbarModeVal"); if (toolbar) toolbar.textContent = st.formatbarMode === "folded" ? "접어두기" : "항상 표시";
+    const backupLimit = getAutoBackupLimit(), backupSub = $("setAutoBackupSub"), backupVal = $("setAutoBackupVal");
+    if (backupSub) backupSub.textContent = `저장할 때마다 최근 ${backupLimit}개 스냅샷 보관`;
+    if (backupVal) backupVal.textContent = `${backupLimit}개 보관 ›`;
     updateStorageUsage();
   }
   const FONT_PRESETS = [
@@ -5306,7 +5345,32 @@ ${gallery}
     $on("installIconClose", "click", closeModal);
   }
 
-  /* ---------- auto backup (last 10 snapshots) ---------- */
+  /* ---------- auto backup (user-selectable retention: 1–15 snapshots) ---------- */
+  const AUTO_BACKUP_LIMIT_KEY = "luminkAutoBackupLimit";
+  const AUTO_BACKUP_LIMIT_DEFAULT = 10;
+  const AUTO_BACKUP_LIMIT_MIN = 1;
+  const AUTO_BACKUP_LIMIT_MAX = 15;
+  function clampAutoBackupLimit(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return AUTO_BACKUP_LIMIT_DEFAULT;
+    return Math.min(AUTO_BACKUP_LIMIT_MAX, Math.max(AUTO_BACKUP_LIMIT_MIN, parsed));
+  }
+  function getAutoBackupLimit() {
+    try { return clampAutoBackupLimit(localStorage.getItem(AUTO_BACKUP_LIMIT_KEY)); }
+    catch (e) { return AUTO_BACKUP_LIMIT_DEFAULT; }
+  }
+  function setAutoBackupLimit(value) {
+    const limit = clampAutoBackupLimit(value);
+    try { localStorage.setItem(AUTO_BACKUP_LIMIT_KEY, String(limit)); } catch (e) {}
+    return limit;
+  }
+  async function pruneAutoBackups(limit, snapshots) {
+    const keep = clampAutoBackupLimit(limit);
+    const all = Array.isArray(snapshots) ? snapshots.slice() : await getAll("backups");
+    all.sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
+    for (let i = keep; i < all.length; i++) await del("backups", all[i].id);
+    return Math.max(0, all.length - keep);
+  }
   let autoBkTimer = null, autoBkLast = 0;
   function triggerAutoBackup() {
     const nowt = Date.now();
@@ -5329,10 +5393,42 @@ ${gallery}
         notes: JSON.parse(JSON.stringify(st.notes)), files: snapFiles
       };
       await put("backups", snap);
-      const all = (await getAll("backups")).sort((a, b) => b.ts - a.ts);
-      for (let i = 10; i < all.length; i++) await del("backups", all[i].id);
+      await pruneAutoBackups(getAutoBackupLimit());
     } catch (e) { console.warn("autobackup", e); }
   }
+  function openAutoBackupSettings() {
+    const limit = getAutoBackupLimit();
+    getAll("backups").then((all) => {
+      const count = all.length;
+      openModal(`<h3>자동 백업</h3><p class="m-sub">메모를 저장할 때마다 현재 상태를 스냅샷으로 남겨요. 보관 수를 줄이면 가장 오래된 백업부터 바로 정리됩니다.</p>
+        <div class="backup-limit-control" role="group" aria-label="자동 백업 보관 개수">
+          <button type="button" class="backup-step-btn" id="autoBackupMinus" aria-label="보관 개수 줄이기">−</button>
+          <label class="backup-limit-readout"><input id="autoBackupLimitInput" type="number" inputmode="numeric" min="${AUTO_BACKUP_LIMIT_MIN}" max="${AUTO_BACKUP_LIMIT_MAX}" value="${limit}" aria-label="보관할 자동 백업 개수"><span>개 보관</span></label>
+          <button type="button" class="backup-step-btn" id="autoBackupPlus" aria-label="보관 개수 늘리기">+</button>
+        </div>
+        <div class="backup-limit-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg><span>최소 ${AUTO_BACKUP_LIMIT_MIN}개부터 최대 ${AUTO_BACKUP_LIMIT_MAX}개까지 설정할 수 있어요. 현재 ${count}개 저장됨.</span></div>
+        <button type="button" class="backup-list-link" id="autoBackupOpenList"><span class="bll-main"><span class="bll-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><span><b>자동 백업 목록</b><small>스냅샷을 확인하고 복원하기</small></span></span><span>›</span></button>
+        <div class="m-row"><button class="m-btn" id="autoBackupCancel">취소</button><button class="m-btn primary" id="autoBackupSave">저장</button></div>`);
+      const input = $("autoBackupLimitInput");
+      const current = () => clampAutoBackupLimit(input.value);
+      const sync = (value) => { input.value = String(clampAutoBackupLimit(value)); };
+      $on("autoBackupMinus", "click", () => sync(current() - 1));
+      $on("autoBackupPlus", "click", () => sync(current() + 1));
+      input.addEventListener("blur", () => sync(current()));
+      input.addEventListener("input", () => { if (input.value && Number(input.value) > AUTO_BACKUP_LIMIT_MAX) sync(AUTO_BACKUP_LIMIT_MAX); });
+      $on("autoBackupCancel", "click", closeModal);
+      $on("autoBackupOpenList", "click", () => { closeModal(); openAutoBackupList(); });
+      $on("autoBackupSave", "click", async () => {
+        const next = setAutoBackupLimit(current());
+        try {
+          const removed = await pruneAutoBackups(next);
+          renderSettings(); closeModal();
+          toast(removed ? `자동 백업 보관 수를 ${next}개로 설정하고 ${removed}개를 정리했어요` : `자동 백업 보관 수를 ${next}개로 설정했어요`);
+        } catch (e) { toast("자동 백업 설정을 저장하지 못했어요"); }
+      });
+    }).catch(() => { toast("자동 백업 정보를 읽지 못했어요"); });
+  }
+
   function openAutoBackupList() {
     getAll("backups").then((all) => {
       all.sort((a, b) => b.ts - a.ts);
@@ -5342,8 +5438,10 @@ ${gallery}
         const fileLabel = Array.isArray(s.files) ? ` · 첨부 ${s.files.length}` : " · 첨부 미포함";
         return `<div class="lore-pick" data-bk="${s.id}"><div class="lp-body"><div class="lp-name">${label}</div><div class="lp-meta">프로젝트 ${s.projects.length} · 메모 ${s.notes.length}${fileLabel}</div></div><button class="ce-addbtn ab-restore" data-bk="${s.id}">복원 ›</button></div>`;
       }).join("");
-      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}개 스냅샷. v44부터 첨부파일도 함께 보관합니다. 복원 방식은 병합 또는 완전 교체를 고를 수 있어요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abClose2">닫기</button></div>`);
+      const limit = getAutoBackupLimit();
+      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}/${limit}개 스냅샷. v44부터 첨부파일도 함께 보관합니다. 복원 방식은 병합 또는 완전 교체를 고를 수 있어요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abSettings">보관 설정</button><button class="m-btn primary" id="abClose2">닫기</button></div>`);
       $on("abClose2", "click", closeModal);
+      $on("abSettings", "click", () => { closeModal(); openAutoBackupSettings(); });
       document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
         const snap = all.find((x) => x.id === btn.dataset.bk); if (!snap) return;
         const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
@@ -5381,7 +5479,7 @@ ${gallery}
     $on("setBackup", "click", exportBackup);
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
-    $on("setAutoBackup", "click", openAutoBackupList);
+    $on("setAutoBackup", "click", openAutoBackupSettings);
     $on("setStorage", "click", () => {
       const val = $("setStorageVal").textContent, sub = $("setStorageSub").textContent;
       openModal(`<h3>저장공간</h3><p class="m-sub"><b>${esc(val)}</b><br>${esc(sub)}<br><br>표시 용량은 이 사이트가 브라우저에 저장한 데이터와 자동 백업을 포함해요. 이미지가 많을수록 자동 백업도 함께 커집니다.</p><div class="m-row"><button class="m-btn primary" id="storageClose">확인</button></div>`);
