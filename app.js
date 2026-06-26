@@ -3641,9 +3641,9 @@
     openModal(`
       <div class="type-picker-modal">
         <h3>새 메모</h3><p class="m-sub">만들 작업을 고르거나, 바로 자유롭게 적어 보세요.</p>
-        <button type="button" class="type-quick-free" data-create-type="free" aria-label="그라데이션 자유 메모 만들기">
+        <button type="button" class="type-quick-free" data-create-type="free" aria-label="자유 메모 만들기">
           <span class="tqf-icon">${icons.free}</span>
-          <span class="tqf-copy"><span class="tqf-eyebrow">QUICK NOTE</span><span class="tqf-title">그라데이션 자유 메모</span><span class="tqf-sub">서식 보존 편집기로 바로 시작하기</span></span>
+          <span class="tqf-copy"><span class="tqf-eyebrow">QUICK NOTE</span><span class="tqf-title">자유 메모</span><span class="tqf-sub">서식 보존 편집기로 바로 시작하기</span></span>
           <span class="tqf-arrow">${icon('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>
         </button>
         <div class="type-picker-tabs" role="tablist" aria-label="새 메모 분류">
@@ -3653,7 +3653,7 @@
         </div>
         <div class="type-picker-pane active" data-type-pane="character" role="tabpanel">
           <div class="type-pane-caption">Persona &amp; Character</div>
-          ${card("persona", "single", "페르소나", "한 명의 나를 위한 페르소나 카드", icons.persona)}
+          ${card("persona", "single", "페르소나", "단일 페르소나 카드 · 국문/영문 · 이미지", icons.persona)}
           ${card("persona", "collection", "다인 페르소나", "여러 페르소나를 한 카드 묶음으로 관리", icons.people)}
           ${card("character", "single", "캐릭터", "단일 캐릭터 카드 · 국문/영문 · 이미지", icons.persona)}
           ${card("character", "collection", "다인 캐릭터", "여러 캐릭터를 하나의 카드 묶음으로 관리", icons.people)}

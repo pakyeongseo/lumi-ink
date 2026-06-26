@@ -1,14 +1,14 @@
-# Lumi Ink v63.45
+# Lumi Ink v64.3
 
 루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본은 v63.44 정리본 이후 아이디어 보드에서 실제 사용 중 남아 있던 이벤트·잠금·색상·썸네일·스크린샷 문제를 보수한 버전입니다.
 
 ## 현재 버전
 
-- 버전: v63.45
+- 버전: v64.3
 - 기준 빌드: `lumi-ink-v63.43-note-lock-handles-eyedropper`
-- 서비스워커 캐시: `ink-memo-v63.45-idea-board-fixes`
+- 서비스워커 캐시: `ink-memo-v64.3-new-memo-polish`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
-- 릴리즈 노트: `Lumi_Ink_v63.45_Release_Notes.md`
+- 최신 릴리즈 노트: `Lumi_Ink_v64.3_Release_Notes.md`
 
 ## 주요 기능
 
@@ -84,17 +84,20 @@
 - `Lumi_Ink_v63.46_Release_Notes.md`
 - `Lumi_Ink_v64.1_Release_Notes.md`
 - `Lumi_Ink_v64.2_Release_Notes.md`
+- `Lumi_Ink_v64.3_Release_Notes.md`
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
 - `idea-board-template-registry-guide.md`
 - `idea-divider-template-guide.md`
 
-## v64.2 검수 기준
+## v64.3 검수 기준
 
 - JavaScript 문법 검사 통과
 - 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
 - 새 메모 3탭 생성 경로와 빠른 자유 메모 경로 확인
+- 새 메모 카드 폭 100% 고정과 테마 어두운 제목색 적용 확인
+- 빠른 자유 메모 카드 그림자 범위 축소 확인
 - 자동 백업 보관 수 1–15 정규화 및 즉시 정리 경로 확인
 - JavaScript 문법 검사 통과
 - 서비스워커 캐시 목록과 실제 파일 존재 여부 확인
