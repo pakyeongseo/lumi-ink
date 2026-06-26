@@ -186,7 +186,7 @@
     discardDraft(n);
   }
   function queueDraftRecovery(n, type) {
-    if (!n || n.type !== type) return;
+    if (!n || (n.type !== type && !(type === "character" && isCharacterCardType(n)))) return;
     const d = readDraft(n);
     if (!d || d.type !== type || d.at <= (n.updatedAt || 0) || !draftDiffers(n, d)) return;
     const token = n.id + ":" + d.at;
@@ -344,16 +344,39 @@
       });
       if (changed) await put("notes", note);
     }
-    // v62: 기존 persona 레코드는 character 단일 모드로 손실 없이 승격합니다.
-    // 변환 직전에 자동 백업을 남기고, 알려지지 않은 data 필드는 legacyPersonaExtras에 보존합니다.
+    // v63.50+: persona and character share the card editor but remain separate memo types.
+    // Old persona records are normalized to the card data model without changing their type.
     const legacyPersonas = st.notes.filter((n) => n && n.type === "persona");
     if (legacyPersonas.length) {
       try { await doAutoBackup(); } catch (e) { console.warn("persona pre-migration backup", e); }
       for (const n of legacyPersonas) {
-        n.type = "character";
-        n.data = legacyPersonaDataToCharacterData(n.data, true);
+        if (!n.data || !Array.isArray(n.data.pages)) n.data = legacyPersonaDataToCharacterData(n.data, true);
         n.updatedAt = n.updatedAt || now();
         migratePersonaDraftToCharacter(n);
+        await put("notes", n);
+      }
+    }
+    const promotedPersonas = st.notes.filter((n) => n && n.type === "character" && n.data && n.data.legacySourceType === "persona");
+    if (promotedPersonas.length) {
+      for (const n of promotedPersonas) {
+        n.type = "persona";
+        n.updatedAt = n.updatedAt || now();
+        await put("notes", n);
+      }
+    }
+    const legacySinglePersonas = st.notes.filter((n) => n && n.type === "character" && n.data && n.data.mode === "single" && n.data.cardTypeVersion !== 2);
+    if (legacySinglePersonas.length) {
+      for (const n of legacySinglePersonas) {
+        n.type = "persona";
+        n.data.cardTypeVersion = 2;
+        n.updatedAt = n.updatedAt || now();
+        await put("notes", n);
+      }
+    }
+    const cardNotes = st.notes.filter((n) => n && (n.type === "persona" || n.type === "character") && n.data && Array.isArray(n.data.pages));
+    for (const n of cardNotes) {
+      if (n.data.cardTypeVersion !== 2) {
+        n.data.cardTypeVersion = 2;
         await put("notes", n);
       }
     }
@@ -399,21 +422,21 @@
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
   const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb", idea: "#f0c967" };
   const TYPE_TAG = { free: "F", html: "H", lorebook: "R", log: "L", persona: "P", character: "C", idea: "I" };
-  // v62: 페르소나와 캐릭터 메모는 하나의 character 저장 모델을 공유합니다.
-  // 카드·목록에서는 mode에 따라 각각 페르소나 / 캐릭터 모음으로 보이게 합니다.
+  // Persona and character notes share the card editor, but stay separate memo types.
+  function isCharacterCardType(n) { return !!n && (n.type === "character" || n.type === "persona"); }
   function characterMode(n) {
-    if (!n || n.type !== "character") return "collection";
+    if (!isCharacterCardType(n)) return "collection";
     const d = ensureCharacterData(n);
     return d.mode === "single" ? "single" : "collection";
   }
   function isSingleCharacter(n) { return n && n.type === "character" && characterMode(n) === "single"; }
-  function visualMemoType(n) { return isSingleCharacter(n) ? "persona" : (n && n.type ? n.type : ""); }
+  function visualMemoType(n) { return n && n.type ? n.type : ""; }
   function noteTypeLabel(n) { return TYPE_LABEL[visualMemoType(n)] || (n && n.type) || ""; }
   function noteTypeShortLabel(n) {
     const type = visualMemoType(n);
     return ({ free:"자유메모", html:"HTML", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[type] || noteTypeLabel(n);
   }
-  function noteSectionKey(n) { return n && n.type === "character" ? `character-${characterMode(n)}` : (n && n.type ? n.type : ""); }
+  function noteSectionKey(n) { return n && n.type ? n.type : ""; }
   function memoTagHTML(n) { const type = visualMemoType(n); return `<span class="memo-tag t-${type}">${TYPE_TAG[type] || "?"}</span>`; }
   function recentMemos(limit, scope) {
     limit = limit || 10;
@@ -584,19 +607,15 @@
     chip.className = "memo-chip";
     const col = n.chipColor && CHIP[n.chipColor] ? CHIP[n.chipColor].c : null;
     let lead, meta;
-    if (n.type === "persona") {
-      const d = n.data || {};
-      const img = d.square || d.portrait || DEFAULT_ICON;
-      lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
-      meta = perTagsPreview(d);
-    } else if (n.type === "character") {
+    if (isCharacterCardType(n)) {
       const d = ensureCharacterData(n), page = activeCharacterPage(n);
       const img = characterCoverImage(n);
       lead = `<div class="mc-thumb"><img src="${img}" alt=""></div>`;
       const tags = (page.ko && page.ko.tags) || (page.en && page.en.tags) || [];
+      const base = n.type === "persona" ? "페르소나" : "캐릭터";
       meta = characterMode(n) === "single"
-        ? (tags.length ? tags.join(", ") : "페르소나 카드")
-        : `${d.pages.length}명 · ${tags.length ? tags.join(", ") : "캐릭터 카드"}`;
+        ? (tags.length ? tags.join(", ") : `${base} 카드`)
+        : `${d.pages.length}명 · ${tags.length ? tags.join(", ") : `${base} 카드`}`;
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
@@ -632,7 +651,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["idea", "아이디어 보드"], ["character-single", "페르소나"], ["character-collection", "캐릭터 모음"], ["persona", "이전 페르소나"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
+    const SECTIONS = [["idea", "아이디어 보드"], ["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => noteSectionKey(n) === t);
@@ -723,8 +742,7 @@
       else if (n.type === "html") commitGo({ s: "html" });
       else if (n.type === "lorebook") commitGo({ s: "lore" });
       else if (n.type === "log") { logEditMode = false; commitGo({ s: "log" }); }
-      else if (n.type === "persona") { st.perEdit = false; commitGo({ s: "persona" }); }
-      else if (n.type === "character") { st.charEdit = false; commitGo({ s: "character" }); }
+      else if (isCharacterCardType(n)) { st.charEdit = false; commitGo({ s: "character" }); }
       else if (n.type === "idea") { commitGo({ s: "idea" }); }
       else toast(TYPE_LABEL[n.type] + " 편집기는 다음 단계에서 제공돼요");
     } finally { navTransition = false; }
@@ -893,18 +911,18 @@
   async function saveNote(n) { n.updatedAt = now(); await put("notes", n); const p = getProject(n.projectId); if (p) await saveProject(p); triggerAutoBackup(); }
   async function createNote(type, projectId, options) {
     const characterModeOption = options && options.characterMode === "single" ? "single" : "collection";
-    const characterTitle = characterModeOption === "single" ? "이름 없는 페르소나" : "이름 없는 캐릭터 모음";
+    const characterTitle = characterModeOption === "single" ? "이름 없는 캐릭터" : "이름 없는 캐릭터 모음";
+    const personaTitle = characterModeOption === "single" ? "이름 없는 페르소나" : "이름 없는 페르소나 모음";
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? "이름 없는 페르소나" : type === "character" ? characterTitle : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? personaTitle : type === "character" ? characterTitle : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
           : type === "html" ? { source: "", previewPolicy: "sandbox-web" }
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
-          : type === "persona" ? { portrait: null, square: null, gallery: [], ko: { name: "", brief: "", detail: "" }, en: { name: "", brief: "", detail: "" } }
-          : type === "character" ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()] }
+          : (type === "persona" || type === "character") ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()], cardTypeVersion: 2 }
           : type === "idea" ? makeIdeaBoardData()
           : {}
     };
@@ -2845,6 +2863,7 @@
     const d = n.data = n.data && typeof n.data === "object" ? n.data : {};
     // v62 이전 캐릭터 메모는 모두 다인 모음으로 해석합니다.
     d.mode = d.mode === "single" ? "single" : "collection";
+    d.cardTypeVersion = 2;
     d.pages = Array.isArray(d.pages) && d.pages.length ? d.pages.map(ensureCharacterPage) : [makeCharacterPage()];
     if (!d.activeId || !d.pages.some((p) => p.id === d.activeId)) d.activeId = d.pages[0].id;
     // 대표 썸네일은 캐릭터 메모의 프로젝트 목록용 표지입니다.
@@ -2884,7 +2903,7 @@
       Object.keys(original).forEach((key) => { if (!["name", "detail", "tags"].includes(key)) keep[key] = jsonCopy(original[key]) ?? original[key]; });
       if (Object.keys(keep).length) langExtras[lang] = keep;
     });
-    const data = { mode: "single", activeId: page.id, coverImage: safeImageSource(source.coverImage) || null, pages: [page], legacySourceType: "persona" };
+    const data = { mode: "single", activeId: page.id, coverImage: safeImageSource(source.coverImage) || null, pages: [page], legacySourceType: "persona", cardTypeVersion: 2 };
     if (Object.keys(extras).length) data.legacyPersonaExtras = extras;
     if (Object.keys(langExtras).length) data.legacyPersonaLangExtras = langExtras;
     return data;
@@ -2921,7 +2940,8 @@
     if (!n || n.titleLocked) return;
     const d = ensureCharacterData(n), first = d.pages[0];
     const base = charPageName(first, "ko");
-    n.title = d.mode === "single" ? (base === "이름 없는 캐릭터" ? "이름 없는 페르소나" : base) : (d.pages.length > 1 ? `${base} 외 ${d.pages.length - 1}명` : base);
+    const empty = n.type === "persona" ? "이름 없는 페르소나" : "이름 없는 캐릭터";
+    n.title = d.mode === "single" ? (base === "이름 없는 캐릭터" ? empty : base) : (d.pages.length > 1 ? `${base} 외 ${d.pages.length - 1}명` : base);
     const title = $("charTitle"); if (title) title.textContent = n.title;
   }
   function characterTextSnapshot(n, fromEditor) {
@@ -2973,7 +2993,7 @@
       wrap.appendChild(b);
     });
     const add = $(read ? "charRAddPage" : "charAddPage"); if (add) add.title = "새 캐릭터 페이지 추가";
-    $("charPageCount").textContent = d.mode === "single" ? "페르소나" : `캐릭터 ${d.pages.findIndex((p) => p.id === d.activeId) + 1} / ${d.pages.length}`;
+    $("charPageCount").textContent = d.mode === "single" ? (n.type === "persona" ? "페르소나" : "캐릭터") : `${n.type === "persona" ? "페르소나" : "캐릭터"} ${d.pages.findIndex((p) => p.id === d.activeId) + 1} / ${d.pages.length}`;
   }
   function renderCharTags(n, lang) {
     const page = activeCharacterPage(n), wrap = $(lang === "ko" ? "charKoTags" : "charEnTags"), input = $(lang === "ko" ? "charKoTagInput" : "charEnTagInput");
@@ -3010,7 +3030,7 @@
           const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
           toastAction("갤러리 이미지를 삭제했어요", "되돌리기", async () => {
             if (undoToken !== token) return; undoToken = null; if (undoTimer) clearTimeout(undoTimer);
-            const cur = getNote(n.id); if (!cur || cur.type !== "character") return;
+            const cur = getNote(n.id); if (!cur || !isCharacterCardType(cur)) return;
             const target = ensureCharacterData(cur).pages.find((item) => item.id === pageId); if (!target) return;
             target.gallery.splice(Math.min(idx, target.gallery.length), 0, removed);
             await saveCharacter(cur, true); renderCharacter(); toast("삭제를 되돌렸어요");
@@ -3182,7 +3202,7 @@
   }
 
   function openCreatorMemoModal() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     const html = normalizeCreatorMemo(activeCharacterPage(n).creatorMemo); if (!html) return;
     openModal(`<h3>크리에이터 메모</h3><div class="creator-modal-body read-body">${html}</div><div class="m-row"><button class="m-btn primary" type="button" data-creator-modal-close>닫기</button></div>`);
     const box = $("modalBox");
@@ -3233,14 +3253,14 @@
     charLang = lang;
     document.querySelectorAll("#screen-character [data-char-lang]").forEach((b) => b.classList.toggle("active", b.dataset.charLang === lang));
     $("charFormKo").hidden = lang !== "ko"; $("charFormEn").hidden = lang !== "en";
-    const n = getNote(st.curNoteId); if (n && n.type === "character") { renderCharNav(n, false); renderCharNav(n, true); if (!st.charEdit) renderCharacterRead(n); }
+    const n = getNote(st.curNoteId); if (n && isCharacterCardType(n)) { renderCharNav(n, false); renderCharNav(n, true); if (!st.charEdit) renderCharacterRead(n); }
   }
   function renderCharacter() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") { back(); return; }
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) { back(); return; }
     const data = ensureCharacterData(n); syncCharacterTitle(n);
     const single = data.mode === "single";
     document.body.classList.toggle("char-single-mode", single);
-    $("charTitle").textContent = n.title || (single ? "페르소나" : "캐릭터 모음");
+    $("charTitle").textContent = n.title || (n.type === "persona" ? (single ? "페르소나" : "페르소나 모음") : (single ? "캐릭터" : "캐릭터 모음"));
     $("charEditView").hidden = !st.charEdit; $("charReadView").hidden = !!st.charEdit; $("charSave").hidden = !st.charEdit;
     $("charViewIcon").innerHTML = st.charEdit ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
     $("charViewToggle").title = st.charEdit ? "보기 모드로" : "편집 모드로";
@@ -3249,14 +3269,14 @@
     setCharSaver(""); updateCharTokens(n); queueDraftRecovery(n, "character");
   }
   function scheduleCharSave() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !st.charEdit) return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n) || !st.charEdit) return;
     writeDraft(n, "character", characterTextSnapshot(n, true));
     setCharSaver("dirty"); clearTimeout(charTimer); const id = n.id;
     charTimer = setTimeout(() => { if (st.curNoteId === id) flushCharacter(); }, 550);
   }
   async function flushCharacter() {
     clearTimeout(charTimer); charTimer = null;
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !st.charEdit) return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n) || !st.charEdit) return;
     const page = activeCharacterPage(n);
     page.ko.name = $("charKoName").value; page.ko.detail = $("charKoDetail").value;
     page.en.name = $("charEnName").value; page.en.detail = $("charEnDetail").value;
@@ -3265,51 +3285,52 @@
   }
   async function addCharTag(lang) {
     const input = $(lang === "ko" ? "charKoTagInput" : "charEnTagInput"), raw = input.value.trim(); if (!raw) return;
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     const page = activeCharacterPage(n); raw.split(",").map((x) => x.trim()).filter(Boolean).forEach((tag) => { if (!page[lang].tags.includes(tag)) page[lang].tags.push(tag); });
     input.value = ""; await saveCharacter(n, true); renderCharTags(n, lang);
   }
   async function switchCharacterPage(id) {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     const d = ensureCharacterData(n); if (!d.pages.some((p) => p.id === id) || d.activeId === id) return;
     if (st.charEdit) await flushCharacter(); d.activeId = id; await saveCharacter(n, true); renderCharacter();
   }
   async function stepCharacter(delta) {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     const d = ensureCharacterData(n), index = d.pages.findIndex((p) => p.id === d.activeId), target = d.pages[index + delta];
     if (target) await switchCharacterPage(target.id);
   }
   async function setCharacterMode(n, mode) {
-    if (!n || n.type !== "character") return;
+    if (!n || !isCharacterCardType(n)) return;
     const d = ensureCharacterData(n), next = mode === "single" ? "single" : "collection";
-    if (next === "single" && d.pages.length > 1) { toast("여러 페이지가 있는 메모는 단일 페르소나로 바꿀 수 없어요"); return; }
+    const kind = n.type === "persona" ? "페르소나" : "캐릭터";
+    if (next === "single" && d.pages.length > 1) { toast(`여러 페이지가 있는 메모는 단일 ${kind}로 바꿀 수 없어요`); return; }
     if (d.mode === next) return;
     d.mode = next;
     syncCharacterTitle(n); await saveCharacter(n, true);
     if (st.curNoteId === n.id) renderCharacter(); else { render(); renderSidebar(); }
-    toast(next === "single" ? "페르소나 단일 모드로 정리했어요" : "캐릭터 모음으로 확장했어요");
+    toast(next === "single" ? `단일 ${kind}로 정리했어요` : `${kind} 모음으로 확장했어요`);
   }
   async function addCharacterPage() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     if (st.charEdit) await flushCharacter();
     const d = ensureCharacterData(n);
     if (d.mode === "single") await setCharacterMode(n, "collection");
     const page = makeCharacterPage(); d.pages.push(page); d.activeId = page.id; st.charEdit = true; syncCharacterTitle(n); await saveCharacter(n, true); renderCharacter(); toast("새 캐릭터 페이지를 추가했어요");
   }
   async function removeActiveCharacterPage() {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     if (st.charEdit) await flushCharacter();
     const d = ensureCharacterData(n); if (d.pages.length < 2) { toast("캐릭터 페이지는 최소 1개가 필요해요"); return; }
     const idx = d.pages.findIndex((p) => p.id === d.activeId), removed = d.pages.splice(idx, 1)[0]; d.activeId = d.pages[Math.max(0, idx - 1)].id; syncCharacterTitle(n); await saveCharacter(n, true); renderCharacter();
     const token = uid(); undoToken = token; if (undoTimer) clearTimeout(undoTimer);
     toastAction("캐릭터 페이지를 삭제했어요", "되돌리기", async () => {
       if (undoToken !== token) return; undoToken = null; if (undoTimer) clearTimeout(undoTimer);
-      const cur = getNote(n.id); if (!cur || cur.type !== "character") return; const data = ensureCharacterData(cur); data.pages.splice(Math.min(idx, data.pages.length), 0, removed); data.activeId = removed.id; syncCharacterTitle(cur); await saveCharacter(cur, true); renderCharacter(); toast("삭제를 되돌렸어요");
+      const cur = getNote(n.id); if (!cur || !isCharacterCardType(cur)) return; const data = ensureCharacterData(cur); data.pages.splice(Math.min(idx, data.pages.length), 0, removed); data.activeId = removed.id; syncCharacterTitle(cur); await saveCharacter(cur, true); renderCharacter(); toast("삭제를 되돌렸어요");
     }, 6000);
     undoTimer = setTimeout(() => { if (undoToken === token) undoToken = null; }, 6200);
   }
   function applyCharImage(file) {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character" || !charImgTarget || !/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n) || !charImgTarget || !/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     const page = activeCharacterPage(n), pageId = page.id, target = charImgTarget;
     if (target === "gallery") {
       fileToResized(file, 1600).then(async (data) => { const cur = getNote(n.id); if (!cur) return; const p = ensureCharacterData(cur).pages.find((x) => x.id === pageId); if (!p) return; p.gallery.push(data); await saveCharacter(cur, true); renderCharGallery(cur, false); toast("이미지를 추가했어요"); }).catch((e) => toast((e && e.message) || "이미지를 넣지 못했어요"));
@@ -3321,14 +3342,14 @@
     });
   }
   async function addCharGalleryFiles(files) {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     const page = activeCharacterPage(n); let added = 0, rejected = 0;
     for (const file of files) { try { page.gallery.push(await fileToResized(file, 1600)); added++; } catch (e) { rejected++; } }
     if (added) { await saveCharacter(n, true); renderCharGallery(n, false); toast(rejected ? `${added}장 추가 · ${rejected}장 제외` : `${added}장 추가했어요`); }
     else toast(imageLimitText());
   }
   async function removeCharImage(kind) {
-    const n = getNote(st.curNoteId); if (!n || n.type !== "character") return;
+    const n = getNote(st.curNoteId); if (!n || !isCharacterCardType(n)) return;
     activeCharacterPage(n)[kind] = null; await saveCharacter(n, true); renderCharImagesEdit(n);
   }
   function toggleCharView() {
@@ -3356,7 +3377,7 @@
     if (!file || !/^image\//.test(file.type)) { toast("이미지 파일만 넣을 수 있어요"); return; }
     startCrop(file, 1, 1080, 1080, async (data) => {
       const current = getNote(noteId);
-      if (!current || current.type !== "character") return;
+      if (!current || !isCharacterCardType(current)) return;
       const dataSet = ensureCharacterData(current);
       dataSet.coverImage = data;
       await saveCharacter(current, true);
@@ -3365,7 +3386,7 @@
     });
   }
   async function chooseCharacterCover(n) {
-    if (!n || n.type !== "character") return;
+    if (!n || !isCharacterCardType(n)) return;
     if (st.charEdit && st.curNoteId === n.id) await flushCharacter();
     const d = ensureCharacterData(n), candidates = characterCoverCandidates(n);
     const autoSrc = characterCoverImage(n);
@@ -3394,16 +3415,17 @@
   }
   function openCharacterSheet(n) {
     const d = ensureCharacterData(n), single = d.mode === "single";
-    const kind = single ? "페르소나" : "캐릭터 모음";
+    const baseKind = n.type === "persona" ? "페르소나" : "캐릭터";
+    const kind = single ? baseKind : `${baseKind} 모음`;
     const items = [
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "메모 이름 바꾸기", fn: () => renameModal(`${kind} 이름`, n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveCharacter(n, true); render(); } }) },
       { icon: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 16l-5-5L5 21"/></svg>', label: "대표 썸네일 지정", fn: () => chooseCharacterCover(n) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
-      { icon: IC.save, label: single ? "페르소나 HTML로 저장" : "캐릭터 모음 HTML로 저장", fn: async () => { if (st.charEdit) await flushCharacter(); chooseCharacterExportOptions(n.id); } }
+      { icon: IC.save, label: `${kind} HTML로 저장`, fn: async () => { if (st.charEdit) await flushCharacter(); chooseCharacterExportOptions(n.id); } }
     ];
-    if (single) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M18 16v5M15.5 18.5h5"/></svg>', label: "캐릭터 모음으로 확장", fn: () => setCharacterMode(n, "collection") });
-    else if (d.pages.length === 1) items.push({ icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>', label: "페르소나 단일 모드로 정리", fn: () => setCharacterMode(n, "single") });
+    if (single) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M18 16v5M15.5 18.5h5"/></svg>', label: `${baseKind} 모음으로 확장`, fn: () => setCharacterMode(n, "collection") });
+    else if (d.pages.length === 1) items.push({ icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>', label: `단일 ${baseKind}로 정리`, fn: () => setCharacterMode(n, "single") });
     if (!single && d.pages.length > 1) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M8 5h8M8 19h8M12 5v14"/><path d="M5 12h14"/></svg>', label: "현재 캐릭터 페이지 삭제", danger: true, fn: () => removeActiveCharacterPage() });
     items.push(
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
@@ -3558,9 +3580,13 @@
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h3M8 12h6M8 16h4"/><path d="M16.5 8.5h.01M15 15l1.8-2 2.2 3"/></svg></div>
         <div><div class="tc-name">아이디어 보드</div><div class="tc-desc">무한 캔버스 · 메모지 · 이미지 · 음악 · 영상 · 인용 링크</div></div>
       </div>
-      <div class="type-card" data-t="character" data-character-mode="single">
+      <div class="type-card" data-t="persona" data-character-mode="single">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
         <div><div class="tc-name">페르소나</div><div class="tc-desc">한 인물 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
+      </div>
+      <div class="type-card" data-t="character" data-character-mode="single">
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <div><div class="tc-name">단일 캐릭터</div><div class="tc-desc">캐릭터 카테고리에 속하는 단일 인물 카드</div></div>
       </div>
       <div class="type-card" data-t="character" data-character-mode="collection">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/></svg></div>
@@ -3572,12 +3598,12 @@
       card.addEventListener("click", () => {
         if (card.classList.contains("disabled")) { toast("다음 단계에서 제공될 기능이에요"); return; }
         const t = card.dataset.t;
-        const options = t === "character" ? { characterMode: card.dataset.characterMode === "single" ? "single" : "collection" } : null;
+        const options = (t === "character" || t === "persona") ? { characterMode: card.dataset.characterMode === "single" ? "single" : "collection" } : null;
         const openCreated = () => {
           closeModal();
-          if (t === "character") st.charEdit = true;
+          if (t === "character" || t === "persona") st.charEdit = true;
           if (t === "log") logEditMode = true;
-          go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : t === "character" ? "character" : t === "idea" ? "idea" : "editor" });
+          go({ s: t === "html" ? "html" : t === "lorebook" ? "lore" : t === "log" ? "log" : (t === "character" || t === "persona") ? "character" : t === "idea" ? "idea" : "editor" });
         };
         if (presetPid) createNote(t, presetPid, options).then(openCreated);
         else showProjectPicker(t, options);
@@ -3601,7 +3627,7 @@
     $("modalBox").querySelectorAll(".pick-item").forEach((it) => it.addEventListener("click", () => { selPid = it.dataset.pid; sync(); $("pickOk").disabled = false; }));
     $on("pickNew", "click", () => showProjectForm(null, (np) => { selPid = np.id; showProjectPicker(type, options); }));
     $on("pickCancel", "click", closeModal);
-    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid, options).then(() => { closeModal(); if (type === "character") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "html" ? "html" : type === "lorebook" ? "lore" : type === "log" ? "log" : type === "character" ? "character" : type === "idea" ? "idea" : "editor" }); }); });
+    $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid, options).then(() => { closeModal(); if (type === "character" || type === "persona") st.charEdit = true; if (type === "log") logEditMode = true; go({ s: type === "html" ? "html" : type === "lorebook" ? "lore" : type === "log" ? "log" : (type === "character" || type === "persona") ? "character" : type === "idea" ? "idea" : "editor" }); }); });
   }
 
   // project create/edit form. onDone(project) optional
@@ -3709,8 +3735,7 @@
     const n = getNote(id); if (!n) return;
     if (n.type === "lorebook") { openLoreSheet(n); return; }
     if (n.type === "log") { openLogSheet(n); return; }
-    if (n.type === "persona") { openPersonaSheet(n); return; }
-    if (n.type === "character") { openCharacterSheet(n); return; }
+    if (isCharacterCardType(n)) { openCharacterSheet(n); return; }
     if (n.type === "idea") { openIdeaBoardSheet(n); return; }
     if (n.type === "html") { openHtmlSheet(n); return; }
     openSheet(n.title, [
@@ -3890,7 +3915,7 @@
     if (n.type === "lorebook") { const d = n.data || {}; return ((d.content || "") + " " + ((d.keywords || []).join(" "))).toLowerCase(); }
     if (n.type === "log") { const d = normalizeLogData(n.data); return [d.content, ...(d.personaNames || []), d.personaAlias].filter(Boolean).join(" ").toLowerCase(); }
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
-    if (n.type === "character") { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
+    if (isCharacterCardType(n)) { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
     if (n.type === "html") return plainText(htmlSourceOf(n)).toLowerCase();
     return plainText(noteHtml(n)).toLowerCase();
   }
@@ -4091,7 +4116,7 @@
     }).slice(0, 100);
     const safePages = normalized.length ? normalized : [makeCharacterPage()];
     const activeId = isSafeRecordId(src.activeId) && safePages.some((p) => p.id === src.activeId) ? src.activeId : safePages[0].id;
-    return { mode: src.mode === "single" ? "single" : "collection", activeId, coverImage: safeImageSource(src.coverImage), pages: safePages };
+    return { mode: src.mode === "single" ? "single" : "collection", activeId, coverImage: safeImageSource(src.coverImage), pages: safePages, cardTypeVersion: 2 };
   }
 
   function normalizeImportedAttachments(raw) {
@@ -4110,7 +4135,7 @@
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
     const sourceType = ["free", "html", "lorebook", "log", "persona", "character", "idea"].includes(raw.type) ? raw.type : null;
     if (!sourceType) return null;
-    const type = sourceType === "persona" ? "character" : sourceType;
+    const type = sourceType;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
       title: cleanImportedText(raw.title, 180) || (sourceType === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 모음" : type === "html" ? "제목 없는 HTML 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
@@ -4147,7 +4172,7 @@
     } else if (type === "idea") {
       note.data = normalizeImportedIdeaBoardData(data);
     } else if (sourceType === "persona") {
-      note.data = legacyPersonaDataToCharacterData(data);
+      note.data = Array.isArray(data.pages) ? normalizeImportedCharacterData(data) : legacyPersonaDataToCharacterData(data);
     } else {
       note.data = normalizeImportedCharacterData(data);
     }
@@ -4297,7 +4322,7 @@
     updateSelBar();
     document.querySelectorAll(`[data-selid="${id}"]`).forEach((el) => el.classList.toggle("selected", st.selIds.has(id)));
   }
-  function isPersonCardNote(n) { return !!n && (n.type === "persona" || n.type === "character"); }
+  function isPersonCardNote(n) { return isCharacterCardType(n); }
   function personCardMergeSnapshot(note, sourceIndex) {
     // 병합 결과는 원본을 참조하지 않습니다. 각 페이지와 보조 필드를 복제해
     // 원본 메모를 삭제해도 새 캐릭터 모음이 독립적으로 남도록 합니다.
@@ -4340,6 +4365,9 @@
   async function mergePersonCards(notes) {
     const pid = notes[0] && notes[0].projectId;
     if (!pid || !notes.every((n) => n.projectId === pid)) { toast("같은 프로젝트의 인물 카드만 합칠 수 있어요"); return; }
+    const targetType = notes[0] && notes[0].type;
+    if (!notes.every((n) => n.type === targetType)) { toast("페르소나와 캐릭터는 서로 다른 개념이라 함께 합치지 않아요"); return; }
+    const targetLabel = targetType === "persona" ? "페르소나 모음" : "캐릭터 모음";
     let mergedNote = null;
     try {
       // 원본은 삭제하지 않지만, 병합 전 시점도 자동 백업에 남겨 둡니다.
@@ -4347,13 +4375,14 @@
       const snapshots = notes.map(personCardMergeSnapshot);
       const pages = snapshots.flatMap((entry) => entry.pages);
       if (!pages.length) { toast("병합할 인물 페이지를 찾지 못했어요"); return; }
-      mergedNote = await createNote("character", pid, { characterMode: "collection" });
+      mergedNote = await createNote(targetType, pid, { characterMode: "collection" });
       const firstCover = snapshots.map((entry) => entry.sourceMeta.coverImage).find(Boolean) || null;
       mergedNote.data = {
         mode: "collection",
         activeId: pages[0].id,
         coverImage: firstCover,
         pages,
+        cardTypeVersion: 2,
         // 각 원본의 노트 수준 호환 필드와 출처를 보관합니다.
         mergedSources: snapshots.map((entry) => entry.sourceMeta),
         mergedAt: now()
@@ -4366,7 +4395,7 @@
       exitSelMode();
       st.curNoteId = mergedNote.id;
       st.charEdit = false;
-      toast(`${notes.length}개 인물 카드를 캐릭터 모음으로 합쳤어요`);
+      toast(`${notes.length}개 인물 카드를 ${targetLabel}으로 합쳤어요`);
       go({ s: "character" });
     } catch (e) {
       console.warn("character card merge", e);
@@ -4386,7 +4415,7 @@
       if (st.selType === "note" && ids.length >= 2) {
         const notes = ids.map(getNote).filter(Boolean);
         const t = notes[0] && notes[0].type;
-        personCards = notes.length === ids.length && notes.every(isPersonCardNote);
+        personCards = notes.length === ids.length && notes.every(isPersonCardNote) && notes.every((n) => n.type === notes[0].type);
         ok = personCards || (!!t && t !== "html" && t !== "idea" && notes.every((n) => n.type === t));
       }
       mb.hidden = !ok;
@@ -4399,7 +4428,9 @@
     const notes = ids.map(getNote).filter(Boolean);
     if (notes.length !== ids.length) { toast("선택한 메모를 찾지 못했어요"); return; }
     if (notes.every(isPersonCardNote)) {
-      confirmModal("캐릭터 모음으로 합치기", `선택한 ${notes.length}개 인물 카드의 모든 페이지를 새 캐릭터 모음에 복제합니다. 원본 메모는 삭제하지 않아요.`, "캐릭터 모음 만들기", false, () => { void mergePersonCards(notes); });
+      if (!notes.every((n) => n.type === notes[0].type)) { toast("페르소나와 캐릭터는 서로 다른 개념이라 함께 합치지 않아요"); return; }
+      const label = notes[0].type === "persona" ? "페르소나 모음" : "캐릭터 모음";
+      confirmModal(`${label}으로 합치기`, `선택한 ${notes.length}개 인물 카드의 모든 페이지를 새 ${label}에 복제합니다. 원본 메모는 삭제하지 않아요.`, `${label} 만들기`, false, () => { void mergePersonCards(notes); });
       return;
     }
     const type = notes[0].type;
@@ -4615,15 +4646,15 @@ ${gallery}
     toast("HTML로 저장했어요");
   }
   function chooseCharacterExportOptions(id) {
-    const n = getNote(id); if (!n || n.type !== "character") return;
+    const n = getNote(id); if (!n || !isCharacterCardType(n)) return;
     const accent = ACCENTS[st.accent || "blue"] || ACCENTS.blue;
-    const title = characterMode(n) === "single" ? "페르소나 HTML로 저장" : "캐릭터 모음 HTML로 저장";
+    const title = n.type === "persona" ? (characterMode(n) === "single" ? "페르소나 HTML로 저장" : "페르소나 모음 HTML로 저장") : (characterMode(n) === "single" ? "캐릭터 HTML로 저장" : "캐릭터 모음 HTML로 저장");
     openModal(`<h3>${title}</h3><p class="m-sub">현재 컬러 테마(<b>${esc(accent.name)}</b>)를 유지한 채 밝기를 고르고, 제작용 메모 포함 여부를 정해요.</p><label class="lore-toggle-wrap" style="margin:5px 0 16px"><input type="checkbox" id="cxCreator"> 크리에이터 메모 포함</label><p class="m-sub" style="margin-top:-7px">기본값은 미포함이에요. 공유용 카드에 제작 메모가 섞이지 않도록 보호합니다.</p><div class="m-row"><button class="m-btn" id="cxLight">밝게</button><button class="m-btn primary" id="cxDark">어둡게</button></div>`);
     const run = (theme) => { const includeCreator = !!$("cxCreator").checked; closeModal(); exportCharacterHtml(id, theme, includeCreator); };
     $on("cxLight", "click", () => run("light")); $on("cxDark", "click", () => run("dark"));
   }
   function exportCharacterHtml(id, theme, includeCreator) {
-    const n = getNote(id); if (!n || n.type !== "character") return;
+    const n = getNote(id); if (!n || !isCharacterCardType(n)) return;
     const d = ensureCharacterData(n);
     const langBlock = (page, lang, label) => {
       const o = page[lang] || {}, has = (o.name || "").trim() || (o.detail || "").trim() || (o.tags || []).length;
@@ -4642,7 +4673,8 @@ ${gallery}
     const nav = d.pages.length > 1 ? `<nav class="cnav">${d.pages.map((page, index) => { const src = page.square || page.portrait; return `<button type="button" data-page="${index}"${index === 0 ? ' class="active"' : ""}>${src ? `<img src="${src}" alt="">` : `<span class="nav-placeholder">${index + 1}</span>`}<span>${esc(charPageName(page, "ko"))}</span></button>`; }).join("")}</nav>` : "";
     const exportData = jsonCopy(d) || { activeId: d.activeId, pages: d.pages };
     if (!includeCreator) exportData.pages.forEach((page) => { page.creatorMemo = ""; });
-    const payload = JSON.stringify({ app: "lumink", kind: "character", title: n.title, data: exportData }).replace(/</g, "\\u003c");
+    const exportKind = n.type === "persona" ? "persona" : "character";
+    const payload = JSON.stringify({ app: "lumink", kind: exportKind, title: n.title, data: exportData }).replace(/</g, "\\u003c");
     const css = personaExportCSS(theme === "dark" ? "dark" : "light") + `.cnav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 5px}.cnav button{border:1px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").line};background:transparent;color:inherit;border-radius:12px;padding:6px 9px;display:flex;gap:7px;align-items:center;cursor:pointer;white-space:nowrap;font:inherit;font-size:12px}.cnav button.active{border-color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.cnav img,.nav-placeholder{width:28px;height:28px;border-radius:8px;object-fit:cover;background:${personaExportPalette(theme === "dark" ? "dark" : "light").panel2};display:grid;place-items:center}.char-page[hidden]{display:none}.creator{margin:0 0 28px}.creator-label{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.11em;color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};padding:5px 12px;border-radius:999px;margin-bottom:11px}.creator .detail{border-left:3px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.creator-rich img{max-width:100%;height:auto;border-radius:8px}.creator-rich pre{overflow:auto}.creator-rich a{color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}`;
     const doc = `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="character"><title>${esc(n.title || (characterMode(n) === "single" ? "페르소나" : "캐릭터 모음"))}</title><style>${css}</style></head><body><main class="wrap"><h1 class="ptitle">${esc(n.title || (characterMode(n) === "single" ? "페르소나" : "캐릭터 모음"))}</h1>${nav}${pageHtml}<div class="foot">Lumi Ink · ${characterMode(n) === "single" ? "페르소나 카드" : "캐릭터 모음"}</div></main><script type="application/json" id="lumink-character">${payload}<\/script><script>(function(){var pages=[].slice.call(document.querySelectorAll('.char-page')),buttons=[].slice.call(document.querySelectorAll('.cnav button'));function show(i){pages.forEach(function(p,x){p.hidden=x!==i});buttons.forEach(function(b,x){b.classList.toggle('active',x===i)});window.scrollTo({top:0,behavior:'smooth'})}buttons.forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.page)})})})();<\/script></body></html>`;
@@ -5060,9 +5092,9 @@ ${gallery}
         try {
           const pl = JSON.parse(pTag.textContent);
           if (pl && pl.kind === "persona" && pl.data) {
-            const n = await createNote("character", pid, { characterMode: "single" });
+            const n = await createNote("persona", pid, { characterMode: "single" });
             n.title = cleanImportedText(pl.title, 180) || file.name.replace(/\.(html?)$/i, "") || "불러온 페르소나";
-            n.titleLocked = true; n.data = legacyPersonaDataToCharacterData(pl.data);
+            n.titleLocked = true; n.data = pl.data && Array.isArray(pl.data.pages) ? normalizeImportedCharacterData(pl.data) : legacyPersonaDataToCharacterData(pl.data);
             await saveCharacter(n, true);
             st.curNoteId = n.id; charLang = "ko"; st.charEdit = false; st.curProjectId = pid;
             toast("페르소나를 불러왔어요"); go({ s: "character" }); return;
