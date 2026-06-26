@@ -1,15 +1,15 @@
 # Lumi Ink v1.5
 
-루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v65**입니다.
+루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v64.8**입니다.
 
 ## 현재 버전
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: `v65`
-- 서비스워커 캐시: `ink-memo-v1.5-v65-custom-theme`
+- 개발 기준 빌드: `v64.9`
+- 서비스워커 캐시: `ink-memo-v1.5-v64.9-quick-menu-preferences`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 최신 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 개발 변경 이력: `Lumi_Ink_v65_Release_Notes.md`
+- 개발 변경 이력: `Lumi_Ink_v64.9_Release_Notes.md`
 
 ## 주요 기능
 
@@ -22,13 +22,6 @@
 - 페르소나 / 다인 페르소나
 - 캐릭터 / 다인 캐릭터
 - 아이디어 보드
-
-### 사용자 지정 컬러 테마
-
-- 설정 → **컬러 테마 → 직접 지정**에서 주조색·보조색을 HEX 또는 색상 선택기로 직접 설정
-- 밝게/어둡게 각각의 읽기성과 대비를 유지하도록 배경·표면·텍스트·강조색을 자동 조율
-- 적용 전 전체 앱 실시간 미리보기와 보조색 자동 생성
-- 직접 지정 팔레트와 선택 상태를 IndexedDB·전체 백업·자동 백업에 함께 보관
 
 ### 오른쪽 엣지 퀵 메뉴
 
@@ -107,16 +100,16 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v65_Release_Notes.md` (최신 개발 변경 이력)
+- `Lumi_Ink_v64.5_Release_Notes.md` (개발 변경 이력)
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
 - `idea-board-template-registry-guide.md`
 - `idea-divider-template-guide.md`
 
-## v65 문서 정합성 검수 기준
+## v1.5 문서 정합성 검수 기준
 
-- 상세 매뉴얼의 사용자 버전(v1.5)과 개발 기준(v65) 분리 표기
+- 상세 매뉴얼의 사용자 버전(v1.5)과 개발 기준(v64.5) 분리 표기
 - 새 메모 3탭 / 자유 메모 빠른 생성 / 기존 색감 카드·동일 폭 설명 반영
 - 자동 백업 목록 우선 → 보관 설정 분리 동선 반영
 - PNG 전용 저장, 스포이드, 다중선택, 그룹 스냅 안내 반영
