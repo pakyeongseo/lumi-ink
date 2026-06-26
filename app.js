@@ -82,6 +82,344 @@
   }
   function getOne(name, id) { return new Promise((res, rej) => { const r = store(name, "readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
+
+
+  /* ---------- right-edge quick menu ---------- */
+  const QUICK_MENU_SETTING_ID = "quickMenu";
+  const QUICK_MENU_MAX = 5;
+  const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "lorebook", "log", "persona", "character", "idea"]);
+  let quickMenuImageSlot = null;
+
+  function emptyQuickMenuSlot(index) {
+    return { slotId: index + 1, kind: null, label: "", thumbnail: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
+  }
+  function normalizeQuickMenu(raw) {
+    const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
+    const list = Array.isArray(src.slots) ? src.slots : [];
+    const slots = [];
+    for (let i = 0; i < QUICK_MENU_MAX; i++) {
+      const base = emptyQuickMenuSlot(i), item = list[i] && typeof list[i] === "object" ? list[i] : {};
+      const kind = ["home", "project", "note", "create"].includes(item.kind) ? item.kind : null;
+      if (!kind) { slots.push(base); continue; }
+      const thumb = safeImageSource(item.thumbnail);
+      const slot = {
+        slotId: i + 1,
+        kind,
+        label: cleanImportedText(String(item.label || ""), 42).trim(),
+        thumbnail: thumb && thumb.length <= 900000 ? thumb : null,
+        targetId: isSafeRecordId(item.targetId) ? item.targetId : null,
+        createType: QUICK_MENU_ALLOWED_TYPES.has(item.createType) ? item.createType : "free",
+        createMode: item.createMode === "collection" ? "collection" : "single",
+        createProjectId: isSafeRecordId(item.createProjectId) ? item.createProjectId : null
+      };
+      if ((kind === "project" || kind === "note") && !slot.targetId) { slots.push(base); continue; }
+      slots.push(slot);
+    }
+    return {
+      version: 2,
+      updatedAt: Number(src.updatedAt) || 0,
+      // v64.9: 기존 퀵 메뉴는 모두 기본형·사용 상태로 자연스럽게 승격합니다.
+      enabled: src.enabled !== false,
+      displayMode: src.displayMode === "mini" ? "mini" : "full",
+      slots
+    };
+  }
+  function quickMenuConfig() {
+    if (!st.quickMenu || !Array.isArray(st.quickMenu.slots)) st.quickMenu = normalizeQuickMenu(st.quickMenu);
+    return st.quickMenu;
+  }
+  function quickMenuIsEnabled() { return quickMenuConfig().enabled !== false; }
+  function quickMenuDisplayModeName(cfg) { return (cfg && cfg.displayMode) === "mini" ? "미니형" : "기본형"; }
+  function quickMenuFilledCount() { return quickMenuConfig().slots.filter((slot) => !!slot.kind).length; }
+  function quickMenuSlotActionName(slot) {
+    if (!slot || !slot.kind) return "빈 슬롯";
+    if (slot.kind === "home") return "홈 바로가기";
+    if (slot.kind === "project") return "프로젝트 바로가기";
+    if (slot.kind === "note") return "내 글 바로가기";
+    return "메모 바로 만들기";
+  }
+  function quickMenuCreateTypeName(slot) {
+    const type = slot && slot.createType;
+    if (type === "persona") return slot.createMode === "collection" ? "다인 페르소나" : "페르소나";
+    if (type === "character") return slot.createMode === "collection" ? "다인 캐릭터" : "캐릭터";
+    return ({ free: "자유 메모", html: "HTML 작업실", lorebook: "로어북", log: "로그 저장", idea: "아이디어 보드" })[type] || "메모";
+  }
+  function quickMenuSlotLabel(slot) {
+    if (!slot || !slot.kind) return "새 슬롯 등록";
+    if (slot.label) return slot.label;
+    if (slot.kind === "home") return "홈";
+    if (slot.kind === "project") { const p = getProject(slot.targetId); return p ? p.name : "삭제된 프로젝트"; }
+    if (slot.kind === "note") { const n = getNote(slot.targetId); return n ? (n.title || "제목 없는 메모") : "삭제된 메모"; }
+    return `${quickMenuCreateTypeName(slot)} 만들기`;
+  }
+  function quickMenuSlotMeta(slot) {
+    if (!slot || !slot.kind) return "누르면 바로 등록";
+    if (slot.kind === "home") return "루미잉크 첫 화면";
+    if (slot.kind === "project") return "프로젝트 바로가기";
+    if (slot.kind === "note") {
+      const n = getNote(slot.targetId), p = n && getProject(n.projectId);
+      return n ? `${p ? p.name : "프로젝트 없음"} · ${noteTypeLabel(n)}` : "삭제 시 자동 정리";
+    }
+    const p = slot.createProjectId && getProject(slot.createProjectId);
+    return p ? `${p.name}에 바로 생성` : "현재 프로젝트 · 없으면 선택";
+  }
+  function quickMenuIcon(slot) {
+    const kind = slot && slot.kind;
+    if (kind === "home") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>';
+    if (kind === "project") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18" opacity=".55"/></svg>';
+    if (kind === "note") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg>';
+    if (kind === "create") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9" opacity=".45"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9" opacity=".32"/></svg>';
+  }
+  function quickMenuSlotMedia(slot) {
+    const image = slot && safeImageSource(slot.thumbnail);
+    return `<span class="quick-slot-media">${image ? `<img src="${esc(image)}" alt="">` : quickMenuIcon(slot)}</span>`;
+  }
+  function quickMenuSlotMarkup(slot, index, manager) {
+    const filled = !!(slot && slot.kind), cls = filled ? "is-filled" : "is-empty";
+    const label = quickMenuSlotLabel(slot), meta = quickMenuSlotMeta(slot);
+    if (manager) {
+      return `<button type="button" class="qm-manager-slot ${cls}" data-qm-manage-slot="${index}">${quickMenuSlotMedia(slot)}<span class="qm-manager-copy"><b>${esc(label)}</b><small>${esc(filled ? `${quickMenuSlotActionName(slot)} · ${meta}` : "동작과 썸네일을 등록할 수 있어요")}</small></span><span class="qm-manager-index">SLOT ${String(index + 1).padStart(2, "0")}</span></button>`;
+    }
+    const aria = filled ? `${quickMenuSlotActionName(slot)}: ${label}` : `빈 슬롯 ${index + 1} 등록`;
+    return `<button type="button" class="quick-menu-slot ${cls}" aria-label="${esc(aria)}" title="${esc(label)}" ${filled ? `data-qm-run="${index}"` : `data-qm-empty="${index}"`}>${quickMenuSlotMedia(slot)}<span class="quick-slot-copy"><b>${esc(label)}</b><small>${esc(meta)}</small></span><span class="quick-slot-arrow" aria-hidden="true">${filled ? "›" : "+"}</span><span class="quick-slot-num">${String(index + 1).padStart(2, "0")}</span></button>`;
+  }
+  function setQuickMenuOpen(open) {
+    const on = !!open && quickMenuIsEnabled();
+    document.body.classList.toggle("quick-menu-open", on);
+    const tab = $("quickMenuTab"); if (tab) { tab.setAttribute("aria-expanded", String(on)); tab.setAttribute("aria-label", on ? "퀵 메뉴 접기" : "퀵 메뉴 펼치기"); }
+  }
+  function renderQuickMenu() {
+    const box = $("quickMenuSlots"), count = $("quickMenuCount"), settingSub = $("setQuickMenuSub"), settingVal = $("setQuickMenuVal"), root = $("quickMenu");
+    const cfg = quickMenuConfig(), enabled = cfg.enabled !== false, mini = cfg.displayMode === "mini";
+    if (root) {
+      root.hidden = !enabled;
+      root.classList.toggle("is-mini", mini);
+      root.setAttribute("aria-hidden", String(!enabled));
+    }
+    document.body.classList.toggle("quick-menu-disabled", !enabled);
+    if (!enabled && document.body.classList.contains("quick-menu-open")) setQuickMenuOpen(false);
+    if (box) {
+      box.innerHTML = cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, false)).join("");
+      box.querySelectorAll("[data-qm-run]").forEach((button) => button.addEventListener("click", () => { void runQuickMenuSlot(Number(button.dataset.qmRun)); }));
+      box.querySelectorAll("[data-qm-empty]").forEach((button) => button.addEventListener("click", () => { setQuickMenuOpen(false); openQuickMenuSlotTypePicker(Number(button.dataset.qmEmpty)); }));
+    }
+    const filled = quickMenuFilledCount();
+    if (count) count.textContent = `${filled} / ${QUICK_MENU_MAX} 등록`;
+    if (settingSub) settingSub.textContent = enabled ? `오른쪽 가장자리 · ${quickMenuDisplayModeName(cfg)} · ${filled}/${QUICK_MENU_MAX} 등록` : "사용 안 함 · 퀵 메뉴 탭 숨김";
+    if (settingVal) settingVal.textContent = enabled ? `${quickMenuDisplayModeName(cfg)} ›` : "꺼짐 ›";
+  }
+  async function persistQuickMenu(options) {
+    const opt = options || {}, cfg = normalizeQuickMenu(quickMenuConfig());
+    cfg.updatedAt = now(); st.quickMenu = cfg;
+    await put("settings", { id: QUICK_MENU_SETTING_ID, value: jsonCopy(cfg), updatedAt: cfg.updatedAt });
+    if (opt.backup !== false) triggerAutoBackup();
+    renderQuickMenu();
+    if (typeof curView === "function" && curView().s === "settings") renderSettings();
+  }
+  async function loadQuickMenuSetting() {
+    try {
+      const row = await getOne("settings", QUICK_MENU_SETTING_ID);
+      st.quickMenu = normalizeQuickMenu(row && row.value);
+    } catch (e) { st.quickMenu = normalizeQuickMenu(null); }
+    const changed = await pruneQuickMenuReferences(false);
+    if (changed) await persistQuickMenu({ backup: false });
+    renderQuickMenu();
+  }
+  async function restoreQuickMenuConfig(value) {
+    if (!value || typeof value !== "object") return;
+    st.quickMenu = normalizeQuickMenu(value);
+    await pruneQuickMenuReferences(false);
+    await persistQuickMenu({ backup: false });
+  }
+  async function pruneQuickMenuReferences(shouldPersist) {
+    const cfg = quickMenuConfig(); let changed = false;
+    cfg.slots.forEach((slot, index) => {
+      if (!slot || !slot.kind) return;
+      if (slot.kind === "project" && !getProject(slot.targetId)) { cfg.slots[index] = emptyQuickMenuSlot(index); changed = true; return; }
+      if (slot.kind === "note" && !getNote(slot.targetId)) { cfg.slots[index] = emptyQuickMenuSlot(index); changed = true; return; }
+      if (slot.kind === "create" && slot.createProjectId && !getProject(slot.createProjectId)) { slot.createProjectId = null; changed = true; }
+    });
+    if (changed && shouldPersist) await persistQuickMenu({ backup: false });
+    else if (changed) renderQuickMenu();
+    return changed;
+  }
+  function replaceQuickMenuSlot(index, next) {
+    const cfg = quickMenuConfig(), old = cfg.slots[index] || emptyQuickMenuSlot(index);
+    cfg.slots[index] = Object.assign(emptyQuickMenuSlot(index), {
+      thumbnail: old.thumbnail || null,
+      label: old.label || ""
+    }, next || {});
+    return cfg.slots[index];
+  }
+  async function setQuickMenuSlot(index, next, options) {
+    if (!Number.isInteger(index) || index < 0 || index >= QUICK_MENU_MAX) return;
+    replaceQuickMenuSlot(index, next);
+    await persistQuickMenu(options);
+  }
+  async function clearQuickMenuSlot(index) {
+    const cfg = quickMenuConfig(); cfg.slots[index] = emptyQuickMenuSlot(index);
+    await persistQuickMenu();
+  }
+  async function quickThumbnailFromFile(file) {
+    const { img, url } = await validateImageFile(file, { maxBytes: 4 * 1024 * 1024, maxPixels: 12 * 1000 * 1000, limitText: "퀵 메뉴 썸네일은 4MB 이하, 1,200만 픽셀 이하만 사용할 수 있어요" });
+    try {
+      const side = Math.min(img.naturalWidth, img.naturalHeight), sx = Math.max(0, Math.round((img.naturalWidth - side) / 2)), sy = Math.max(0, Math.round((img.naturalHeight - side) / 2));
+      const canvas = document.createElement("canvas"); canvas.width = 320; canvas.height = 320;
+      canvas.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, 320, 320);
+      return canvas.toDataURL("image/jpeg", .86);
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function runQuickMenuSlot(index) {
+    const slot = quickMenuConfig().slots[index];
+    if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
+    if (slot.kind === "home") { setQuickMenuOpen(false); await goHome(); return; }
+    if (slot.kind === "project") {
+      const p = getProject(slot.targetId);
+      if (!p) { await pruneQuickMenuReferences(true); toast("삭제된 프로젝트 바로가기를 정리했어요"); return; }
+      setQuickMenuOpen(false); await openProject(p.id); return;
+    }
+    if (slot.kind === "note") {
+      const n = getNote(slot.targetId);
+      if (!n) { await pruneQuickMenuReferences(true); toast("삭제된 메모 바로가기를 정리했어요"); return; }
+      setQuickMenuOpen(false); await openNote(n.id); return;
+    }
+    setQuickMenuOpen(false);
+    const configured = slot.createProjectId && getProject(slot.createProjectId);
+    const current = st.curProjectId && getProject(st.curProjectId);
+    const pid = (configured || current) && (configured || current).id;
+    if (pid) { await quickCreateFromSlot(slot, pid); return; }
+    pickTargetProject(null, (projectId) => { void quickCreateFromSlot(slot, projectId); });
+  }
+  async function quickCreateFromSlot(slot, projectId) {
+    const type = QUICK_MENU_ALLOWED_TYPES.has(slot.createType) ? slot.createType : "free";
+    const p = getProject(projectId); if (!p) { toast("저장할 프로젝트를 찾지 못했어요"); return; }
+    try {
+      await flushPending();
+      const n = await createNote(type, p.id, (type === "persona" || type === "character") ? { characterMode: slot.createMode === "collection" ? "collection" : "single" } : null);
+      triggerAutoBackup();
+      await openNote(n.id);
+    } catch (e) { console.warn("quick menu create", e); toast("새 메모를 만들지 못했어요"); }
+  }
+  function openQuickMenuSettings() {
+    const cfg = quickMenuConfig(), enabled = cfg.enabled !== false, mode = cfg.displayMode === "mini" ? "mini" : "full";
+    const modePreview = (kind) => kind === "mini"
+      ? `<span class="qm-display-schematic mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`
+      : `<span class="qm-display-schematic full" aria-hidden="true"><i></i><i></i><i></i></span>`;
+    openModal(`<h3>퀵 메뉴 설정</h3><p class="m-sub">오른쪽 가장자리에서 빠르게 꺼내 쓰는 개인 런처예요. 숨기더라도 슬롯과 썸네일 구성은 그대로 보관됩니다.</p>
+      <div class="qm-settings-card">
+        <button type="button" class="qm-settings-toggle" id="qmToggleEnabled" role="switch" aria-checked="${enabled ? "true" : "false"}">
+          <span class="qm-settings-toggle-copy"><b>퀵 메뉴 사용</b><small>${enabled ? "오른쪽 엣지 탭과 슬라이드 동작이 켜져 있어요" : "탭과 엣지 슬라이드는 숨겨진 상태예요"}</small></span>
+          <span class="lore-switch ${enabled ? "on" : ""}" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="qm-settings-section"><div class="qm-settings-section-title">표시 형태</div><div class="qm-display-options">
+        <button type="button" class="qm-display-option ${mode === "full" ? "is-active" : ""}" data-qm-display-mode="full">${modePreview("full")}<span><b>기본형</b><small>아이콘 · 제목 · 설명을 함께 표시</small></span></button>
+        <button type="button" class="qm-display-option ${mode === "mini" ? "is-active" : ""}" data-qm-display-mode="mini">${modePreview("mini")}<span><b>미니형</b><small>설명 없이 아이콘만 간결하게 표시</small></span></button>
+      </div></div>
+      <div class="qm-settings-manage"><span><b>등록한 바로가기</b><small>${quickMenuFilledCount()} / ${QUICK_MENU_MAX} 슬롯 사용 중</small></span><button type="button" class="m-btn primary" id="qmOpenManager">슬롯 편집</button></div>
+      <div class="m-row"><button class="m-btn" id="qmSettingsClose">닫기</button></div>`);
+    $on("qmToggleEnabled", "click", async () => {
+      quickMenuConfig().enabled = !quickMenuIsEnabled();
+      await persistQuickMenu();
+      openQuickMenuSettings();
+    });
+    $("modalBox").querySelectorAll("[data-qm-display-mode]").forEach((button) => button.addEventListener("click", async () => {
+      const next = button.dataset.qmDisplayMode === "mini" ? "mini" : "full";
+      if (quickMenuConfig().displayMode === next) return;
+      quickMenuConfig().displayMode = next;
+      await persistQuickMenu();
+      openQuickMenuSettings();
+    }));
+    $on("qmOpenManager", "click", openQuickMenuManager);
+    $on("qmSettingsClose", "click", closeModal);
+  }
+
+  function openQuickMenuManager() {
+    const cfg = quickMenuConfig();
+    openModal(`<h3>퀵 메뉴 편집</h3><p class="m-sub">화면 오른쪽의 숨김 탭을 밀어 펼치면 사용할 최대 5개의 바로가기를 정해요. 등록 대상이 삭제되면 해당 슬롯은 자동으로 비워집니다.</p><div class="qm-manager-grid">${cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, true)).join("")}</div><div class="m-row"><button class="m-btn" id="qmManagerClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-manage-slot]").forEach((button) => button.addEventListener("click", () => {
+      const index = Number(button.dataset.qmManageSlot), slot = quickMenuConfig().slots[index];
+      if (slot && slot.kind) openQuickMenuSlotEditor(index); else openQuickMenuSlotTypePicker(index);
+    }));
+    $on("qmManagerClose", "click", closeModal);
+  }
+  function openQuickMenuSlotTypePicker(index) {
+    const blank = emptyQuickMenuSlot(index);
+    openModal(`<h3>슬롯 ${index + 1} 등록</h3><p class="m-sub">바로 실행할 동작을 고르세요. 썸네일과 표시 이름은 다음 화면에서 바꿀 수 있어요.</p><div class="qm-choice-list">
+      <button type="button" class="qm-choice" data-qm-kind="home">${quickMenuSlotMedia(Object.assign(blank,{kind:"home"}))}<span class="qm-choice-copy"><b>홈 바로가기</b><small>언제든 루미잉크 첫 화면으로 이동</small></span><span class="qm-choice-arrow">›</span></button>
+      <button type="button" class="qm-choice" data-qm-kind="project">${quickMenuSlotMedia(Object.assign(blank,{kind:"project"}))}<span class="qm-choice-copy"><b>프로젝트 바로가기</b><small>특정 프로젝트를 한 번에 열기</small></span><span class="qm-choice-arrow">›</span></button>
+      <button type="button" class="qm-choice" data-qm-kind="note">${quickMenuSlotMedia(Object.assign(blank,{kind:"note"}))}<span class="qm-choice-copy"><b>내 글 바로가기</b><small>특정 메모를 바로 열기 · 이동 경로 자동 반영</small></span><span class="qm-choice-arrow">›</span></button>
+      <button type="button" class="qm-choice" data-qm-kind="create">${quickMenuSlotMedia(Object.assign(blank,{kind:"create"}))}<span class="qm-choice-copy"><b>메모 바로 만들기</b><small>메모 타입과 저장 위치를 미리 지정</small></span><span class="qm-choice-arrow">›</span></button>
+    </div><div class="m-row"><button class="m-btn" id="qmTypeCancel">취소</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-kind]").forEach((button) => button.addEventListener("click", async () => {
+      const kind = button.dataset.qmKind;
+      if (kind === "home") { await setQuickMenuSlot(index, { kind: "home" }); openQuickMenuSlotEditor(index); }
+      else if (kind === "project") openQuickMenuProjectPicker(index);
+      else if (kind === "note") openQuickMenuNotePicker(index);
+      else openQuickMenuCreateTypePicker(index);
+    }));
+    $on("qmTypeCancel", "click", closeModal);
+  }
+  function openQuickMenuProjectPicker(index) {
+    const list = st.projects.slice().sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    openModal(`<h3>프로젝트 바로가기</h3><p class="m-sub">삭제되면 이 퀵 메뉴 슬롯도 자동으로 비워집니다.</p><div class="qm-picker-list">${list.length ? list.map((p) => `<button type="button" class="qm-picker-row" data-qm-project="${esc(p.id)}"><b>${esc(p.name)}</b><small>${esc(p.description || "프로젝트 열기")}</small></button>`).join("") : '<div class="qm-picker-empty">먼저 프로젝트를 만들어 주세요.</div>'}</div><div class="m-row"><button class="m-btn" id="qmProjectBack">뒤로</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-project]").forEach((button) => button.addEventListener("click", async () => {
+      await setQuickMenuSlot(index, { kind: "project", targetId: button.dataset.qmProject }); openQuickMenuSlotEditor(index);
+    }));
+    $on("qmProjectBack", "click", () => openQuickMenuSlotTypePicker(index));
+  }
+  function openQuickMenuNotePicker(index) {
+    let query = "";
+    const draw = () => {
+      const host = $("qmNoteList"); if (!host) return;
+      const q = query.trim().toLocaleLowerCase("ko");
+      const list = st.notes.slice().filter((n) => !q || `${n.title || ""} ${getProject(n.projectId)?.name || ""} ${noteTypeLabel(n)}`.toLocaleLowerCase("ko").includes(q)).sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      host.innerHTML = list.length ? list.map((n) => { const p = getProject(n.projectId); return `<button type="button" class="qm-picker-row" data-qm-note="${esc(n.id)}"><b>${esc(n.title || "제목 없는 메모")}</b><small>${esc(`${p ? p.name : "프로젝트 없음"} · ${noteTypeLabel(n)}`)}</small></button>`; }).join("") : '<div class="qm-picker-empty">일치하는 메모가 없어요.</div>';
+      host.querySelectorAll("[data-qm-note]").forEach((button) => button.addEventListener("click", async () => { await setQuickMenuSlot(index, { kind: "note", targetId: button.dataset.qmNote }); openQuickMenuSlotEditor(index); }));
+    };
+    openModal(`<h3>내 글 바로가기</h3><p class="m-sub">메모가 다른 프로젝트로 이동해도 이 바로가기는 같은 글을 따라가요.</p><input class="m-input" id="qmNoteSearch" type="search" autocomplete="off" placeholder="제목 또는 프로젝트 검색"><div class="qm-picker-list" id="qmNoteList"></div><div class="m-row"><button class="m-btn" id="qmNoteBack">뒤로</button></div>`);
+    $on("qmNoteSearch", "input", (event) => { query = event.target.value || ""; draw(); });
+    $on("qmNoteBack", "click", () => openQuickMenuSlotTypePicker(index)); draw();
+  }
+  function openQuickMenuCreateTypePicker(index) {
+    const options = [
+      ["free", "single", "자유 메모", "바로 빈 문서 열기"], ["html", "single", "HTML 작업실", "HTML 원본 작업 시작"], ["lorebook", "single", "로어북", "World Info용 항목 만들기"], ["log", "single", "로그 저장", "대화 로그용 메모 만들기"],
+      ["persona", "single", "페르소나", "단일 페르소나 카드"], ["persona", "collection", "다인 페르소나", "페르소나 모음 카드"], ["character", "single", "캐릭터", "단일 캐릭터 카드"], ["character", "collection", "다인 캐릭터", "캐릭터 모음 카드"], ["idea", "single", "아이디어 보드", "자유 배치 보드 만들기"]
+    ];
+    openModal(`<h3>만들 메모 타입</h3><p class="m-sub">실행하면 이 타입의 새 메모를 바로 만듭니다.</p><div class="qm-picker-list">${options.map(([type, mode, label, desc]) => `<button type="button" class="qm-picker-row" data-qm-create-type="${type}" data-qm-create-mode="${mode}"><b>${esc(label)}</b><small>${esc(desc)}</small></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="qmCreateTypeBack">뒤로</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-create-type]").forEach((button) => button.addEventListener("click", () => openQuickMenuCreateProjectPicker(index, { createType: button.dataset.qmCreateType, createMode: button.dataset.qmCreateMode })));
+    $on("qmCreateTypeBack", "click", () => openQuickMenuSlotTypePicker(index));
+  }
+  function openQuickMenuCreateProjectPicker(index, draft) {
+    const projects = st.projects.slice().sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    openModal(`<h3>새 메모 저장 위치</h3><p class="m-sub">고정 프로젝트를 고르면 한 번에 생성합니다. ‘현재 프로젝트’는 열고 있는 프로젝트가 없을 때만 선택창을 보여줘요.</p><div class="qm-picker-list"><button type="button" class="qm-picker-row" id="qmCreateCurrent"><b>현재 프로젝트에 만들기</b><small>홈에서는 실행할 때 프로젝트 선택</small></button>${projects.map((p) => `<button type="button" class="qm-picker-row" data-qm-create-project="${esc(p.id)}"><b>${esc(p.name)}</b><small>이 프로젝트에 바로 생성</small></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="qmCreateProjectBack">뒤로</button></div>`);
+    $on("qmCreateCurrent", "click", async () => { await setQuickMenuSlot(index, { kind: "create", createType: draft.createType, createMode: draft.createMode, createProjectId: null }); openQuickMenuSlotEditor(index); });
+    $("modalBox").querySelectorAll("[data-qm-create-project]").forEach((button) => button.addEventListener("click", async () => { await setQuickMenuSlot(index, { kind: "create", createType: draft.createType, createMode: draft.createMode, createProjectId: button.dataset.qmCreateProject }); openQuickMenuSlotEditor(index); }));
+    $on("qmCreateProjectBack", "click", () => openQuickMenuCreateTypePicker(index));
+  }
+  function openQuickMenuSlotEditor(index) {
+    const slot = quickMenuConfig().slots[index]; if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
+    openModal(`<h3>슬롯 ${index + 1} 편집</h3><p class="m-sub">기본 아이콘 대신 원하는 이미지를 썸네일로 등록할 수 있어요.</p><div class="qm-entry-preview">${quickMenuSlotMedia(slot)}<span class="qm-entry-preview-copy"><b>${esc(quickMenuSlotLabel(slot))}</b><small>${esc(`${quickMenuSlotActionName(slot)} · ${quickMenuSlotMeta(slot)}`)}</small></span></div><label class="qm-editor-label" for="qmSlotLabel">표시 이름 <span style="font-weight:500">(비우면 대상 이름을 자동 표시)</span></label><input class="m-input" id="qmSlotLabel" maxlength="42" value="${esc(slot.label || "")}" placeholder="예: 진행 중인 세계관"><div class="qm-editor-actions"><button class="m-btn" id="qmChangeAction">동작 변경</button><button class="m-btn" id="qmThumbPick">썸네일 변경</button><button class="m-btn ${slot.thumbnail ? "" : "qm-wide"}" id="qmThumbReset" ${slot.thumbnail ? "" : "hidden"}>기본 아이콘 사용</button><button class="m-btn danger qm-wide" id="qmSlotDelete">이 슬롯 비우기</button></div><div class="m-row"><button class="m-btn" id="qmEditorBack">목록</button><button class="m-btn primary" id="qmEditorSave">저장</button></div>`);
+    const saveLabel = async (stay) => {
+      const cfg = quickMenuConfig(), current = cfg.slots[index]; if (!current) return;
+      current.label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu();
+      if (stay) openQuickMenuManager(); else closeModal();
+    };
+    $on("qmChangeAction", "click", async () => {
+      quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim();
+      await persistQuickMenu(); openQuickMenuSlotTypePicker(index);
+    });
+    $on("qmThumbPick", "click", async () => {
+      quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim();
+      await persistQuickMenu(); quickMenuImageSlot = index; $("quickMenuImageInput").click();
+    });
+    $on("qmThumbReset", "click", async () => { quickMenuConfig().slots[index].thumbnail = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
+    $on("qmSlotDelete", "click", () => confirmModal("퀵 메뉴 슬롯 비우기", `슬롯 ${index + 1}의 바로가기와 사용자 지정 썸네일을 지울까요?`, "비우기", true, async () => { await clearQuickMenuSlot(index); openQuickMenuManager(); }));
+    $on("qmEditorBack", "click", () => { void saveLabel(true); });
+    $on("qmEditorSave", "click", () => { void saveLabel(false); });
+  }
+
   /* ---------- crash-safe local drafts ---------- */
   const DRAFT_PREFIX = "lumink:draft:v1:";
   const DRAFT_MAX_CHARS = 700000;
@@ -233,6 +571,7 @@
     else if (v.s === "idea") renderIdeaBoard();
     else if (v.s === "settings") renderSettings();
     else if (v.s === "search") renderSearch();
+    renderQuickMenu();
   }
   let navTransition = false;
   function commitGo(view) { st.viewStack.push(normalizeRouteView(view)); history.pushState({ d: st.viewStack.length }, ""); render(); }
@@ -801,6 +1140,7 @@
     for (const n of notes) { await purgeNoteFiles(n); await del("notes", n.id); }
     const removed = new Set(notes.map((n) => n.id));
     st.notes = st.notes.filter((n) => !removed.has(n.id));
+    await pruneQuickMenuReferences(true);
     if (bundle) armUndo(notes.length === 1 ? "메모를 삭제했어요" : `${notes.length}개 메모를 삭제했어요`, bundle);
   }
   async function deleteProjectsBatch(ids, options) {
@@ -812,6 +1152,7 @@
     for (const p of projects) await del("projects", p.id);
     st.notes = st.notes.filter((n) => !pids.has(n.projectId));
     st.projects = st.projects.filter((p) => !pids.has(p.id));
+    await pruneQuickMenuReferences(true);
     if (pids.has(st.curProjectId)) st.curProjectId = null;
     if (bundle) armUndo(projects.length === 1 ? "프로젝트를 삭제했어요" : `${projects.length}개 프로젝트를 삭제했어요`, bundle);
   }
@@ -948,6 +1289,7 @@
   async function moveNote(id, targetPid) {
     const n = getNote(id); if (!n) return;
     n.projectId = targetPid; await saveNote(n);
+    renderQuickMenu();
     toast("이동했어요");
   }
 
@@ -1262,7 +1604,7 @@
         scale:dpr, logging:false, useCORS:true, allowTaint:false,
         x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
         scrollX:0, scrollY:0, windowWidth:document.documentElement.clientWidth, windowHeight:document.documentElement.clientHeight,
-        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} }
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} try{ stripInsetShadows(el||doc.body); }catch(e){} }
       });
     }catch(e){ console.warn("eyedropper snapshot",e); if(scrim) scrim.style.visibility=scrimViz; toast("화면을 캡처하지 못해 스포이드를 열 수 없어요."); return; }
     if(scrim) scrim.style.visibility=scrimViz;
@@ -4114,12 +4456,12 @@
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
   function clearStore(name) { return new Promise((res, rej) => { const r = store(name, "readwrite").clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
-  async function reloadState() { st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
+  async function reloadState() { st.projects = await getAll("projects"); st.notes = await getAll("notes"); await loadQuickMenuSetting(); }
   async function exportBackup() {
     try {
       const files = await getAll("files"); const fileRecs = [];
       for (const f of files) { try { fileRecs.push({ id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, data: await blobToBase64(f.blob) }); } catch (e) {} }
-      const payload = { app: "lumink", version: 1, exportedAt: now(), projects: st.projects, notes: st.notes, files: fileRecs };
+      const payload = { app: "lumink", version: 2, exportedAt: now(), projects: st.projects, notes: st.notes, files: fileRecs, quickMenu: jsonCopy(quickMenuConfig()) };
       const json = JSON.stringify(payload).replace(/</g, "\\u003c");
       const summary = st.projects.map((p) => {
         const ns = st.notes.filter((n) => n.projectId === p.id);
@@ -4356,6 +4698,7 @@
       try {
         await doAutoBackup();
         await applyImportData(payload.projects || [], payload.notes || [], payload.files || [], false);
+        await restoreQuickMenuConfig(payload.quickMenu);
         await reloadState(); render(); renderSidebar(); toast("병합 복원했어요");
       } catch (e) { toast("복원 중 오류가 났어요"); }
     }));
@@ -4363,6 +4706,7 @@
       try {
         await doAutoBackup();
         await replaceImportData(payload.projects || [], payload.notes || [], payload.files || []);
+        await restoreQuickMenuConfig(payload.quickMenu);
         await reloadState(); goHome(); renderSidebar(); toast("백업 시점으로 되돌렸어요");
       } catch (e) { toast("복원 중 오류가 났어요"); }
     }));
@@ -4387,7 +4731,7 @@
       confirmModal("정말 초기화할까요?", "자동 백업을 포함해 되돌릴 수 없어요.", "전부 삭제", true, async () => {
         try {
           if (autoBkTimer) { clearTimeout(autoBkTimer); autoBkTimer = null; }
-          await clearStore("notes"); await clearStore("projects"); await clearStore("files"); await clearStore("backups");
+          await clearStore("notes"); await clearStore("projects"); await clearStore("files"); await clearStore("backups"); await clearStore("settings");
         } catch (e) {}
         location.reload();
       });
@@ -4413,9 +4757,14 @@
     // 병합 결과는 원본을 참조하지 않습니다. 각 페이지와 보조 필드를 복제해
     // 원본 메모를 삭제해도 새 캐릭터 모음이 독립적으로 남도록 합니다.
     const raw = jsonCopy(note && note.data) || {};
-    const source = note && note.type === "persona"
-      ? legacyPersonaDataToCharacterData(raw, true)
-      : ensureCharacterData({ data: raw });
+    // v64.7: v64에서 페르소나도 pages 기반 카드 데이터로 전환되었습니다.
+    // 이미 전환된 페르소나를 구형 변환기에 다시 넣으면 pages가 새 빈 페이지로
+    // 치환될 수 있으므로, pages가 있으면 캐릭터 모음과 같은 경로로 그대로 복제합니다.
+    const source = Array.isArray(raw.pages)
+      ? ensureCharacterData({ data: raw })
+      : (note && note.type === "persona"
+        ? legacyPersonaDataToCharacterData(raw, true)
+        : ensureCharacterData({ data: raw }));
     const coreKeys = new Set(["mode", "activeId", "pages", "coverImage"]);
     const dataExtras = {};
     Object.keys(source).forEach((key) => {
@@ -5390,7 +5739,8 @@ ${gallery}
       const snap = {
         id: "bk_" + autoBkLast, version: 2, ts: autoBkLast,
         projects: JSON.parse(JSON.stringify(st.projects)),
-        notes: JSON.parse(JSON.stringify(st.notes)), files: snapFiles
+        notes: JSON.parse(JSON.stringify(st.notes)), files: snapFiles,
+        quickMenu: jsonCopy(quickMenuConfig())
       };
       await put("backups", snap);
       await pruneAutoBackups(getAutoBackupLimit());
@@ -5445,7 +5795,7 @@ ${gallery}
       document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
         const snap = all.find((x) => x.id === btn.dataset.bk); if (!snap) return;
         const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
-        openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [] }, `${label} 자동 백업`);
+        openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [], quickMenu: snap.quickMenu || null }, `${label} 자동 백업`);
       }));
     }).catch(() => { toast("자동 백업 정보를 읽지 못했어요"); });
   }
@@ -5473,6 +5823,16 @@ ${gallery}
   function bind() {
     $on("homeMenu", "click", openSidebar);
     $on("homeSettings", "click", () => go({ s: "settings" }));
+    $on("quickMenuTab", "click", () => setQuickMenuOpen(!document.body.classList.contains("quick-menu-open")));
+    $on("quickMenuEdit", "click", () => { setQuickMenuOpen(false); openQuickMenuManager(); });
+    $on("quickMenuManage", "click", () => { setQuickMenuOpen(false); openQuickMenuManager(); });
+    $on("quickMenuImageInput", "change", async (event) => {
+      const file = event.target.files && event.target.files[0], index = quickMenuImageSlot; event.target.value = "";
+      if (!file || !Number.isInteger(index)) return;
+      try { quickMenuConfig().slots[index].thumbnail = await quickThumbnailFromFile(file); await persistQuickMenu(); openQuickMenuSlotEditor(index); }
+      catch (e) { toast((e && e.message) || "썸네일을 바꾸지 못했어요"); }
+      finally { quickMenuImageSlot = null; }
+    });
     // settings rows
     $on("setTheme", "click", () => { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); });
     $on("setFont", "click", showFontDialog);
@@ -5486,6 +5846,7 @@ ${gallery}
       $on("storageClose", "click", closeModal);
     });
     $on("setAccent", "click", openAccentPicker);
+    $on("setQuickMenu", "click", openQuickMenuSettings);
     $on("setToolbarMode", "click", openFormatbarModePicker);
     $on("setInstallIcon", "click", openInstallIconPicker);
     $on("setManual", "click", async () => {
@@ -5568,17 +5929,23 @@ ${gallery}
     // read: double-tap to edit
     $on("readBody", "dblclick", editCurrentNote);
 
-    // global left-edge swipe -> open sidebar (any screen)
-    let edgeX = null, edgeY = null;
+    // global edge swipes: left opens navigation, right opens the compact quick menu.
+    let edgeX = null, edgeY = null, quickEdgeX = null, quickEdgeY = null, quickDragX = null, quickDragY = null;
     document.addEventListener("touchstart", (e) => {
-      if (document.body.classList.contains("sidebar-open") || document.body.classList.contains("sheet-open") || $("modalScrim").classList.contains("open")) { edgeX = null; return; }
-      const t = e.touches[0]; edgeX = t.clientX <= 24 ? t.clientX : null; edgeY = t.clientY;
+      if (document.body.classList.contains("sidebar-open") || document.body.classList.contains("sheet-open") || $("modalScrim").classList.contains("open")) { edgeX = null; quickEdgeX = null; quickDragX = null; return; }
+      const t = e.touches[0], root = $("quickMenu"), quickEnabled = quickMenuIsEnabled();
+      edgeX = t.clientX <= 24 ? t.clientX : null; edgeY = t.clientY;
+      quickEdgeX = quickEnabled && t.clientX >= window.innerWidth - 26 ? t.clientX : null; quickEdgeY = t.clientY;
+      if (quickEnabled && root && document.body.classList.contains("quick-menu-open") && e.target.closest && e.target.closest("#quickMenuPanel")) { quickDragX = t.clientX; quickDragY = t.clientY; }
     }, { passive: true });
     document.addEventListener("touchmove", (e) => {
-      if (edgeX == null) return; const t = e.touches[0];
-      if (t.clientX - edgeX > 55 && Math.abs(t.clientY - edgeY) < 45) { openSidebar(); edgeX = null; }
+      const t = e.touches[0];
+      if (edgeX != null && t.clientX - edgeX > 55 && Math.abs(t.clientY - edgeY) < 45) { openSidebar(); edgeX = null; quickEdgeX = null; }
+      if (quickEdgeX != null && quickEdgeX - t.clientX > 45 && Math.abs(t.clientY - quickEdgeY) < 48) { setQuickMenuOpen(true); quickEdgeX = null; }
+      if (quickDragX != null && t.clientX - quickDragX > 62 && Math.abs(t.clientY - quickDragY) < 48) { setQuickMenuOpen(false); quickDragX = null; }
     }, { passive: true });
-    document.addEventListener("touchend", () => { edgeX = null; });
+    document.addEventListener("touchend", () => { edgeX = null; quickEdgeX = null; quickDragX = null; });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.body.classList.contains("quick-menu-open")) setQuickMenuOpen(false); });
 
     // HTML workshop
     $on("htmlSource", "input", scheduleHtmlSave);
@@ -8405,6 +8772,39 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       (doc.head||doc.documentElement).appendChild(style);
     }
   }
+  // html2canvas는 inset box-shadow를 요소 전체 흰색/검정 범람으로 잘못 렌더해 배경을 덮어버립니다.
+  // 캡처 직전 inset 그림자만 제거하고 일반 드롭 섀도는 유지합니다.
+  function stripInsetShadows(root){
+    if(!root) return;
+    const win=(root.ownerDocument&&root.ownerDocument.defaultView)||window;
+    const doc=root.ownerDocument||document;
+    const pseudoRules=[];
+    const nodes=[root].concat([...root.querySelectorAll("*")]);
+    nodes.forEach((node,idx)=>{
+      if(node.nodeType!==1) return;
+      [null,"::before","::after"].forEach((pseudo)=>{
+        let cs; try{ cs=win.getComputedStyle(node,pseudo); }catch(e){ return; }
+        if(!cs) return;
+        const bs=cs.boxShadow;
+        if(!bs || bs==="none" || bs.indexOf("inset")<0) return;
+        if(pseudo){ const ct=cs.content; if(!ct||ct==="none") return; }
+        const kept=__rgSplitTop(bs,",").map((s)=>s.trim()).filter((p)=>p && !/\binset\b/.test(p));
+        const newBs=kept.length?kept.join(", "):"none";
+        if(pseudo){
+          const mark="data-lumink-bs-"+idx+"-"+(pseudo==="::before"?"b":"a");
+          try{ node.setAttribute(mark,""); pseudoRules.push("["+mark+"]"+pseudo+"{box-shadow:"+newBs+" !important;}"); }catch(e){}
+        } else {
+          try{ node.style.boxShadow=newBs; }catch(e){}
+        }
+      });
+    });
+    if(pseudoRules.length){
+      const style=doc.createElement("style");
+      style.setAttribute("data-lumink-bs","1");
+      style.textContent=pseudoRules.join("\n");
+      (doc.head||doc.documentElement).appendChild(style);
+    }
+  }
   async function exportIdeaViewportPng(id) {
     if(st.curNoteId===id) await flushIdeaBoard(false);
     const n=getNote(id); if(!n || n.type!=="idea") return;
@@ -8437,7 +8837,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
         logging:false,
         useCORS:true,
         allowTaint:false,
-        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} },
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} try{ stripInsetShadows(el||doc.body); }catch(e){} },
         width:Math.max(1,Math.round(crop.w)),
         height:Math.max(1,Math.round(crop.h)),
         windowWidth:Math.max(1,Math.round(crop.w)),
@@ -8512,8 +8912,8 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     } catch (e) {}
     try { bind(); } catch (e) { console.warn("bind", e); }
     const logTemplatesLoaded = loadBundledLogTemplates();
-    try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); }
-    catch (e) { console.warn("DB error", e); toast("저장소를 열 수 없어요"); }
+    try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); await loadQuickMenuSetting(); }
+    catch (e) { console.warn("DB error", e); st.quickMenu = normalizeQuickMenu(null); toast("저장소를 열 수 없어요"); }
     try { await logTemplatesLoaded; } catch (e) { console.warn("log templates", e); }
     try { await migrate(); } catch (e) { console.warn("migrate", e); }
     history.replaceState({ d: 1 }, "");

@@ -2729,6 +2729,148 @@
   .auto-backup-empty b { display:block; color:var(--ink); font-size:13px; font-weight:780; }
   .auto-backup-empty small { display:block; margin-top:3px; font-size:11.5px; line-height:1.4; }
 
+
+  /* ===== v64.8: right-edge quick menu ===== */
+  .quick-menu {
+    position:fixed; top:50%; right:0; z-index:35; width:min(292px,calc(100vw - 22px));
+    transform:translateX(100%) translateY(-50%); transition:transform .32s cubic-bezier(.22,.74,.25,1), filter .22s ease;
+    /* v64.9: 패널 외곽 그림자는 넓게 번지지 않도록 아주 얕고 옅게 조정 */
+    filter:drop-shadow(-3px 6px 9px rgba(10,24,46,.10));
+    touch-action:pan-y; user-select:none;
+  }
+  body.quick-menu-open .quick-menu { transform:translateX(0) translateY(-50%); }
+  .quick-menu-panel {
+    position:relative; overflow:hidden; border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line)); border-right:0;
+    border-radius:23px 0 0 23px; background:
+      radial-gradient(110% 90% at 100% 0%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 58%),
+      linear-gradient(142deg,color-mix(in srgb,var(--surface) 95%,#fff 5%),var(--bg-2));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 1px 0 0 color-mix(in srgb,var(--accent) 18%,transparent);
+    padding:14px 12px 12px 16px;
+  }
+  html[data-theme="light"] .quick-menu-panel { background:radial-gradient(110% 90% at 100% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 58%),linear-gradient(142deg,#fff,#f4f7fc); }
+  .quick-menu-panel::before { content:""; position:absolute; width:128px; height:128px; right:-64px; top:-66px; border-radius:50%; pointer-events:none; border:1px solid color-mix(in srgb,var(--accent) 32%,transparent); box-shadow:0 0 0 13px color-mix(in srgb,var(--accent) 7%,transparent),0 0 0 28px color-mix(in srgb,var(--accent) 4%,transparent); }
+  .quick-menu-tab {
+    position:absolute; left:-47px; top:50%; width:48px; height:92px; transform:translateY(-50%);
+    border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line)); border-right:0; border-radius:18px 0 0 18px;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--surface) 84%,var(--accent) 16%),var(--surface-3));
+    color:var(--accent); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+    box-shadow:-2px 3px 7px rgba(10,24,46,.09),inset 0 1px 0 rgba(255,255,255,.22); transition:background .18s ease,transform .22s ease;
+  }
+  .quick-menu-tab:active { background:var(--accent-soft); }
+  .quick-menu-tab svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .28s ease; }
+  body.quick-menu-open .quick-menu-tab svg { transform:rotate(180deg); }
+  .quick-menu-tab .qm-tab-dots { display:grid; grid-template-columns:repeat(2,4px); gap:4px; }
+  .quick-menu-tab .qm-tab-dots i { display:block; width:4px; height:4px; border-radius:50%; background:currentColor; box-shadow:0 0 8px color-mix(in srgb,currentColor 65%,transparent); }
+  .quick-menu-head { position:relative; z-index:1; display:flex; align-items:center; gap:10px; min-height:32px; margin-bottom:10px; }
+  .quick-menu-headmark { width:30px; height:30px; display:grid; place-items:center; border-radius:11px; background:var(--grad-blue); color:#fff; box-shadow:0 6px 14px color-mix(in srgb,var(--accent) 35%,transparent); }
+  .quick-menu-headmark svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .quick-menu-headcopy { min-width:0; flex:1; }
+  .quick-menu-headcopy b { display:block; color:var(--ink); font-size:12px; line-height:1.1; font-weight:820; letter-spacing:.02em; }
+  /* 라이트 모드에서도 검정 대신 현재 강조색을 눌러 만든 깊은 잉크색을 사용합니다. */
+  html[data-theme="light"] .quick-menu-headcopy b,
+  html[data-theme="light"] .quick-slot-copy b { color:color-mix(in srgb,var(--accent) 58%,#142845); }
+  .quick-menu-headcopy small { display:block; margin-top:3px; color:var(--faint); font-size:9.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+  .quick-menu-edit { flex:0 0 auto; width:32px; height:32px; border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line)); border-radius:11px; background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 88%,var(--accent) 12%),var(--surface-2)); color:var(--accent); display:grid; place-items:center; cursor:pointer; box-shadow:inset 0 1px 0 rgba(255,255,255,.28); }
+  .quick-menu-edit:active { color:var(--accent); background:var(--accent-soft); border-color:var(--accent); transform:scale(.94); }
+  .quick-menu-edit svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.85; stroke-linecap:round; stroke-linejoin:round; }
+  .quick-menu-slots { position:relative; z-index:1; display:grid; gap:7px; }
+  .quick-menu-slot { position:relative; width:100%; min-height:53px; padding:6px 9px 6px 7px; border:1px solid var(--line); border-radius:15px; background:color-mix(in srgb,var(--surface) 88%,transparent); color:var(--ink); display:flex; align-items:center; gap:9px; cursor:pointer; overflow:hidden; text-align:left; font:inherit; transition:transform .14s ease,border-color .16s ease,background .16s ease; }
+  .quick-menu-slot::after { content:""; position:absolute; inset:0; pointer-events:none; opacity:0; background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,transparent),transparent 66%); transition:opacity .16s ease; }
+  .quick-menu-slot.is-filled:active { transform:translateX(-2px) scale(.985); border-color:color-mix(in srgb,var(--accent) 68%,var(--line)); background:var(--accent-soft); }
+  .quick-menu-slot.is-filled:active::after { opacity:1; }
+  .quick-menu-slot.is-empty { border-style:dashed; color:var(--faint); background:color-mix(in srgb,var(--surface-2) 72%,transparent); }
+  .quick-menu-slot.is-empty:active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .quick-slot-media { position:relative; z-index:1; width:39px; height:39px; flex:0 0 auto; overflow:hidden; display:grid; place-items:center; border-radius:13px; color:var(--accent); background:linear-gradient(145deg,var(--accent-soft),color-mix(in srgb,var(--surface-3) 72%,var(--accent) 28%)); border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line)); box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
+  .quick-slot-media img { width:100%; height:100%; object-fit:cover; display:block; }
+  .quick-slot-media svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.85; stroke-linecap:round; stroke-linejoin:round; }
+  .quick-menu-slot.is-empty .quick-slot-media { background:transparent; border-style:dashed; }
+  .quick-slot-num { position:absolute; right:-1px; bottom:-1px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; border:1px solid var(--line); border-radius:7px 0 12px 0; color:var(--faint); background:var(--bg-2); font-size:8px; font-weight:850; letter-spacing:.04em; font-variant-numeric:tabular-nums; }
+  .quick-slot-copy { position:relative; z-index:1; min-width:0; flex:1; }
+  .quick-slot-copy b { display:block; overflow:hidden; color:var(--ink); font-size:12.2px; font-weight:780; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
+  .quick-slot-copy small { display:block; overflow:hidden; margin-top:3px; color:var(--muted); font-size:10px; font-weight:590; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
+  .quick-slot-arrow { position:relative; z-index:1; color:var(--faint); font-size:17px; line-height:1; }
+  .quick-menu-foot { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:8px; margin:10px 2px 0; color:var(--faint); font-size:9.5px; font-weight:650; }
+  .quick-menu-foot button { border:0; padding:3px 0; background:none; color:var(--accent); font:inherit; font-weight:820; cursor:pointer; }
+  .quick-menu.is-dragging { transition:none; }
+  /* 설명을 걷어낸 아이콘 전용 미니형. 설정 아이콘만 남겨 편집 동선은 보존합니다. */
+  .quick-menu.is-mini { width:88px; }
+  .quick-menu.is-mini .quick-menu-panel { border-radius:19px 0 0 19px; padding:10px 8px 9px; }
+  .quick-menu.is-mini .quick-menu-panel::before { width:82px; height:82px; right:-42px; top:-44px; box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 6%,transparent),0 0 0 17px color-mix(in srgb,var(--accent) 3%,transparent); }
+  .quick-menu.is-mini .quick-menu-head { justify-content:space-between; margin:0 0 8px; gap:4px; }
+  .quick-menu.is-mini .quick-menu-headcopy,
+  .quick-menu.is-mini .quick-menu-foot { display:none; }
+  .quick-menu.is-mini .quick-menu-headmark { width:29px; height:29px; border-radius:10px; }
+  .quick-menu.is-mini .quick-menu-edit { width:29px; height:29px; border-radius:10px; }
+  .quick-menu.is-mini .quick-menu-edit svg { width:15px; height:15px; }
+  .quick-menu.is-mini .quick-menu-slots { gap:6px; }
+  .quick-menu.is-mini .quick-menu-slot { min-height:46px; padding:3px; border-radius:14px; justify-content:center; gap:0; }
+  .quick-menu.is-mini .quick-menu-slot .quick-slot-copy,
+  .quick-menu.is-mini .quick-menu-slot .quick-slot-arrow,
+  .quick-menu.is-mini .quick-menu-slot .quick-slot-num { display:none; }
+  .quick-menu.is-mini .quick-slot-media { width:37px; height:37px; border-radius:12px; }
+  .quick-menu.is-mini .quick-slot-media svg { width:18px; height:18px; }
+  .qm-settings-card { margin:13px 0 14px; padding:4px; border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line)); border-radius:16px; background:linear-gradient(145deg,color-mix(in srgb,var(--accent-soft) 55%,var(--surface-2)),var(--surface-2)); }
+  .qm-settings-toggle { width:100%; padding:12px 12px 12px 13px; display:flex; align-items:center; justify-content:space-between; gap:12px; border:0; border-radius:12px; background:transparent; color:var(--ink); text-align:left; font:inherit; cursor:pointer; }
+  .qm-settings-toggle:active { background:color-mix(in srgb,var(--accent) 10%,transparent); }
+  .qm-settings-toggle-copy { min-width:0; }
+  .qm-settings-toggle-copy b { display:block; font-size:13px; font-weight:820; }
+  .qm-settings-toggle-copy small { display:block; margin-top:3px; color:var(--muted); font-size:10.5px; line-height:1.35; }
+  .qm-settings-section { margin:14px 0 15px; }
+  .qm-settings-section-title { margin:0 0 8px 2px; color:var(--faint); font-size:10.5px; font-weight:850; letter-spacing:.08em; }
+  .qm-display-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .qm-display-option { min-height:104px; padding:10px 9px; display:flex; flex-direction:column; align-items:flex-start; gap:9px; border:1px solid var(--line); border-radius:15px; background:var(--surface-2); color:var(--ink); text-align:left; font:inherit; cursor:pointer; }
+  .qm-display-option:active { transform:scale(.985); }
+  .qm-display-option.is-active { border-color:color-mix(in srgb,var(--accent) 72%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--accent-soft) 84%,var(--surface-2)),var(--surface-2)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent); }
+  .qm-display-option b { display:block; font-size:12px; font-weight:820; }
+  .qm-display-option small { display:block; margin-top:3px; color:var(--muted); font-size:9.8px; line-height:1.35; }
+  .qm-display-schematic { width:100%; height:31px; display:flex; align-items:center; justify-content:center; gap:4px; padding:4px; border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line)); border-radius:10px; background:color-mix(in srgb,var(--surface) 74%,var(--accent-soft)); }
+  .qm-display-schematic i { position:relative; display:block; height:5px; border-radius:99px; background:color-mix(in srgb,var(--accent) 75%,#fff); }
+  .qm-display-schematic.full { flex-direction:column; align-items:stretch; gap:3px; padding:5px 7px; }
+  .qm-display-schematic.full i:nth-child(1) { width:76%; }
+  .qm-display-schematic.full i:nth-child(2) { width:59%; opacity:.72; }
+  .qm-display-schematic.full i:nth-child(3) { width:42%; opacity:.42; }
+  .qm-display-schematic.mini { justify-content:center; gap:5px; }
+  .qm-display-schematic.mini i { width:14px; height:14px; border-radius:5px; }
+  .qm-settings-manage { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 12px; border:1px dashed color-mix(in srgb,var(--accent) 24%,var(--line)); border-radius:14px; background:color-mix(in srgb,var(--surface-2) 76%,transparent); }
+  .qm-settings-manage span { min-width:0; }
+  .qm-settings-manage b { display:block; font-size:12.3px; font-weight:800; }
+  .qm-settings-manage small { display:block; margin-top:3px; color:var(--muted); font-size:10px; }
+  .qm-settings-manage .m-btn { flex:0 0 auto; margin:0; padding:8px 10px; font-size:11px; }
+  .qm-manager-grid { display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0 16px; }
+  .qm-manager-slot { width:100%; min-height:58px; padding:8px 10px; display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:15px; background:var(--surface-2); color:var(--ink); text-align:left; font:inherit; cursor:pointer; }
+  .qm-manager-slot:active { border-color:var(--accent); background:var(--accent-soft); }
+  .qm-manager-slot.is-empty { border-style:dashed; background:color-mix(in srgb,var(--surface-2) 70%,transparent); color:var(--faint); }
+  .qm-manager-slot .quick-slot-media { width:38px; height:38px; }
+  .qm-manager-copy { flex:1; min-width:0; }
+  .qm-manager-copy b { display:block; font-size:12.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qm-manager-copy small { display:block; margin-top:3px; color:var(--muted); font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qm-manager-index { color:var(--faint); font-size:10px; font-weight:850; letter-spacing:.08em; }
+  .qm-choice-list { display:grid; gap:8px; margin:12px 0 16px; }
+  .qm-choice { width:100%; min-height:60px; padding:9px 11px; display:flex; align-items:center; gap:11px; border:1px solid var(--line); border-radius:15px; background:var(--surface-2); color:var(--ink); text-align:left; font:inherit; cursor:pointer; }
+  .qm-choice:active { border-color:var(--accent); background:var(--accent-soft); }
+  .qm-choice .quick-slot-media { width:39px; height:39px; }
+  .qm-choice-copy { flex:1; min-width:0; }
+  .qm-choice-copy b { display:block; font-size:13px; font-weight:790; }
+  .qm-choice-copy small { display:block; margin-top:2px; color:var(--muted); font-size:10.8px; line-height:1.35; }
+  .qm-choice-arrow { color:var(--faint); font-size:20px; }
+  .qm-picker-list { max-height:min(43vh,340px); overflow:auto; display:grid; gap:7px; margin:12px 0 16px; padding-right:2px; }
+  .qm-picker-row { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:13px; background:var(--surface-2); color:var(--ink); text-align:left; font:inherit; cursor:pointer; }
+  .qm-picker-row:active { border-color:var(--accent); background:var(--accent-soft); }
+  .qm-picker-row b { display:block; font-size:12.6px; font-weight:790; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qm-picker-row small { display:block; margin-top:3px; color:var(--muted); font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qm-picker-empty { padding:24px 12px; border:1px dashed var(--line); border-radius:14px; color:var(--faint); text-align:center; font-size:12px; }
+  .qm-entry-preview { display:flex; align-items:center; gap:12px; margin:12px 0 14px; padding:11px; border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line)); border-radius:16px; background:linear-gradient(135deg,var(--accent-soft),var(--surface-2)); }
+  .qm-entry-preview .quick-slot-media { width:48px; height:48px; border-radius:15px; }
+  .qm-entry-preview-copy { min-width:0; flex:1; }
+  .qm-entry-preview-copy b { display:block; font-size:13px; font-weight:830; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .qm-entry-preview-copy small { display:block; margin-top:4px; color:var(--muted); font-size:10.8px; line-height:1.35; }
+  .qm-editor-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:10px 0 14px; }
+  .qm-editor-actions .m-btn { width:100%; margin:0; }
+  .qm-editor-actions .qm-wide { grid-column:1 / -1; }
+  .qm-editor-label { display:block; margin:0 0 6px; color:var(--muted); font-size:11.5px; font-weight:760; }
+  @media (max-width:360px) { .quick-menu { width:min(274px,calc(100vw - 18px)); } .quick-menu-slot { min-height:49px; } .quick-menu-panel { padding:12px 10px 10px 14px; } }
+  @media (prefers-reduced-motion:reduce) { .quick-menu,.quick-menu-tab,.quick-menu-tab svg { transition:none; } }
+
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
 </head>
@@ -3211,6 +3353,7 @@
   <input type="file" id="perImgInput" class="hidden-input" multiple>
   <input type="file" id="charImgInput" class="hidden-input" multiple>
   <input type="file" id="charCoverInput" class="hidden-input" accept="image/*">
+  <input type="file" id="quickMenuImageInput" class="hidden-input" accept="image/*">
   <input type="file" id="charCreatorImgInput" class="hidden-input">
   <input type="file" id="ideaMediaInput" class="hidden-input" accept="image/*,audio/*,video/*">
   <input type="file" id="ideaCanvasBgInput" class="hidden-input">
@@ -3247,6 +3390,10 @@
         <div class="set-row" id="setToolbarMode">
           <div class="set-rtext"><div class="set-rlabel">자유 메모 툴바</div><div class="set-rsub">항상 표시하거나 접어둘 수 있어요</div></div>
           <div class="set-rval" id="setToolbarModeVal">항상 표시</div>
+        </div>
+        <div class="set-row" id="setQuickMenu">
+          <div class="set-rtext"><div class="set-rlabel">퀵 메뉴 설정</div><div class="set-rsub" id="setQuickMenuSub">오른쪽 가장자리 · 기본형 · 0/5 등록</div></div>
+          <div class="set-rval" id="setQuickMenuVal">기본형 ›</div>
         </div>
         <div class="set-row" id="setInstallIcon">
           <div class="set-rtext"><div class="set-rlabel">앱 설치 아이콘</div><div class="set-rsub">설치 전 아이콘 스타일을 선택</div></div>
@@ -3342,6 +3489,24 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- ============ RIGHT-EDGE QUICK MENU ============ -->
+  <aside class="quick-menu" id="quickMenu" aria-label="퀵 메뉴">
+    <button type="button" class="quick-menu-tab" id="quickMenuTab" aria-label="퀵 메뉴 펼치기" aria-expanded="false">
+      <span class="qm-tab-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    <div class="quick-menu-panel" id="quickMenuPanel">
+      <div class="quick-menu-head">
+        <span class="quick-menu-headmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span>
+        <span class="quick-menu-headcopy"><b>퀵 메뉴</b><small>SWIPE · 5 SLOTS</small></span>
+        <button type="button" class="quick-menu-edit" id="quickMenuEdit" aria-label="퀵 메뉴 편집" title="퀵 메뉴 편집"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg></button>
+      </div>
+      <div class="quick-menu-slots" id="quickMenuSlots"></div>
+      <div class="quick-menu-foot"><span id="quickMenuCount">0 / 5 등록</span><button type="button" id="quickMenuManage">편집하기</button></div>
+    </div>
+  </aside>
+
+
 <script>
 "use strict";
 /* ============================================================
@@ -3365,7 +3530,7 @@
   const TYPE_LABEL = { free: "자유", html: "HTML 작업실", lorebook: "로어북", log: "로그", persona: "페르소나", character: "캐릭터", idea: "아이디어 보드" };
 
   /* ---------- IndexedDB ---------- */
-  const DB_NAME = "inkMemoDB", DB_VER = 4;
+  const DB_NAME = "inkMemoDB", DB_VER = 5;
   let db = null;
 
   function openDB() {
@@ -3386,6 +3551,9 @@
         }
         if (!d.objectStoreNames.contains("backups")) {
           d.createObjectStore("backups", { keyPath: "id" });
+        }
+        if (!d.objectStoreNames.contains("settings")) {
+          d.createObjectStore("settings", { keyPath: "id" });
         }
       };
       r.onsuccess = (e) => { db = e.target.result; res(db); };
