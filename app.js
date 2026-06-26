@@ -1262,7 +1262,7 @@
         scale:dpr, logging:false, useCORS:true, allowTaint:false,
         x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
         scrollX:0, scrollY:0, windowWidth:document.documentElement.clientWidth, windowHeight:document.documentElement.clientHeight,
-        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} }
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} }
       });
     }catch(e){ console.warn("eyedropper snapshot",e); if(scrim) scrim.style.visibility=scrimViz; toast("화면을 캡처하지 못해 스포이드를 열 수 없어요."); return; }
     if(scrim) scrim.style.visibility=scrimViz;
@@ -8197,6 +8197,116 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       (doc.head || doc.documentElement).appendChild(style);
     }
   }
+  // html2canvas는 repeating-linear-gradient(괘선·종이결·텍스처)를 렌더하지 못합니다.
+  // 캡처 직전 복제본에서 축정렬 반복 그라데이션을 한 주기 타일 PNG로 구워 url()로 교체해, 실제와 동일하게 캡처되게 합니다.
+  function __rgSplitTop(str,sep){ const out=[]; let depth=0,cur=""; for(let i=0;i<str.length;i++){ const c=str[i]; if(c==="(")depth++; else if(c===")")depth--; if(c===sep&&depth===0){ out.push(cur); cur=""; } else cur+=c; } if(cur.trim()!=="") out.push(cur); return out; }
+  function __rgAxis(angle){ angle=(angle||"").trim(); const m={"to top":{a:"v",d:-1},"to bottom":{a:"v",d:1},"to left":{a:"h",d:-1},"to right":{a:"h",d:1}}; if(m[angle])return m[angle]; const x=/^(-?[\d.]+)deg$/.exec(angle); if(!x)return null; let d=((parseFloat(x[1])%360)+360)%360; if(d===0)return{a:"v",d:-1}; if(d===180)return{a:"v",d:1}; if(d===90)return{a:"h",d:1}; if(d===270)return{a:"h",d:-1}; return null; }
+  // html2canvas는 그라데이션의 transparent를 검정으로 페이드시켜 음영처럼 어둡게 깨뜨립니다.
+  // transparent를 인접 색의 알파0으로 바꿔 색조를 유지한 채 자연스럽게 사라지게 합니다.
+  function __isTransparentTok(p){ return /\btransparent\b/.test(p) || /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/.test(p) || /\/\s*0\s*\)/.test(p); }
+  function __colorTok(part){ const m=/(rgba?\([^)]*\)|color\([^)]*\)|hsla?\([^)]*\)|#[0-9a-fA-F]{3,8})/.exec(part); return m?m[1]:null; }
+  function __toAlphaZero(c){ const r=resolveColorFunctions(c)||c; let m=/rgba?\(([^)]+)\)/.exec(r); if(m){ const n=m[1].split(",").map((s)=>s.trim()); if(n.length>=3) return "rgba("+n[0]+", "+n[1]+", "+n[2]+", 0)"; } m=/color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i.exec(c); if(m){ const to=(x)=>Math.max(0,Math.min(255,Math.round(parseFloat(x)*255))); return "rgba("+to(m[1])+", "+to(m[2])+", "+to(m[3])+", 0)"; } return null; }
+  function __neutralizeGradientStr(grad){
+    const open=grad.indexOf("("); if(open<0) return grad;
+    const fn=grad.slice(0,open), inner=grad.slice(open+1, grad.lastIndexOf(")"));
+    const parts=__rgSplitTop(inner,",").map((s)=>s.trim());
+    const trans=parts.map(__isTransparentTok);
+    const colorOf=parts.map((p,i)=> trans[i]?null:__colorTok(p));
+    let changed=false;
+    const out=parts.map((part,idx)=>{
+      if(!trans[idx]) return part;
+      let nc=null;
+      for(let dd=1; dd<parts.length && !nc; dd++){ for(const j of [idx-dd, idx+dd]){ if(j>=0&&j<parts.length&&colorOf[j]){ nc=colorOf[j]; break; } } }
+      if(!nc) return part;
+      const z=__toAlphaZero(nc); if(!z) return part;
+      changed=true;
+      return part.replace(/\btransparent\b|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/, z);
+    });
+    return changed ? fn+"("+out.join(", ")+")" : grad;
+  }
+  function __rgTile(layer){
+    const inner=layer.slice(layer.indexOf("(")+1, layer.lastIndexOf(")"));
+    const parts=__rgSplitTop(inner,",").map((s)=>s.trim()).filter(Boolean);
+    if(parts.length<2) return null;
+    let angle="180deg", stopParts=parts;
+    if(/deg\s*$/.test(parts[0])||/^to\s/.test(parts[0])){ angle=parts[0]; stopParts=parts.slice(1); }
+    const axis=__rgAxis(angle); if(!axis) return null;
+    const stops=[];
+    for(const sp of stopParts){
+      const mm=/^(.*\S)\s+(-?[\d.]+)px$/.exec(sp);
+      if(mm) stops.push({c:mm[1].trim(), p:parseFloat(mm[2])});
+      else if(/%\s*$/.test(sp)) return null; // % 위치는 px 환산 불가 → 건너뜀
+      else stops.push({c:sp.trim(), p:null});
+    }
+    const pos=stops.filter((s)=>s.p!==null);
+    if(pos.length<2) return null;
+    const base=pos[0].p, period=pos[pos.length-1].p-base;
+    if(!(period>0)||period>3000) return null;
+    const OS=3, thin=4;
+    const W=axis.a==="v"?thin:Math.max(1,Math.round(period));
+    const H=axis.a==="v"?Math.max(1,Math.round(period)):thin;
+    const cnv=document.createElement("canvas"); cnv.width=W*OS; cnv.height=H*OS;
+    const ctx=cnv.getContext("2d"); if(!ctx) return null; ctx.scale(OS,OS);
+    let grad;
+    if(axis.a==="v") grad= axis.d===1? ctx.createLinearGradient(0,0,0,period) : ctx.createLinearGradient(0,period,0,0);
+    else grad= axis.d===1? ctx.createLinearGradient(0,0,period,0) : ctx.createLinearGradient(period,0,0,0);
+    for(const s of stops){ if(s.p===null) continue; let off=(s.p-base)/period; off=Math.max(0,Math.min(1,off)); let col; if(__isTransparentTok(s.c)){ let nc=null; for(let dd=1;dd<stops.length&&!nc;dd++){ for(const j of [stops.indexOf(s)-dd, stops.indexOf(s)+dd]){ if(j>=0&&j<stops.length&&!__isTransparentTok(stops[j].c)){ nc=stops[j].c; break; } } } col=(nc&&__toAlphaZero(nc))||"rgba(0,0,0,0)"; } else { col=resolveColorFunctions(s.c)||s.c; } try{ grad.addColorStop(off,col); }catch(e){ return null; } }
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+    let url; try{ url=cnv.toDataURL("image/png"); }catch(e){ return null; }
+    return { url, size: axis.a==="v"? (W+"px "+Math.round(period)+"px") : (Math.round(period)+"px "+H+"px") };
+  }
+  function rasterizeRepeatingGradients(root){
+    if(!root) return;
+    const win=(root.ownerDocument&&root.ownerDocument.defaultView)||window;
+    const doc=root.ownerDocument||document;
+    const pseudoRules=[];
+    const nodes=[root].concat([...root.querySelectorAll("*")]);
+    nodes.forEach((node,idx)=>{
+      if(node.nodeType!==1) return;
+      [null,"::before","::after"].forEach((pseudo)=>{
+        let cs; try{ cs=win.getComputedStyle(node,pseudo); }catch(e){ return; }
+        if(!cs) return;
+        const bi=cs.backgroundImage;
+        if(!bi || bi==="none") return;
+        const needsRG = bi.indexOf("repeating-linear-gradient")>=0;
+        const needsNeut = /gradient\(/.test(bi) && (/\btransparent\b/.test(bi) || /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/.test(bi) || /\/\s*0\s*\)/.test(bi));
+        if(!needsRG && !needsNeut) return;
+        if(pseudo){ const ct=cs.content; if(!ct||ct==="none") return; }
+        const layers=__rgSplitTop(bi,",").map((s)=>s.trim());
+        const sizes=__rgSplitTop(cs.backgroundSize||"",",").map((s)=>s.trim());
+        const repeats=__rgSplitTop(cs.backgroundRepeat||"",",").map((s)=>s.trim());
+        const positions=__rgSplitTop(cs.backgroundPosition||"",",").map((s)=>s.trim());
+        let changed=false; const nImg=[],nSize=[],nRep=[],nPos=[];
+        layers.forEach((layer,i)=>{
+          const p=positions.length?positions[i%positions.length]:"0% 0%";
+          if(/^repeating-linear-gradient\(/i.test(layer)){
+            const t=__rgTile(layer);
+            if(t){ changed=true; nImg.push("url("+t.url+")"); nSize.push(t.size); nRep.push("repeat"); nPos.push(p); return; }
+          }
+          let outLayer=layer;
+          if(/gradient\(/i.test(layer) && __isTransparentTok(layer)){
+            const neut=__neutralizeGradientStr(layer);
+            if(neut!==layer){ outLayer=neut; changed=true; }
+          }
+          nImg.push(outLayer); nSize.push(sizes.length?sizes[i%sizes.length]:"auto"); nRep.push(repeats.length?repeats[i%repeats.length]:"repeat"); nPos.push(p);
+        });
+        if(!changed) return;
+        const decl="background-image:"+nImg.join(", ")+";background-size:"+nSize.join(", ")+";background-repeat:"+nRep.join(", ")+";background-position:"+nPos.join(", ")+";";
+        if(pseudo){
+          const mark="data-lumink-rg-"+idx+"-"+(pseudo==="::before"?"b":"a");
+          try{ node.setAttribute(mark,""); pseudoRules.push("["+mark+"]"+pseudo+"{"+decl.replace(/;/g,"!important;")+"}"); }catch(e){}
+        } else {
+          try{ node.style.cssText+=";"+decl; }catch(e){}
+        }
+      });
+    });
+    if(pseudoRules.length){
+      const style=doc.createElement("style");
+      style.setAttribute("data-lumink-rg","1");
+      style.textContent=pseudoRules.join("\n");
+      (doc.head||doc.documentElement).appendChild(style);
+    }
+  }
   async function exportIdeaViewportPng(id) {
     if(st.curNoteId===id) await flushIdeaBoard(false);
     const n=getNote(id); if(!n || n.type!=="idea") return;
@@ -8229,7 +8339,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
         logging:false,
         useCORS:true,
         allowTaint:false,
-        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} },
+        onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} try{ rasterizeRepeatingGradients(el||doc.body); }catch(e){} },
         width:Math.max(1,Math.round(crop.w)),
         height:Math.max(1,Math.round(crop.h)),
         windowWidth:Math.max(1,Math.round(crop.w)),
