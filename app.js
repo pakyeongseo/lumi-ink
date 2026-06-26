@@ -5806,7 +5806,11 @@ ${gallery}
   function ideaColorMeta(key) {
     if (isIdeaColorKey(key)) return IDEA_ALL_COLORS[key];
     const custom=normHex(key);
-    if (custom) return { name:custom, grad:`linear-gradient(135deg,${mixHex(custom,"#ffffff",.14)},${mixHex(custom,"#111722",.28)})`, ig:[mixHex(custom,"#ffffff",.14),mixHex(custom,"#111722",.28)] };
+    if (custom) {
+      const a = mixHex(custom, "#ffffff", .18);
+      const b = mixHex(custom, "#ffffff", .04);
+      return { name:custom, grad:`linear-gradient(135deg,${a},${b})`, ig:[a,b] };
+    }
     return IDEA_THEME_COLORS.blue;
   }
   function hexRgb(hex) { const value=String(hex||"").replace("#",""); if(!/^[0-9a-fA-F]{6}$/.test(value)) return [106,208,255]; return [parseInt(value.slice(0,2),16),parseInt(value.slice(2,4),16),parseInt(value.slice(4,6),16)]; }
