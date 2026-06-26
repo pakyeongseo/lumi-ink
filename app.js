@@ -344,7 +344,7 @@
       });
       if (changed) await put("notes", note);
     }
-    // v63.50+: persona and character share the card editor but remain separate memo types.
+    // v64: persona and character share the card editor but remain separate memo types.
     // Old persona records are normalized to the card data model without changing their type.
     const legacyPersonas = st.notes.filter((n) => n && n.type === "persona");
     if (legacyPersonas.length) {
@@ -651,7 +651,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["idea", "아이디어 보드"], ["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["free", "자유 메모"]];
+    const SECTIONS = [["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그 저장"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["idea", "아이디어 보드"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => noteSectionKey(n) === t);
@@ -1000,6 +1000,14 @@
   function refreshHtmlPreview(source) {
     const frame = $("htmlPreview"); if (!frame) return;
     try { frame.srcdoc = buildSandboxPreview(source); } catch (e) { frame.srcdoc = "<!doctype html><meta charset='utf-8'><pre>미리보기를 만들지 못했어요.</pre>"; }
+  }
+  function openHtmlPreviewPage() {
+    const source = $("htmlSource").value || "<!doctype html><meta charset='utf-8'>";
+    const blob = new Blob([source], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) { URL.revokeObjectURL(url); toast("팝업 차단 때문에 웹페이지를 열지 못했어요"); return; }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
   function queueHtmlPreview(source) {
     clearTimeout(htmlPreviewTimer);
@@ -3413,6 +3421,43 @@
     });
     $on("charCoverClose", "click", closeModal);
   }
+  async function switchCharacterCardType(n) {
+    if (!n || !isCharacterCardType(n)) return;
+    if (st.charEdit && st.curNoteId === n.id) await flushCharacter();
+    const nextType = n.type === "persona" ? "character" : "persona";
+    n.type = nextType;
+    ensureCharacterData(n).cardTypeVersion = 2;
+    if (!n.titleLocked) syncCharacterTitle(n);
+    await saveCharacter(n, true);
+    if (st.curNoteId === n.id) renderCharacter();
+    render(); renderSidebar();
+    toast(nextType === "persona" ? "페르소나 타입으로 전환했어요" : "캐릭터 타입으로 전환했어요");
+  }
+  async function copyActiveCharacterPageAsSingle(n) {
+    if (!n || !isCharacterCardType(n)) return;
+    if (st.charEdit && st.curNoteId === n.id) await flushCharacter();
+    const d = ensureCharacterData(n), page = activeCharacterPage(n);
+    if (!page) return;
+    const copy = ensureCharacterPage(jsonCopy(page) || makeCharacterPage());
+    const sourcePageId = copy.id;
+    copy.id = uid();
+    const nn = await createNote(n.type, n.projectId, { characterMode: "single" });
+    nn.data = {
+      mode: "single",
+      activeId: copy.id,
+      coverImage: copy.square || copy.portrait || (copy.gallery && copy.gallery[0]) || null,
+      pages: [copy],
+      cardTypeVersion: 2,
+      splitSource: { noteId: n.id, title: String(n.title || ""), pageId: sourcePageId, at: now() }
+    };
+    nn.chipColor = n.chipColor || null;
+    nn.titleLocked = false;
+    syncCharacterTitle(nn);
+    await saveCharacter(nn, true);
+    st.curNoteId = nn.id; st.charEdit = false;
+    toast(n.type === "persona" ? "현재 페이지를 단일 페르소나로 복사했어요" : "현재 페이지를 단일 캐릭터로 복사했어요");
+    go({ s: "character" });
+  }
   function openCharacterSheet(n) {
     const d = ensureCharacterData(n), single = d.mode === "single";
     const baseKind = n.type === "persona" ? "페르소나" : "캐릭터";
@@ -3424,8 +3469,10 @@
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.save, label: `${kind} HTML로 저장`, fn: async () => { if (st.charEdit) await flushCharacter(); chooseCharacterExportOptions(n.id); } }
     ];
+    items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H8z"/><path d="M4 8h8l4 4v8H4z"/><path d="M9 14h6M12 11v6"/></svg>', label: n.type === "persona" ? "캐릭터 타입으로 전환" : "페르소나 타입으로 전환", fn: () => switchCharacterCardType(n) });
     if (single) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M18 16v5M15.5 18.5h5"/></svg>', label: `${baseKind} 모음으로 확장`, fn: () => setCharacterMode(n, "collection") });
     else if (d.pages.length === 1) items.push({ icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>', label: `단일 ${baseKind}로 정리`, fn: () => setCharacterMode(n, "single") });
+    if (!single && d.pages.length > 1) items.push({ icon: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="10" height="14" rx="2"/><path d="M9 8h2M9 12h2"/><path d="M15 10h4v10H9v-2"/></svg>', label: `현재 페이지를 단일 ${baseKind}로 분리 복사`, fn: () => copyActiveCharacterPageAsSingle(n) });
     if (!single && d.pages.length > 1) items.push({ icon: '<svg viewBox="0 0 24 24"><path d="M8 5h8M8 19h8M12 5v14"/><path d="M5 12h14"/></svg>', label: "현재 캐릭터 페이지 삭제", danger: true, fn: () => removeActiveCharacterPage() });
     items.push(
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
@@ -4674,14 +4721,19 @@ ${gallery}
     const exportData = jsonCopy(d) || { activeId: d.activeId, pages: d.pages };
     if (!includeCreator) exportData.pages.forEach((page) => { page.creatorMemo = ""; });
     const exportKind = n.type === "persona" ? "persona" : "character";
+    const single = characterMode(n) === "single";
+    const kindName = exportKind === "persona" ? "페르소나" : "캐릭터";
+    const collectionName = `${kindName} 모음`;
+    const fallbackTitle = single ? kindName : collectionName;
+    const footLabel = single ? `${kindName} 카드` : collectionName;
     const payload = JSON.stringify({ app: "lumink", kind: exportKind, title: n.title, data: exportData }).replace(/</g, "\\u003c");
     const css = personaExportCSS(theme === "dark" ? "dark" : "light") + `.cnav{display:flex;gap:8px;overflow:auto;margin:0 0 20px;padding:3px 1px 5px}.cnav button{border:1px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").line};background:transparent;color:inherit;border-radius:12px;padding:6px 9px;display:flex;gap:7px;align-items:center;cursor:pointer;white-space:nowrap;font:inherit;font-size:12px}.cnav button.active{border-color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.cnav img,.nav-placeholder{width:28px;height:28px;border-radius:8px;object-fit:cover;background:${personaExportPalette(theme === "dark" ? "dark" : "light").panel2};display:grid;place-items:center}.char-page[hidden]{display:none}.creator{margin:0 0 28px}.creator-label{display:inline-block;font-weight:800;font-size:11px;letter-spacing:.11em;color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor};background:${personaExportPalette(theme === "dark" ? "dark" : "light").chipBg};padding:5px 12px;border-radius:999px;margin-bottom:11px}.creator .detail{border-left:3px solid ${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}.creator-rich img{max-width:100%;height:auto;border-radius:8px}.creator-rich pre{overflow:auto}.creator-rich a{color:${personaExportPalette(theme === "dark" ? "dark" : "light").chipColor}}`;
     const doc = `<!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="character"><title>${esc(n.title || (characterMode(n) === "single" ? "페르소나" : "캐릭터 모음"))}</title><style>${css}</style></head><body><main class="wrap"><h1 class="ptitle">${esc(n.title || (characterMode(n) === "single" ? "페르소나" : "캐릭터 모음"))}</h1>${nav}${pageHtml}<div class="foot">Lumi Ink · ${characterMode(n) === "single" ? "페르소나 카드" : "캐릭터 모음"}</div></main><script type="application/json" id="lumink-character">${payload}<\/script><script>(function(){var pages=[].slice.call(document.querySelectorAll('.char-page')),buttons=[].slice.call(document.querySelectorAll('.cnav button'));function show(i){pages.forEach(function(p,x){p.hidden=x!==i});buttons.forEach(function(b,x){b.classList.toggle('active',x===i)});window.scrollTo({top:0,behavior:'smooth'})}buttons.forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.page)})})})();<\/script></body></html>`;
-    const name = ((n.title || "character").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "character") + ".html";
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="${exportKind}"><title>${esc(n.title || fallbackTitle)}</title><style>${css}</style></head><body><main class="wrap"><h1 class="ptitle">${esc(n.title || fallbackTitle)}</h1>${nav}${pageHtml}<div class="foot">Lumi Ink · ${footLabel}</div></main><script type="application/json" id="lumink-character">${payload}<\/script><script>(function(){var pages=[].slice.call(document.querySelectorAll('.char-page')),buttons=[].slice.call(document.querySelectorAll('.cnav button'));function show(i){pages.forEach(function(p,x){p.hidden=x!==i});buttons.forEach(function(b,x){b.classList.toggle('active',x===i)});window.scrollTo({top:0,behavior:'smooth'})}buttons.forEach(function(b){b.addEventListener('click',function(){show(+b.dataset.page)})})})();<\/script></body></html>`;
+    const name = ((n.title || exportKind).replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || exportKind) + ".html";
     const blob = new Blob([doc], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500); toast(characterMode(n) === "single" ? "페르소나 HTML로 저장했어요" : "캐릭터 모음 HTML로 저장했어요");
+    setTimeout(() => URL.revokeObjectURL(url), 1500); toast(`${footLabel} HTML로 저장했어요`);
   }
 
   // 자유 메모는 인라인 디자인 HTML을 보관하는 용도도 겸합니다.
@@ -5437,6 +5489,7 @@ ${gallery}
     $on("htmlMore", "click", () => openNoteSheet(st.curNoteId));
     $on("htmlCopy", "click", () => clipboardCopy($("htmlSource").value).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")));
     $on("htmlReload", "click", () => { refreshHtmlPreview($("htmlSource").value); toast("미리보기를 새로고침했어요"); });
+    $on("htmlOpenPage", "click", openHtmlPreviewPage);
     $on("htmlModeSource", "click", () => setHtmlView("source"));
     $on("htmlModePreview", "click", () => setHtmlView("preview"));
     $on("htmlModeSplit", "click", () => setHtmlView("split"));
