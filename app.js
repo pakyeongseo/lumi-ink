@@ -615,7 +615,7 @@
       const base = n.type === "persona" ? "페르소나" : "캐릭터";
       meta = characterMode(n) === "single"
         ? (tags.length ? tags.join(", ") : `${base} 카드`)
-        : `${d.pages.length}명 · ${tags.length ? tags.join(", ") : `${base} 카드`}`;
+        : `${d.pages.length}명 · ${base}`;
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
@@ -3621,23 +3621,23 @@
       </div>
       <div class="type-card" data-t="log">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/></svg></div>
-        <div><div class="tc-name">로그 저장</div><div class="tc-desc">정규식 디자인 · 이름 가림 · 게시용 HTML 내보내기</div></div>
+        <div><div class="tc-name">로그 저장</div><div class="tc-desc">대화 로그를 저장하고 꾸미는 타입 · 이름 가림 · 게시용 HTML 내보내기</div></div>
       </div>
       <div class="type-card" data-t="idea">
-        <div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h3M8 12h6M8 16h4"/><path d="M16.5 8.5h.01M15 15l1.8-2 2.2 3"/></svg></div>
-        <div><div class="tc-name">아이디어 보드</div><div class="tc-desc">무한 캔버스 · 메모지 · 이미지 · 음악 · 영상 · 인용 링크</div></div>
+        <div class="tc-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 16.5l2.4-5.8 2.3 4.2 1.5-2.2 2.8 3.8"/><circle cx="15.8" cy="8.2" r="1.5"/><path d="M7 7.5h4"/></svg></div>
+        <div><div class="tc-name">아이디어 보드</div><div class="tc-desc">캔버스 안에 다양한 요소를 배치하여 자유롭게 꾸미는 타입</div></div>
       </div>
       <div class="type-card" data-t="persona" data-character-mode="single">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-        <div><div class="tc-name">페르소나</div><div class="tc-desc">한 인물 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
+        <div><div class="tc-name">페르소나</div><div class="tc-desc">페르소나 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
       </div>
       <div class="type-card" data-t="character" data-character-mode="single">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
-        <div><div class="tc-name">단일 캐릭터</div><div class="tc-desc">캐릭터 카테고리에 속하는 단일 인물 카드</div></div>
+        <div><div class="tc-name">단일 캐릭터</div><div class="tc-desc">캐릭터 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
       </div>
       <div class="type-card" data-t="character" data-character-mode="collection">
         <div class="tc-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/></svg></div>
-        <div><div class="tc-name">캐릭터 모음</div><div class="tc-desc">한 메모 안의 복수 인물 카드 · 페이지별 제작 메모</div></div>
+        <div><div class="tc-name">캐릭터</div><div class="tc-desc">캐릭터 카드 · 국문/영문 · 이미지 · 크리에이터 메모</div></div>
       </div>
       <div class="m-row"><button class="m-btn" data-x="cancel">취소</button></div>
     `);
