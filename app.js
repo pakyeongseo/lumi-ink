@@ -3640,7 +3640,7 @@
     };
     openModal(`
       <div class="type-picker-modal">
-        <h3>새 메모</h3><p class="m-sub">만들 작업을 고르거나, 바로 자유롭게 적어 보세요.</p>
+        <h3>새 메모</h3><p class="m-sub">생성할 메모 타입을 골라주세요</p>
         <button type="button" class="type-quick-free" data-create-type="free" aria-label="자유 메모 만들기">
           <span class="tqf-icon">${icons.free}</span>
           <span class="tqf-copy"><span class="tqf-eyebrow">QUICK NOTE</span><span class="tqf-title">자유 메모</span><span class="tqf-sub">서식 보존 편집기로 바로 시작하기</span></span>
@@ -5400,15 +5400,14 @@ ${gallery}
     const limit = getAutoBackupLimit();
     getAll("backups").then((all) => {
       const count = all.length;
-      openModal(`<h3>자동 백업</h3><p class="m-sub">메모를 저장할 때마다 현재 상태를 스냅샷으로 남겨요. 보관 수를 줄이면 가장 오래된 백업부터 바로 정리됩니다.</p>
+      openModal(`<h3>자동 백업 보관 설정</h3><p class="m-sub">메모를 저장할 때마다 현재 상태를 스냅샷으로 남겨요. 보관 수를 줄이면 가장 오래된 백업부터 바로 정리됩니다.</p>
         <div class="backup-limit-control" role="group" aria-label="자동 백업 보관 개수">
           <button type="button" class="backup-step-btn" id="autoBackupMinus" aria-label="보관 개수 줄이기">−</button>
           <label class="backup-limit-readout"><input id="autoBackupLimitInput" type="number" inputmode="numeric" min="${AUTO_BACKUP_LIMIT_MIN}" max="${AUTO_BACKUP_LIMIT_MAX}" value="${limit}" aria-label="보관할 자동 백업 개수"><span>개 보관</span></label>
           <button type="button" class="backup-step-btn" id="autoBackupPlus" aria-label="보관 개수 늘리기">+</button>
         </div>
         <div class="backup-limit-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg><span>최소 ${AUTO_BACKUP_LIMIT_MIN}개부터 최대 ${AUTO_BACKUP_LIMIT_MAX}개까지 설정할 수 있어요. 현재 ${count}개 저장됨.</span></div>
-        <button type="button" class="backup-list-link" id="autoBackupOpenList"><span class="bll-main"><span class="bll-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><span><b>자동 백업 목록</b><small>스냅샷을 확인하고 복원하기</small></span></span><span>›</span></button>
-        <div class="m-row"><button class="m-btn" id="autoBackupCancel">취소</button><button class="m-btn primary" id="autoBackupSave">저장</button></div>`);
+        <div class="m-row"><button class="m-btn" id="autoBackupBackToList">목록으로</button><button class="m-btn primary" id="autoBackupSave">저장</button></div>`);
       const input = $("autoBackupLimitInput");
       const current = () => clampAutoBackupLimit(input.value);
       const sync = (value) => { input.value = String(clampAutoBackupLimit(value)); };
@@ -5416,8 +5415,7 @@ ${gallery}
       $on("autoBackupPlus", "click", () => sync(current() + 1));
       input.addEventListener("blur", () => sync(current()));
       input.addEventListener("input", () => { if (input.value && Number(input.value) > AUTO_BACKUP_LIMIT_MAX) sync(AUTO_BACKUP_LIMIT_MAX); });
-      $on("autoBackupCancel", "click", closeModal);
-      $on("autoBackupOpenList", "click", () => { closeModal(); openAutoBackupList(); });
+      $on("autoBackupBackToList", "click", () => { closeModal(); openAutoBackupList(); });
       $on("autoBackupSave", "click", async () => {
         const next = setAutoBackupLimit(current());
         try {
@@ -5432,14 +5430,16 @@ ${gallery}
   function openAutoBackupList() {
     getAll("backups").then((all) => {
       all.sort((a, b) => b.ts - a.ts);
-      if (!all.length) { openModal(`<h3>자동 백업</h3><p class="m-sub">아직 저장된 자동 백업이 없어요. 메모를 저장하면 자동으로 스냅샷이 쌓여요.</p><div class="m-row"><button class="m-btn primary" id="abClose">확인</button></div>`); $on("abClose", "click", closeModal); return; }
+      const limit = getAutoBackupLimit();
       const rows = all.map((s) => {
         const dt = new Date(s.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
         const fileLabel = Array.isArray(s.files) ? ` · 첨부 ${s.files.length}` : " · 첨부 미포함";
         return `<div class="lore-pick" data-bk="${s.id}"><div class="lp-body"><div class="lp-name">${label}</div><div class="lp-meta">프로젝트 ${s.projects.length} · 메모 ${s.notes.length}${fileLabel}</div></div><button class="ce-addbtn ab-restore" data-bk="${s.id}">복원 ›</button></div>`;
       }).join("");
-      const limit = getAutoBackupLimit();
-      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}/${limit}개 스냅샷. v44부터 첨부파일도 함께 보관합니다. 복원 방식은 병합 또는 완전 교체를 고를 수 있어요.</p><div class="lore-pick-list">${rows}</div><div class="m-row"><button class="m-btn" id="abSettings">보관 설정</button><button class="m-btn primary" id="abClose2">닫기</button></div>`);
+      const listBody = all.length
+        ? `<div class="lore-pick-list">${rows}</div>`
+        : `<div class="auto-backup-empty"><span class="auto-backup-empty-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><div><b>아직 저장된 자동 백업이 없어요</b><small>메모를 저장하면 이곳에 스냅샷이 쌓여요.</small></div></div>`;
+      openModal(`<h3>자동 백업</h3><p class="m-sub">최근 ${all.length}/${limit}개 스냅샷. v44부터 첨부파일도 함께 보관합니다. 복원 방식은 병합 또는 완전 교체를 고를 수 있어요.</p>${listBody}<div class="m-row"><button class="m-btn" id="abSettings">보관 설정</button><button class="m-btn primary" id="abClose2">닫기</button></div>`);
       $on("abClose2", "click", closeModal);
       $on("abSettings", "click", () => { closeModal(); openAutoBackupSettings(); });
       document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
@@ -5447,7 +5447,7 @@ ${gallery}
         const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
         openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [] }, `${label} 자동 백업`);
       }));
-    });
+    }).catch(() => { toast("자동 백업 정보를 읽지 못했어요"); });
   }
 
 
@@ -5479,7 +5479,7 @@ ${gallery}
     $on("setBackup", "click", exportBackup);
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
-    $on("setAutoBackup", "click", openAutoBackupSettings);
+    $on("setAutoBackup", "click", openAutoBackupList);
     $on("setStorage", "click", () => {
       const val = $("setStorageVal").textContent, sub = $("setStorageSub").textContent;
       openModal(`<h3>저장공간</h3><p class="m-sub"><b>${esc(val)}</b><br>${esc(sub)}<br><br>표시 용량은 이 사이트가 브라우저에 저장한 데이터와 자동 백업을 포함해요. 이미지가 많을수록 자동 백업도 함께 커집니다.</p><div class="m-row"><button class="m-btn primary" id="storageClose">확인</button></div>`);

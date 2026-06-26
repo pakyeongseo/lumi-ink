@@ -114,3 +114,7 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+
+## v64.4
+- `Lumi_Ink_v64.4_Release_Notes.md`: 자동 백업 목록 우선 진입과 새 메모 투명 카드 칩 UI 조정.
