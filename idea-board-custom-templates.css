@@ -2230,25 +2230,7 @@
   place-items:center;
   pointer-events:none;
 }
-.idea-divider-body span {
-  display:block;
-  width:100%;
-  height:0;
-  border-top:3px solid var(--idea-color-b,#7b9bff);
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.12));
-}
-.idea-divider[data-divider-style="dashed"] .idea-divider-body span,
-.idea-preview-divider[data-divider-style="dashed"] .idea-divider-body span {
-  border-top-style:dashed;
-}
-.idea-divider.no-shadow .idea-divider-body span {
-  filter:none;
-}
-.idea-divider.selected .idea-divider-body span,
-.idea-divider.multi-selected .idea-divider-body span,
-.idea-divider.group-selected .idea-divider-body span {
-  border-top-color:var(--accent);
-}
+/* 구분선 span·패턴·선택 스타일은 파일 하단 "구분선 — 굵기 변수 + 디자인 30종" 블록에서 정의합니다. */
 .idea-preview-divider {
   display:block;
 }
@@ -2258,7 +2240,7 @@
   margin-top:8px;
 }
 .idea-preview-divider .idea-divider-body span {
-  border-top-color:var(--idea-color-b,#7b9bff);
+  /* 색은 하단 구분선 디자인 블록의 background로 처리 */
 }
 .idea-options-row[data-idea-divider-style] > span:first-child {
   color:var(--accent);
@@ -2423,3 +2405,115 @@
 .ce-eyedropper-hex { font:800 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; color:#fff; background:rgba(0,0,0,.74); padding:3px 8px; border-radius:7px; letter-spacing:.06em; }
 .ce-eyedropper-hint { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:rgba(0,0,0,.78); color:#fff; font-size:12px; font-weight:600; padding:8px 15px; border-radius:999px; pointer-events:none; max-width:90vw; text-align:center; z-index:2; }
 .ce-eyedropper-cancel { position:fixed; top:14px; right:14px; background:rgba(0,0,0,.72); color:#fff; border:1px solid rgba(255,255,255,.32); border-radius:999px; padding:8px 17px; font-size:13px; font-weight:700; z-index:3; }
+
+/* ============================================================
+ * 구분선 — 굵기 변수(--idea-divider-weight) + 디자인 30종
+ * 선: .idea-divider-body span / 장식: .idea-divider-body ::before·::after
+ * 색: --idea-color-b, 굵기: --idea-divider-weight
+ * ============================================================ */
+.idea-divider-body { --c: var(--idea-color-b,#7b9bff); --w: var(--idea-divider-weight,3px); }
+.idea-divider-body span {
+  display:block; width:100%; height:var(--w); min-height:1px;
+  background:var(--c); border:0; border-radius:999px; position:relative;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.14));
+}
+.idea-divider-body::before, .idea-divider-body::after { content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none; }
+.idea-divider-body::before, .idea-divider-body::after { display:none; }
+
+/* 선택/그림자 공통 */
+.idea-divider.no-shadow .idea-divider-body span { filter:none; }
+.idea-divider.selected .idea-divider-body span, .idea-divider.multi-selected .idea-divider-body span, .idea-divider.group-selected .idea-divider-body span { background:var(--accent); }
+.idea-divider.selected .idea-divider-body::before, .idea-divider.multi-selected .idea-divider-body::before, .idea-divider.group-selected .idea-divider-body::before,
+.idea-divider.selected .idea-divider-body::after, .idea-divider.multi-selected .idea-divider-body::after, .idea-divider.group-selected .idea-divider-body::after { color:var(--accent); }
+
+/* ── 기본 2종 재정의(배경 기반) ── */
+.idea-divider[data-divider-style="solid"] .idea-divider-body span, .idea-preview-divider[data-divider-style="solid"] .idea-divider-body span { background:var(--c); }
+.idea-divider[data-divider-style="dashed"] .idea-divider-body span, .idea-preview-divider[data-divider-style="dashed"] .idea-divider-body span { background:repeating-linear-gradient(90deg,var(--c) 0 14px,transparent 14px 24px); border-radius:0; }
+
+/* ── 선 패턴 10종 ── */
+.idea-divider[data-divider-style="dotted"] .idea-divider-body span, .idea-preview-divider[data-divider-style="dotted"] .idea-divider-body span { background:radial-gradient(circle, var(--c) 46%, transparent 50%); background-size:calc(var(--w)*2.6) 100%; background-repeat:repeat-x; border-radius:0; }
+.idea-divider[data-divider-style="dashDot"] .idea-divider-body span, .idea-preview-divider[data-divider-style="dashDot"] .idea-divider-body span { background:repeating-linear-gradient(90deg,var(--c) 0 16px,transparent 16px 23px,var(--c) 23px 27px,transparent 27px 34px); border-radius:0; }
+.idea-divider[data-divider-style="longDash"] .idea-divider-body span, .idea-preview-divider[data-divider-style="longDash"] .idea-divider-body span { background:repeating-linear-gradient(90deg,var(--c) 0 26px,transparent 26px 40px); border-radius:0; }
+.idea-divider[data-divider-style="fineDash"] .idea-divider-body span, .idea-preview-divider[data-divider-style="fineDash"] .idea-divider-body span { background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 10px); border-radius:0; }
+.idea-divider[data-divider-style="double"] .idea-divider-body span, .idea-preview-divider[data-divider-style="double"] .idea-divider-body span { height:calc(var(--w)*2.8); background:linear-gradient(var(--c) 0 var(--w), transparent var(--w) calc(100% - var(--w)), var(--c) calc(100% - var(--w)) 100%); border-radius:0; }
+.idea-divider[data-divider-style="triple"] .idea-divider-body span, .idea-preview-divider[data-divider-style="triple"] .idea-divider-body span { height:calc(var(--w)*4.2); background:linear-gradient(var(--c) 0 var(--w), transparent var(--w) calc(50% - var(--w)/2), var(--c) calc(50% - var(--w)/2) calc(50% + var(--w)/2), transparent calc(50% + var(--w)/2) calc(100% - var(--w)), var(--c) calc(100% - var(--w)) 100%); border-radius:0; }
+.idea-divider[data-divider-style="gradientFade"] .idea-divider-body span, .idea-preview-divider[data-divider-style="gradientFade"] .idea-divider-body span { background:linear-gradient(90deg, transparent, var(--c) 24%, var(--c) 76%, transparent); }
+.idea-divider[data-divider-style="taperedLens"] .idea-divider-body span, .idea-preview-divider[data-divider-style="taperedLens"] .idea-divider-body span { height:calc(var(--w)*3.2); background:var(--c); clip-path:polygon(0 50%, 6% 32%, 94% 32%, 100% 50%, 94% 68%, 6% 68%); filter:drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+.idea-divider[data-divider-style="glowLine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="glowLine"] .idea-divider-body span { background:var(--c); box-shadow:0 0 6px var(--c),0 0 12px color-mix(in srgb,var(--c) 60%,transparent); filter:none; }
+.idea-divider[data-divider-style="shadowLine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="shadowLine"] .idea-divider-body span { background:var(--c); filter:drop-shadow(0 3px 4px rgba(0,0,0,.42)); }
+
+/* ── 분절/구슬 5종 ── */
+.idea-divider[data-divider-style="beads"] .idea-divider-body span, .idea-preview-divider[data-divider-style="beads"] .idea-divider-body span { height:calc(var(--w)*2.6); background:radial-gradient(circle, var(--c) 44%, transparent 48%); background-size:calc(var(--w)*4) 100%; background-repeat:repeat-x; border-radius:0; }
+.idea-divider[data-divider-style="squareDash"] .idea-divider-body span, .idea-preview-divider[data-divider-style="squareDash"] .idea-divider-body span { height:calc(var(--w)*2); background:repeating-linear-gradient(90deg,var(--c) 0 calc(var(--w)*2),transparent calc(var(--w)*2) calc(var(--w)*3.4)); border-radius:0; }
+.idea-divider[data-divider-style="railroad"] .idea-divider-body span, .idea-preview-divider[data-divider-style="railroad"] .idea-divider-body span { height:calc(var(--w)*3); background:linear-gradient(var(--c) 0 var(--w), transparent var(--w) calc(100% - var(--w)), var(--c) calc(100% - var(--w)) 100%), repeating-linear-gradient(90deg, var(--c) 0 2px, transparent 2px 12px); background-blend-mode:normal; border-radius:0; }
+.idea-divider[data-divider-style="ladder"] .idea-divider-body span, .idea-preview-divider[data-divider-style="ladder"] .idea-divider-body span { height:calc(var(--w)*3.4); background:linear-gradient(var(--c) 0 var(--w), transparent var(--w) calc(100% - var(--w)), var(--c) calc(100% - var(--w)) 100%), repeating-linear-gradient(90deg, var(--c) 0 2px, transparent 2px 16px); border-radius:0; }
+.idea-divider[data-divider-style="morse"] .idea-divider-body span, .idea-preview-divider[data-divider-style="morse"] .idea-divider-body span { background:repeating-linear-gradient(90deg,var(--c) 0 18px,transparent 18px 26px,var(--c) 26px 32px,transparent 32px 40px); border-radius:0; }
+
+/* ── 가운데 장식 공통: 양분할 선 + 장식 표시 ── */
+.idea-divider[data-divider-style="dotCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="dotCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="circleCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="circleCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="diamondCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="diamondCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="squareCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="squareCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="starCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="starCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="flowerCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="flowerCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="leafCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="leafCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="heartCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="heartCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="plusCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="plusCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="gemCenter"] .idea-divider-body span, .idea-preview-divider[data-divider-style="gemCenter"] .idea-divider-body span,
+.idea-divider[data-divider-style="ornateScroll"] .idea-divider-body span, .idea-preview-divider[data-divider-style="ornateScroll"] .idea-divider-body span,
+.idea-divider[data-divider-style="taperDots"] .idea-divider-body span, .idea-preview-divider[data-divider-style="taperDots"] .idea-divider-body span {
+  background:linear-gradient(90deg, var(--c) 0 calc(50% - 15px), transparent calc(50% - 15px) calc(50% + 15px), var(--c) calc(50% + 15px) 100%);
+}
+.idea-divider[data-divider-style="dotCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="dotCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="circleCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="circleCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="diamondCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="diamondCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="squareCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="squareCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="starCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="starCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="flowerCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="flowerCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="leafCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="leafCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="heartCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="heartCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="plusCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="plusCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="gemCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="gemCenter"] .idea-divider-body::before,
+.idea-divider[data-divider-style="ornateScroll"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="ornateScroll"] .idea-divider-body::before,
+.idea-divider[data-divider-style="taperDots"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="taperDots"] .idea-divider-body::before { display:block; color:var(--c); }
+
+.idea-divider[data-divider-style="dotCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="dotCenter"] .idea-divider-body::before { width:10px; height:10px; border-radius:50%; background:var(--c); }
+.idea-divider[data-divider-style="circleCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="circleCenter"] .idea-divider-body::before { width:12px; height:12px; border-radius:50%; border:2.4px solid var(--c); }
+.idea-divider[data-divider-style="diamondCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="diamondCenter"] .idea-divider-body::before { width:12px; height:12px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); }
+.idea-divider[data-divider-style="squareCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="squareCenter"] .idea-divider-body::before { width:11px; height:11px; background:var(--c); border-radius:2px; }
+.idea-divider[data-divider-style="starCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="starCenter"] .idea-divider-body::before { content:"✦"; font-size:18px; line-height:1; }
+.idea-divider[data-divider-style="flowerCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="flowerCenter"] .idea-divider-body::before { content:"✿"; font-size:17px; line-height:1; }
+.idea-divider[data-divider-style="leafCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="leafCenter"] .idea-divider-body::before { content:"❧"; font-size:18px; line-height:1; }
+.idea-divider[data-divider-style="heartCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="heartCenter"] .idea-divider-body::before { content:"♥"; font-size:15px; line-height:1; }
+.idea-divider[data-divider-style="plusCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="plusCenter"] .idea-divider-body::before { content:"+"; font-size:20px; font-weight:900; line-height:1; }
+.idea-divider[data-divider-style="gemCenter"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="gemCenter"] .idea-divider-body::before { content:"◆"; font-size:14px; line-height:1; }
+.idea-divider[data-divider-style="ornateScroll"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="ornateScroll"] .idea-divider-body::before { content:"❦"; font-size:17px; line-height:1; }
+.idea-divider[data-divider-style="taperDots"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="taperDots"] .idea-divider-body::before { width:11px; height:11px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); }
+
+/* ── 세 점 ── */
+.idea-divider[data-divider-style="dotsTrio"] .idea-divider-body span, .idea-preview-divider[data-divider-style="dotsTrio"] .idea-divider-body span { background:none; height:8px; }
+.idea-divider[data-divider-style="dotsTrio"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="dotsTrio"] .idea-divider-body::before { display:block; width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:-16px 0 0 var(--c), 16px 0 0 var(--c); }
+
+/* ── 화살 끝 ── */
+.idea-divider[data-divider-style="arrowEnds"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="arrowEnds"] .idea-divider-body::before,
+.idea-divider[data-divider-style="arrowEnds"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="arrowEnds"] .idea-divider-body::after { display:block; top:50%; width:0; height:0; border:6px solid transparent; }
+.idea-divider[data-divider-style="arrowEnds"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="arrowEnds"] .idea-divider-body::before { left:0; transform:translateY(-50%); border-right-color:var(--c); border-left:0; }
+.idea-divider[data-divider-style="arrowEnds"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="arrowEnds"] .idea-divider-body::after { left:auto; right:0; transform:translateY(-50%); border-left-color:var(--c); border-right:0; }
+
+/* ── 괄호 끝 ── */
+.idea-divider[data-divider-style="bracketEnds"] .idea-divider-body span, .idea-preview-divider[data-divider-style="bracketEnds"] .idea-divider-body span { background:linear-gradient(90deg, transparent 0 14px, var(--c) 14px calc(100% - 14px), transparent calc(100% - 14px) 100%); }
+.idea-divider[data-divider-style="bracketEnds"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="bracketEnds"] .idea-divider-body::before { display:block; content:"❮"; left:8px; transform:translate(-50%,-50%); color:var(--c); font-size:15px; font-weight:800; }
+.idea-divider[data-divider-style="bracketEnds"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="bracketEnds"] .idea-divider-body::after { display:block; content:"❯"; left:auto; right:8px; transform:translate(50%,-50%); color:var(--c); font-size:15px; font-weight:800; }
+
+/* taperDots 보조 점 번짐 */
+.idea-divider[data-divider-style="taperDots"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="taperDots"] .idea-divider-body::after { display:block; width:5px; height:5px; border-radius:50%; background:var(--c); box-shadow:-15px 0 0 -1px var(--c), 15px 0 0 -1px var(--c), -26px 0 0 -2px color-mix(in srgb,var(--c) 60%,transparent), 26px 0 0 -2px color-mix(in srgb,var(--c) 60%,transparent); }
+
+/* ── 구분선 디자인 선택 그리드 ── */
+.idea-divider-weight-range { margin-bottom:6px; }
+.idea-divider-choice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:6px; max-height:46vh; overflow-y:auto; padding:2px 2px 4px; }
+.idea-divider-choice { display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:9px 10px 7px; border:1px solid var(--line); border-radius:13px; background:var(--surface); cursor:pointer; text-align:center; }
+.idea-divider-choice.active { border-color:color-mix(in srgb,var(--accent) 55%,var(--line)); background:linear-gradient(145deg,var(--accent-soft),var(--surface)); }
+.idea-divider-choice .idea-preview-divider { width:100%; }
+.idea-divider-choice .idea-preview-divider .idea-divider-body { position:relative; height:30px; margin-top:0; }
+.idea-divider-choice small { font-size:11px; line-height:1.2; color:color-mix(in srgb,var(--ink) 62%,transparent); }
+.idea-divider-choice.active small { color:var(--accent); font-weight:700; }

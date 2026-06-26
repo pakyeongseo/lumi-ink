@@ -1215,6 +1215,10 @@
     if(typeof window.html2canvas!=="function"){ toast("이 브라우저에서는 화면 스포이드를 사용할 수 없어요."); return; }
     toast("화면을 준비하고 있어요…");
     const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+    const scrim=document.getElementById("modalScrim");
+    const scrimViz=scrim?scrim.style.visibility:"";
+    if(scrim) scrim.style.visibility="hidden";
+    await new Promise((r)=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     let shot;
     try{
       shot=await window.html2canvas(document.body,{
@@ -1224,7 +1228,8 @@
         scrollX:0, scrollY:0, windowWidth:document.documentElement.clientWidth, windowHeight:document.documentElement.clientHeight,
         onclone:(doc,el)=>{ try{ normalizeCloneColorFns(el||doc.body); }catch(e){} }
       });
-    }catch(e){ console.warn("eyedropper snapshot",e); toast("화면을 캡처하지 못해 스포이드를 열 수 없어요."); return; }
+    }catch(e){ console.warn("eyedropper snapshot",e); if(scrim) scrim.style.visibility=scrimViz; toast("화면을 캡처하지 못해 스포이드를 열 수 없어요."); return; }
+    if(scrim) scrim.style.visibility=scrimViz;
     const ctx=shot.getContext("2d", { willReadFrequently:true });
     await new Promise((resolve)=>{
       const ov=document.createElement("div"); ov.className="ce-eyedropper-overlay";
@@ -5866,7 +5871,37 @@ ${gallery}
   const IDEA_KIND_LABEL = { note:"메모지", image:"이미지", audio:"음악", video:"영상", file:"파일", quote:"링크", frame:"프레임", divider:"구분선" };
   const IDEA_DIVIDER_STYLES = Object.freeze({
     solid: { label:"실선", desc:"가장 기본적인 단일 구분선" },
-    dashed: { label:"점선", desc:"짧은 선이 반복되는 구분선" }
+    dashed: { label:"파선", desc:"짧은 선이 반복되는 구분선" },
+    dotted: { label:"점선", desc:"동그란 점이 이어지는 구분선" },
+    dashDot: { label:"일점쇄선", desc:"선과 점이 번갈아 나오는 구분선" },
+    longDash: { label:"긴 파선", desc:"길쭉한 선이 반복되는 구분선" },
+    fineDash: { label:"잔파선", desc:"촘촘한 짧은 선 구분선" },
+    double: { label:"이중선", desc:"두 줄이 나란한 구분선" },
+    triple: { label:"삼중선", desc:"세 줄이 나란한 구분선" },
+    gradientFade: { label:"페이드", desc:"양끝이 흐려지는 그라데이션 선" },
+    taperedLens: { label:"렌즈", desc:"가운데가 도톰한 렌즈형 선" },
+    glowLine: { label:"네온", desc:"은은하게 빛나는 선" },
+    shadowLine: { label:"그림자선", desc:"진한 그림자가 깔린 선" },
+    beads: { label:"구슬", desc:"동그란 구슬이 꿰인 구분선" },
+    squareDash: { label:"각진 파선", desc:"사각 조각이 이어지는 구분선" },
+    railroad: { label:"레일", desc:"두 줄과 침목의 레일선" },
+    ladder: { label:"사다리", desc:"가로줄과 세로 칸의 사다리선" },
+    morse: { label:"모스", desc:"길고 짧은 점선의 리듬 구분선" },
+    dotCenter: { label:"가운데 점", desc:"중앙에 점이 있는 선" },
+    circleCenter: { label:"가운데 원", desc:"중앙에 빈 원이 있는 선" },
+    diamondCenter: { label:"가운데 마름모", desc:"중앙 마름모 장식 선" },
+    squareCenter: { label:"가운데 사각", desc:"중앙 사각 장식 선" },
+    starCenter: { label:"가운데 별", desc:"중앙 별 장식 선" },
+    flowerCenter: { label:"가운데 꽃", desc:"중앙 꽃 장식 선" },
+    leafCenter: { label:"가운데 잎", desc:"중앙 잎 장식 선" },
+    heartCenter: { label:"가운데 하트", desc:"중앙 하트 장식 선" },
+    plusCenter: { label:"가운데 십자", desc:"중앙 십자 장식 선" },
+    gemCenter: { label:"가운데 보석", desc:"중앙 보석 장식 선" },
+    dotsTrio: { label:"세 점", desc:"가운데 점 세 개 구분선" },
+    arrowEnds: { label:"화살 끝", desc:"양끝이 화살표인 선" },
+    bracketEnds: { label:"괄호 끝", desc:"양끝에 괄호 장식 선" },
+    taperDots: { label:"점 페이드", desc:"가운데 마름모에 점이 번지는 선" },
+    ornateScroll: { label:"스크롤", desc:"중앙 소용돌이 장식 선" }
   });
   const IDEA_DIVIDER_TEMPLATE_GUIDE = `# Lumi Ink 아이디어 보드 구분선 템플릿 가이드
 
@@ -6047,6 +6082,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       , groupId: typeof item.groupId === "string" && item.groupId ? item.groupId : null
       , vAlign: kind === "note" && item.vAlign === "center" ? "center" : "top"
       , dividerStyle: kind === "divider" && Object.prototype.hasOwnProperty.call(IDEA_DIVIDER_STYLES, item.dividerStyle) ? item.dividerStyle : "solid"
+      , dividerWeight: Math.max(1, Math.min(12, Math.round(Number(item.dividerWeight) || 3)))
     });
   }
   function ideaItemDefaults(kind) {
@@ -6273,6 +6309,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       el.innerHTML = `<div class="idea-empty-frame-body" aria-hidden="true"></div>`;
     } else if (item.kind === "divider") {
       el.dataset.dividerStyle = item.dividerStyle || "solid";
+      el.style.setProperty("--idea-divider-weight", (Math.max(1,Math.min(12,Math.round(Number(item.dividerWeight)||3)))) + "px");
       el.innerHTML = `<div class="idea-divider-body" aria-hidden="true"><span></span></div>`;
     } else {
       const needsFrame = item.kind === "image" || item.kind === "video";
@@ -6497,7 +6534,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     else if (item.kind === "quote") body = `<div class="idea-preview-quote idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>↗ ${esc(title)}</b><button class="m-btn primary" id="ideaPreviewOpenQuote">메모 열기</button></div>`;
     else if (item.kind === "file") body = `<div class="idea-preview-file idea-preview-chip" style="${ideaColorStyleAttr(item.color, item.textColor)}"><div>${fileIconSvg((itemAttachment(n,item.fileId)||{}).type||"")}</div><b>${esc(title)}</b><button class="m-btn primary" id="ideaPreviewDownload">파일 다운로드</button></div>`;
     else if (item.kind === "frame") body = `<div class="idea-preview-file idea-preview-chip idea-preview-frame" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>□</b><small>${esc(ideaMediaFrameLabel(item))}</small></div>`;
-    else if (item.kind === "divider") body = `<div class="idea-preview-file idea-preview-chip idea-preview-divider" data-divider-style="${esc(item.dividerStyle || "solid")}" style="${ideaColorStyleAttr(item.color, item.textColor)}"><b>— ${esc(title)}</b><div class="idea-divider-body"><span></span></div></div>`;
+    else if (item.kind === "divider") body = `<div class="idea-preview-file idea-preview-chip idea-preview-divider" data-divider-style="${esc(item.dividerStyle || "solid")}" style="${ideaColorStyleAttr(item.color, item.textColor)};--idea-divider-weight:${Math.max(1,Math.min(12,Math.round(Number(item.dividerWeight)||3)))}px"><b>— ${esc(title)}</b><div class="idea-divider-body"><span></span></div></div>`;
     else body = `<div class="idea-preview-media${item.kind === "audio" ? ` idea-preview-audio ${item.audioMode === "light" ? "is-player-light" : "is-player-dark"}` : ""}${item.kind === "image" && item.flipX ? " flipped-x" : ""}" id="ideaPreviewMedia" style="${item.kind === "audio" ? ideaColorStyleAttr(item.color) : ""}"><div class="idea-media-loading">불러오는 중…</div></div>`;
     openModal(`<h3>${esc(title)}</h3><div class="idea-preview-wrap">${body}</div><div class="m-row"><button class="m-btn" id="ideaPreviewClose">닫기</button></div>`);
     $on("ideaPreviewClose", "click", closeModal);
@@ -7246,7 +7283,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const noteLockMode=ideaLockMode(item);
     const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
-    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>기본 템플릿은 실선과 점선입니다</small></span></button></div>`:"";
+    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 32종에서 선택</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
     const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
@@ -7284,9 +7321,37 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
   }
   function openIdeaDividerStylePicker(id) {
     const item=getIdeaItem(id); if(!item || item.kind!=="divider" || !ideaCanEditItem(item)) return;
-    const rows=Object.entries(IDEA_DIVIDER_STYLES).map(([key,meta])=>`<button type="button" class="idea-options-row${item.dividerStyle===key?" active":""}" data-idea-divider-style="${esc(key)}"><span>—</span><span><b>${esc(meta.label)}</b><small>${esc(meta.desc)}</small></span></button>`).join("");
-    openModal(`<h3>구분선 템플릿</h3><p class="m-sub">지금은 기본 실선·점선 2종만 제공합니다. 추가 디자인은 가이드 형식으로 CSS와 레지스트리에 넣을 수 있습니다.</p><div class="idea-divider-style-list">${rows}</div><div class="m-row"><button class="m-btn" id="ideaDividerStyleGuide">가이드</button><button class="m-btn" id="ideaDividerStyleClose">닫기</button></div>`);
-    $("modalBox").querySelectorAll("[data-idea-divider-style]").forEach((button)=>button.addEventListener("click",()=>{pushIdeaUndo();item.dividerStyle=button.dataset.ideaDividerStyle;const el=ideaItemElement(id);if(el)el.dataset.dividerStyle=item.dividerStyle;scheduleIdeaSave(0);closeModal();openIdeaItemOptions(id);}));
+    const clampW=(v)=>Math.max(1,Math.min(12,Math.round(Number(v)||3)));
+    const w=clampW(item.dividerWeight);
+    const colorVars=ideaColorStyleAttr(item.color, item.textColor);
+    const tiles=Object.entries(IDEA_DIVIDER_STYLES).map(([key,meta])=>
+      `<button type="button" class="idea-divider-choice${item.dividerStyle===key?" active":""}" data-idea-divider-style="${esc(key)}" title="${esc(meta.desc)}">`
+      +`<div class="idea-preview-divider" data-divider-style="${esc(key)}" style="${colorVars};--idea-divider-weight:${w}px"><div class="idea-divider-body" aria-hidden="true"><span></span></div></div>`
+      +`<small>${esc(meta.label)}</small></button>`).join("");
+    openModal(`<h3>구분선 디자인</h3><p class="m-sub">선 굵기를 정하고 아래에서 디자인을 고르세요. 미리보기는 현재 색·굵기로 표시됩니다.</p>`
+      +`<label class="idea-overlay-range idea-divider-weight-range"><span>선 굵기 <b id="ideaDivWeightValue">${w}px</b></span><input id="ideaDivWeight" type="range" min="1" max="12" step="1" value="${w}" aria-label="구분선 굵기"></label>`
+      +`<div class="idea-divider-choice-grid">${tiles}</div>`
+      +`<div class="m-row"><button class="m-btn" id="ideaDividerStyleGuide">가이드</button><button class="m-btn primary" id="ideaDividerStyleClose">완료</button></div>`);
+    let pushedUndo=false; const ensureUndo=()=>{ if(!pushedUndo){ pushIdeaUndo(); pushedUndo=true; } };
+    const weightInput=$("ideaDivWeight");
+    if(weightInput) weightInput.addEventListener("input",()=>{
+      const fresh=getIdeaItem(id); if(!fresh)return;
+      const val=clampW(weightInput.value);
+      ensureUndo();
+      fresh.dividerWeight=val;
+      const vEl=$("ideaDivWeightValue"); if(vEl)vEl.textContent=val+"px";
+      const el=ideaItemElement(id); if(el)el.style.setProperty("--idea-divider-weight",val+"px");
+      $("modalBox").querySelectorAll(".idea-preview-divider").forEach((p)=>p.style.setProperty("--idea-divider-weight",val+"px"));
+      scheduleIdeaSave(0);
+    });
+    $("modalBox").querySelectorAll("[data-idea-divider-style]").forEach((button)=>button.addEventListener("click",()=>{
+      const fresh=getIdeaItem(id); if(!fresh)return;
+      ensureUndo();
+      fresh.dividerStyle=button.dataset.ideaDividerStyle;
+      const el=ideaItemElement(id); if(el)el.dataset.dividerStyle=fresh.dividerStyle;
+      $("modalBox").querySelectorAll(".idea-divider-choice").forEach((b)=>b.classList.toggle("active",b===button));
+      scheduleIdeaSave(0);
+    }));
     $on("ideaDividerStyleGuide","click",()=>{ downloadDoc(IDEA_DIVIDER_TEMPLATE_GUIDE,"lumi-ink-idea-divider-template-guide.md","text/markdown"); toast("구분선 템플릿 가이드를 저장했어요"); });
     $on("ideaDividerStyleClose","click",closeModal);
   }
@@ -7790,7 +7855,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     if(item.kind==="audio") { const aTitleCls=item.showTitle===false?" is-title-hidden":"", aModeCls=item.audioMode==="light"?" is-player-light":" is-player-dark"; return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-audio-shell${aTitleCls}${aModeCls}"><div class="idea-audio-head"><span class="idea-audio-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 17V6.2l9-2V15" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.4" cy="17.3" r="2.7" fill="#fff"/><circle cx="15.4" cy="15.3" r="2.7" fill="#fff"/></svg></span><span class="idea-audio-meta"><span class="idea-audio-eyebrow">MUSIC</span><span class="idea-audio-name">${esc(title)}</span></span><span class="idea-audio-spark">✦</span></div><div class="idea-media-content">${source?`<audio controls src="${esc(source)}"></audio>`:`<span>오디오 파일 없음</span>`}</div></div>${genericFrame}</article>`; }
     if(item.kind==="quote") { const ref=getNote(item.noteId), typeLabel=ref?noteTypeShortLabel(ref):"메모 없음"; return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-quote-body"><span class="idea-quote-mark">↗</span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-preview">${esc(typeLabel)}</span></span><span class="idea-quote-go">연결 메모</span></div>${genericFrame}</article>`; }
     if(item.kind==="frame") return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}"><div class="idea-empty-frame-body"></div>${genericFrame}</article>`;
-    if(item.kind==="divider") return `<article class="${cls}" data-color="${esc(item.color)}" data-divider-style="${esc(item.dividerStyle || "solid")}" style="${esc(genericBase)}"><div class="idea-divider-body"><span></span></div></article>`;
+    if(item.kind==="divider") return `<article class="${cls}" data-color="${esc(item.color)}" data-divider-style="${esc(item.dividerStyle || "solid")}" style="${esc(genericBase)};--idea-divider-weight:${Math.max(1,Math.min(12,Math.round(Number(item.dividerWeight)||3)))}px"><div class="idea-divider-body"><span></span></div></article>`;
     return `<article class="${cls}${frameConfig?" has-media-frame":""}" data-color="${esc(item.color)}" style="${esc(genericBase)}">${source?`<a class="idea-file-body" href="${esc(source)}" download="${esc(title)}"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">받기</span></a>`:`<div class="idea-file-body"><span class="idea-file-icon">⌁</span><span class="idea-file-name">${esc(title)}</span><span class="idea-file-download">파일 없음</span></div>`}${genericFrame}</article>`;
   }
   async function exportIdeaBoardHtmlLegacy(id) {
