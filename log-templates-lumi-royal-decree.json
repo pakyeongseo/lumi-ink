@@ -1,0 +1,142 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-royal-decree",
+  "name": "황금 칙령",
+  "description": "네이비-골드 하이 판타지 왕실 로그. 격식 있는 세리프와 금장 테두리.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#0f1d3e,#16294e 55%,#101f3c)",
+      "color": "#e6ecf7",
+      "border": "2px solid #c9a44c",
+      "border-radius": "4px",
+      "padding": "30px 28px",
+      "box-shadow": "0 20px 48px rgba(6,12,28,.5), inset 0 0 0 1px rgba(201,164,76,.25)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.88",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#e3c46f",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "text-align": "center",
+      "border-bottom": "1px solid #c9a44c",
+      "padding": "0 0 16px",
+      "margin": "0 0 22px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#f0d488",
+        "font-weight": "700",
+        "letter-spacing": ".01em"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9fc4e8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d9b85f",
+        "border": "1px solid #8a6d2f",
+        "border-radius": "2px",
+        "padding": "0 7px",
+        "font-size": "13px",
+        "letter-spacing": ".1em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c7d4e8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#807a65"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#587295"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 분",
+    "style": {
+      "color": "#14213d",
+      "background-color": "#e3c46f",
+      "border-radius": "2px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}

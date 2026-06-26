@@ -1,0 +1,142 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-quest-board",
+  "name": "퀘스트 보드",
+  "description": "다크 슬레이트와 바이올렛·골드 등급색의 모던 게임 UI 로그. RPG 인터페이스 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#191333,#221a44 55%,#1a1336)",
+      "color": "#bcc2d6",
+      "border": "1px solid #3a3a6a",
+      "border-radius": "14px",
+      "padding": "26px 24px",
+      "box-shadow": "0 18px 46px rgba(6,8,20,.5), inset 0 0 0 1px rgba(140,120,255,.10)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.82",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#9a8cff",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".24em",
+      "border-bottom": "1px solid #353560",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5fc6ff",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(시스템·생각)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a99cdf",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(아이템·스탯)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ffd36a",
+        "background-color": "rgba(255,200,90,.10)",
+        "border": "1px solid #7a5f22",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "font-weight": "700",
+        "letter-spacing": ".03em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8b87b8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3e6e9c"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#62588c"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "PLAYER",
+    "style": {
+      "color": "#15161f",
+      "background-color": "#9a8cff",
+      "border-radius": "5px",
+      "padding": "1px 8px",
+      "font-weight": "800",
+      "letter-spacing": ".04em"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-wedding-march",
+  "name": "웨딩 마치",
+  "description": "순백과 샴페인 골드, 블러쉬의 웨딩 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#fffdfb,#fdf5ee 55%,#fbf0f1)",
+      "color": "#5e524e",
+      "border": "1px solid #e8d4b8",
+      "border-radius": "16px",
+      "padding": "30px 28px",
+      "box-shadow": "0 16px 42px rgba(190,160,130,.16), inset 0 0 60px rgba(255,248,240,.4)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#c2a05e",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "text-align": "center",
+      "border-bottom": "1px solid #ecdcc0",
+      "padding": "0 0 16px",
+      "margin": "0 0 22px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b8788a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9a86b0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b09250",
+        "border": "1px solid #e2cc9a",
+        "border-radius": "8px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".05em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a86a48",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b08a96",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#dab7be"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ccbed2"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#fffdfb",
+      "background-color": "#cfae6a",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "letter-spacing": ".03em"
+    }
+  }
+}

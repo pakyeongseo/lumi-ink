@@ -1,0 +1,140 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-rainfall-glass",
+  "name": "레인폴 글래스",
+  "description": "창에 흐르는 빗물의 차분한 회청 로그. 멜랑콜리한 정적과 절제된 강조.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(170deg,#222d38,#28333f 55%,#243039)",
+      "color": "#aab8c4",
+      "border": "1px solid #3b4a58",
+      "border-left": "4px solid #5e7d9a",
+      "border-radius": "10px",
+      "padding": "26px 24px",
+      "box-shadow": "0 16px 40px rgba(10,18,26,.5)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.88",
+      "max-width": "700px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#8fb0c8",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".26em",
+      "border-bottom": "1px solid #36444f",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#bcd6e6",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9a96b8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7fa0b8",
+        "border": "1px solid #46586a",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".04em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d2e2ee",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8593a0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#708390"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5f6379"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#222d38",
+      "background-color": "#7d9db8",
+      "border-radius": "6px",
+      "padding": "1px 8px",
+      "font-weight": "700"
+    }
+  }
+}

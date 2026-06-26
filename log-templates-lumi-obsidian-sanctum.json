@@ -1,0 +1,135 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-obsidian-sanctum",
+  "name": "흑요석 성소",
+  "description": "검보랏빛 고딕 다크 판타지 로그. 핏빛 대사와 본골드 강조.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(155deg,#190f24,#231530 55%,#1c1229)",
+      "color": "#d8cfe0",
+      "border": "1px solid #4a3658",
+      "border-radius": "6px",
+      "padding": "28px 26px",
+      "box-shadow": "0 22px 50px rgba(8,4,16,.55), inset 0 0 60px rgba(74,54,88,.18)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#c8a86a",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".32em",
+      "text-align": "center",
+      "border-bottom": "1px solid #4a3658",
+      "padding": "0 0 16px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e2607a",
+        "background-color": "rgba(178,46,74,.16)",
+        "border-left": "2px solid #b22e4a",
+        "border-radius": "0 5px 5px 0",
+        "padding": "1px 8px",
+        "font-weight": "600"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9a86c2",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(지문)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c8a86a",
+        "border": "1px solid #6b5436",
+        "border-radius": "3px",
+        "padding": "0 6px",
+        "font-size": "13px",
+        "letter-spacing": ".08em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f1e7d2",
+        "font-weight": "800",
+        "letter-spacing": ".02em"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b6a6d0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5c4c76"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 이름",
+    "style": {
+      "color": "#1a0e12",
+      "background-color": "#c8536a",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}

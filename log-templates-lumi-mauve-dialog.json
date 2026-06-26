@@ -1,0 +1,131 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-mauve-dialog",
+  "name": "모브 다이얼로그",
+  "description": "따뜻한 모브빛 일상·로맨스 로그. 대사는 부드러운 말풍선 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#fdf6f3,#f6ecf2 55%,#efe6f0)",
+      "color": "#4a3f49",
+      "border": "1px solid #e6d2dd",
+      "border-radius": "20px",
+      "padding": "26px 24px",
+      "box-shadow": "0 18px 44px rgba(140,96,128,.14)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.85",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#a36d8c",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".22em",
+      "text-align": "center",
+      "border-bottom": "1px solid #ecd9e3",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9c3d6b",
+        "background-color": "rgba(214,128,170,.14)",
+        "border-radius": "12px 12px 12px 3px",
+        "padding": "2px 10px",
+        "font-weight": "700",
+        "box-shadow": "0 2px 8px rgba(156,61,107,.10)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a7497",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(지문)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a98ba0",
+        "font-size": "13px",
+        "letter-spacing": ".02em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6e3050",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8190",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c0b0c4"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 사람",
+    "style": {
+      "color": "#fff",
+      "background-color": "#bb7ba0",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700",
+      "letter-spacing": ".04em"
+    }
+  }
+}

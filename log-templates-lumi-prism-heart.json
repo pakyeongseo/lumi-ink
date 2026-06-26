@@ -1,0 +1,135 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-prism-heart",
+  "name": "프리즘 하트",
+  "description": "비비드 파스텔과 별빛 글로우의 마법소녀 로그. 발랄한 다색 강조.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(155deg,#fff0f8,#ffe6f4 55%,#ffe0ef)",
+      "color": "#5a4d63",
+      "border": "1px solid #f2cfe6",
+      "border-radius": "22px",
+      "padding": "26px 24px",
+      "box-shadow": "0 16px 44px rgba(220,130,200,.20), inset 0 0 50px rgba(255,220,245,.35)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.86",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#e85aa8",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".26em",
+      "text-align": "center",
+      "border-bottom": "1px solid #f6d8ec",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e23d97",
+        "background-color": "rgba(255,90,190,.2)",
+        "border-radius": "999px",
+        "padding": "2px 11px",
+        "font-weight": "800",
+        "box-shadow": "0 0 18px rgba(255,90,190,.45)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9168d6",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(변신·이펙트)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2f9fd4",
+        "background-color": "rgba(120,210,235,.18)",
+        "border-radius": "8px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "font-weight": "700",
+        "letter-spacing": ".04em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e6189a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5aa3d4",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c8a8e4"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 애",
+    "style": {
+      "color": "#fff",
+      "background-color": "#f06bb0",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800",
+      "box-shadow": "0 0 12px rgba(240,107,176,.5)"
+    }
+  }
+}

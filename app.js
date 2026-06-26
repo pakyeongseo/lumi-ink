@@ -206,10 +206,20 @@
 
   /* ---------- routing ---------- */
   const SCREENS = ["home", "project", "read", "editor", "html", "lore", "log", "persona", "character", "idea", "settings", "search"];
+  const NOTE_SCREENS = new Set(["read", "editor", "html", "lore", "log", "persona", "character", "idea"]);
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
+  function normalizeRouteView(view) {
+    const next = Object.assign({}, view || { s: "home" });
+    if (NOTE_SCREENS.has(next.s) && !next.id && st.curNoteId) next.id = st.curNoteId;
+    return next;
+  }
+  function restoreRouteView(view) {
+    if (view && NOTE_SCREENS.has(view.s) && view.id && getNote(view.id)) st.curNoteId = view.id;
+  }
   function render() {
     const v = curView();
+    restoreRouteView(v);
     showScreen(v.s);
     if (v.s === "home") renderHome();
     else if (v.s === "project") renderProjectDetail();
@@ -225,7 +235,7 @@
     else if (v.s === "search") renderSearch();
   }
   let navTransition = false;
-  function commitGo(view) { st.viewStack.push(view); history.pushState({ d: st.viewStack.length }, ""); render(); }
+  function commitGo(view) { st.viewStack.push(normalizeRouteView(view)); history.pushState({ d: st.viewStack.length }, ""); render(); }
   function go(view) {
     const cur = curView();
     // 자유 메모 에디터는 화면을 떠난 뒤 발생하는 blur/timer가 다른 메모에 쓰이지 않도록
@@ -1221,7 +1231,7 @@
     await new Promise((r)=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     let shot;
     try{
-      shot=await window.html2canvas(document.body,{
+      shot=await captureHtml2CanvasSafe(document.body,{
         backgroundColor:(getComputedStyle(document.body).backgroundColor)||"#0e1320",
         scale:dpr, logging:false, useCORS:true, allowTaint:false,
         x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
@@ -7278,7 +7288,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     if (isIdeaReadonly()) { openIdeaArtifactPreview(id); return; }
     const n=currentIdeaNote(), item=getIdeaItem(id);if(!n||!item)return;selectIdeaItem(id,null);
     const supportsAspect=["image","video"].includes(item.kind);
-    const isColorable=["note","audio","quote","file","divider"].includes(item.kind);
+    const isColorable=["note","audio","quote","file"].includes(item.kind);
     const blocked=()=>!ideaCanEditItem(item);
     const noteLockMode=ideaLockMode(item);
     const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
@@ -7328,10 +7338,10 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       `<button type="button" class="idea-divider-choice${item.dividerStyle===key?" active":""}" data-idea-divider-style="${esc(key)}" title="${esc(meta.desc)}">`
       +`<div class="idea-preview-divider" data-divider-style="${esc(key)}" style="${colorVars};--idea-divider-weight:${w}px"><div class="idea-divider-body" aria-hidden="true"><span></span></div></div>`
       +`<small>${esc(meta.label)}</small></button>`).join("");
-    openModal(`<h3>구분선 디자인</h3><p class="m-sub">선 굵기를 정하고 아래에서 디자인을 고르세요. 미리보기는 현재 색·굵기로 표시됩니다.</p>`
+    openModal(`<h3>구분선 디자인</h3><p class="m-sub">선 굵기를 정한 뒤 디자인을 고르면 바로 컬러 선택으로 넘어갑니다.</p>`
       +`<label class="idea-overlay-range idea-divider-weight-range"><span>선 굵기 <b id="ideaDivWeightValue">${w}px</b></span><input id="ideaDivWeight" type="range" min="1" max="12" step="1" value="${w}" aria-label="구분선 굵기"></label>`
       +`<div class="idea-divider-choice-grid">${tiles}</div>`
-      +`<div class="m-row"><button class="m-btn" id="ideaDividerStyleGuide">가이드</button><button class="m-btn primary" id="ideaDividerStyleClose">완료</button></div>`);
+      +`<div class="m-row"><button class="m-btn" id="ideaDividerStyleClose">닫기</button></div>`);
     let pushedUndo=false; const ensureUndo=()=>{ if(!pushedUndo){ pushIdeaUndo(); pushedUndo=true; } };
     const weightInput=$("ideaDivWeight");
     if(weightInput) weightInput.addEventListener("input",()=>{
@@ -7351,9 +7361,36 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       const el=ideaItemElement(id); if(el)el.dataset.dividerStyle=fresh.dividerStyle;
       $("modalBox").querySelectorAll(".idea-divider-choice").forEach((b)=>b.classList.toggle("active",b===button));
       scheduleIdeaSave(0);
+      openIdeaDividerColorPicker(id);
     }));
-    $on("ideaDividerStyleGuide","click",()=>{ downloadDoc(IDEA_DIVIDER_TEMPLATE_GUIDE,"lumi-ink-idea-divider-template-guide.md","text/markdown"); toast("구분선 템플릿 가이드를 저장했어요"); });
     $on("ideaDividerStyleClose","click",closeModal);
+  }
+  function openIdeaDividerColorPicker(id) {
+    const item=getIdeaItem(id); if(!item || item.kind!=="divider" || !ideaCanEditItem(item)) return;
+    let cpPushed=false; const cpUndo=()=>{ if(!cpPushed){ pushIdeaUndo(); cpPushed=true; } };
+    const w=Math.max(1,Math.min(12,Math.round(Number(item.dividerWeight)||3)));
+    const colorVars=ideaColorStyleAttr(item.color, item.textColor);
+    openModal(`<h3>구분선 컬러</h3><p class="m-sub">${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)} 디자인에 적용할 색을 고릅니다.</p>`
+      +`<div class="idea-preview-divider idea-divider-color-preview" id="ideaDividerColorPreview" data-divider-style="${esc(item.dividerStyle || "solid")}" style="${colorVars};--idea-divider-weight:${w}px"><div class="idea-divider-body" aria-hidden="true"><span></span></div></div>`
+      +`<div class="idea-options-label">구분선 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(item.color,"data-idea-divider-color",true)}</div>`
+      +`<div class="m-row"><button class="m-btn" id="ideaDividerColorBack">뒤로가기</button><button class="m-btn primary" id="ideaDividerColorDone">완료</button></div>`);
+    const update=()=>{
+      const fresh=getIdeaItem(id), preview=$("ideaDividerColorPreview"), el=ideaItemElement(id);
+      if(!fresh)return;
+      if(preview){preview.dataset.dividerStyle=fresh.dividerStyle||"solid";preview.setAttribute("style",`${ideaColorStyleAttr(fresh.color,fresh.textColor)};--idea-divider-weight:${Math.max(1,Math.min(12,Math.round(Number(fresh.dividerWeight)||3)))}px`);}
+      if(el)applyIdeaColor(el,fresh);
+    };
+    $("modalBox").querySelectorAll("[data-idea-divider-color]").forEach((button)=>button.addEventListener("click",()=>{
+      const fresh=getIdeaItem(id); if(!fresh)return; cpUndo(); fresh.color=button.dataset.ideaDividerColor; scheduleIdeaSave(0);
+      $("modalBox").querySelectorAll("[data-idea-divider-color]").forEach((x)=>x.classList.toggle("active",x===button)); update();
+    }));
+    $("modalBox").querySelectorAll('[data-idea-custom-color="data-idea-divider-color"]').forEach((button)=>button.addEventListener("click",()=>{
+      const fresh=getIdeaItem(id); if(!fresh)return;
+      openIdeaCustomColorPicker("구분선 컬러 직접 선택",fresh.color,(value)=>{cpUndo();const next=getIdeaItem(id);if(!next)return;next.color=value;scheduleIdeaSave(0);openIdeaDividerColorPicker(id);});
+    }));
+    $on("ideaDividerColorBack","click",()=>openIdeaDividerStylePicker(id));
+    $on("ideaDividerColorDone","click",closeModal);
+    update();
   }
   function ideaFramePreviewMarkup(fid, color, p) {
     const media=frameThumbInner(p || {});
@@ -7963,6 +8000,35 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     await Promise.all(waits);
     await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   }
+  function ideaCaptureSafeCss() {
+    return `.lumink-capture-safe,.lumink-capture-safe *,.lumink-capture-safe *::before,.lumink-capture-safe *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}`
+      +`.lumink-capture-safe .idea-transform-tools,.lumink-capture-safe .idea-note-rich-tools,.lumink-capture-safe .idea-snap-guide,.lumink-capture-safe .idea-selection-box,.lumink-capture-safe .idea-lock-badge,.lumink-capture-safe .idea-multi-tools,.lumink-capture-safe .idea-group-box{display:none!important}`
+      +`.lumink-capture-safe .idea-item,.lumink-capture-safe .idea-media-content,.lumink-capture-safe .idea-media-shell,.lumink-capture-safe .idea-audio-shell,.lumink-capture-safe .idea-file-body,.lumink-capture-safe .idea-quote-body,.lumink-capture-safe .idea-divider-body span,.lumink-capture-safe .idea-divider-body::before,.lumink-capture-safe .idea-divider-body::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;mix-blend-mode:normal!important}`;
+  }
+  function ensureIdeaCaptureSafeStyle(doc) {
+    const d=doc || document;
+    if(d.getElementById("luminkCaptureSafeStyle")) return;
+    const style=d.createElement("style");
+    style.id="luminkCaptureSafeStyle";
+    style.textContent=ideaCaptureSafeCss();
+    (d.head || d.documentElement).appendChild(style);
+  }
+  async function captureHtml2CanvasSafe(target, options) {
+    const opts=Object.assign({}, options || {});
+    const prev=opts.onclone;
+    opts.onclone=(doc,el)=>{
+      try{
+        ensureIdeaCaptureSafeStyle(doc);
+        if(doc.documentElement) doc.documentElement.classList.add("lumink-capture-safe-root");
+        if(doc.body) doc.body.classList.add("lumink-capture-safe");
+        const root=el || doc.body;
+        if(root && root.classList) root.classList.add("lumink-capture-safe");
+        normalizeCloneColorFns(root || doc.body);
+      }catch(e){}
+      if(typeof prev==="function") prev(doc,el);
+    };
+    return window.html2canvas(target, opts);
+  }
   // html2canvas는 color()/color-mix() 같은 최신 색 함수를 파싱하지 못해 캡처가 실패합니다.
   // 캡처 직전 복제본의 색을 캔버스로 rgb()로 환산해 주입해, 보드의 color-mix 디자인도 정상 캡처되게 합니다.
   let __colorFnCtx=null;
@@ -7973,7 +8039,17 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       const a=__colorFnCtx.fillStyle;
       __colorFnCtx.fillStyle="#123456"; __colorFnCtx.fillStyle=token;
       const b=__colorFnCtx.fillStyle;
-      return a===b ? a : null; // 두 센티넬에서 같은 값이면 유효 변환
+      if(a===b) return a;
+    }catch(e){}
+    try{
+      const probe=document.createElement("span");
+      probe.style.color=token;
+      if(!probe.style.color) return null;
+      probe.style.cssText+=";position:absolute;left:-9999px;top:-9999px;visibility:hidden";
+      document.body.appendChild(probe);
+      const value=getComputedStyle(probe).color;
+      probe.remove();
+      return value || null;
     }catch(e){ return null; }
   }
   function resolveColorFunctions(value){
@@ -7993,9 +8069,12 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
   function normalizeCloneColorFns(root){
     if(!root) return;
     const win=(root.ownerDocument&&root.ownerDocument.defaultView)||window;
-    const props=["color","backgroundColor","backgroundImage","borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor","boxShadow","fill","stroke","columnRuleColor","textDecorationColor","caretColor"];
+    const doc=root.ownerDocument || document;
+    const props=["color","background","backgroundColor","backgroundImage","borderColor","borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor","boxShadow","textShadow","filter","fill","stroke","columnRuleColor","textDecorationColor","caretColor"];
+    const cssName=(p)=>p.replace(/[A-Z]/g,(m)=>"-"+m.toLowerCase());
+    const pseudoRules=[];
     const nodes=[root].concat([...root.querySelectorAll("*")]);
-    nodes.forEach((node)=>{
+    nodes.forEach((node,idx)=>{
       if(node.nodeType!==1) return;
       let cs; try{ cs=win.getComputedStyle(node); }catch(e){ return; }
       props.forEach((p)=>{
@@ -8005,7 +8084,29 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
           if(fixed && fixed!==val){ try{ node.style[p]=fixed; }catch(e){} }
         }
       });
+      ["::before","::after"].forEach((pseudo)=>{
+        let ps; try{ ps=win.getComputedStyle(node,pseudo); }catch(e){ return; }
+        if(!ps) return;
+        const fixes=[];
+        props.forEach((p)=>{
+          const val=ps[p];
+          if(val && (val.indexOf("color(")>=0 || val.indexOf("color-mix(")>=0)){
+            const fixed=resolveColorFunctions(val);
+            if(fixed && fixed!==val) fixes.push(`${cssName(p)}:${fixed}!important`);
+          }
+        });
+        if(fixes.length){
+          const mark=`data-lumink-capture-pseudo-${idx}`;
+          try{ node.setAttribute(mark,""); pseudoRules.push(`[${mark}]${pseudo}{${fixes.join(";")}}`); }catch(e){}
+        }
+      });
     });
+    if(pseudoRules.length){
+      const style=doc.createElement("style");
+      style.setAttribute("data-lumink-capture-pseudo","1");
+      style.textContent=pseudoRules.join("\n");
+      (doc.head || doc.documentElement).appendChild(style);
+    }
   }
   async function exportIdeaViewportPng(id) {
     if(st.curNoteId===id) await flushIdeaBoard(false);
@@ -8033,7 +8134,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
       toast("현재 장면 PNG를 준비하고 있어요");
       await waitForIdeaPngAssets(host);
       const scale=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-      const bitmap=await window.html2canvas(host,{
+      const bitmap=await captureHtml2CanvasSafe(host,{
         backgroundColor:null,
         scale,
         logging:false,

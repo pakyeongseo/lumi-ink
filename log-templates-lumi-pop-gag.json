@@ -1,0 +1,143 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-pop-gag",
+  "name": "팝 개그",
+  "description": "원색 팝과 굵은 만화 테두리의 명랑개그 로그. 글로우 없는 코믹 효과음 박스.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background-color": "#fffdf3",
+      "color": "#3a342a",
+      "border": "3px solid #2c2620",
+      "border-radius": "16px",
+      "padding": "24px 22px",
+      "box-shadow": "6px 6px 0 #ffcf3f, 6px 6px 0 2px #2c2620",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.8",
+      "max-width": "700px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#ff5a2c",
+      "font-size": "14px",
+      "font-weight": "800",
+      "letter-spacing": ".08em",
+      "border-bottom": "3px solid #2c2620",
+      "padding": "0 0 11px",
+      "margin": "0 0 16px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 11px"
+    },
+    "empty": {
+      "height": "10px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#1f7fd6",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a4ec4",
+        "font-style": "italic",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(효과음)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d62f2f",
+        "background-color": "#ffe14a",
+        "border": "2px solid #2c2620",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "font-weight": "800",
+        "letter-spacing": ".02em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e23838",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a6458",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8fbee4"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c4a6dc"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 녀석",
+    "style": {
+      "color": "#fffdf3",
+      "background-color": "#ff7a2c",
+      "border": "2px solid #2c2620",
+      "border-radius": "999px",
+      "padding": "0 9px",
+      "font-weight": "800"
+    }
+  }
+}

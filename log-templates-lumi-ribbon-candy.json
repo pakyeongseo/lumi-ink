@@ -1,0 +1,132 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-ribbon-candy",
+  "name": "리본 캔디",
+  "description": "보들보들 멀티 파스텔의 깜찍 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#fbf7fc,#f2f3fb 50%,#eef8f4)",
+      "color": "#6b5660",
+      "border": "2px dashed #f4c2dc",
+      "border-radius": "26px",
+      "padding": "26px 24px",
+      "box-shadow": "0 14px 36px rgba(220,160,200,.20)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif",
+      "line-height": "1.86",
+      "max-width": "680px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#c47ab0",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".2em",
+      "text-align": "center",
+      "border-bottom": "2px dotted #d6cce8",
+      "padding": "0 0 13px",
+      "margin": "0 0 17px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c46a9e",
+        "background-color": "rgba(210,170,220,.32)",
+        "border-radius": "14px",
+        "padding": "2px 11px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a884d6",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#3aa890",
+        "background-color": "rgba(170,225,205,.4)",
+        "border-radius": "12px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a85ab0",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9678c4",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#cebde8"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "○○",
+    "style": {
+      "color": "#fff",
+      "background-color": "#f48bbb",
+      "border-radius": "999px",
+      "padding": "1px 10px",
+      "font-weight": "800"
+    }
+  }
+}

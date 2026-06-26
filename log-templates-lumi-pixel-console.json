@@ -1,0 +1,134 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-pixel-console",
+  "name": "픽셀 콘솔",
+  "description": "남보라 CRT 바탕과 라임 그린 프레임의 레트로 게임 로그. 도트 대사창 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(180deg,#1a1230,#211836)",
+      "color": "#b9aee0",
+      "border": "2px solid #7ce06a",
+      "border-radius": "2px",
+      "padding": "24px 22px",
+      "box-shadow": "0 0 0 4px #14102a, 0 16px 40px rgba(0,0,0,.55)",
+      "font-family": "'DejaVu Sans Mono','Courier New',monospace",
+      "line-height": "1.85",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#7ce06a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "border-bottom": "2px solid #2f6b2a",
+      "padding": "0 0 13px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 11px"
+    },
+    "empty": {
+      "height": "10px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사창)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ffe14d",
+        "background-color": "rgba(255,225,77,.10)",
+        "border": "1px solid #6b5e1f",
+        "border-radius": "2px",
+        "padding": "1px 7px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(생각)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5fd9e8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(시스템)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ff6fc4",
+        "background-color": "rgba(255,111,196,.10)",
+        "border": "1px solid #7a2e5a",
+        "border-radius": "2px",
+        "padding": "0 6px",
+        "font-size": "12px",
+        "letter-spacing": ".06em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8d82b8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3e778e"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "????",
+    "style": {
+      "color": "#14102a",
+      "background-color": "#7ce06a",
+      "border-radius": "1px",
+      "padding": "1px 7px",
+      "font-weight": "800",
+      "letter-spacing": ".06em"
+    }
+  }
+}

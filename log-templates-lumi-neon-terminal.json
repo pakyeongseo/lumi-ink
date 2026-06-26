@@ -1,0 +1,136 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-neon-terminal",
+  "name": "네온 터미널",
+  "description": "시안-마젠타 네온 사이버펑크 로그. 모노스페이스 터미널 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(180deg,#06080f,#080b16)",
+      "color": "#9fb6cc",
+      "border": "1px solid #1e6f8a",
+      "border-radius": "8px",
+      "padding": "24px 22px",
+      "box-shadow": "0 0 0 1px rgba(34,224,255,.12), 0 18px 48px rgba(0,0,0,.6), inset 0 0 50px rgba(34,224,255,.05)",
+      "font-family": "'DejaVu Sans Mono','Courier New',monospace",
+      "line-height": "1.8",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#22e0ff",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "text-decoration": "underline",
+      "border-bottom": "1px solid #16485c",
+      "padding": "0 0 13px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 11px"
+    },
+    "empty": {
+      "height": "10px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ff4fd8",
+        "background-color": "rgba(255,79,216,.10)",
+        "border-radius": "4px",
+        "padding": "1px 7px",
+        "font-weight": "700",
+        "box-shadow": "0 0 14px rgba(255,79,216,.30)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(생각)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5fe8ff",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(시스템)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c8ff5f",
+        "background-color": "rgba(200,255,95,.08)",
+        "border": "1px solid #5f7a2e",
+        "border-radius": "3px",
+        "padding": "0 6px",
+        "font-size": "13px",
+        "letter-spacing": ".05em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800",
+        "box-shadow": "0 0 10px rgba(34,224,255,.4)"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6f93a8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#337888"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "[REDACTED]",
+    "style": {
+      "color": "#06080f",
+      "background-color": "#22e0ff",
+      "border-radius": "3px",
+      "padding": "1px 7px",
+      "font-weight": "800",
+      "letter-spacing": ".04em"
+    }
+  }
+}

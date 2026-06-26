@@ -1,0 +1,142 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-requiem-rest",
+  "name": "레퀴엠",
+  "description": "창백한 차콜과 백합빛 세이지의 안식 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#1b1e1c,#222624 55%,#1d211f)",
+      "color": "#a8aab0",
+      "border": "1px solid #3c4046",
+      "border-radius": "8px",
+      "padding": "30px 28px",
+      "box-shadow": "0 18px 44px rgba(6,8,12,.5), inset 0 0 60px rgba(160,170,180,.05)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#aab8a8",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".36em",
+      "text-align": "center",
+      "border-bottom": "1px solid #34383e",
+      "padding": "0 0 16px",
+      "margin": "0 0 22px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "13px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#dde0e2",
+        "font-weight": "600"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a99cc0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9ab09a",
+        "border": "1px solid #4e5a4e",
+        "border-radius": "6px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".08em",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e6e8ea",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9098a0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7e8080"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#645e70"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "고인",
+    "style": {
+      "color": "#1a1c20",
+      "background-color": "#9ab09a",
+      "border-radius": "6px",
+      "padding": "1px 8px",
+      "font-weight": "600",
+      "letter-spacing": ".04em"
+    }
+  }
+}

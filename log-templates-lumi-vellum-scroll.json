@@ -1,0 +1,142 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-vellum-scroll",
+  "name": "벨럼 스크롤",
+  "description": "갈변한 세피아 양피지와 봉랍 톤의 고문서 로그. 난외 주석과 이중 테두리.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#e0cfa6,#d6c192 55%,#cdb585)",
+      "color": "#3f3320",
+      "border": "3px double #9c7c44",
+      "border-radius": "3px",
+      "padding": "30px 28px",
+      "box-shadow": "0 16px 40px rgba(80,60,28,.28), inset 0 0 60px rgba(150,118,60,.20)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.92",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#6b4f24",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "text-align": "center",
+      "border-bottom": "3px double #b59658",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#933225",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(방백)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a583a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(난외 주석)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8a6a34",
+        "border": "1px solid #a98a52",
+        "border-radius": "2px",
+        "padding": "0 7px",
+        "font-size": "12px",
+        "font-style": "italic",
+        "letter-spacing": ".04em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2c2110",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6f5c3c",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b47a5c"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a08c67"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "이름 미상",
+    "style": {
+      "color": "#ece0c2",
+      "background-color": "#933225",
+      "border-radius": "1px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}

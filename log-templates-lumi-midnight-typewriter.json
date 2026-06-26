@@ -1,0 +1,134 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-midnight-typewriter",
+  "name": "심야 타자기",
+  "description": "빛바랜 종이와 검정 활자의 느와르·추리 로그. 검열 인장 톤의 강조.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background-color": "#e9e4d8",
+      "color": "#26231d",
+      "border": "1px solid #b3ab98",
+      "border-radius": "2px",
+      "padding": "28px 26px",
+      "box-shadow": "0 14px 34px rgba(40,34,24,.22), inset 0 0 40px rgba(120,108,82,.10)",
+      "font-family": "'DejaVu Sans Mono','Courier New',monospace",
+      "line-height": "1.86",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#1c1a15",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".32em",
+      "border-bottom": "2px dotted #8a8270",
+      "padding": "0 0 14px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(증언)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#14120e",
+        "background-color": "rgba(40,34,24,.07)",
+        "border-bottom": "1px solid #6e6552",
+        "padding": "0 3px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(독백)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5e5849",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(사건기록)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f0ece0",
+        "background-color": "#8a2b22",
+        "border-radius": "1px",
+        "padding": "1px 7px",
+        "font-size": "12px",
+        "letter-spacing": ".12em",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#000000",
+        "font-weight": "800",
+        "text-decoration": "underline"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a6354",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a49e90"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "█████",
+    "style": {
+      "color": "#e9e4d8",
+      "background-color": "#1c1a15",
+      "border-radius": "0",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".1em"
+    }
+  }
+}

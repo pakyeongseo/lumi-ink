@@ -1,0 +1,141 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-royal-crimson",
+  "name": "로얄 크림슨",
+  "description": "선명한 크림슨과 리치 골드의 왕가 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#300c0e,#400f14 55%,#330d10)",
+      "color": "#e0c4c0",
+      "border": "3px double #c2922f",
+      "border-radius": "4px",
+      "padding": "30px 28px",
+      "box-shadow": "0 20px 50px rgba(12,2,4,.6), inset 0 0 0 1px rgba(194,146,47,.25)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#e8c563",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".36em",
+      "text-align": "center",
+      "border-bottom": "3px double #b08a36",
+      "padding": "0 0 16px",
+      "margin": "0 0 22px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#f4e8c8",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d4a08e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e8c563",
+        "border": "1px solid #9a7830",
+        "border-radius": "3px",
+        "padding": "1px 8px",
+        "font-size": "13px",
+        "letter-spacing": ".06em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f2d27a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#cca89a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#957a6c"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#85564f"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 분",
+    "style": {
+      "color": "#2c0e12",
+      "background-color": "#e8c563",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-starship-hud",
+  "name": "스타십 HUD",
+  "description": "딥스페이스 네이비와 아이스블루 홀로그램의 하드 SF 로그. 우주선 콘솔 인터페이스 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#0a1020,#0f1830 55%,#0c1426)",
+      "color": "#aebfd6",
+      "border": "1px solid #2a4a72",
+      "border-radius": "10px",
+      "padding": "26px 24px",
+      "box-shadow": "0 0 0 1px rgba(120,190,255,.10), 0 18px 46px rgba(2,6,16,.6), inset 0 0 50px rgba(60,120,200,.07)",
+      "font-family": "'DejaVu Sans Mono','Courier New',monospace",
+      "line-height": "1.82",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#69c8e0",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".3em",
+      "border-bottom": "1px solid #234266",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(통신)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d6ecff",
+        "background-color": "rgba(105,200,224,.10)",
+        "border-radius": "4px",
+        "padding": "1px 7px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(사념)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#73d6c4",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(시스템 상태)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7fd4ea",
+        "background-color": "rgba(60,140,200,.12)",
+        "border": "1px solid #3a6a96",
+        "border-radius": "3px",
+        "padding": "0 7px",
+        "font-size": "13px",
+        "letter-spacing": ".05em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800",
+        "box-shadow": "0 0 8px rgba(120,200,255,.25)"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#7a90ad",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#407576"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "UNIDENTIFIED",
+    "style": {
+      "color": "#0a1020",
+      "background-color": "#69c8e0",
+      "border-radius": "3px",
+      "padding": "1px 7px",
+      "font-weight": "800",
+      "letter-spacing": ".04em"
+    }
+  }
+}

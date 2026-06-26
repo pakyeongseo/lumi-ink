@@ -1,0 +1,141 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-smoke-whiskey",
+  "name": "스모크 & 위스키",
+  "description": "담배 연기와 위스키 호박색의 하드보일드 로그. 강한 명암과 1인칭 독백 톤.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#17130e,#1e1812 55%,#191410)",
+      "color": "#b3a692",
+      "border": "1px solid #4a3c28",
+      "border-radius": "4px",
+      "padding": "28px 26px",
+      "box-shadow": "0 20px 48px rgba(0,0,0,.6), inset 0 0 70px rgba(0,0,0,.4)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif",
+      "line-height": "1.9",
+      "max-width": "720px",
+      "margin": "0 auto"
+    },
+    "header": {
+      "color": "#c89556",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".34em",
+      "border-bottom": "1px solid #4a3c28",
+      "padding": "0 0 15px",
+      "margin": "0 0 20px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 13px"
+    },
+    "empty": {
+      "height": "12px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e6ddca",
+        "font-weight": "700",
+        "letter-spacing": ".01em"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(독백)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9a8a6e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c08a44",
+        "border": "1px solid #6b5230",
+        "border-radius": "2px",
+        "padding": "0 7px",
+        "font-size": "13px",
+        "letter-spacing": ".06em"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d97b3a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8f8268",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "dqq",
+      "label": "큰따옴표 기호",
+      "pattern": "\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#80796d"
+      }
+    },
+    {
+      "id": "sqq",
+      "label": "작은따옴표 기호",
+      "pattern": "'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5a503f"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "그 여자",
+    "style": {
+      "color": "#17130e",
+      "background-color": "#c89556",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    }
+  }
+}
