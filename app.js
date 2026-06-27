@@ -1946,8 +1946,18 @@
     const drawSaved = () => {
       const host = node("Saved"); if (!host) return;
       const saved = getSavedColors();
-      host.innerHTML = saved.length ? `<div class="ce-swatches">${saved.map((color) => `<button type="button" class="ce-sw" data-${prefix}-saved="${color}" style="background:${color}" aria-label="${color}" title="${color}"></button>`).join("")}</div>` : '<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>';
-      host.querySelectorAll(`[data-${prefix}-saved]`).forEach((button) => button.addEventListener("click", () => setCurrent(button.getAttribute(`data-${prefix}-saved`))));
+      host.innerHTML = saved.length ? `<div class="ce-swatches">${saved.map((color) => `<button type="button" class="ce-sw ce-saved-sw" data-${prefix}-saved="${color}" style="background:${color}" aria-label="${color}" title="${color} · 길게 눌러 삭제"></button>`).join("")}</div>` : '<div class="ce-saved-empty">저장된 색이 없어요. 색을 고르고 “저장”을 눌러보세요.</div>';
+      host.querySelectorAll(`[data-${prefix}-saved]`).forEach((button) => {
+        const color=button.getAttribute(`data-${prefix}-saved`), remove=()=>confirmModal("저장 색상 삭제", `${String(color||"").toUpperCase()} 색상을 내 색상에서 삭제할까요?`, "삭제", true, ()=>{
+          setSavedColors(getSavedColors().filter((value)=>value!==color)); drawSaved(); toast("저장한 색상을 삭제했어요");
+        });
+        let timer=null, moved=false, held=false;
+        const clear=()=>{ if(timer){clearTimeout(timer);timer=null;} };
+        button.addEventListener("pointerdown",(event)=>{ if(event.button!=null&&event.button!==0)return; moved=false; held=false; clear(); timer=setTimeout(()=>{if(!moved){held=true;navigator.vibrate&&navigator.vibrate(12);remove();}},520); });
+        button.addEventListener("pointermove",()=>{moved=true;clear();});
+        button.addEventListener("pointerup",clear); button.addEventListener("pointercancel",clear); button.addEventListener("contextmenu",(event)=>{event.preventDefault();clear();held=true;remove();});
+        button.addEventListener("click",(event)=>{ if(held){event.preventDefault();event.stopPropagation();held=false;return;} setCurrent(color); });
+      });
     };
     const save = node("Save");
     if (save) save.addEventListener("click", () => { const colors = getSavedColors().filter((color) => color !== current); colors.unshift(current); setSavedColors(colors); drawSaved(); if (typeof opts.onSave === "function") opts.onSave(current); else toast("색을 저장했어요"); });
@@ -2949,40 +2959,69 @@
   function logSetNamesFromModal() {
     return [...document.querySelectorAll("#logSetNames .log-set-name")].map((input) => input.value.trim()).filter(Boolean);
   }
+  function logNameLookup(value) { return cleanImportedText(String(value || ""), 80).trim().toLocaleLowerCase(); }
+  function findLogNameSetConflicts(sets, currentIndex, names) {
+    const wanted=[...new Set((names||[]).map(logNameLookup).filter(Boolean))]; if(!wanted.length)return [];
+    const normalized=normalizeLogNameSets(sets), found=new Map();
+    normalized.forEach((set,index)=>{ if(index===currentIndex)return; (set.names||[]).forEach((name)=>{const key=logNameLookup(name); if(!key||!wanted.includes(key))return; const row=found.get(key)||{name:String(name||"").trim(),sets:[]}; if(!row.sets.includes(index+1))row.sets.push(index+1); found.set(key,row); }); });
+    return [...found.values()];
+  }
+  function logSetConflictMarkup(conflicts) {
+    if(!conflicts.length)return "";
+    const items=conflicts.map((row)=>`<li><b>${esc(row.name)}</b><span>세트 ${row.sets.join(", ")}에서 사용 중</span></li>`).join("");
+    return `<div class="log-set-conflict" id="logSetConflict" role="status"><b>다른 세트에서 사용 중인 원본 이름</b><small>같은 이름을 여러 세트에 넣으면 세트별 치환 결과가 겹칠 수 있어요.</small><ul>${items}</ul></div>`;
+  }
   function renderLogSetNames(names) {
     const host = $("logSetNames"); if (!host) return;
     const values = Array.isArray(names) && names.length ? names.slice(0, LOG_NAME_SET_LIMIT) : [""];
     host.innerHTML = values.map((name, index) => `<div class="log-set-name-row"><input class="m-input log-set-name" maxlength="80" value="${esc(name)}" placeholder="원본 이름 ${index + 1}"><button class="log-set-name-remove" type="button" data-log-set-remove="${index}" aria-label="원본 이름 삭제"${values.length === 1 ? " hidden" : ""}>×</button></div>`).join("");
     host.querySelectorAll("[data-log-set-remove]").forEach((button) => button.addEventListener("click", () => {
       const namesNow = logSetNamesFromModal(); namesNow.splice(Number(button.dataset.logSetRemove), 1); renderLogSetNames(namesNow.length ? namesNow : [""]);
+      document.dispatchEvent(new CustomEvent("lumink:log-set-names-changed"));
     }));
   }
-  function openLogNameSetEditor(index) {
+  async function saveLogNameSet(index, draft) {
+    const n=getNote(st.curNoteId); if(!n||n.type!=="log")return;
+    const safeIndex=Math.max(0,Math.min(LOG_NAME_SET_COUNT-1,Number(index)||0));
+    const sets=normalizeLogNameSets(n.data&&n.data.nameSets,n.data&&n.data.personaNames,n.data&&n.data.personaAlias);
+    sets[safeIndex]=normalizeLogNameSet(draft);
+    n.data=normalizeLogData(Object.assign({},n.data||{},{nameSets:sets}));
+    await saveLog(n,true); closeModal(); renderLogRenameSets(n.data.nameSets); if(!logEditMode)renderLogPreview(n);
+    toast(`이름 바꾸기 세트 ${safeIndex+1}을 저장했어요`);
+  }
+  function openLogNameSetDuplicateConfirm(index,draft,conflicts) {
+    const list=conflicts.map((row)=>`<li><b>${esc(row.name)}</b><span>세트 ${row.sets.join(", ")}에서 이미 사용 중</span></li>`).join("");
+    openModal(`<h3>다른 세트에서 사용 중인 이름</h3><p class="m-sub">같은 원본 이름을 여러 세트에 넣으면 표시 결과가 겹칠 수 있어요. 아래 이름을 수정하거나, 의도한 중복이라면 그대로 저장할 수 있습니다.</p><div class="log-set-conflict log-set-conflict-confirm"><ul>${list}</ul></div><div class="m-row"><button class="m-btn" id="logSetConflictBack">수정으로 돌아가기</button><button class="m-btn primary" id="logSetConflictSave">그래도 저장</button></div>`);
+    $on("logSetConflictBack","click",()=>openLogNameSetEditor(index,draft));
+    $on("logSetConflictSave","click",()=>{void saveLogNameSet(index,draft);});
+  }
+  function openLogNameSetEditor(index,seed) {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
     const safeIndex = Math.max(0, Math.min(LOG_NAME_SET_COUNT - 1, Number(index) || 0));
     const sets = normalizeLogNameSets(n.data && n.data.nameSets, n.data && n.data.personaNames, n.data && n.data.personaAlias);
-    const current = sets[safeIndex];
-    openModal(`<h3>이름 바꾸기 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트에 넣은 이름은 모두 아래 “바꿀 이름”으로 표시되며, 로그 템플릿의 이름 스타일을 그대로 따릅니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
+    const current = normalizeLogNameSet(seed || sets[safeIndex]);
+    openModal(`<h3>이름 바꾸기 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트에 넣은 이름은 모두 아래 “바꿀 이름”으로 표시되며, 로그 템플릿의 이름 스타일을 그대로 따릅니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
     renderLogSetNames(current.names);
     const updateCount = () => { const label = $("logSetNameCount"); if (label) label.textContent = `${logSetNamesFromModal().length}/${LOG_NAME_SET_LIMIT}`; };
-    $("logSetNames").addEventListener("input", updateCount);
-    $on("logSetAdd", "click", () => {
+    const updateConflict=()=>{const host=$("logSetConflictHost"); if(!host)return; const conflict=findLogNameSetConflicts(sets,safeIndex,logSetNamesFromModal());host.innerHTML=logSetConflictMarkup(conflict);};
+    $("logSetNames").addEventListener("input",()=>{updateCount();updateConflict();});
+    document.addEventListener("lumink:log-set-names-changed",updateConflict,{once:false});
+    const cleanupConflictListener=()=>document.removeEventListener("lumink:log-set-names-changed",updateConflict);
+    updateConflict();
+    $("logSetAdd").addEventListener("click", () => {
       const names = logSetNamesFromModal();
       if (names.length >= LOG_NAME_SET_LIMIT) { toast(`원본 이름은 최대 ${LOG_NAME_SET_LIMIT}개까지 추가할 수 있어요`); return; }
-      names.push(""); renderLogSetNames(names); updateCount();
+      names.push(""); renderLogSetNames(names); updateCount(); updateConflict();
       const inputs = $("logSetNames").querySelectorAll(".log-set-name"); if (inputs.length) inputs[inputs.length - 1].focus();
     });
-    $on("logSetCancel", "click", closeModal);
-    $on("logSetSave", "click", async () => {
+    $("logSetCancel").addEventListener("click",()=>{cleanupConflictListener();closeModal();});
+    $("logSetSave").addEventListener("click", async () => {
       const replacement = $("logSetReplacement").value.trim();
       const names = logSetNamesFromModal();
       if (names.length && !replacement) { toast("바꿀 이름을 입력해 주세요"); $("logSetReplacement").focus(); return; }
-      sets[safeIndex] = normalizeLogNameSet({ names, replacement });
-      n.data = normalizeLogData(Object.assign({}, n.data || {}, { nameSets: sets }));
-      await saveLog(n, true);
-      closeModal(); renderLogRenameSets(n.data.nameSets);
-      if (!logEditMode) renderLogPreview(n);
-      toast(`이름 바꾸기 세트 ${safeIndex + 1}을 저장했어요`);
+      const draft={names,replacement},conflicts=findLogNameSetConflicts(sets,safeIndex,names); cleanupConflictListener();
+      if(conflicts.length){openLogNameSetDuplicateConfirm(safeIndex,draft,conflicts);return;}
+      await saveLogNameSet(safeIndex,draft);
     });
     setTimeout(() => $("logSetReplacement").focus(), 80);
   }
@@ -6007,9 +6046,10 @@ ${gallery}
   const CUSTOM_THEME_SETTING_ID = "customTheme";
   const LEGACY_CUSTOM_ACCENT = "custom";
   const CUSTOM_THEME_COLOR_META = Object.freeze([
-    { key:"mainA",    label:"메인 색상 1 · 시작", variable:"--accent",      fallback:"#2F6FD0", group:"main" },
-    { key:"mainB",    label:"메인 색상 2 · 끝",   variable:"--accent-2",    fallback:"#5A73D8", group:"main" },
-    { key:"bg",       label:"앱 배경",             variable:"--bg",          fallback:"#F3F4F8", group:"background" },
+    { key:"mainA",          label:"메인 색상 1 · 시작",  variable:"--accent",            fallback:"#2F6FD0", group:"main" },
+    { key:"mainB",          label:"메인 색상 2 · 끝",    variable:"--accent-2",          fallback:"#5A73D8", group:"main" },
+    { key:"sectionTitleBg", label:"작은 섹션 제목 배경",  variable:"--section-title-bg", fallback:"#EAF0FF", group:"section" },
+    { key:"bg",             label:"앱 배경",              variable:"--bg",                fallback:"#F3F4F8", group:"background" },
     { key:"bg2",      label:"보조 배경",           variable:"--bg-2",        fallback:"#ECEEF4", group:"background" },
     { key:"paper",    label:"문서 바탕",           variable:"--paper",       fallback:"#FCFCFD", group:"background" },
     { key:"surface",  label:"카드 표면",           variable:"--surface",     fallback:"#FFFFFF", group:"card" },
@@ -6018,14 +6058,15 @@ ${gallery}
     { key:"barBg",    label:"상단바",              variable:"--bar-bg",      fallback:"#FFFFFF", group:"bar" },
     { key:"barBg2",   label:"상단바 보조",         variable:"--bar-bg-2",    fallback:"#F6F7FB", group:"bar" },
     { key:"barLine",  label:"상단바 경계",         variable:"--bar-line",    fallback:"#E1E3EC", group:"bar" },
-    { key:"ink",      label:"본문 글자",           variable:"--ink",         fallback:"#1B1D27", group:"type" },
-    { key:"muted",    label:"보조 글자",           variable:"--muted",       fallback:"#5E6377", group:"type" },
+    { key:"memoTitle", label:"메모 제목",           variable:"--memo-title-color", fallback:"#283A63", group:"type" },
+    { key:"ink",       label:"본문 글자",           variable:"--ink",              fallback:"#1B1D27", group:"type" },
+    { key:"muted",     label:"보조 글자",           variable:"--muted",            fallback:"#5E6377", group:"type" },
     { key:"faint",    label:"희미한 글자",         variable:"--faint",       fallback:"#A3A8BA", group:"type" },
     { key:"line",     label:"기본 경계선",         variable:"--line",        fallback:"#E1E3EC", group:"line" },
     { key:"lineSoft", label:"옅은 경계선",         variable:"--line-soft",   fallback:"#EBEDF3", group:"line" }
   ]);
   const CUSTOM_THEME_GROUPS = Object.freeze([
-    ["main", "메인 그라데이션"], ["background", "바탕"], ["card", "카드"],
+    ["main", "메인 그라데이션"], ["section", "섹션 제목"], ["background", "바탕"], ["card", "카드"],
     ["bar", "상단바"], ["type", "글자"], ["line", "경계선"]
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
@@ -6063,7 +6104,8 @@ ${gallery}
         bg:hslToHex(H,S*.16,.978), bg2:hslToHex(lerpHue(hueA,hueB,.30),S*.22,.952), paper:hslToHex(lerpHue(hueA,hueB,.62),S*.09,.995),
         surface:hslToHex(H,S*.11,.998), surface2:hslToHex(lerpHue(hueB,hueA,.24),S*.20,.968), surface3:hslToHex(H,S*.26,.932),
         barBg:hslToHex(hueA,S*.10,.998), barBg2:hslToHex(hueB,S*.16,.982), barLine:hslToHex(H,S*.21,.885),
-        ink:hslToHex(H,Math.max(.30,S*.52),.205), muted:hslToHex(H,Math.max(.18,S*.30),.39), faint:hslToHex(H,Math.max(.12,S*.18),.61),
+        sectionTitleBg:hslToHex(lerpHue(hueA,hueB,.44),Math.max(.10,S*.25),.915),
+        memoTitle:hslToHex(H,Math.max(.28,S*.48),.245), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted:hslToHex(H,Math.max(.18,S*.30),.39), faint:hslToHex(H,Math.max(.12,S*.18),.61),
         line:hslToHex(H,S*.18,.892), lineSoft:hslToHex(H,S*.12,.942)
       });
     } else {
@@ -6071,7 +6113,8 @@ ${gallery}
         bg:hslToHex(H,S*.27,.072), bg2:hslToHex(lerpHue(hueA,hueB,.28),S*.30,.102), paper:hslToHex(H,S*.20,.092),
         surface:hslToHex(H,S*.25,.135), surface2:hslToHex(lerpHue(hueB,hueA,.25),S*.28,.178), surface3:hslToHex(H,S*.27,.225),
         barBg:hslToHex(hueA,S*.34,.145), barBg2:hslToHex(hueB,S*.35,.188), barLine:hslToHex(H,S*.26,.275),
-        ink:hslToHex(H,Math.max(.13,S*.18),.94), muted:hslToHex(H,Math.max(.10,S*.14),.70), faint:hslToHex(H,Math.max(.08,S*.10),.48),
+        sectionTitleBg:hslToHex(H,Math.max(.13,S*.20),.20),
+        memoTitle:hslToHex(H,Math.max(.12,S*.18),.965), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted:hslToHex(H,Math.max(.10,S*.14),.70), faint:hslToHex(H,Math.max(.08,S*.10),.48),
         line:hslToHex(H,S*.23,.258), lineSoft:hslToHex(H,S*.18,.195)
       });
     }
@@ -6096,13 +6139,20 @@ ${gallery}
     try { root.removeAttribute("data-custom-theme"); CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.setAttribute("data-theme",mode); const accent=validAccentName(accentName); if(accent==="blue")root.removeAttribute("data-accent");else root.setAttribute("data-accent",accent); return read(getComputedStyle(root)); }
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
-  function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.key,normalizeThemeHex((css.getPropertyValue(item.variable)||"").trim(),item.fallback)]))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
-  function normalizePalette(raw,fallback){
+  function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
+    const sourceVar=item.key==="sectionTitleBg"?"--accent-soft":item.key==="memoTitle"?"--logo-ink":item.variable;
+    return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
+  }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
+  function normalizePalette(raw,fallback,mode){
     const src=raw&&typeof raw==="object"?raw:{}, ref=fallback||CUSTOM_THEME_FALLBACK_COLORS, out={};
     const legacyMain=normalizeThemeHex(src.main||src.mainA,ref.mainA||"#2F6FD0");
     out.mainA=normalizeThemeHex(src.mainA||src.main,ref.mainA||legacyMain);
     out.mainB=normalizeThemeHex(src.mainB,ref.mainB||gradientMate(legacyMain));
-    CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{out[item.key]=normalizeThemeHex(src[item.key],ref[item.key]||item.fallback);});
+    const recommended=recommendCustomPalette(out.mainA,out.mainB,mode==="dark"?"dark":"light");
+    CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{
+      const missingRole=item.key==="sectionTitleBg"||item.key==="memoTitle";
+      out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
+    });
     return out;
   }
   function normalizeCustomTheme(raw){
@@ -6113,38 +6163,51 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:6,baseAccent,
-      light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight)},
-      dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark)},
+    return {version:7,baseAccent,
+      light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
+      dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:6,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:7,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){ return Object.assign(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,palette.colors[item.key]])),customThemeAccentVars(palette,mode)); }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<6;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
-  function appearanceSnapshot(){return {version:6,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<7;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  function appearanceSnapshot(){return {version:7,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
   function applyAccent(name){const custom=name===LEGACY_CUSTOM_ACCENT;const accent=custom?LEGACY_CUSTOM_ACCENT:validAccentName(name);st.accent=accent;if(custom||accent==="blue")document.documentElement.removeAttribute("data-accent");else document.documentElement.setAttribute("data-accent",accent);if(!custom&&st.customTheme){st.customTheme.baseAccent=accent;}try{localStorage.setItem("luminkAccent",accent);}catch(e){}applyCustomTheme(st.customTheme,{persist:false});}
-  function detectAccent(){let name="blue",rawTheme=null;try{name=localStorage.getItem("luminkAccent")||"blue";const raw=localStorage.getItem("luminkCustomTheme");if(raw)rawTheme=JSON.parse(raw);}catch(e){}const cfg=normalizeCustomTheme(rawTheme||null);st.customTheme=cfg;const configured=rawTheme&&!!((rawTheme.light&&rawTheme.light.enabled===true)||(rawTheme.dark&&rawTheme.dark.enabled===true));if(name!==LEGACY_CUSTOM_ACCENT&&configured)name=LEGACY_CUSTOM_ACCENT;applyAccent(name);}
+  function detectAccent(){let name=null,rawTheme=null;try{name=localStorage.getItem("luminkAccent");const raw=localStorage.getItem("luminkCustomTheme");if(raw)rawTheme=JSON.parse(raw);}catch(e){}const cfg=normalizeCustomTheme(rawTheme||null);st.customTheme=cfg;const configured=rawTheme&&!!((rawTheme.light&&rawTheme.light.enabled===true)||(rawTheme.dark&&rawTheme.dark.enabled===true));if(!name&&configured)name=LEGACY_CUSTOM_ACCENT;applyAccent(name===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(name||"blue"));}
   function customThemePreviewPaint(box,palette){if(!box)return;const c=palette.colors;Object.entries({"--ct-bg":c.bg,"--ct-card":c.surface,"--ct-card-2":c.surface2,"--ct-ink":c.ink,"--ct-muted":c.muted,"--ct-line":c.line,"--ct-bar":c.barBg2,"--ct-main-a":c.mainA,"--ct-main-b":c.mainB}).forEach(([k,v])=>box.style.setProperty(k,v));box.classList.toggle("is-off",!palette.enabled);}
+  const CUSTOM_THEME_EXPORT_KIND = "lumink-custom-theme";
+  const CUSTOM_THEME_EXPORT_VERSION = 1;
+  function exportCustomThemeJson(config) {
+    const payload={kind:CUSTOM_THEME_EXPORT_KIND,schemaVersion:CUSTOM_THEME_EXPORT_VERSION,exportedAt:now(),customTheme:normalizeCustomTheme(config)};
+    downloadDoc(JSON.stringify(payload,null,2).replace(/</g,"\\u003c"),`lumink-custom-theme-${dateStamp()}.json`,"application/json");
+  }
+  function importCustomThemeJson(onLoad) {
+    const input=document.createElement("input"); input.type="file"; input.accept="application/json,.json"; input.style.display="none"; document.body.appendChild(input);
+    input.addEventListener("change",()=>{const file=input.files&&input.files[0]; if(!file){input.remove();return;} const reader=new FileReader(); reader.onload=()=>{try{const raw=JSON.parse(String(reader.result||"{}")); const source=raw&&typeof raw==="object"?(raw.customTheme||raw):null; if(!source||typeof source!=="object")throw new Error("invalid"); const cfg=normalizeCustomTheme(source); if(typeof onLoad==="function")onLoad(cfg); }catch(e){toast("사용자 테마 JSON 파일을 읽지 못했어요");} finally{input.remove();}}; reader.onerror=()=>{toast("사용자 테마 JSON 파일을 읽지 못했어요");input.remove();}; reader.readAsText(file,"UTF-8");});
+    input.click();
+  }
   function openCustomThemeStudio(seed,initialMode){
     const before=cloneThemeObject(currentCustomTheme()), beforeAccent=st.accent; let draft=seed?normalizeCustomTheme(seed):(before.light.enabled||before.dark.enabled?cloneThemeObject(before):customThemeSeedFromActiveAccent()); draft.light.enabled=true; draft.dark.enabled=true; let mode=initialMode==="dark"?"dark":"light";
     const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
-    const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const items=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key).map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${key==="main"?palette.colors[item.key]:palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
+    const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const items=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key).map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
-    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 개별 색상은 아래에서 다시 미세 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><p class="custom-theme-note">적용한 모드에서만 독립 테마가 활성화됩니다. 다른 모드는 별도 탭에서 따로 설정할 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
+    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 작은 섹션 제목 배경과 메모 제목도 이 화면에서 직접 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
     const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
     document.querySelectorAll("[data-custom-tab]").forEach((b)=>b.addEventListener("click",()=>openCustomThemeStudio(draft,b.dataset.customTab)));
     document.querySelectorAll("[data-custom-editor-key]").forEach((b)=>b.addEventListener("click",()=>{const key=b.dataset.customEditorKey,item=CUSTOM_THEME_COLOR_META.find((x)=>x.key===key);openAdvancedColorPicker(`${item.label} 색상`,draft[mode].colors[key],(value)=>{draft[mode].colors[key]=value;openCustomThemeStudio(draft,mode);},{prefix:"customThemeRole",saved:true,save:true,intro:"정사각형 색상판·HEX·RGB·스포이드로 정확하게 조절할 수 있어요."});}));
-    $on("customThemeRecommend","click",()=>{draft[mode].colors=recommendCustomPalette(draft[mode].colors.mainA,draft[mode].colors.mainB,mode);draft[mode].enabled=true;openCustomThemeStudio(draft,mode);});
-    $on("customThemeReset","click",()=>{draft[mode].colors=capturePresetPalette(validAccentName(draft.baseAccent),mode);draft[mode].enabled=true;preview();openCustomThemeStudio(draft,mode);});
-    $on("customThemeCancel","click",closeModal);$on("customThemeApply","click",async()=>{try{draft.light.enabled=true;draft.dark.enabled=true;const saved=await persistCustomTheme(draft);applyAccent(LEGACY_CUSTOM_ACCENT);applyCustomTheme(saved,{persist:false});customThemePreviewRestore=null;closeModal();renderSettings();toast("사용자 지정 테마를 적용했어요");}catch(e){}});preview();
+    $("customThemeRecommend").addEventListener("click",()=>{draft[mode].colors=recommendCustomPalette(draft[mode].colors.mainA,draft[mode].colors.mainB,mode);draft[mode].enabled=true;openCustomThemeStudio(draft,mode);});
+    $("customThemeReset").addEventListener("click",()=>{draft[mode].colors=capturePresetPalette(validAccentName(draft.baseAccent),mode);draft[mode].enabled=true;preview();openCustomThemeStudio(draft,mode);});
+    $("customThemeExport").addEventListener("click",()=>{exportCustomThemeJson(draft);toast("사용자 테마 JSON을 저장했어요");});
+    $("customThemeImport").addEventListener("click",()=>importCustomThemeJson((loaded)=>{toast("사용자 테마를 불러왔어요. 적용을 누르면 반영됩니다.");openCustomThemeStudio(loaded,mode);}));
+    $("customThemeCancel").addEventListener("click",closeModal);$("customThemeApply").addEventListener("click",async()=>{try{draft.light.enabled=true;draft.dark.enabled=true;const saved=await persistCustomTheme(draft);applyAccent(LEGACY_CUSTOM_ACCENT);applyCustomTheme(saved,{persist:false});customThemePreviewRestore=null;closeModal();renderSettings();toast("사용자 지정 테마를 적용했어요");}catch(e){}});preview();
   }
   function openAccentPicker(){const cur=st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent||"blue"),cells=Object.keys(ACCENTS).map((key)=>`<div class="accent-cell${key===cur?" sel":""}" data-accent="${key}"><span class="ac-sw" style="background:${ACCENTS[key].grad}"></span><span class="ac-name">${ACCENTS[key].name}</span></div>`).join(""),customCfg=currentCustomTheme(),customCell=`<div class="accent-cell accent-custom${cur===LEGACY_CUSTOM_ACCENT?" sel is-custom":""}" data-custom-light="1" style="--custom-preview-a:${customCfg.light.colors.mainA};--custom-preview-b:${customCfg.light.colors.mainB}"><span class="ac-sw"></span><span class="ac-name">사용자 지정</span></div>`;openModal(`<h3>컬러 테마</h3><p class="m-sub">프리셋은 v64.9 원래 색상 결을 유지합니다. <b>사용자 지정</b>을 선택하면 프리셋 선택은 해제되고, 라이트·다크 각각의 두 색 그라데이션 독립 테마가 적용됩니다.</p><div class="accent-grid">${cells}${customCell}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);$on("acClose","click",closeModal);document.querySelectorAll(".accent-cell[data-accent]").forEach((el)=>el.addEventListener("click",()=>{applyAccent(el.dataset.accent);document.querySelectorAll(".accent-cell").forEach((x)=>x.classList.toggle("sel",x===el));renderSettings();}));const cell=document.querySelector(".accent-cell[data-custom-light]");if(cell)cell.addEventListener("click",()=>{applyAccent(LEGACY_CUSTOM_ACCENT);closeModal();openCustomThemeStudio();});}
 

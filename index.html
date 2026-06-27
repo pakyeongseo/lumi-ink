@@ -3123,6 +3123,26 @@
   .custom-theme-preview-mark { background:linear-gradient(135deg,var(--ct-main-a,var(--accent)),var(--ct-main-b,var(--accent-2))); }
   .custom-theme-group-main { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
 
+
+
+  /* ===== v66.1 · custom theme roles and log guard ===== */
+  html[data-custom-theme] .set-gtitle { background:var(--section-title-bg); }
+  html[data-custom-theme] .topbar .tb-title { color:var(--memo-title-color); }
+  .custom-theme-file-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:8px; }
+  .custom-theme-file-actions .custom-theme-auto { width:100%; }
+  .ce-saved-sw { touch-action:manipulation; }
+  .log-set-conflict { margin:10px 0 1px; padding:10px 11px; border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line)); border-radius:11px; background:color-mix(in srgb,var(--accent-soft) 54%,var(--surface)); color:var(--muted); font-size:11px; line-height:1.45; }
+  .log-set-conflict > b { display:block; color:var(--accent); font-size:11.5px; margin-bottom:2px; }
+  .log-set-conflict > small { display:block; color:var(--muted); }
+  .log-set-conflict ul { display:grid; gap:3px; margin:7px 0 0; padding:0; list-style:none; }
+  .log-set-conflict li { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .log-set-conflict li b { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); }
+  .log-set-conflict li span { flex:0 0 auto; color:var(--muted); font-size:10px; }
+  .log-set-conflict-confirm { margin:0 0 2px; }
+  .quick-slot-media.has-library-icon,
+  .quick-slot-media.has-code-icon { border:0; box-shadow:none; background:transparent; }
+  .quick-slot-media.has-library-icon .quick-menu-library-icon { filter:none; }
+  @media (max-width:380px) { .custom-theme-file-actions { grid-template-columns:1fr; } }
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
 </head>
