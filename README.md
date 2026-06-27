@@ -139,3 +139,7 @@
 - 퀵메뉴 기본 아이콘 30종 추가
 - 프로젝트 썸네일 팝업에 SVG 아이콘 모음 탭 추가
 - SVG 그라데이션 ID 충돌 방지 렌더링 적용
+
+
+## v65.4
+- Preset-safe dual custom palettes and theme-reactive SVG icon colors.
