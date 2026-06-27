@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.7**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.7-theme-auto-roles`
+- 개발 기준 빌드: **v66.8**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.8-appjs-divider-palette`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.7_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.8_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -41,7 +41,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.7_Release_Notes.md`
+- `Lumi_Ink_v66.8_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -49,6 +49,11 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.8
+
+- 사용자 제공 개선 `app.js`를 반영하고 SVG 참조 재매핑·테마 역할 자동 계산을 동기화
+- 메모 타입 7종 자동 팔레트는 라이트에서 기존 다크 추천의 선명도를 사용하고, 다크에서는 한 단계 더 밝게 파생
 
 ## v66.7
 
