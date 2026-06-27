@@ -2838,7 +2838,7 @@
   .quick-menu-slot.is-filled:active::after { opacity:1; }
   .quick-menu-slot.is-empty { border-style:dashed; color:var(--faint); background:color-mix(in srgb,var(--surface-2) 72%,transparent); }
   .quick-menu-slot.is-empty:active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
-  .quick-slot-media { position:relative; z-index:1; width:39px; height:39px; flex:0 0 auto; overflow:hidden; display:grid; place-items:center; border-radius:13px; color:var(--accent); background:linear-gradient(145deg,var(--accent-soft),color-mix(in srgb,var(--surface-3) 72%,var(--accent) 28%)); border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line)); box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
+  .quick-slot-media { position:relative; z-index:1; width:39px; height:39px; flex:0 0 auto; overflow:hidden; display:grid; place-items:center; border-radius:13px; color:var(--accent); background:linear-gradient(145deg,var(--quickmenu-default-icon-bg-a,var(--accent-soft)),var(--quickmenu-default-icon-bg-b,color-mix(in srgb,var(--surface-3) 72%,var(--accent) 28%))); border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line)); box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
   .quick-slot-media img { width:100%; height:100%; object-fit:cover; display:block; }
   .quick-slot-media svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.85; stroke-linecap:round; stroke-linejoin:round; }
   .quick-slot-media.has-code-icon { padding:0; background:color-mix(in srgb,var(--surface) 92%,transparent); }
@@ -3302,12 +3302,41 @@
   html[data-custom-theme] .pd-count { background:var(--project-count-bg) !important; }
   html[data-custom-theme] .sort-btn { background:var(--home-sort-bg) !important; }
   html[data-custom-theme] .modal h3 { color:var(--modal-title-color) !important; }
-  html[data-custom-theme] .chip-section-label {
-    background:var(--note-type-divider-bg) !important;
-    color:var(--note-type-divider-text) !important;
+  /* v66.7 · seven memo types stay distinct without seven manual colour inputs.
+     Their colours are always recalculated from the custom main gradient stops. */
+  html[data-custom-theme] .chip-section[data-note-type="free"] { --note-type-auto:var(--custom-note-type-free); }
+  html[data-custom-theme] .chip-section[data-note-type="html"] { --note-type-auto:var(--custom-note-type-html); }
+  html[data-custom-theme] .chip-section[data-note-type="lorebook"] { --note-type-auto:var(--custom-note-type-lorebook); }
+  html[data-custom-theme] .chip-section[data-note-type="log"] { --note-type-auto:var(--custom-note-type-log); }
+  html[data-custom-theme] .chip-section[data-note-type="persona"] { --note-type-auto:var(--custom-note-type-persona); }
+  html[data-custom-theme] .chip-section[data-note-type="character"] { --note-type-auto:var(--custom-note-type-character); }
+  html[data-custom-theme] .chip-section[data-note-type="idea"] { --note-type-auto:var(--custom-note-type-idea); }
+  html[data-custom-theme] .chip-section[data-note-type] .chip-section-label {
+    background:color-mix(in srgb,var(--note-type-auto) 18%,var(--surface)) !important;
+    color:color-mix(in srgb,var(--note-type-auto) 54%,var(--custom-note-divider-text)) !important;
+    border:1px solid color-mix(in srgb,var(--note-type-auto) 18%,transparent);
   }
-  html[data-custom-theme] .chip-section-label .csl-dot { background:var(--note-type-divider-dot) !important; opacity:1 !important; }
-  html[data-custom-theme] .chip-section-label .csl-count { color:var(--note-type-divider-count) !important; }
+  html[data-custom-theme] .chip-section[data-note-type] .csl-dot { background:var(--note-type-auto) !important; opacity:1 !important; }
+  html[data-custom-theme] .chip-section[data-note-type] .csl-count { color:color-mix(in srgb,var(--note-type-auto) 32%,var(--custom-note-divider-count)) !important; }
+  html[data-custom-theme] .memo-tag.t-free { background:var(--custom-note-type-free) !important; color:var(--custom-note-type-free-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-html { background:var(--custom-note-type-html) !important; color:var(--custom-note-type-html-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-lorebook { background:var(--custom-note-type-lorebook) !important; color:var(--custom-note-type-lorebook-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-log { background:var(--custom-note-type-log) !important; color:var(--custom-note-type-log-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-persona { background:var(--custom-note-type-persona) !important; color:var(--custom-note-type-persona-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-character { background:var(--custom-note-type-character) !important; color:var(--custom-note-type-character-ink) !important; }
+  html[data-custom-theme] .memo-tag.t-idea { background:var(--custom-note-type-idea) !important; color:var(--custom-note-type-idea-ink) !important; }
+
+  /* v66.7 · remaining custom-theme coverage */
+  html[data-custom-theme] .code-toggle.has-bg { background:var(--memo-code-icon-bg) !important; }
+  html[data-custom-theme] .sec-chip { background:var(--home-section-title-bg) !important; }
+  html[data-custom-theme] .set-row { box-shadow:0 6px 16px -13px color-mix(in srgb,var(--settings-shadow-color) 76%,transparent) !important; }
+  html[data-custom-theme] .set-row:active { background:var(--settings-pressed-bg) !important; }
+  html[data-custom-theme] .type-card .tc-ico { background:var(--new-note-icon-bg) !important; }
+  html[data-custom-theme] .type-quick-free .tqf-icon {
+    background:color-mix(in srgb,var(--new-note-icon-bg) 72%,transparent) !important;
+    border-color:color-mix(in srgb,var(--new-note-icon-bg) 72%,white 28%) !important;
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white 42%,transparent),0 5px 12px -8px color-mix(in srgb,var(--new-note-icon-bg) 82%,transparent) !important;
+  }
 
   /* Log rename sets: a short five-tab binder rhythm, with the active/configured gradient
      only at the top edge so the buttons read as a compact control rather than five cards. */

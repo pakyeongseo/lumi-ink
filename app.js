@@ -1239,7 +1239,7 @@
       if (!group.length) return;
       const [pin, rest] = partitionPinned(group);
       const ordered = [...pin, ...sortList(rest, st.noteSort, (n) => n.title || "", (n) => n.updatedAt || 0)];
-      const sec = document.createElement("div"); sec.className = "chip-section";
+      const sec = document.createElement("div"); sec.className = "chip-section"; sec.dataset.noteType = t;
       const head = document.createElement("div"); head.className = "csec-head";
       head.innerHTML = `<span class="chip-section-label"><span class="csl-dot"></span>${label} <span class="csl-count">· ${group.length}</span></span>` +
         (firstSec ? `<button class="sort-btn" id="pdSort"><svg viewBox="0 0 24 24"><path d="M3 6h11M3 12h7M3 18h4M17 5v14M17 19l3-3M17 19l-3-3"/></svg><span id="pdSortLabel">${SORT_LABELS[st.noteSort] || "최신순"}</span></button>` : "");
@@ -6101,18 +6101,19 @@ ${gallery}
     { key:"barLine",        label:"상단바 경계",         variable:"--bar-line",                       fallback:"#E1E3EC", group:"bar" },
     { key:"topbarShadow",   label:"상단 제목바 아래 그림자", variable:"--topbar-shadow-color",          fallback:"#7690C2", group:"bar" },
     { key:"memoCodeBg",     label:"자유 메모 코드 보기 배경", variable:"--memo-code-bg",                  fallback:"#FCFCFD", group:"memo" },
+    { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo" },
     { key:"memoTitle",      label:"메모 제목",           variable:"--memo-title-color",               fallback:"#283A63", group:"type" },
-    { key:"noteTypeDividerBg",    label:"메모 타입 구분자 배경", variable:"--note-type-divider-bg",          fallback:"#EAF0FF", group:"type" },
-    { key:"noteTypeDividerText",  label:"메모 타입 구분자 글자", variable:"--note-type-divider-text",        fallback:"#5E6377", group:"type" },
-    { key:"noteTypeDividerDot",   label:"메모 타입 구분자 점",   variable:"--note-type-divider-dot",         fallback:"#4E72A8", group:"type" },
-    { key:"noteTypeDividerCount", label:"메모 타입 구분자 개수", variable:"--note-type-divider-count",       fallback:"#A3A8BA", group:"type" },
     { key:"homeSectionTitle", label:"메인 화면 섹션 제목", variable:"--home-section-title-color",       fallback:"#5E6377", group:"home" },
+    { key:"homeSectionTitleBg", label:"메인 화면 섹션 제목 배경", variable:"--home-section-title-bg",   fallback:"#EAF0FF", group:"home" },
     { key:"homeShadow",     label:"메인 화면 그림자",     variable:"--home-shadow-color",              fallback:"#7690C2", group:"home" },
     { key:"projectCountBg", label:"프로젝트 메모 개수 배경", variable:"--project-count-bg",              fallback:"#EAF0FF", group:"home" },
     { key:"homeSortBg",     label:"메인 화면 정렬 배경", variable:"--home-sort-bg",                     fallback:"#EAF0FF", group:"home" },
     { key:"modalTitle",     label:"팝업 제목",           variable:"--modal-title-color",              fallback:"#283A63", group:"popup" },
+    { key:"newNoteIconBg",  label:"새 메모 팝업 아이콘 배경", variable:"--new-note-icon-bg",              fallback:"#EAF0FF", group:"popup" },
     { key:"settingsGroupTitle", label:"설정 그룹 제목",  variable:"--settings-group-title-color",      fallback:"#5E6377", group:"settings" },
     { key:"settingsRowTitle", label:"설정 항목 제목",    variable:"--settings-row-title-color",        fallback:"#1B1D27", group:"settings" },
+    { key:"settingsShadow", label:"설정 그림자",         variable:"--settings-shadow-color",           fallback:"#7690C2", group:"settings" },
+    { key:"settingsPressedBg", label:"설정 버튼 눌림",    variable:"--settings-pressed-bg",             fallback:"#F1F2F7", group:"settings" },
     { key:"ink",            label:"본문 글자",           variable:"--ink",                            fallback:"#1B1D27", group:"type" },
     { key:"muted",          label:"보조 글자",           variable:"--muted",                          fallback:"#5E6377", group:"type" },
     { key:"faint",          label:"희미한 글자",         variable:"--faint",                          fallback:"#A3A8BA", group:"type" },
@@ -6121,12 +6122,16 @@ ${gallery}
   ]);
   const CUSTOM_THEME_GROUPS = Object.freeze([
     ["main", "메인 그라데이션"], ["brand", "로고"], ["section", "섹션 제목"], ["sidebar", "사이드바"], ["background", "바탕"], ["card", "카드"],
-    ["bar", "상단바"], ["memo", "자유 메모 코드"], ["home", "메인 화면"], ["popup", "팝업"], ["settings", "설정 제목"], ["type", "글자"], ["line", "경계선"]
+    ["bar", "상단바"], ["memo", "자유 메모 코드"], ["home", "메인 화면"], ["popup", "팝업"], ["settings", "설정"], ["type", "글자"], ["line", "경계선"]
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
     ...CUSTOM_THEME_COLOR_META.map((item) => item.variable),
     "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--logo-ink",
-    "--custom-main-a", "--custom-main-b", "--custom-logo-body", "--custom-logo-tip", "--custom-logo-ink", "--custom-logo-glow"
+    "--custom-main-a", "--custom-main-b", "--custom-logo-body", "--custom-logo-tip", "--custom-logo-ink", "--custom-logo-glow",
+    "--quickmenu-default-icon-bg-a", "--quickmenu-default-icon-bg-b",
+    "--custom-note-type-free", "--custom-note-type-html", "--custom-note-type-lorebook", "--custom-note-type-log", "--custom-note-type-persona", "--custom-note-type-character", "--custom-note-type-idea",
+    "--custom-note-type-free-ink", "--custom-note-type-html-ink", "--custom-note-type-lorebook-ink", "--custom-note-type-log-ink", "--custom-note-type-persona-ink", "--custom-note-type-character-ink", "--custom-note-type-idea-ink",
+    "--custom-note-divider-text", "--custom-note-divider-count"
   ]);
   const CUSTOM_THEME_FALLBACK_COLORS = Object.freeze(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item) => [item.key, item.fallback])));
   let customThemePreviewRestore = null;
@@ -6160,11 +6165,11 @@ ${gallery}
         bg:hslToHex(H,S*.16,.978), bg2:hslToHex(lerpHue(hueA,hueB,.30),S*.22,.952), paper:hslToHex(lerpHue(hueA,hueB,.62),S*.09,.995),
         surface:hslToHex(H,S*.11,.998), surface2:hslToHex(lerpHue(hueB,hueA,.24),S*.20,.968), surface3:hslToHex(H,S*.26,.932),
         barBg:hslToHex(hueA,S*.10,.998), barBg2:hslToHex(hueB,S*.16,.982), barLine:hslToHex(H,S*.21,.885),
-        topbarShadow:hslToHex(H,Math.max(.23,S*.38),.48), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.58),S*.12,.982),
+        topbarShadow:hslToHex(H,Math.max(.23,S*.38),.48), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.58),S*.12,.982), memoCodeIconBg:hslToHex(lerpHue(hueA,hueB,.54),Math.max(.13,S*.28),.922),
         sectionTitleBg:soft, sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.12,S*.25),.928),
         sidebarSectionGradientStart:hslToHex(lerpHue(hueA,hueB,.18),Math.max(.12,S*.28),.918), sidebarCountBg:hslToHex(lerpHue(hueA,hueB,.46),Math.max(.12,S*.25),.91),
-        memoTitle:titleInk, noteTypeDividerBg:hslToHex(lerpHue(hueA,hueB,.42),Math.max(.11,S*.24),.925), noteTypeDividerText:muted, noteTypeDividerDot:hslToHex(lerpHue(hueA,hueB,.58),Math.max(.30,S*.50),.48), noteTypeDividerCount:hslToHex(H,Math.max(.12,S*.18),.61), homeSectionTitle:muted, homeShadow:hslToHex(H,Math.max(.20,S*.34),.50), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.12,S*.27),.91), homeSortBg:hslToHex(lerpHue(hueB,hueA,.35),Math.max(.12,S*.28),.91), modalTitle:titleInk,
-        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.30,S*.52),.205), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted, faint:hslToHex(H,Math.max(.12,S*.18),.61),
+        memoTitle:titleInk, homeSectionTitle:muted, homeSectionTitleBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.12,S*.27),.925), homeShadow:hslToHex(H,Math.max(.20,S*.34),.50), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.12,S*.27),.91), homeSortBg:hslToHex(lerpHue(hueB,hueA,.35),Math.max(.12,S*.28),.91), modalTitle:titleInk, newNoteIconBg:hslToHex(lerpHue(hueA,hueB,.55),Math.max(.14,S*.30),.914),
+        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.30,S*.52),.205), settingsShadow:hslToHex(H,Math.max(.22,S*.36),.48), settingsPressedBg:hslToHex(lerpHue(hueA,hueB,.35),Math.max(.14,S*.24),.94), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted, faint:hslToHex(H,Math.max(.12,S*.18),.61),
         line:hslToHex(H,S*.18,.892), lineSoft:hslToHex(H,S*.12,.942)
       });
     } else {
@@ -6174,26 +6179,43 @@ ${gallery}
         bg:hslToHex(H,S*.27,.072), bg2:hslToHex(lerpHue(hueA,hueB,.28),S*.30,.102), paper:hslToHex(H,S*.20,.092),
         surface:hslToHex(H,S*.25,.135), surface2:hslToHex(lerpHue(hueB,hueA,.25),S*.28,.178), surface3:hslToHex(H,S*.27,.225),
         barBg:hslToHex(hueA,S*.34,.145), barBg2:hslToHex(hueB,S*.35,.188), barLine:hslToHex(H,S*.26,.275),
-        topbarShadow:hslToHex(H,Math.max(.25,S*.38),.025), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.55),S*.22,.105),
+        topbarShadow:hslToHex(H,Math.max(.25,S*.38),.025), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.55),S*.22,.105), memoCodeIconBg:hslToHex(lerpHue(hueA,hueB,.52),Math.max(.18,S*.30),.24),
         sectionTitleBg:soft, sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.34),Math.max(.15,S*.24),.19),
         sidebarSectionGradientStart:hslToHex(lerpHue(hueA,hueB,.20),Math.max(.15,S*.27),.225), sidebarCountBg:hslToHex(lerpHue(hueA,hueB,.47),Math.max(.16,S*.28),.235),
-        memoTitle:titleInk, noteTypeDividerBg:hslToHex(lerpHue(hueA,hueB,.42),Math.max(.16,S*.25),.205), noteTypeDividerText:muted, noteTypeDividerDot:hslToHex(lerpHue(hueA,hueB,.58),Math.max(.34,S*.52),.65), noteTypeDividerCount:hslToHex(H,Math.max(.08,S*.10),.48), homeSectionTitle:muted, homeShadow:hslToHex(H,Math.max(.24,S*.34),.025), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.17,S*.30),.24), homeSortBg:hslToHex(lerpHue(hueB,hueA,.36),Math.max(.16,S*.30),.24), modalTitle:titleInk,
-        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.13,S*.18),.94), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted, faint:hslToHex(H,Math.max(.08,S*.10),.48),
+        memoTitle:titleInk, homeSectionTitle:muted, homeSectionTitleBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.17,S*.28),.225), homeShadow:hslToHex(H,Math.max(.24,S*.34),.025), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.17,S*.30),.24), homeSortBg:hslToHex(lerpHue(hueB,hueA,.36),Math.max(.16,S*.30),.24), modalTitle:titleInk, newNoteIconBg:hslToHex(lerpHue(hueA,hueB,.54),Math.max(.20,S*.34),.255),
+        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.13,S*.18),.94), settingsShadow:hslToHex(H,Math.max(.26,S*.36),.035), settingsPressedBg:hslToHex(lerpHue(hueA,hueB,.35),Math.max(.18,S*.28),.25), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted, faint:hslToHex(H,Math.max(.08,S*.10),.48),
         line:hslToHex(H,S*.23,.258), lineSoft:hslToHex(H,S*.18,.195)
       });
     }
     return out;
+  }
+  const CUSTOM_NOTE_TYPE_KEYS = Object.freeze(["free","html","lorebook","log","persona","character","idea"]);
+  function customThemeAutoTypeVars(mainA,mainB,dark){
+    const a=hexToHsl(mainA),b=hexToHsl(mainB),mid=blendHsl(mainA,mainB,.5);
+    const delta=Math.abs(((b.h-a.h+540)%360)-180), spread=delta<46?16:7, saturation=Math.max(.46,Math.min(.84,mid.s*.92+.06));
+    const vars={"--custom-note-divider-text":dark?hslToHex(mid.h,Math.max(.12,mid.s*.16),.93):hslToHex(mid.h,Math.max(.22,mid.s*.42),.27),"--custom-note-divider-count":dark?hslToHex(mid.h,Math.max(.10,mid.s*.12),.61):hslToHex(mid.h,Math.max(.12,mid.s*.20),.54)};
+    CUSTOM_NOTE_TYPE_KEYS.forEach((type,index)=>{
+      const point=index/(CUSTOM_NOTE_TYPE_KEYS.length-1), hue=lerpHue(a.h,b.h,point)+(index-3)*spread;
+      const color=hslToHex(hue,Math.min(.86,saturation+(index%3)*.025),dark?.69:.50);
+      vars[`--custom-note-type-${type}`]=color;
+      vars[`--custom-note-type-${type}-ink`]=contrastInk(color,dark);
+    });
+    return vars;
   }
   function customThemeAccentVars(palette,mode){
     const c=palette.colors, a=normalizeThemeHex(c.mainA,"#2F6FD0"), b=normalizeThemeHex(c.mainB,gradientMate(a));
     const mid=blendHsl(a,b,.5),dark=mode==="dark", deep=dark?hslToHex(mid.h,Math.max(.28,mid.s*.55),.23):hslToHex(mid.h,Math.max(.34,mid.s*.58),.30);
     const soft=dark?hslToHex(mid.h,Math.max(.18,mid.s*.28),.18):hslToHex(mid.h,Math.max(.14,mid.s*.24),.91);
     const logoBody=a,logoTip=b,logoInk=normalizeThemeHex(c.logoCore,contrastInk(a,dark)),word=dark?hslToHex(mid.h,Math.max(.15,mid.s*.22),.88):hslToHex(mid.h,Math.max(.24,mid.s*.42),.27);
+    const quickA=dark?hslToHex(hexToHsl(a).h,Math.max(.24,hexToHsl(a).s*.54),.25):hslToHex(hexToHsl(a).h,Math.max(.16,hexToHsl(a).s*.32),.91);
+    const quickB=dark?hslToHex(hexToHsl(b).h,Math.max(.22,hexToHsl(b).s*.48),.18):hslToHex(hexToHsl(b).h,Math.max(.14,hexToHsl(b).s*.28),.965);
     return {
       "--accent":a,"--accent-2":b,"--accent-deep":deep,"--accent-soft":soft,"--accent-ink":c.ink,
       "--grad-blue":`linear-gradient(135deg, ${a} 0%, ${b} 100%)`,"--glow":`0 0 ${dark?24:18}px ${themeHexAlpha(a,dark?.30:.18)}`,"--logo-ink":word,
       "--custom-main-a":a,"--custom-main-b":b,"--custom-logo-body":logoBody,"--custom-logo-tip":logoTip,"--custom-logo-ink":logoInk,
-      "--custom-logo-glow":`drop-shadow(0 0 ${dark?13:6}px ${themeHexAlpha(a,dark?.46:.28)})`
+      "--custom-logo-glow":`drop-shadow(0 0 ${dark?13:6}px ${themeHexAlpha(a,dark?.46:.28)})`,
+      "--quickmenu-default-icon-bg-a":quickA,"--quickmenu-default-icon-bg-b":quickB,
+      ...customThemeAutoTypeVars(a,b,dark)
     };
   }
   function inferLegacyBaseAccent(raw) { const src=raw&&typeof raw==="object"?raw:{}; const primary=normalizeThemeHex(src.primary||src.main||src.mainA,"#7B9BFF"), secondary=normalizeThemeHex(src.secondary||src.mainB,"#B58BFF"); let best="blue", score=Infinity; Object.entries(ACCENTS).forEach(([name,meta])=>{const s=colorDistance(primary,meta.ig[0])+colorDistance(secondary,meta.ig[1]);if(s<score){score=s;best=name;}}); return best; }
@@ -6204,7 +6226,7 @@ ${gallery}
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
   function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
-    const sourceVar=({ logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoCodeBg:"--paper", memoTitle:"--logo-ink", noteTypeDividerBg:"--accent-soft", noteTypeDividerText:"--muted", noteTypeDividerDot:"--accent", noteTypeDividerCount:"--faint", homeSectionTitle:"--muted", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", settingsGroupTitle:"--muted", settingsRowTitle:"--ink" })[item.key] || item.variable;
+    const sourceVar=({ logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
     return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
   }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
   function normalizePalette(raw,fallback,mode){
@@ -6214,7 +6236,7 @@ ${gallery}
     out.mainB=normalizeThemeHex(src.mainB,ref.mainB||gradientMate(legacyMain));
     const recommended=recommendCustomPalette(out.mainA,out.mainB,mode==="dark"?"dark":"light");
     CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{
-      const missingRole=["logoCore","sectionTitleBg","sidebarFootBg","sidebarSectionGradientStart","sidebarCountBg","topbarShadow","memoCodeBg","memoTitle","noteTypeDividerBg","noteTypeDividerText","noteTypeDividerDot","noteTypeDividerCount","homeSectionTitle","homeShadow","projectCountBg","homeSortBg","modalTitle","settingsGroupTitle","settingsRowTitle"].includes(item.key);
+      const missingRole=["logoCore","sectionTitleBg","sidebarFootBg","sidebarSectionGradientStart","sidebarCountBg","topbarShadow","memoCodeBg","memoCodeIconBg","memoTitle","homeSectionTitle","homeSectionTitleBg","homeShadow","projectCountBg","homeSortBg","modalTitle","newNoteIconBg","settingsGroupTitle","settingsRowTitle","settingsShadow","settingsPressedBg"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
     return out;
@@ -6227,21 +6249,21 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:9,baseAccent,
+    return {version:10,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:9,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:10,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){ return Object.assign(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,palette.colors[item.key]])),customThemeAccentVars(palette,mode)); }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<9;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
-  function appearanceSnapshot(){return {version:9,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<10;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  function appearanceSnapshot(){return {version:10,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
   function applyAccent(name){const custom=name===LEGACY_CUSTOM_ACCENT;const accent=custom?LEGACY_CUSTOM_ACCENT:validAccentName(name);st.accent=accent;if(custom||accent==="blue")document.documentElement.removeAttribute("data-accent");else document.documentElement.setAttribute("data-accent",accent);if(!custom&&st.customTheme){st.customTheme.baseAccent=accent;}try{localStorage.setItem("luminkAccent",accent);}catch(e){}applyCustomTheme(st.customTheme,{persist:false});}

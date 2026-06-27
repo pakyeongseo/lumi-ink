@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.6**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.6-icon-refresh-slots-log-divider`
+- 개발 기준 빌드: **v66.7**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.7-theme-auto-roles`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.6_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.7_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -41,7 +41,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.6_Release_Notes.md`
+- `Lumi_Ink_v66.7_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -49,6 +49,11 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.7
+
+- 사용자 지정 테마의 누락 역할 5종을 편집·추천·JSON 백업 흐름까지 연결
+- 퀵메뉴 기본 기능 아이콘 타일과 7개 메모 타입 팔레트를 메인 그라데이션 기반 자동 파생으로 전환
 
 ## v66.6
 
