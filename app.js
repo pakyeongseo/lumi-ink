@@ -84,14 +84,62 @@
 
 
 
-  /* ---------- right-edge quick menu ---------- */
+  /* ---------- right-edge quick menu · v65.2 code icon slots ---------- */
   const QUICK_MENU_SETTING_ID = "quickMenu";
   const QUICK_MENU_MAX = 5;
   const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "lorebook", "log", "persona", "character", "idea"]);
+  const QUICK_MENU_ICON_LIBRARY = Array.isArray(window.__luminkQuickMenuIcons) ? window.__luminkQuickMenuIcons.filter((item) => item && typeof item.id === "string" && typeof item.svg === "string") : [];
+  const QUICK_MENU_ICON_BY_ID = new Map(QUICK_MENU_ICON_LIBRARY.map((item) => [item.id, item]));
+  const QUICK_MENU_ICON_CATEGORIES = [
+    ["all", "전체"], ["navigation", "이동"], ["action", "기능"], ["archive", "기록"], ["mood", "장식"]
+  ];
   let quickMenuImageSlot = null;
+  let quickMenuIconRenderSerial = 0;
+
+  function quickMenuLibraryIconId(value) { return QUICK_MENU_ICON_BY_ID.has(String(value || "")) ? String(value) : null; }
+  function quickMenuLibraryIcon(entryId) { return QUICK_MENU_ICON_BY_ID.get(quickMenuLibraryIconId(entryId)) || null; }
+  function uniquifyInlineSvgIds(raw, scope) {
+    const source = String(raw || "");
+    if (!source) return "";
+    const doc = new DOMParser().parseFromString(source, "text/html");
+    const svg = doc.querySelector("svg");
+    if (!svg) return "";
+    const map = new Map();
+    svg.querySelectorAll("[id]").forEach((node) => {
+      const oldId = node.getAttribute("id");
+      if (!oldId) return;
+      const nextId = `${scope}-${oldId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+      map.set(oldId, nextId); node.setAttribute("id", nextId);
+    });
+    const rewrite = (text) => {
+      let out = String(text || "");
+      map.forEach((nextId, oldId) => {
+        const escId = oldId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        out = out.replace(new RegExp(`url\(#${escId}\)`, "g"), `url(#${nextId})`)
+                 .replace(new RegExp(`^#${escId}$`), `#${nextId}`);
+      });
+      return out;
+    };
+    svg.querySelectorAll("*").forEach((node) => {
+      ["fill", "stroke", "filter", "clip-path", "mask", "href", "xlink:href", "style"].forEach((attr) => {
+        if (node.hasAttribute(attr)) node.setAttribute(attr, rewrite(node.getAttribute(attr)));
+      });
+      if (node.tagName && node.tagName.toLowerCase() === "style") node.textContent = rewrite(node.textContent || "");
+    });
+    svg.setAttribute("aria-hidden", "true"); svg.setAttribute("focusable", "false");
+    return svg.outerHTML;
+  }
+  function quickMenuLibraryIconMarkup(iconId, extraClass) {
+    const item = quickMenuLibraryIcon(iconId);
+    if (!item) return "";
+    const safe = sanitizeQuickMenuSvg(item.svg);
+    if (!safe) return "";
+    const scope = `li-${item.id}-${++quickMenuIconRenderSerial}`;
+    return `<span class="li-vector-icon ${extraClass || ""}" data-li-icon="${esc(item.id)}" title="${esc(item.label || "아이콘")}">${uniquifyInlineSvgIds(safe, scope)}</span>`;
+  }
 
   function emptyQuickMenuSlot(index) {
-    return { slotId: index + 1, kind: null, label: "", thumbnail: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
+    return { slotId: index + 1, kind: null, label: "", thumbnail: null, iconCode: null, libraryIconId: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
   }
   function normalizeQuickMenu(raw) {
     const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
@@ -107,6 +155,8 @@
         kind,
         label: cleanImportedText(String(item.label || ""), 42).trim(),
         thumbnail: thumb && thumb.length <= 900000 ? thumb : null,
+        iconCode: normalizeQuickMenuIconCode(item.iconCode),
+        libraryIconId: quickMenuLibraryIconId(item.libraryIconId),
         targetId: isSafeRecordId(item.targetId) ? item.targetId : null,
         createType: QUICK_MENU_ALLOWED_TYPES.has(item.createType) ? item.createType : "free",
         createMode: item.createMode === "collection" ? "collection" : "single",
@@ -116,7 +166,7 @@
       slots.push(slot);
     }
     return {
-      version: 2,
+      version: 4,
       updatedAt: Number(src.updatedAt) || 0,
       // v64.9: 기존 퀵 메뉴는 모두 기본형·사용 상태로 자연스럽게 승격합니다.
       enabled: src.enabled !== false,
@@ -163,6 +213,50 @@
     const p = slot.createProjectId && getProject(slot.createProjectId);
     return p ? `${p.name}에 바로 생성` : "현재 프로젝트 · 없으면 선택";
   }
+  function sanitizeQuickMenuSvg(raw) {
+    const source = cleanImportedText(String(raw || ""), 60000).trim();
+    if (!source || !/<svg\b/i.test(source)) return null;
+    const result = sanitize(source).html;
+    const doc = new DOMParser().parseFromString(result, "text/html");
+    const svg = doc.querySelector("svg");
+    if (!svg) return null;
+    svg.removeAttribute("id");
+    svg.setAttribute("viewBox", svg.getAttribute("viewBox") || "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    return svg.outerHTML;
+  }
+  function sanitizeQuickMenuCssIcon(rawHtml, rawCss) {
+    const markup = cleanImportedText(String(rawHtml || ""), 22000).trim();
+    const css = cleanImportedText(String(rawCss || ""), 36000).trim();
+    if (!markup || !css) return null;
+    const result = sanitize(`<style>${css}</style><div class="qm-custom-art">${markup}</div>`).html;
+    const doc = new DOMParser().parseFromString(result, "text/html");
+    const art = doc.querySelector(".qm-custom-art");
+    if (!art || !art.innerHTML.trim()) return null;
+    const scopedCss = [...doc.querySelectorAll("style")].map((style) => style.textContent || "").join("\n")
+      .replace(/\.lumink-user-html/g, ".quick-menu-custom-icon");
+    if (!scopedCss.trim()) return null;
+    return { html: art.outerHTML, css: scopedCss };
+  }
+  function normalizeQuickMenuIconCode(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    if (raw.mode === "svg") {
+      const svg = sanitizeQuickMenuSvg(raw.svg || raw.code || "");
+      return svg ? { mode: "svg", svg } : null;
+    }
+    if (raw.mode === "css") {
+      const safe = sanitizeQuickMenuCssIcon(raw.html || raw.markup || "", raw.css || "");
+      return safe ? { mode: "css", html: safe.html, css: safe.css } : null;
+    }
+    return null;
+  }
+  function quickMenuCustomIconMarkup(iconCode) {
+    const icon = normalizeQuickMenuIconCode(iconCode);
+    if (!icon) return "";
+    if (icon.mode === "svg") return `<span class="quick-menu-custom-icon quick-menu-custom-svg">${icon.svg}</span>`;
+    return `<span class="quick-menu-custom-icon quick-menu-custom-css"><style>${String(icon.css || "").replace(/<\/style/gi, "")}</style>${icon.html || ""}</span>`;
+  }
   function quickMenuIcon(slot) {
     const kind = slot && slot.kind;
     if (kind === "home") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>';
@@ -173,7 +267,11 @@
   }
   function quickMenuSlotMedia(slot) {
     const image = slot && safeImageSource(slot.thumbnail);
-    return `<span class="quick-slot-media">${image ? `<img src="${esc(image)}" alt="">` : quickMenuIcon(slot)}</span>`;
+    const code = slot && normalizeQuickMenuIconCode(slot.iconCode);
+    const library = slot && quickMenuLibraryIcon(slot.libraryIconId);
+    const cls = code ? "has-code-icon" : library ? "has-library-icon" : "";
+    const content = code ? quickMenuCustomIconMarkup(code) : (image ? `<img src="${esc(image)}" alt="">` : (library ? quickMenuLibraryIconMarkup(library.id, "quick-menu-library-icon") : quickMenuIcon(slot)));
+    return `<span class="quick-slot-media ${cls}">${content}</span>`;
   }
   function quickMenuSlotMarkup(slot, index, manager) {
     const filled = !!(slot && slot.kind), cls = filled ? "is-filled" : "is-empty";
@@ -200,9 +298,15 @@
     document.body.classList.toggle("quick-menu-disabled", !enabled);
     if (!enabled && document.body.classList.contains("quick-menu-open")) setQuickMenuOpen(false);
     if (box) {
-      box.innerHTML = cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, false)).join("");
-      box.querySelectorAll("[data-qm-run]").forEach((button) => button.addEventListener("click", () => { void runQuickMenuSlot(Number(button.dataset.qmRun)); }));
-      box.querySelectorAll("[data-qm-empty]").forEach((button) => button.addEventListener("click", () => { setQuickMenuOpen(false); openQuickMenuSlotTypePicker(Number(button.dataset.qmEmpty)); }));
+      const markup = cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, false)).join("");
+      // 화면 전환마다 동일한 5개 슬롯을 재삽입하면 fixed 패널의 높이·중심점이 미세하게 다시 계산될 수 있어요.
+      // 내용이 실제로 달라졌을 때만 교체해서 위치 흔들림을 막습니다.
+      if (box.dataset.qmMarkup !== markup) {
+        box.dataset.qmMarkup = markup;
+        box.innerHTML = markup;
+        box.querySelectorAll("[data-qm-run]").forEach((button) => button.addEventListener("click", () => { void runQuickMenuSlot(Number(button.dataset.qmRun)); }));
+        box.querySelectorAll("[data-qm-empty]").forEach((button) => button.addEventListener("click", () => { setQuickMenuOpen(false); openQuickMenuSlotTypePicker(Number(button.dataset.qmEmpty)); }));
+      }
     }
     const filled = quickMenuFilledCount();
     if (count) count.textContent = `${filled} / ${QUICK_MENU_MAX} 등록`;
@@ -248,6 +352,7 @@
     const cfg = quickMenuConfig(), old = cfg.slots[index] || emptyQuickMenuSlot(index);
     cfg.slots[index] = Object.assign(emptyQuickMenuSlot(index), {
       thumbnail: old.thumbnail || null,
+      iconCode: normalizeQuickMenuIconCode(old.iconCode),
       label: old.label || ""
     }, next || {});
     return cfg.slots[index];
@@ -398,24 +503,62 @@
     $("modalBox").querySelectorAll("[data-qm-create-project]").forEach((button) => button.addEventListener("click", async () => { await setQuickMenuSlot(index, { kind: "create", createType: draft.createType, createMode: draft.createMode, createProjectId: button.dataset.qmCreateProject }); openQuickMenuSlotEditor(index); }));
     $on("qmCreateProjectBack", "click", () => openQuickMenuCreateTypePicker(index));
   }
+  function openQuickMenuIconCodeEditor(index, draft) {
+    const slot = quickMenuConfig().slots[index]; if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
+    const existing = normalizeQuickMenuIconCode(slot.iconCode);
+    const state = Object.assign({ mode: existing ? existing.mode : "svg", svg: existing && existing.mode === "svg" ? existing.svg : "", html: existing && existing.mode === "css" ? existing.html : "", css: existing && existing.mode === "css" ? existing.css : "" }, draft || {});
+    const svgMode = state.mode !== "css";
+    const body = svgMode
+      ? `<label class="qm-editor-label" for="qmIconSvg">SVG 코드</label><textarea class="m-input qm-code-input" id="qmIconSvg" spellcheck="false" placeholder="&lt;svg viewBox=&quot;0 0 24 24&quot; ...&gt;...&lt;/svg&gt;">${esc(state.svg || "")}</textarea><p class="qm-code-hint">외부 이미지·스크립트·&lt;foreignObject&gt;는 자동으로 제거됩니다. viewBox가 있는 단일 SVG를 권장해요.</p>`
+      : `<label class="qm-editor-label" for="qmIconMarkup">HTML 마크업</label><textarea class="m-input qm-code-input qm-code-short" id="qmIconMarkup" spellcheck="false" placeholder="&lt;span class=&quot;orb&quot;&gt;&lt;/span&gt;">${esc(state.html || "")}</textarea><label class="qm-editor-label" for="qmIconCss">CSS 코드</label><textarea class="m-input qm-code-input" id="qmIconCss" spellcheck="false" placeholder=".orb { width:100%; height:100%; border-radius:50%; ... }">${esc(state.css || "")}</textarea><p class="qm-code-hint">CSS는 이 슬롯의 아이콘 영역 안으로만 자동 한정됩니다. 외부 URL·스크립트형 CSS는 저장되지 않습니다.</p>`;
+    openModal(`<h3>슬롯 ${index + 1} 코드 아이콘</h3><p class="m-sub">이미지 업로드 대신 복붙 가능한 SVG 또는 CSS+마크업 아이콘을 등록합니다. 기본 아이콘과 사용자 썸네일은 그대로 보관돼요.</p><div class="qm-code-tabs"><button type="button" class="qm-code-tab ${svgMode ? "is-active" : ""}" id="qmIconModeSvg">SVG 코드</button><button type="button" class="qm-code-tab ${!svgMode ? "is-active" : ""}" id="qmIconModeCss">CSS + 마크업</button></div>${body}<div class="m-row"><button class="m-btn" id="qmIconCodeBack">뒤로</button>${existing ? '<button class="m-btn danger" id="qmIconCodeReset">코드 아이콘 해제</button>' : ''}<button class="m-btn primary" id="qmIconCodeSave">등록</button></div>`);
+    const currentDraft = () => ({ mode: svgMode ? "svg" : "css", svg: svgMode ? ($("qmIconSvg")?.value || "") : "", html: !svgMode ? ($("qmIconMarkup")?.value || "") : "", css: !svgMode ? ($("qmIconCss")?.value || "") : "" });
+    $on("qmIconModeSvg", "click", () => openQuickMenuIconCodeEditor(index, Object.assign(currentDraft(), { mode: "svg" })));
+    $on("qmIconModeCss", "click", () => openQuickMenuIconCodeEditor(index, Object.assign(currentDraft(), { mode: "css" })));
+    $on("qmIconCodeBack", "click", () => openQuickMenuSlotEditor(index));
+    $on("qmIconCodeReset", "click", async () => { quickMenuConfig().slots[index].iconCode = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
+    $on("qmIconCodeSave", "click", async () => {
+      const value = currentDraft();
+      const safe = normalizeQuickMenuIconCode(value);
+      if (!safe) { toast(svgMode ? "유효한 SVG 코드를 찾지 못했어요" : "유효한 CSS 아이콘 마크업과 CSS를 입력해 주세요"); return; }
+      quickMenuConfig().slots[index].iconCode = safe;
+      await persistQuickMenu();
+      openQuickMenuSlotEditor(index);
+    });
+  }
+  function openQuickMenuBuiltinIconPicker(index, category) {
+    const slot = quickMenuConfig().slots[index]; if (!slot) return;
+    const active = QUICK_MENU_ICON_CATEGORIES.some((row) => row[0] === category) ? category : "all";
+    const available = QUICK_MENU_ICON_LIBRARY.filter((item) => active === "all" || item.category === active);
+    const tabs = QUICK_MENU_ICON_CATEGORIES.map(([key, label]) => `<button type="button" class="qm-library-tab ${key === active ? "is-active" : ""}" data-qm-library-tab="${key}">${label}</button>`).join("");
+    const cards = available.map((item) => `<button type="button" class="qm-library-card ${slot.libraryIconId === item.id ? "is-selected" : ""}" data-qm-library-icon="${esc(item.id)}">${quickMenuLibraryIconMarkup(item.id, "qm-library-art")}<span>${esc(item.label)}</span></button>`).join("");
+    openModal(`<h3>퀵메뉴 아이콘 모음</h3><p class="m-sub">루미잉크 기본 SVG 아이콘 30종입니다. 선택하면 해당 슬롯의 코드 아이콘과 이미지 썸네일은 해제되고, 벡터 아이콘으로 깔끔하게 바뀝니다.</p><div class="qm-library-tabs">${tabs}</div><div class="qm-library-grid">${cards}</div><div class="m-row"><button class="m-btn" id="qmLibraryBack">뒤로</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-library-tab]").forEach((button) => button.addEventListener("click", () => openQuickMenuBuiltinIconPicker(index, button.dataset.qmLibraryTab)));
+    $("modalBox").querySelectorAll("[data-qm-library-icon]").forEach((button) => button.addEventListener("click", async () => {
+      const id = quickMenuLibraryIconId(button.dataset.qmLibraryIcon); if (!id) return;
+      const current = quickMenuConfig().slots[index]; current.libraryIconId = id; current.thumbnail = null; current.iconCode = null;
+      await persistQuickMenu(); openQuickMenuSlotEditor(index);
+    }));
+    $on("qmLibraryBack", "click", () => openQuickMenuSlotEditor(index));
+  }
+
   function openQuickMenuSlotEditor(index) {
     const slot = quickMenuConfig().slots[index]; if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
-    openModal(`<h3>슬롯 ${index + 1} 편집</h3><p class="m-sub">기본 아이콘 대신 원하는 이미지를 썸네일로 등록할 수 있어요.</p><div class="qm-entry-preview">${quickMenuSlotMedia(slot)}<span class="qm-entry-preview-copy"><b>${esc(quickMenuSlotLabel(slot))}</b><small>${esc(`${quickMenuSlotActionName(slot)} · ${quickMenuSlotMeta(slot)}`)}</small></span></div><label class="qm-editor-label" for="qmSlotLabel">표시 이름 <span style="font-weight:500">(비우면 대상 이름을 자동 표시)</span></label><input class="m-input" id="qmSlotLabel" maxlength="42" value="${esc(slot.label || "")}" placeholder="예: 진행 중인 세계관"><div class="qm-editor-actions"><button class="m-btn" id="qmChangeAction">동작 변경</button><button class="m-btn" id="qmThumbPick">썸네일 변경</button><button class="m-btn ${slot.thumbnail ? "" : "qm-wide"}" id="qmThumbReset" ${slot.thumbnail ? "" : "hidden"}>기본 아이콘 사용</button><button class="m-btn danger qm-wide" id="qmSlotDelete">이 슬롯 비우기</button></div><div class="m-row"><button class="m-btn" id="qmEditorBack">목록</button><button class="m-btn primary" id="qmEditorSave">저장</button></div>`);
+    const hasCode = !!normalizeQuickMenuIconCode(slot.iconCode);
+    openModal(`<h3>슬롯 ${index + 1} 편집</h3><p class="m-sub">기본 아이콘, 사용자 썸네일, 또는 SVG/CSS 코드 아이콘 중 원하는 방식을 등록할 수 있어요.</p><div class="qm-entry-preview">${quickMenuSlotMedia(slot)}<span class="qm-entry-preview-copy"><b>${esc(quickMenuSlotLabel(slot))}</b><small>${esc(`${quickMenuSlotActionName(slot)} · ${quickMenuSlotMeta(slot)}`)}</small></span></div><label class="qm-editor-label" for="qmSlotLabel">표시 이름 <span style="font-weight:500">(비우면 대상 이름을 자동 표시)</span></label><input class="m-input" id="qmSlotLabel" maxlength="42" value="${esc(slot.label || "")}" placeholder="예: 진행 중인 세계관"><div class="qm-editor-actions"><button class="m-btn" id="qmChangeAction">동작 변경</button><button class="m-btn" id="qmBuiltinIcon">아이콘 모음</button><button class="m-btn" id="qmThumbPick">이미지 썸네일</button><button class="m-btn" id="qmCodeIcon">SVG/CSS 아이콘</button><button class="m-btn ${slot.libraryIconId ? "" : "hidden"}" id="qmBuiltinReset">아이콘 해제</button><button class="m-btn ${slot.thumbnail ? "" : "hidden"}" id="qmThumbReset">이미지 해제</button><button class="m-btn ${hasCode ? "" : "hidden"}" id="qmCodeReset">코드 해제</button><button class="m-btn danger qm-wide" id="qmSlotDelete">이 슬롯 비우기</button></div><div class="m-row"><button class="m-btn" id="qmEditorBack">목록</button><button class="m-btn primary" id="qmEditorSave">저장</button></div>`);
     const saveLabel = async (stay) => {
       const cfg = quickMenuConfig(), current = cfg.slots[index]; if (!current) return;
       current.label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu();
       if (stay) openQuickMenuManager(); else closeModal();
     };
-    $on("qmChangeAction", "click", async () => {
-      quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim();
-      await persistQuickMenu(); openQuickMenuSlotTypePicker(index);
-    });
-    $on("qmThumbPick", "click", async () => {
-      quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim();
-      await persistQuickMenu(); quickMenuImageSlot = index; $("quickMenuImageInput").click();
-    });
+    $on("qmChangeAction", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuSlotTypePicker(index); });
+    $on("qmBuiltinIcon", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuBuiltinIconPicker(index); });
+    $on("qmBuiltinReset", "click", async () => { quickMenuConfig().slots[index].libraryIconId = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
+    $on("qmThumbPick", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); quickMenuImageSlot = index; $("quickMenuImageInput").click(); });
+    $on("qmCodeIcon", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuIconCodeEditor(index); });
     $on("qmThumbReset", "click", async () => { quickMenuConfig().slots[index].thumbnail = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
-    $on("qmSlotDelete", "click", () => confirmModal("퀵 메뉴 슬롯 비우기", `슬롯 ${index + 1}의 바로가기와 사용자 지정 썸네일을 지울까요?`, "비우기", true, async () => { await clearQuickMenuSlot(index); openQuickMenuManager(); }));
+    $on("qmCodeReset", "click", async () => { quickMenuConfig().slots[index].iconCode = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
+    $on("qmSlotDelete", "click", () => confirmModal("퀵 메뉴 슬롯 비우기", `슬롯 ${index + 1}의 바로가기와 사용자 지정 아이콘을 지울까요?`, "비우기", true, async () => { await clearQuickMenuSlot(index); openQuickMenuManager(); }));
     $on("qmEditorBack", "click", () => { void saveLabel(true); });
     $on("qmEditorSave", "click", () => { void saveLabel(false); });
   }
@@ -749,7 +892,9 @@
 
   /* ---------- renderers ---------- */
   function projectThumbMedia(p) {
-    return `<div class="thumb-media">${p && p.icon ? `<img src="${p.icon}" alt="">` : '<span class="deflogo"></span>'}</div>`;
+    const libraryId = p && quickMenuLibraryIconId(p.iconLibraryId);
+    const art = p && p.icon ? `<img src="${p.icon}" alt="">` : (libraryId ? quickMenuLibraryIconMarkup(libraryId, "project-library-icon") : '<span class="deflogo"></span>');
+    return `<div class="thumb-media ${libraryId && !(p && p.icon) ? "has-library-icon" : ""}">${art}</div>`;
   }
   function projIconHTML(p, cls) {
     const framed = !!(p && frameById(p.frame));
@@ -3943,7 +4088,10 @@
 
   /* ---------- modal ---------- */
   function openModal(html) { const box = $("modalBox"), scrim = $("modalScrim"); box.className = "modal"; box.innerHTML = html; scrim.classList.remove("log-template-open"); scrim.classList.add("open"); }
-  function closeModal() { $("modalScrim").classList.remove("open"); }
+  function closeModal() {
+    if (customThemePreviewRestore) { const restore = customThemePreviewRestore; customThemePreviewRestore = null; try { restore(); } catch (e) {} }
+    $("modalScrim").classList.remove("open");
+  }
   $on("modalScrim", "click", (e) => { if (e.target === $("modalScrim")) closeModal(); });
 
   function newNoteScreen(type) {
@@ -4207,19 +4355,30 @@
 
   /* ---------- icon picker ---------- */
   let iconTargetPid = null;
-  function showIconPicker(pid) {
+  function showIconPicker(pid, tab, category) {
     const p = getProject(pid); if (!p) return;
-    const grid = ICONS.map((ic) => `<div class="icon-opt${p.icon === ic.data ? " sel" : ""}" data-icon="${ic.id}"><img src="${ic.data}" alt="${esc(ic.name)}"></div>`).join("");
-    openModal(`
-      <h3>프로젝트 썸네일</h3><p class="m-sub">${esc(p.name)}</p>
-      <div class="icon-grid">${grid}
-        <div class="icon-opt upload" id="iconUpload"><svg viewBox="0 0 24 24"><path d="M12 16V5M7 10l5-5 5 5"/><path d="M5 16v3h14v-3"/></svg><span>업로드</span></div>
-      </div>
-      <div class="m-row"><button class="m-btn" id="iconClose">닫기</button></div>
-    `);
+    const activeTab = tab === "library" ? "library" : "images";
+    const activeCat = QUICK_MENU_ICON_CATEGORIES.some((row) => row[0] === category) ? category : "all";
+    const tabBar = `<div class="project-icon-tabs"><button type="button" class="project-icon-tab ${activeTab === "images" ? "is-active" : ""}" data-project-icon-tab="images">기본 이미지</button><button type="button" class="project-icon-tab ${activeTab === "library" ? "is-active" : ""}" data-project-icon-tab="library">SVG 아이콘 모음 <span>30</span></button></div>`;
+    let content = "";
+    if (activeTab === "images") {
+      const grid = ICONS.map((ic) => `<div class="icon-opt${!p.iconLibraryId && p.icon === ic.data ? " sel" : ""}" data-icon="${ic.id}"><img src="${ic.data}" alt="${esc(ic.name)}"></div>`).join("");
+      content = `<div class="icon-grid">${grid}<div class="icon-opt upload" id="iconUpload"><svg viewBox="0 0 24 24"><path d="M12 16V5M7 10l5-5 5 5"/><path d="M5 16v3h14v-3"/></svg><span>업로드</span></div></div>`;
+    } else {
+      const cats = QUICK_MENU_ICON_CATEGORIES.map(([key, label]) => `<button type="button" class="project-icon-cat ${key === activeCat ? "is-active" : ""}" data-project-icon-cat="${key}">${label}</button>`).join("");
+      const items = QUICK_MENU_ICON_LIBRARY.filter((item) => activeCat === "all" || item.category === activeCat);
+      content = `<div class="project-icon-cats">${cats}</div><div class="project-icon-library-grid">${items.map((item) => `<button type="button" class="project-library-icon-card ${p.iconLibraryId === item.id && !p.icon ? "sel" : ""}" data-project-library-icon="${esc(item.id)}">${quickMenuLibraryIconMarkup(item.id, "project-library-art")}<span>${esc(item.label)}</span></button>`).join("")}</div>`;
+    }
+    openModal(`<h3>프로젝트 썸네일</h3><p class="m-sub">${esc(p.name)} · 기본 이미지와 루미잉크 SVG 아이콘 모음 중에서 선택할 수 있어요.</p>${tabBar}${content}<div class="m-row"><button class="m-btn" id="iconClose">닫기</button></div>`);
+    $("modalBox").querySelectorAll("[data-project-icon-tab]").forEach((el) => el.addEventListener("click", () => showIconPicker(pid, el.dataset.projectIconTab, activeCat)));
+    $("modalBox").querySelectorAll("[data-project-icon-cat]").forEach((el) => el.addEventListener("click", () => showIconPicker(pid, "library", el.dataset.projectIconCat)));
     $("modalBox").querySelectorAll(".icon-opt[data-icon]").forEach((el) => el.addEventListener("click", async () => {
       const ic = ICONS.find((x) => x.id === el.dataset.icon); if (!ic) return;
-      p.icon = ic.data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요");
+      p.icon = ic.data; p.iconLibraryId = null; await saveProject(p); closeModal(); render(); renderSidebar(); toast("기본 이미지 썸네일을 적용했어요");
+    }));
+    $("modalBox").querySelectorAll("[data-project-library-icon]").forEach((el) => el.addEventListener("click", async () => {
+      const id = quickMenuLibraryIconId(el.dataset.projectLibraryIcon); if (!id) return;
+      p.icon = null; p.iconLibraryId = id; await saveProject(p); closeModal(); render(); renderSidebar(); toast("SVG 아이콘 썸네일을 적용했어요");
     }));
     $on("iconUpload", "click", () => { iconTargetPid = pid; $("iconInput").click(); });
     $on("iconClose", "click", closeModal);
@@ -4330,7 +4489,7 @@
     if (!f || !iconTargetPid) return;
     const pid = iconTargetPid;
     startCrop(f, 1, 512, 512, async (data) => {
-      const p = getProject(pid); if (p) { p.icon = data; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요"); }
+      const p = getProject(pid); if (p) { p.icon = data; p.iconLibraryId = null; await saveProject(p); closeModal(); render(); renderSidebar(); toast("썸네일을 변경했어요"); }
     });
   });
 
@@ -4405,7 +4564,7 @@
     $("setThemeVal").textContent = st.theme === "light" ? "밝게" : "어둡게";
     $("setFontSub").textContent = (st.userFont && st.userFont.name) ? st.userFont.name : "기본 폰트";
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.fs === (st.fontScale || "normal")));
-    const av = $("setAccentVal"); if (av && ACCENTS[st.accent || "blue"]) av.innerHTML = `<span class="accent-dot"></span>${ACCENTS[st.accent || "blue"].name}`;
+    const av = $("setAccentVal"); if (av) av.innerHTML = `<span class="accent-dot"></span>${themeDisplayName()}`;
     const toolbar = $("setToolbarModeVal"); if (toolbar) toolbar.textContent = st.formatbarMode === "folded" ? "접어두기" : "항상 표시";
     const backupLimit = getAutoBackupLimit(), backupSub = $("setAutoBackupSub"), backupVal = $("setAutoBackupVal");
     if (backupSub) backupSub.textContent = `저장할 때마다 최근 ${backupLimit}개 스냅샷 보관`;
@@ -4461,7 +4620,7 @@
     try {
       const files = await getAll("files"); const fileRecs = [];
       for (const f of files) { try { fileRecs.push({ id: f.id, noteId: f.noteId, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, data: await blobToBase64(f.blob) }); } catch (e) {} }
-      const payload = { app: "lumink", version: 2, exportedAt: now(), projects: st.projects, notes: st.notes, files: fileRecs, quickMenu: jsonCopy(quickMenuConfig()) };
+      const payload = { app: "lumink", version: 3, exportedAt: now(), projects: st.projects, notes: st.notes, files: fileRecs, quickMenu: jsonCopy(quickMenuConfig()), appearance: appearanceSnapshot() };
       const json = JSON.stringify(payload).replace(/</g, "\\u003c");
       const summary = st.projects.map((p) => {
         const ns = st.notes.filter((n) => n.projectId === p.id);
@@ -4699,6 +4858,7 @@
         await doAutoBackup();
         await applyImportData(payload.projects || [], payload.notes || [], payload.files || [], false);
         await restoreQuickMenuConfig(payload.quickMenu);
+        await restoreAppearanceConfig(payload.appearance);
         await reloadState(); render(); renderSidebar(); toast("병합 복원했어요");
       } catch (e) { toast("복원 중 오류가 났어요"); }
     }));
@@ -4707,6 +4867,7 @@
         await doAutoBackup();
         await replaceImportData(payload.projects || [], payload.notes || [], payload.files || []);
         await restoreQuickMenuConfig(payload.quickMenu);
+        await restoreAppearanceConfig(payload.appearance);
         await reloadState(); goHome(); renderSidebar(); toast("백업 시점으로 되돌렸어요");
       } catch (e) { toast("복원 중 오류가 났어요"); }
     }));
@@ -5036,7 +5197,7 @@ ${html}
 .foot{margin-top:30px;text-align:center;color:${c.muted};font-size:12px}`;
   }
   function choosePersonaExportTheme(id) {
-    const accent = ACCENTS[st.accent || "blue"] || ACCENTS.blue;
+    const accent = { name: themeDisplayName() };
     openModal(`<h3>HTML로 저장</h3><p class="m-sub">현재 컬러 테마(<b>${esc(accent.name)}</b>)를 유지한 채, 저장할 카드의 밝기만 골라요.</p><div class="m-row"><button class="m-btn" id="pxLight">밝게</button><button class="m-btn primary" id="pxDark">어둡게</button></div>`);
     $on("pxLight", "click", () => { closeModal(); exportPersonaHtml(id, "light"); });
     $on("pxDark", "click", () => { closeModal(); exportPersonaHtml(id, "dark"); });
@@ -5082,7 +5243,7 @@ ${gallery}
   }
   function chooseCharacterExportOptions(id) {
     const n = getNote(id); if (!n || !isCharacterCardType(n)) return;
-    const accent = ACCENTS[st.accent || "blue"] || ACCENTS.blue;
+    const accent = { name: themeDisplayName() };
     const title = n.type === "persona" ? (characterMode(n) === "single" ? "페르소나 HTML로 저장" : "페르소나 모음 HTML로 저장") : (characterMode(n) === "single" ? "캐릭터 HTML로 저장" : "캐릭터 모음 HTML로 저장");
     openModal(`<h3>${title}</h3><p class="m-sub">현재 컬러 테마(<b>${esc(accent.name)}</b>)를 유지한 채 밝기를 고르고, 제작용 메모 포함 여부를 정해요.</p><label class="lore-toggle-wrap" style="margin:5px 0 16px"><input type="checkbox" id="cxCreator"> 크리에이터 메모 포함</label><p class="m-sub" style="margin-top:-7px">기본값은 미포함이에요. 공유용 카드에 제작 메모가 섞이지 않도록 보호합니다.</p><div class="m-row"><button class="m-btn" id="cxLight">밝게</button><button class="m-btn primary" id="cxDark">어둡게</button></div>`);
     const run = (theme) => { const includeCreator = !!$("cxCreator").checked; closeModal(); exportCharacterHtml(id, theme, includeCreator); };
@@ -5598,7 +5759,9 @@ ${gallery}
   $on("sidebarScrim", "click", closeSidebar);
   function applyTheme(t) {
     st.theme = t; document.documentElement.setAttribute("data-theme", t);
-    document.querySelector('meta[name=theme-color]').setAttribute("content", t === "light" ? "#f3f4f8" : "#0d0f17");
+    // Custom colors are intentionally a light-mode surface layer. Accent presets,
+    // logo colors and all existing gradients stay under the normal preset system.
+    applyCustomLightTheme(st.customTheme, { persist: false });
     $("themeIcon").innerHTML = t === "light"
       ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>'
       : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
@@ -5629,28 +5792,280 @@ ${gallery}
     mgold: { name: "메탈릭 골드", grad: "linear-gradient(135deg, #d4b842, #b89826)", ig: ["#e8cc5e", "#ccae3e"] },
     bw: { name: "블랙&화이트", grad: "linear-gradient(135deg, #ffffff 0%, #ffffff 50%, #141414 50%, #141414 100%)", ig: ["#9a9a9a", "#7a7a7a"] }
   };
-  function applyAccent(name) {
-    if (!ACCENTS[name]) name = "blue";
-    st.accent = name;
-    if (name === "blue") document.documentElement.removeAttribute("data-accent");
-    else document.documentElement.setAttribute("data-accent", name);
-    const ig = ACCENTS[name].ig;
-    const a = $("igA"), bb = $("igB");
-    if (a) a.setAttribute("stop-color", ig[0]);
-    if (bb) bb.setAttribute("stop-color", ig[1]);
-    try { localStorage.setItem("luminkAccent", name); } catch (e) {}
-    const v = $("setAccentVal"); if (v) v.innerHTML = `<span class="accent-dot"></span>${ACCENTS[name].name}`;
+  /* ---------- v65.1: light-mode custom surface palette ---------- */
+  /*
+     Important design rule:
+     - Preset accents still own logos, default icons, thumbnails and every existing gradient.
+     - The custom palette only changes the light UI's structural surfaces and typography.
+     - Every editable role is stored directly; no derived hue conversion is applied.
+  */
+  const CUSTOM_THEME_SETTING_ID = "customTheme";
+  const LEGACY_CUSTOM_ACCENT = "custom";
+  const CUSTOM_LIGHT_COLOR_META = Object.freeze([
+    { key:"bg",       label:"앱 배경",        variable:"--bg",          fallback:"#F3F4F8", group:"바탕" },
+    { key:"bg2",      label:"보조 배경",      variable:"--bg-2",        fallback:"#ECEEF4", group:"바탕" },
+    { key:"paper",    label:"문서 바탕",      variable:"--paper",       fallback:"#FCFCFD", group:"바탕" },
+    { key:"surface",  label:"카드 표면",      variable:"--surface",     fallback:"#FFFFFF", group:"카드" },
+    { key:"surface2", label:"보조 카드",      variable:"--surface-2",   fallback:"#F1F2F7", group:"카드" },
+    { key:"surface3", label:"눌림·보조 표면", variable:"--surface-3",   fallback:"#E7E9F1", group:"카드" },
+    { key:"barBg",    label:"상단바",         variable:"--bar-bg",      fallback:"#FFFFFF", group:"상단바" },
+    { key:"barBg2",   label:"상단바 보조",    variable:"--bar-bg-2",    fallback:"#F6F7FB", group:"상단바" },
+    { key:"barLine",  label:"상단바 경계",    variable:"--bar-line",    fallback:"#E1E3EC", group:"상단바" },
+    { key:"ink",      label:"본문 글자",      variable:"--ink",         fallback:"#1B1D27", group:"글자" },
+    { key:"muted",    label:"보조 글자",      variable:"--muted",       fallback:"#5E6377", group:"글자" },
+    { key:"faint",    label:"희미한 글자",    variable:"--faint",       fallback:"#A3A8BA", group:"글자" },
+    { key:"line",     label:"기본 경계선",    variable:"--line",        fallback:"#E1E3EC", group:"경계선" },
+    { key:"lineSoft", label:"옅은 경계선",    variable:"--line-soft",   fallback:"#EBEDF3", group:"경계선" }
+  ]);
+  const CUSTOM_LIGHT_STYLE_VARS = Object.freeze(CUSTOM_LIGHT_COLOR_META.map((item) => item.variable));
+  const CUSTOM_LIGHT_FALLBACK_COLORS = Object.freeze(Object.fromEntries(CUSTOM_LIGHT_COLOR_META.map((item) => [item.key, item.fallback])));
+  const CUSTOM_THEME_DEFAULT = Object.freeze({ version:2, enabled:false, baseAccent:"blue", colors:CUSTOM_LIGHT_FALLBACK_COLORS, updatedAt:0 });
+  let customThemePreviewRestore = null;
+
+  function normalizeThemeHex(value, fallback) {
+    const m = String(value || "").trim().match(/^#?([0-9a-f]{6})$/i);
+    return m ? `#${m[1].toUpperCase()}` : (fallback || "#F3F4F8");
   }
-  function detectAccent() { let a = "blue"; try { a = localStorage.getItem("luminkAccent") || "blue"; } catch (e) {} applyAccent(a); }
-  function openAccentPicker() {
-    const cur = st.accent || "blue";
-    const cells = Object.keys(ACCENTS).map((k) => `<div class="accent-cell${k === cur ? " sel" : ""}" data-accent="${k}"><span class="ac-sw" style="background:${ACCENTS[k].grad}"></span><span class="ac-name">${ACCENTS[k].name}</span></div>`).join("");
-    openModal(`<h3>컬러 테마</h3><p class="m-sub">앱 전체 강조색을 골라요. 밝게·어둡게 테마와 함께 적용돼요.</p><div class="accent-grid">${cells}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);
-    $on("acClose", "click", closeModal);
-    document.querySelectorAll(".accent-cell").forEach((el) => el.addEventListener("click", () => {
-      applyAccent(el.dataset.accent);
-      document.querySelectorAll(".accent-cell").forEach((x) => x.classList.toggle("sel", x === el));
+  function cloneThemeObject(value) { return JSON.parse(JSON.stringify(value)); }
+  function validAccentName(value) { return ACCENTS[value] ? value : "blue"; }
+  function setOrRemoveAttr(node, name, value) { if (value == null || value === "") node.removeAttribute(name); else node.setAttribute(name, value); }
+
+  function rgbFromHex(hex) {
+    const h = normalizeThemeHex(hex, "#7B9BFF").slice(1);
+    return { r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) };
+  }
+  function colorDistance(a, b) {
+    const x = rgbFromHex(a), y = rgbFromHex(b);
+    return Math.pow(x.r-y.r,2) + Math.pow(x.g-y.g,2) + Math.pow(x.b-y.b,2);
+  }
+  function inferLegacyBaseAccent(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const primary = normalizeThemeHex(src.primary, "#7B9BFF"), secondary = normalizeThemeHex(src.secondary, "#B58BFF");
+    let best = "blue", bestScore = Infinity;
+    Object.entries(ACCENTS).forEach(([name, meta]) => {
+      const score = colorDistance(primary, meta.ig[0]) + colorDistance(secondary, meta.ig[1]);
+      if (score < bestScore) { bestScore = score; best = name; }
+    });
+    return best;
+  }
+
+  function withPresetLightComputed(accentName, read) {
+    const root = document.documentElement;
+    const oldTheme = root.getAttribute("data-theme"), oldAccent = root.getAttribute("data-accent"), oldCustom = root.getAttribute("data-custom-light-theme");
+    const inline = new Map(CUSTOM_LIGHT_STYLE_VARS.map((name) => [name, root.style.getPropertyValue(name)]));
+    try {
+      root.removeAttribute("data-custom-light-theme");
+      CUSTOM_LIGHT_STYLE_VARS.forEach((name) => root.style.removeProperty(name));
+      root.setAttribute("data-theme", "light");
+      const accent = validAccentName(accentName);
+      if (accent === "blue") root.removeAttribute("data-accent"); else root.setAttribute("data-accent", accent);
+      return read(getComputedStyle(root));
+    } finally {
+      setOrRemoveAttr(root, "data-theme", oldTheme);
+      setOrRemoveAttr(root, "data-accent", oldAccent);
+      setOrRemoveAttr(root, "data-custom-light-theme", oldCustom);
+      inline.forEach((value, name) => { if (value) root.style.setProperty(name, value); else root.style.removeProperty(name); });
+    }
+  }
+  function capturePresetLightPalette(accentName) {
+    const colors = withPresetLightComputed(accentName, (css) => Object.fromEntries(CUSTOM_LIGHT_COLOR_META.map((item) => {
+      const value = (css.getPropertyValue(item.variable) || "").trim();
+      return [item.key, normalizeThemeHex(value, item.fallback)];
+    })));
+    return colors || cloneThemeObject(CUSTOM_LIGHT_FALLBACK_COLORS);
+  }
+  function normalizeCustomTheme(raw) {
+    const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
+    const isLegacy = Number(src.version || 1) < 2 && (src.primary || src.secondary || src.accent === LEGACY_CUSTOM_ACCENT);
+    const baseAccent = validAccentName(src.baseAccent || (isLegacy ? inferLegacyBaseAccent(src) : "blue"));
+    const fallback = (src.colors && typeof src.colors === "object") ? CUSTOM_LIGHT_FALLBACK_COLORS : (isLegacy ? capturePresetLightPalette(baseAccent) : CUSTOM_LIGHT_FALLBACK_COLORS);
+    const sourceColors = src.colors && typeof src.colors === "object" ? src.colors : {};
+    const colors = {};
+    CUSTOM_LIGHT_COLOR_META.forEach((item) => { colors[item.key] = normalizeThemeHex(sourceColors[item.key], fallback[item.key] || item.fallback); });
+    return {
+      version:2,
+      enabled:isLegacy ? true : src.enabled === true,
+      baseAccent,
+      colors,
+      legacyPrimary:isLegacy && src.primary ? normalizeThemeHex(src.primary, "#7B9BFF") : undefined,
+      legacySecondary:isLegacy && src.secondary ? normalizeThemeHex(src.secondary, "#B58BFF") : undefined,
+      updatedAt:Number(src.updatedAt) || 0
+    };
+  }
+  function currentCustomTheme() {
+    if (!st.customTheme || typeof st.customTheme !== "object") st.customTheme = normalizeCustomTheme(null);
+    return normalizeCustomTheme(st.customTheme);
+  }
+  function customThemeSeedFromActiveAccent() {
+    const baseAccent = validAccentName(st.accent);
+    return { version:2, enabled:true, baseAccent, colors:capturePresetLightPalette(baseAccent), updatedAt:now() };
+  }
+  function customThemeStyleVars(config) {
+    const cfg = normalizeCustomTheme(config);
+    return Object.fromEntries(CUSTOM_LIGHT_COLOR_META.map((item) => [item.variable, cfg.colors[item.key]]));
+  }
+  function clearCustomThemeStyles() {
+    const root = document.documentElement;
+    CUSTOM_LIGHT_STYLE_VARS.forEach((name) => root.style.removeProperty(name));
+    root.removeAttribute("data-custom-light-theme");
+    root.style.removeProperty("--custom-preview-a");
+    root.style.removeProperty("--custom-preview-b");
+  }
+  function updateThemeMetaColor() {
+    const meta = document.querySelector('meta[name=theme-color]');
+    if (!meta) return;
+    const value = (getComputedStyle(document.documentElement).getPropertyValue("--bg") || "").trim();
+    meta.setAttribute("content", /^#[0-9a-f]{6}$/i.test(value) ? value : (st.theme === "light" ? "#f3f4f8" : "#0d0f17"));
+  }
+  function syncAccentGradientAndLabel() {
+    const css = getComputedStyle(document.documentElement);
+    const first = (css.getPropertyValue("--accent") || "#7B9BFF").trim();
+    const second = (css.getPropertyValue("--accent-2") || "#B58BFF").trim();
+    const a = $("igA"), bb = $("igB"); if (a) a.setAttribute("stop-color", first); if (bb) bb.setAttribute("stop-color", second);
+    const value = $("setAccentVal"); if (value) value.innerHTML = `<span class="accent-dot"></span>${themeDisplayName()}`;
+  }
+  function applyCustomLightTheme(config, options) {
+    const opt = options || {}, cfg = normalizeCustomTheme(config), root = document.documentElement;
+    st.customTheme = cfg;
+    clearCustomThemeStyles();
+    if (cfg.enabled && st.theme === "light") {
+      root.setAttribute("data-custom-light-theme", "on");
+      Object.entries(customThemeStyleVars(cfg)).forEach(([key, value]) => root.style.setProperty(key, value));
+    }
+    root.style.setProperty("--custom-preview-a", cfg.colors.bg);
+    root.style.setProperty("--custom-preview-b", cfg.colors.surface2);
+    if (opt.persist !== false) {
+      try { localStorage.setItem("luminkCustomTheme", JSON.stringify(cfg)); } catch (e) {}
+    }
+    syncAccentGradientAndLabel(); updateThemeMetaColor();
+  }
+  async function persistCustomTheme(config, options) {
+    const opt = options || {};
+    const cfg = normalizeCustomTheme(Object.assign({}, config, { updatedAt:now() }));
+    st.customTheme = cfg;
+    try { localStorage.setItem("luminkCustomTheme", JSON.stringify(cfg)); } catch (e) {}
+    try { await put("settings", { id:CUSTOM_THEME_SETTING_ID, value:cfg, updatedAt:cfg.updatedAt }); }
+    catch (e) { if (!opt.silent) toast("직접 지정 색상을 저장하지 못했어요"); throw e; }
+    if (opt.backup !== false) triggerAutoBackup();
+    return cfg;
+  }
+  async function loadCustomThemeSetting() {
+    let stored = null;
+    try { const row = await getOne("settings", CUSTOM_THEME_SETTING_ID); stored = row && row.value; } catch (e) {}
+    if (!stored) { try { const raw = localStorage.getItem("luminkCustomTheme"); if (raw) stored = JSON.parse(raw); } catch (e) {} }
+    const cfg = normalizeCustomTheme(stored || st.customTheme || null);
+    st.customTheme = cfg;
+    const needsMigration = stored && Number((stored.value || stored).version || 1) < 2;
+    if (needsMigration) { try { await persistCustomTheme(cfg, { backup:false, silent:true }); } catch (e) {} }
+    applyCustomLightTheme(cfg, { persist:false });
+  }
+  function appearanceSnapshot() {
+    return { version:2, accent:validAccentName(st.accent), customTheme:normalizeCustomTheme(st.customTheme || null), updatedAt:now() };
+  }
+  async function restoreAppearanceConfig(value) {
+    if (!value || typeof value !== "object") return;
+    const cfg = normalizeCustomTheme(value.customTheme || st.customTheme || null);
+    const accent = value.accent === LEGACY_CUSTOM_ACCENT ? cfg.baseAccent : validAccentName(value.accent || cfg.baseAccent);
+    st.customTheme = cfg;
+    try { await put("settings", { id:CUSTOM_THEME_SETTING_ID, value:cfg, updatedAt:cfg.updatedAt || now() }); } catch (e) {}
+    try { localStorage.setItem("luminkCustomTheme", JSON.stringify(cfg)); } catch (e) {}
+    applyAccent(accent);
+    applyCustomLightTheme(cfg, { persist:false });
+  }
+  function themeDisplayName() {
+    const base = (ACCENTS[validAccentName(st.accent)] || ACCENTS.blue).name;
+    return currentCustomTheme().enabled ? `${base} · 라이트 커스텀` : base;
+  }
+  function applyAccent(name) {
+    const accent = name === LEGACY_CUSTOM_ACCENT ? currentCustomTheme().baseAccent : validAccentName(name);
+    st.accent = accent;
+    if (accent === "blue") document.documentElement.removeAttribute("data-accent"); else document.documentElement.setAttribute("data-accent", accent);
+    try { localStorage.setItem("luminkAccent", accent); } catch (e) {}
+    applyCustomLightTheme(st.customTheme, { persist:false });
+  }
+  function detectAccent() {
+    let name = "blue", rawTheme = null;
+    try { name = localStorage.getItem("luminkAccent") || "blue"; const raw = localStorage.getItem("luminkCustomTheme"); if (raw) rawTheme = JSON.parse(raw); } catch (e) {}
+    const cfg = normalizeCustomTheme(rawTheme || null);
+    st.customTheme = cfg;
+    if (name === LEGACY_CUSTOM_ACCENT) {
+      name = cfg.baseAccent;
+      try { localStorage.setItem("luminkAccent", name); localStorage.setItem("luminkCustomTheme", JSON.stringify(cfg)); } catch (e) {}
+    }
+    applyAccent(name);
+  }
+  function customThemePreviewPaint(box, cfg) {
+    if (!box) return;
+    const colors = cfg.colors;
+    Object.entries({ "--ct-bg":colors.bg, "--ct-card":colors.surface, "--ct-card-2":colors.surface2, "--ct-ink":colors.ink, "--ct-muted":colors.muted, "--ct-line":colors.line, "--ct-bar":colors.barBg2 }).forEach(([key, value]) => box.style.setProperty(key, value));
+    box.classList.toggle("is-off", !cfg.enabled);
+  }
+  function openCustomThemeStudio() {
+    const before = cloneThemeObject(currentCustomTheme());
+    let draft = before.enabled ? cloneThemeObject(before) : customThemeSeedFromActiveAccent();
+    const restore = () => { st.customTheme = cloneThemeObject(before); applyCustomLightTheme(before, { persist:false }); };
+    customThemePreviewRestore = restore;
+    const groups = ["바탕", "카드", "상단바", "글자", "경계선"];
+    const fields = groups.map((group) => {
+      const items = CUSTOM_LIGHT_COLOR_META.filter((item) => item.group === group).map((item) => `<div class="custom-theme-field"><label for="customTheme_${item.key}">${item.label}</label><input class="custom-theme-color" id="customTheme_${item.key}" data-custom-key="${item.key}" type="color" value="${esc(draft.colors[item.key])}" aria-label="${item.label} 선택"><input class="custom-theme-hex" id="customTheme_${item.key}_hex" data-custom-hex="${item.key}" value="${esc(draft.colors[item.key])}" maxlength="7" inputmode="text" autocapitalize="characters" autocomplete="off" aria-label="${item.label} HEX"></div>`).join("");
+      return `<section class="custom-theme-group"><h4>${group}</h4>${items}</section>`;
+    }).join("");
+    const studio = `<h3>라이트 모드 직접 지정</h3><p class="m-sub">밝게 모드의 바탕·패널·글자·경계선만 직접 정합니다. <b>로고, 기본 아이콘, 프로젝트 썸네일, 버튼 그라데이션과 프리셋 고유 색상은 바꾸지 않습니다.</b></p>
+      <div class="custom-theme-studio">
+        <div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>라이트 UI 팔레트</b><small id="customThemePreviewText">프리셋의 아이콘·그라데이션은 그대로 유지</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div>
+        <label class="custom-theme-enable"><input type="checkbox" id="customThemeEnabled"${draft.enabled ? " checked" : ""}> 밝게 모드에서 직접 지정 색상 사용</label>
+        <div class="custom-theme-fields">${fields}</div>
+        <div class="custom-theme-tools"><small>모든 항목은 자동 보정 없이 입력한 HEX 그대로 적용됩니다.</small><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 라이트 색상 불러오기</button></div>
+        <p class="custom-theme-note">다크 모드는 기존 프리셋을 그대로 유지합니다. 취소하면 적용 전 설정으로 돌아가며, 적용한 값은 이 기기와 전체·자동 백업에 저장됩니다.</p>
+      </div>
+      <div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`;
+    openModal(studio);
+    const previewBox = $("customThemePreview"), enabledInput = $("customThemeEnabled");
+    const refreshInputs = () => {
+      CUSTOM_LIGHT_COLOR_META.forEach((item) => {
+        const color = document.querySelector(`[data-custom-key="${item.key}"]`), hex = document.querySelector(`[data-custom-hex="${item.key}"]`);
+        if (color) color.value = draft.colors[item.key]; if (hex) hex.value = draft.colors[item.key];
+      });
+      if (enabledInput) enabledInput.checked = !!draft.enabled;
+    };
+    const preview = () => {
+      customThemePreviewPaint(previewBox, draft);
+      const label = $("customThemePreviewText"); if (label) label.textContent = draft.enabled ? "프리셋의 아이콘·그라데이션은 그대로 유지" : "현재는 기본 프리셋 라이트 색상을 사용 중";
+      if (st.theme === "light") applyCustomLightTheme(draft, { persist:false });
+    };
+    document.querySelectorAll("[data-custom-key]").forEach((input) => input.addEventListener("input", () => {
+      const key = input.dataset.customKey, value = normalizeThemeHex(input.value, draft.colors[key]); draft.colors[key] = value;
+      const hex = document.querySelector(`[data-custom-hex="${key}"]`); if (hex) hex.value = value; preview();
     }));
+    document.querySelectorAll("[data-custom-hex]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const key = input.dataset.customHex, raw = input.value.trim();
+        if (!/^#?[0-9a-f]{6}$/i.test(raw)) return;
+        const value = normalizeThemeHex(raw, draft.colors[key]); draft.colors[key] = value;
+        const color = document.querySelector(`[data-custom-key="${key}"]`); if (color) color.value = value; preview();
+      });
+      input.addEventListener("blur", () => { const key = input.dataset.customHex; input.value = draft.colors[key]; });
+    });
+    if (enabledInput) enabledInput.addEventListener("change", () => { draft.enabled = !!enabledInput.checked; preview(); });
+    $on("customThemeReset", "click", () => { draft.colors = capturePresetLightPalette(validAccentName(st.accent)); refreshInputs(); preview(); });
+    $on("customThemeCancel", "click", closeModal);
+    $on("customThemeApply", "click", async () => {
+      try {
+        const saved = await persistCustomTheme(draft);
+        applyCustomLightTheme(saved, { persist:false }); customThemePreviewRestore = null; closeModal(); renderSettings(); toast(saved.enabled ? "라이트 모드 직접 지정 색상을 적용했어요" : "직접 지정 색상을 껐어요");
+      } catch (e) {}
+    });
+    refreshInputs(); preview();
+  }
+  function openAccentPicker() {
+    const cur = validAccentName(st.accent || "blue");
+    const cells = Object.keys(ACCENTS).map((key) => `<div class="accent-cell${key === cur ? " sel" : ""}" data-accent="${key}"><span class="ac-sw" style="background:${ACCENTS[key].grad}"></span><span class="ac-name">${ACCENTS[key].name}</span></div>`).join("");
+    const customCfg = currentCustomTheme();
+    const customCell = `<div class="accent-cell accent-custom${customCfg.enabled ? " is-custom" : ""}" data-custom-light="1" style="--custom-preview-a:${customCfg.colors.bg};--custom-preview-b:${customCfg.colors.surface2}"><span class="ac-sw"></span><span class="ac-name">라이트 직접 지정</span></div>`;
+    openModal(`<h3>컬러 테마</h3><p class="m-sub">프리셋은 로고·아이콘·기본 그라데이션을 포함한 기존 디자인을 바꿉니다. <b>라이트 직접 지정</b>은 프리셋을 건드리지 않고 밝게 모드의 바탕·카드·글자·경계선만 별도로 설정합니다.</p><div class="accent-grid">${cells}${customCell}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);
+    $on("acClose", "click", closeModal);
+    document.querySelectorAll(".accent-cell[data-accent]").forEach((el) => el.addEventListener("click", () => { applyAccent(el.dataset.accent); document.querySelectorAll(".accent-cell[data-accent]").forEach((x) => x.classList.toggle("sel", x === el)); renderSettings(); }));
+    const lightCell = document.querySelector(".accent-cell[data-custom-light]"); if (lightCell) lightCell.addEventListener("click", () => { closeModal(); openCustomThemeStudio(); });
   }
 
   /* ---------- font scale ---------- */
@@ -5737,10 +6152,10 @@ ${gallery}
         size: f.size, createdAt: f.createdAt, blob: f.blob
       }));
       const snap = {
-        id: "bk_" + autoBkLast, version: 2, ts: autoBkLast,
+        id: "bk_" + autoBkLast, version: 3, ts: autoBkLast,
         projects: JSON.parse(JSON.stringify(st.projects)),
         notes: JSON.parse(JSON.stringify(st.notes)), files: snapFiles,
-        quickMenu: jsonCopy(quickMenuConfig())
+        quickMenu: jsonCopy(quickMenuConfig()), appearance: appearanceSnapshot()
       };
       await put("backups", snap);
       await pruneAutoBackups(getAutoBackupLimit());
@@ -5795,7 +6210,7 @@ ${gallery}
       document.querySelectorAll(".ab-restore").forEach((btn) => btn.addEventListener("click", () => {
         const snap = all.find((x) => x.id === btn.dataset.bk); if (!snap) return;
         const dt = new Date(snap.ts), label = `${dt.getMonth() + 1}/${dt.getDate()} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
-        openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [], quickMenu: snap.quickMenu || null }, `${label} 자동 백업`);
+        openRestoreModePicker({ app: "lumink", projects: snap.projects, notes: snap.notes, files: snap.files || [], quickMenu: snap.quickMenu || null, appearance: snap.appearance || null }, `${label} 자동 백업`);
       }));
     }).catch(() => { toast("자동 백업 정보를 읽지 못했어요"); });
   }
@@ -5819,6 +6234,34 @@ ${gallery}
     el.addEventListener("contextmenu", (e) => { e.preventDefault(); fn(); });
   }
 
+  function bindQuickMenuInteractions() {
+    const menu = $("quickMenu");
+    if (!menu) return;
+    // 외부 영역을 누르면 항상 접습니다. 메뉴 내부의 버튼·슬롯 입력은 그대로 유지합니다.
+    document.addEventListener("pointerdown", (event) => {
+      if (!document.body.classList.contains("quick-menu-open")) return;
+      if (menu.contains(event.target)) return;
+      setQuickMenuOpen(false);
+    }, true);
+    let active = null;
+    const finish = (event) => {
+      if (!active || (event.pointerId != null && active.id !== event.pointerId)) return;
+      const dx = event.clientX - active.x, dy = event.clientY - active.y;
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+        if (dx < 0) setQuickMenuOpen(true);
+        else if (active.open) setQuickMenuOpen(false);
+      }
+      active = null;
+    };
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      const edgeStart = event.clientX >= window.innerWidth - 34;
+      if (menu.contains(event.target) || edgeStart) active = { id:event.pointerId, x:event.clientX, y:event.clientY, open:document.body.classList.contains("quick-menu-open") };
+    }, { passive:true });
+    document.addEventListener("pointerup", finish, { passive:true });
+    document.addEventListener("pointercancel", () => { active = null; }, { passive:true });
+  }
+
   /* ---------- bind static ---------- */
   function bind() {
     $on("homeMenu", "click", openSidebar);
@@ -5826,6 +6269,7 @@ ${gallery}
     $on("quickMenuTab", "click", () => setQuickMenuOpen(!document.body.classList.contains("quick-menu-open")));
     $on("quickMenuEdit", "click", () => { setQuickMenuOpen(false); openQuickMenuManager(); });
     $on("quickMenuManage", "click", () => { setQuickMenuOpen(false); openQuickMenuManager(); });
+    bindQuickMenuInteractions();
     $on("quickMenuImageInput", "change", async (event) => {
       const file = event.target.files && event.target.files[0], index = quickMenuImageSlot; event.target.value = "";
       if (!file || !Number.isInteger(index)) return;
@@ -8912,7 +9356,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     } catch (e) {}
     try { bind(); } catch (e) { console.warn("bind", e); }
     const logTemplatesLoaded = loadBundledLogTemplates();
-    try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); await loadQuickMenuSetting(); }
+    try { await openDB(); st.projects = await getAll("projects"); st.notes = await getAll("notes"); await loadCustomThemeSetting(); await loadQuickMenuSetting(); }
     catch (e) { console.warn("DB error", e); st.quickMenu = normalizeQuickMenu(null); toast("저장소를 열 수 없어요"); }
     try { await logTemplatesLoaded; } catch (e) { console.warn("log templates", e); }
     try { await migrate(); } catch (e) { console.warn("migrate", e); }
