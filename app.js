@@ -6210,12 +6210,16 @@ ${gallery}
   function customThemeAutoTypeVars(mainA,mainB,dark){
     const a=hexToHsl(mainA),b=hexToHsl(mainB),mid=blendHsl(mainA,mainB,.5);
     const delta=Math.abs(((b.h-a.h+540)%360)-180), spread=delta<46?16:7, saturation=Math.max(.46,Math.min(.84,mid.s*.92+.06));
+    // v66.8: 기존 다크 추천 팔레트의 선명한 타입색(L .69)을 라이트 모드의 기준으로 승격합니다.
+    // 다크 표면에서는 같은 팔레트를 한 단계 밝힌 L .77로 사용해, 일곱 타입의 점·태그가 묻히지 않게 합니다.
+    // 태그 글자는 표면 모드와 무관하게 실제 배경 밝기에 맞춰 계산해 밝은 태그 위에서도 읽히게 유지합니다.
+    const typeLightness=dark?.77:.69;
     const vars={"--custom-note-divider-text":dark?hslToHex(mid.h,Math.max(.12,mid.s*.16),.93):hslToHex(mid.h,Math.max(.22,mid.s*.42),.27),"--custom-note-divider-count":dark?hslToHex(mid.h,Math.max(.10,mid.s*.12),.61):hslToHex(mid.h,Math.max(.12,mid.s*.20),.54)};
     CUSTOM_NOTE_TYPE_KEYS.forEach((type,index)=>{
       const point=index/(CUSTOM_NOTE_TYPE_KEYS.length-1), hue=lerpHue(a.h,b.h,point)+(index-3)*spread;
-      const color=hslToHex(hue,Math.min(.86,saturation+(index%3)*.025),dark?.69:.50);
+      const color=hslToHex(hue,Math.min(.86,saturation+(index%3)*.025),typeLightness);
       vars[`--custom-note-type-${type}`]=color;
-      vars[`--custom-note-type-${type}-ink`]=contrastInk(color,dark);
+      vars[`--custom-note-type-${type}-ink`]=contrastInk(color,false);
     });
     return vars;
   }
