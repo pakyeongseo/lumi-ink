@@ -2506,22 +2506,26 @@
   .log-mask-actions { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; }
   .log-mini-btn { border:0; border-radius:11px; padding:0 14px; background:var(--accent); color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
   .log-mode-note { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-size:11px; margin-top:9px; }
-  .log-rename-sets-wrap { margin-top:10px; padding:10px; border:1px solid color-mix(in srgb,var(--line) 78%,transparent); border-radius:13px; background:color-mix(in srgb,var(--surface2) 64%,transparent); }
-  .log-rename-sets-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
+  .log-rename-sets-wrap { margin-top:10px; padding:11px; border:1px solid color-mix(in srgb,var(--line) 72%,transparent); border-radius:15px; background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 84%,var(--accent-soft) 16%),color-mix(in srgb,var(--surface2) 76%,transparent)); }
+  .log-rename-sets-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 10px; }
   .log-rename-sets-head span:first-child { min-width:0; display:grid; gap:1px; }
   .log-rename-sets-head b { color:var(--text); font-size:12px; }
   .log-rename-sets-head small { color:var(--muted); font-size:10.5px; line-height:1.35; }
   .log-rename-sets-mark { flex:0 0 auto; font-size:9px; font-weight:850; letter-spacing:.12em; color:var(--accent); }
-  .log-rename-sets { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
-  .log-rename-set { min-width:0; min-height:56px; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:7px; padding:7px 7px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); text-align:left; font:inherit; cursor:pointer; transition:transform .16s ease,border-color .16s ease,background .16s ease; }
-  .log-rename-set:hover { border-color:color-mix(in srgb,var(--accent) 58%,var(--line)); background:color-mix(in srgb,var(--accent-soft) 34%,var(--surface)); }
-  .log-rename-set:active { transform:translateY(1px); }
-  .log-rename-set svg { width:14px; height:14px; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-  .log-rename-index { align-self:start; color:var(--accent); font-size:9px; font-weight:900; letter-spacing:.04em; }
-  .log-rename-copy { min-width:0; display:grid; gap:2px; }
-  .log-rename-copy b,.log-rename-copy small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .log-rename-copy b { font-size:10.5px; color:var(--text); }
-  .log-rename-copy small { color:var(--muted); font-size:9.5px; }
+  .log-rename-sets { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; }
+  .log-rename-set { position:relative; min-width:0; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:7px 3px 6px; overflow:hidden; border:1px solid color-mix(in srgb,var(--line) 86%,transparent); border-radius:12px; background:color-mix(in srgb,var(--surface) 90%,transparent); color:var(--text); text-align:center; font:inherit; cursor:pointer; transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+  .log-rename-set::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:0; background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,transparent),transparent 72%); transition:opacity .16s ease; }
+  .log-rename-set:hover { border-color:color-mix(in srgb,var(--accent) 58%,var(--line)); background:color-mix(in srgb,var(--accent-soft) 30%,var(--surface)); box-shadow:0 5px 13px -10px color-mix(in srgb,var(--accent) 75%,transparent); }
+  .log-rename-set:hover::before,.log-rename-set.is-configured::before { opacity:1; }
+  .log-rename-set:active { transform:translateY(1px) scale(.985); }
+  .log-rename-set.is-configured { border-color:color-mix(in srgb,var(--accent) 46%,var(--line)); background:color-mix(in srgb,var(--accent-soft) 24%,var(--surface)); }
+  .log-rename-set.is-partial { border-style:dashed; }
+  .log-rename-index,.log-rename-label,.log-rename-state { position:relative; z-index:1; }
+  .log-rename-index { color:var(--accent); font-family:var(--font-mono,ui-monospace,monospace); font-size:8.5px; font-weight:900; letter-spacing:.09em; line-height:1; font-variant-numeric:tabular-nums; }
+  .log-rename-label { min-width:0; overflow:hidden; color:var(--text); font-size:10px; font-weight:850; line-height:1.16; text-overflow:ellipsis; white-space:nowrap; }
+  .log-rename-state { width:4px; height:4px; border-radius:50%; background:color-mix(in srgb,var(--line) 78%,transparent); }
+  .log-rename-set.is-configured .log-rename-state { background:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent); }
+  .log-rename-set.is-partial .log-rename-state { background:var(--warning,#d39c36); }
   .log-set-modal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:15px; }
   #logSetNameCount { color:var(--muted); font-size:11px; font-weight:700; }
   .log-set-name-list { display:grid; gap:7px; max-height:min(42vh,360px); margin-top:7px; overflow:auto; padding-right:2px; }
@@ -2571,12 +2575,14 @@
   html[data-theme="light"] .log-template-manager .m-input::placeholder { color:color-mix(in srgb,var(--logo-ink) 55%,var(--surface)); opacity:1; }
   html[data-theme="light"] .log-template-manager :where(.m-btn.primary,.log-template-del) { color:#fff; }
   html[data-theme="light"] .log-template-manager .log-template-del { color:var(--danger,#d94a62); }
-  @media (max-width:760px) { .log-rename-sets { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  @media (max-width:760px) { .log-rename-sets { grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; } .log-rename-set { min-height:49px; } }
   @media (max-width:560px) {
     .modal-scrim.log-template-open { padding:10px; }
     .modal.log-template-modal { height:calc((100dvh / var(--fs-zoom, 1)) - 20px); max-height:calc((100dvh / var(--fs-zoom, 1)) - 20px); padding:16px 14px calc(14px + var(--safe-bottom)); border-radius:18px; }
-    .log-rename-sets { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .log-rename-set:last-child { grid-column:1/-1; }
+    .log-rename-sets { grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; }
+    .log-rename-set { min-height:47px; border-radius:10px; }
+    .log-rename-index { font-size:8px; }
+    .log-rename-label { font-size:9px; }
     .log-set-add { min-height:40px; }
     .log-scroll { padding-left:10px; padding-right:10px; }
     .log-preview-shell { padding:8px; }
@@ -3033,18 +3039,18 @@
   /*
      내장 아이콘은 작은 심볼이 아니라 ‘미니 썸네일 그림’으로 취급합니다.
      기본 글리프/업로드 이미지와 같은 39px(미니 37px) 미디어 타일을 쓰되,
-     SVG 안의 8px 안전 여백은 타일 안에서만 확대해 실제 그림이 카드 끝까지 차 보이게 합니다.
+     SVG 안의 8px 안전 여백은 타일 안에서만 적당히 보정해 프로젝트 썸네일과 균형을 맞춥니다.
   */
   .quick-menu-slot > .quick-slot-media.has-library-icon { width:39px; height:39px; border-radius:13px; padding:0; }
   .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon {
     position:absolute; inset:0; width:100%; height:100%;
-    transform:scale(1.34); transform-origin:center;
+    transform:scale(1.072); transform-origin:center;
   }
   .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon > svg {
     width:100%; height:100%; max-width:none; max-height:none; display:block;
   }
   .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon { width:37px; height:37px; border-radius:12px; }
-  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.34); }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.072); }
   .li-card-title { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:10px; font-weight:760; }
   .li-card-style { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--faint); font-size:8.5px; font-weight:700; letter-spacing:.015em; }
   .project-library-icon-card, .qm-library-card { min-height:98px; gap:3px; }
@@ -3363,7 +3369,7 @@
           <button class="log-template-pick" id="logTemplateBtn"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg><span><b id="logTemplateName">템플릿</b><small id="logTemplateDesc">디자인 선택</small></span></button>
         </div>
         <div class="log-rename-sets-wrap">
-          <div class="log-rename-sets-head"><span><b>이름 바꾸기 세트</b><small>세트마다 원본 이름 최대 20개 → 바꿀 이름 1개</small></span><span class="log-rename-sets-mark">5 SETS</span></div>
+          <div class="log-rename-sets-head"><span><b>이름 치환 세트</b><small>원본 이름 최대 20개 → 바꿀 이름 1개 · 세트 간 원본 이름 중복 불가</small></span><span class="log-rename-sets-mark">5 SETS</span></div>
           <div class="log-rename-sets" id="logRenameSets"></div>
         </div>
         <div class="log-mode-note"><span id="logModeLabel">원본 텍스트 편집 중</span><span>원본은 유지되고 보기에서만 꾸며집니다.</span></div>

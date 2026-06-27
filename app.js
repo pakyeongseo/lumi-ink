@@ -2830,7 +2830,19 @@
     if (!hasConfiguredSet) {
       out[0] = normalizeLogNameSet({ names: legacyNames, replacement: legacyAlias });
     }
-    return out;
+    // 원본 이름은 다섯 세트 전체에서 한 번만 쓸 수 있습니다.
+    // 과거 데이터에 중복이 있다면 낮은 번호 세트(1 → 5)를 우선 보존해
+    // 기존 로그의 표시 결과가 예측 가능하도록 안전 이전합니다.
+    const used = new Set();
+    return out.map((set) => {
+      const names = [];
+      (set.names || []).forEach((name) => {
+        const key = logNameLookup(name);
+        if (!key || used.has(key)) return;
+        used.add(key); names.push(String(name || "").trim());
+      });
+      return { names, replacement: set.replacement || "" };
+    });
   }
   function logNameSetCount(sets) {
     return normalizeLogNameSets(sets).reduce((count, set) => count + set.names.length, 0);
@@ -2948,11 +2960,11 @@
     const host = $("logRenameSets"); if (!host) return;
     const normalized = normalizeLogNameSets(sets);
     host.innerHTML = normalized.map((set, index) => {
-      const count = set.names.length;
-      const subtitle = count
-        ? `${count}개 원본 → ${esc(set.replacement || "바꿀 이름 미지정")}`
-        : "원본 이름을 등록해 주세요";
-      return `<button class="log-rename-set" type="button" data-log-rename-set="${index}" aria-label="이름 바꾸기 세트 ${index + 1} 편집"><span class="log-rename-index">${String(index + 1).padStart(2, "0")}</span><span class="log-rename-copy"><b>이름 바꾸기 세트 ${index + 1}</b><small>${subtitle}</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`;
+      const ready = !!(set.names.length && set.replacement);
+      const partial = !!(set.names.length && !set.replacement);
+      const state = ready ? " is-configured" : (partial ? " is-partial" : "");
+      const stateLabel = ready ? "설정됨" : (partial ? "바꿀 이름 미지정" : "비어 있음");
+      return `<button class="log-rename-set${state}" type="button" data-log-rename-set="${index}" aria-label="이름 치환 세트 ${index + 1} 편집 · ${stateLabel}" title="이름 치환 세트 ${index + 1}"><span class="log-rename-index">${String(index + 1).padStart(2, "0")}</span><span class="log-rename-label">세트 ${index + 1}</span><span class="log-rename-state" aria-hidden="true"></span></button>`;
     }).join("");
     host.querySelectorAll("[data-log-rename-set]").forEach((button) => button.addEventListener("click", () => openLogNameSetEditor(Number(button.dataset.logRenameSet))));
   }
@@ -2968,8 +2980,8 @@
   }
   function logSetConflictMarkup(conflicts) {
     if(!conflicts.length)return "";
-    const items=conflicts.map((row)=>`<li><b>${esc(row.name)}</b><span>세트 ${row.sets.join(", ")}에서 사용 중</span></li>`).join("");
-    return `<div class="log-set-conflict" id="logSetConflict" role="status"><b>다른 세트에서 사용 중인 원본 이름</b><small>같은 이름을 여러 세트에 넣으면 세트별 치환 결과가 겹칠 수 있어요.</small><ul>${items}</ul></div>`;
+    const items=conflicts.map((row)=>`<li><b>${esc(row.name)}</b><span>세트 ${row.sets.join(", ")}에 먼저 등록됨</span></li>`).join("");
+    return `<div class="log-set-conflict" id="logSetConflict" role="alert"><b>다른 세트에 이미 등록된 원본 이름입니다</b><small>원본 이름은 다섯 세트 전체에서 한 번만 사용할 수 있어요. 중복된 이름을 수정하거나 삭제한 뒤 저장해 주세요.</small><ul>${items}</ul></div>`;
   }
   function renderLogSetNames(names) {
     const host = $("logSetNames"); if (!host) return;
@@ -2977,36 +2989,39 @@
     host.innerHTML = values.map((name, index) => `<div class="log-set-name-row"><input class="m-input log-set-name" maxlength="80" value="${esc(name)}" placeholder="원본 이름 ${index + 1}"><button class="log-set-name-remove" type="button" data-log-set-remove="${index}" aria-label="원본 이름 삭제"${values.length === 1 ? " hidden" : ""}>×</button></div>`).join("");
     host.querySelectorAll("[data-log-set-remove]").forEach((button) => button.addEventListener("click", () => {
       const namesNow = logSetNamesFromModal(); namesNow.splice(Number(button.dataset.logSetRemove), 1); renderLogSetNames(namesNow.length ? namesNow : [""]);
-      document.dispatchEvent(new CustomEvent("lumink:log-set-names-changed"));
+      const nextHost = $("logSetNames"); if (nextHost) nextHost.dispatchEvent(new Event("input", { bubbles:true }));
     }));
   }
   async function saveLogNameSet(index, draft) {
-    const n=getNote(st.curNoteId); if(!n||n.type!=="log")return;
+    const n=getNote(st.curNoteId); if(!n||n.type!=="log")return false;
     const safeIndex=Math.max(0,Math.min(LOG_NAME_SET_COUNT-1,Number(index)||0));
     const sets=normalizeLogNameSets(n.data&&n.data.nameSets,n.data&&n.data.personaNames,n.data&&n.data.personaAlias);
-    sets[safeIndex]=normalizeLogNameSet(draft);
+    const safeDraft=normalizeLogNameSet(draft);
+    const conflicts=findLogNameSetConflicts(sets,safeIndex,safeDraft.names);
+    if(conflicts.length){ toast("다른 세트에 등록된 원본 이름은 중복 저장할 수 없어요"); return false; }
+    sets[safeIndex]=safeDraft;
     n.data=normalizeLogData(Object.assign({},n.data||{},{nameSets:sets}));
     await saveLog(n,true); closeModal(); renderLogRenameSets(n.data.nameSets); if(!logEditMode)renderLogPreview(n);
-    toast(`이름 바꾸기 세트 ${safeIndex+1}을 저장했어요`);
-  }
-  function openLogNameSetDuplicateConfirm(index,draft,conflicts) {
-    const list=conflicts.map((row)=>`<li><b>${esc(row.name)}</b><span>세트 ${row.sets.join(", ")}에서 이미 사용 중</span></li>`).join("");
-    openModal(`<h3>다른 세트에서 사용 중인 이름</h3><p class="m-sub">같은 원본 이름을 여러 세트에 넣으면 표시 결과가 겹칠 수 있어요. 아래 이름을 수정하거나, 의도한 중복이라면 그대로 저장할 수 있습니다.</p><div class="log-set-conflict log-set-conflict-confirm"><ul>${list}</ul></div><div class="m-row"><button class="m-btn" id="logSetConflictBack">수정으로 돌아가기</button><button class="m-btn primary" id="logSetConflictSave">그래도 저장</button></div>`);
-    $on("logSetConflictBack","click",()=>openLogNameSetEditor(index,draft));
-    $on("logSetConflictSave","click",()=>{void saveLogNameSet(index,draft);});
+    toast(`이름 치환 세트 ${safeIndex+1}을 저장했어요`); return true;
   }
   function openLogNameSetEditor(index,seed) {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
     const safeIndex = Math.max(0, Math.min(LOG_NAME_SET_COUNT - 1, Number(index) || 0));
     const sets = normalizeLogNameSets(n.data && n.data.nameSets, n.data && n.data.personaNames, n.data && n.data.personaAlias);
     const current = normalizeLogNameSet(seed || sets[safeIndex]);
-    openModal(`<h3>이름 바꾸기 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트에 넣은 이름은 모두 아래 “바꿀 이름”으로 표시되며, 로그 템플릿의 이름 스타일을 그대로 따릅니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
+    openModal(`<h3>이름 치환 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트의 원본 이름은 모두 아래 “바꿀 이름”으로 표시되고, 다섯 세트 모두 현재 로그 템플릿의 정규식 스타일 규칙을 함께 적용합니다. 원본 이름은 다른 세트와 중복 저장할 수 없습니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
     renderLogSetNames(current.names);
     const updateCount = () => { const label = $("logSetNameCount"); if (label) label.textContent = `${logSetNamesFromModal().length}/${LOG_NAME_SET_LIMIT}`; };
-    const updateConflict=()=>{const host=$("logSetConflictHost"); if(!host)return; const conflict=findLogNameSetConflicts(sets,safeIndex,logSetNamesFromModal());host.innerHTML=logSetConflictMarkup(conflict);};
-    $("logSetNames").addEventListener("input",()=>{updateCount();updateConflict();});
-    document.addEventListener("lumink:log-set-names-changed",updateConflict,{once:false});
-    const cleanupConflictListener=()=>document.removeEventListener("lumink:log-set-names-changed",updateConflict);
+    const updateConflict = () => {
+      const host = $("logSetConflictHost"); const saveButton = $("logSetSave"); if (!host || !saveButton) return [];
+      const conflicts = findLogNameSetConflicts(sets, safeIndex, logSetNamesFromModal());
+      host.innerHTML = logSetConflictMarkup(conflicts);
+      saveButton.disabled = !!conflicts.length;
+      saveButton.textContent = conflicts.length ? "중복 이름 수정 필요" : "세트 저장";
+      saveButton.title = conflicts.length ? "다른 세트와 겹치는 원본 이름을 수정해 주세요" : "";
+      return conflicts;
+    };
+    $("logSetNames").addEventListener("input",()=>{ updateCount(); updateConflict(); });
     updateConflict();
     $("logSetAdd").addEventListener("click", () => {
       const names = logSetNamesFromModal();
@@ -3014,14 +3029,18 @@
       names.push(""); renderLogSetNames(names); updateCount(); updateConflict();
       const inputs = $("logSetNames").querySelectorAll(".log-set-name"); if (inputs.length) inputs[inputs.length - 1].focus();
     });
-    $("logSetCancel").addEventListener("click",()=>{cleanupConflictListener();closeModal();});
+    $("logSetCancel").addEventListener("click",closeModal);
     $("logSetSave").addEventListener("click", async () => {
       const replacement = $("logSetReplacement").value.trim();
       const names = logSetNamesFromModal();
+      const conflicts = updateConflict();
+      if (conflicts.length) {
+        toast("다른 세트에 등록된 원본 이름은 중복 저장할 수 없어요");
+        const first = $("logSetNames").querySelector(".log-set-name"); if (first) first.focus();
+        return;
+      }
       if (names.length && !replacement) { toast("바꿀 이름을 입력해 주세요"); $("logSetReplacement").focus(); return; }
-      const draft={names,replacement},conflicts=findLogNameSetConflicts(sets,safeIndex,names); cleanupConflictListener();
-      if(conflicts.length){openLogNameSetDuplicateConfirm(safeIndex,draft,conflicts);return;}
-      await saveLogNameSet(safeIndex,draft);
+      await saveLogNameSet(safeIndex,{names,replacement});
     });
     setTimeout(() => $("logSetReplacement").focus(), 80);
   }
