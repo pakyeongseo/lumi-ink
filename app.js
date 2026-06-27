@@ -143,7 +143,7 @@
       let out = String(text || "");
       map.forEach((nextId, oldId) => {
         const escId = oldId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        out = out.replace(new RegExp(`url\(#${escId}\)`, "g"), `url(#${nextId})`)
+        out = out.replace(new RegExp(`url\\(\\s*['"]?#${escId}['"]?\\s*\\)`, "g"), `url(#${nextId})`)
                  .replace(new RegExp(`^#${escId}$`), `#${nextId}`);
       });
       return out;
@@ -6087,9 +6087,9 @@ ${gallery}
     { key:"mainB",          label:"메인 색상 2 · 끝",   variable:"--accent-2",                       fallback:"#5A73D8", group:"main" },
     { key:"logoCore",       label:"로고 중심부",         variable:"--custom-logo-ink",                fallback:"#FFFFFF", group:"brand" },
     { key:"sectionTitleBg", label:"작은 섹션 제목 배경", variable:"--section-title-bg",                fallback:"#EAF0FF", group:"section" },
-    { key:"sidebarFootBg",  label:"사이드바 하단 버튼 배경", variable:"--sidebar-foot-bg",              fallback:"#E8EEF9", group:"sidebar" },
-    { key:"sidebarSectionGradientStart", label:"사이드바 섹션 제목 그라데이션 1", variable:"--sidebar-section-grad-a", fallback:"#EAF0FF", group:"sidebar" },
-    { key:"sidebarCountBg", label:"사이드바 메모 개수 배경", variable:"--sidebar-count-bg",             fallback:"#EAF0FF", group:"sidebar" },
+    { key:"sidebarFootBg",  label:"사이드바 하단 버튼 배경", variable:"--sidebar-foot-bg",              fallback:"#E8EEF9", group:"sidebar", derived:true },
+    { key:"sidebarSectionGradientStart", label:"사이드바 섹션 제목 그라데이션 1", variable:"--sidebar-section-grad-a", fallback:"#EAF0FF", group:"sidebar", derived:true },
+    { key:"sidebarCountBg", label:"사이드바 메모 개수 배경", variable:"--sidebar-count-bg",             fallback:"#EAF0FF", group:"sidebar", derived:true },
     { key:"bg",             label:"앱 배경",             variable:"--bg",                             fallback:"#F3F4F8", group:"background" },
     { key:"bg2",            label:"보조 배경",           variable:"--bg-2",                           fallback:"#ECEEF4", group:"background" },
     { key:"paper",          label:"문서 바탕",           variable:"--paper",                          fallback:"#FCFCFD", group:"background" },
@@ -6101,19 +6101,19 @@ ${gallery}
     { key:"barLine",        label:"상단바 경계",         variable:"--bar-line",                       fallback:"#E1E3EC", group:"bar" },
     { key:"topbarShadow",   label:"상단 제목바 아래 그림자", variable:"--topbar-shadow-color",          fallback:"#7690C2", group:"bar" },
     { key:"memoCodeBg",     label:"자유 메모 코드 보기 배경", variable:"--memo-code-bg",                  fallback:"#FCFCFD", group:"memo" },
-    { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo" },
+    { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo", derived:true },
     { key:"memoTitle",      label:"메모 제목",           variable:"--memo-title-color",               fallback:"#283A63", group:"type" },
-    { key:"homeSectionTitle", label:"메인 화면 섹션 제목", variable:"--home-section-title-color",       fallback:"#5E6377", group:"home" },
-    { key:"homeSectionTitleBg", label:"메인 화면 섹션 제목 배경", variable:"--home-section-title-bg",   fallback:"#EAF0FF", group:"home" },
-    { key:"homeShadow",     label:"메인 화면 그림자",     variable:"--home-shadow-color",              fallback:"#7690C2", group:"home" },
-    { key:"projectCountBg", label:"프로젝트 메모 개수 배경", variable:"--project-count-bg",              fallback:"#EAF0FF", group:"home" },
-    { key:"homeSortBg",     label:"메인 화면 정렬 배경", variable:"--home-sort-bg",                     fallback:"#EAF0FF", group:"home" },
-    { key:"modalTitle",     label:"팝업 제목",           variable:"--modal-title-color",              fallback:"#283A63", group:"popup" },
-    { key:"newNoteIconBg",  label:"새 메모 팝업 아이콘 배경", variable:"--new-note-icon-bg",              fallback:"#EAF0FF", group:"popup" },
-    { key:"settingsGroupTitle", label:"설정 그룹 제목",  variable:"--settings-group-title-color",      fallback:"#5E6377", group:"settings" },
-    { key:"settingsRowTitle", label:"설정 항목 제목",    variable:"--settings-row-title-color",        fallback:"#1B1D27", group:"settings" },
-    { key:"settingsShadow", label:"설정 그림자",         variable:"--settings-shadow-color",           fallback:"#7690C2", group:"settings" },
-    { key:"settingsPressedBg", label:"설정 버튼 눌림",    variable:"--settings-pressed-bg",             fallback:"#F1F2F7", group:"settings" },
+    { key:"homeSectionTitle", label:"메인 화면 섹션 제목", variable:"--home-section-title-color",       fallback:"#5E6377", group:"home", derived:true },
+    { key:"homeSectionTitleBg", label:"메인 화면 섹션 제목 배경", variable:"--home-section-title-bg",   fallback:"#EAF0FF", group:"home", derived:true },
+    { key:"homeShadow",     label:"메인 화면 그림자",     variable:"--home-shadow-color",              fallback:"#7690C2", group:"home", derived:true },
+    { key:"projectCountBg", label:"프로젝트 메모 개수 배경", variable:"--project-count-bg",              fallback:"#EAF0FF", group:"home", derived:true },
+    { key:"homeSortBg",     label:"메인 화면 정렬 배경", variable:"--home-sort-bg",                     fallback:"#EAF0FF", group:"home", derived:true },
+    { key:"modalTitle",     label:"팝업 제목",           variable:"--modal-title-color",              fallback:"#283A63", group:"popup", derived:true },
+    { key:"newNoteIconBg",  label:"새 메모 팝업 아이콘 배경", variable:"--new-note-icon-bg",              fallback:"#EAF0FF", group:"popup", derived:true },
+    { key:"settingsGroupTitle", label:"설정 그룹 제목",  variable:"--settings-group-title-color",      fallback:"#5E6377", group:"settings", derived:true },
+    { key:"settingsRowTitle", label:"설정 항목 제목",    variable:"--settings-row-title-color",        fallback:"#1B1D27", group:"settings", derived:true },
+    { key:"settingsShadow", label:"설정 그림자",         variable:"--settings-shadow-color",           fallback:"#7690C2", group:"settings", derived:true },
+    { key:"settingsPressedBg", label:"설정 버튼 눌림",    variable:"--settings-pressed-bg",             fallback:"#F1F2F7", group:"settings", derived:true },
     { key:"ink",            label:"본문 글자",           variable:"--ink",                            fallback:"#1B1D27", group:"type" },
     { key:"muted",          label:"보조 글자",           variable:"--muted",                          fallback:"#5E6377", group:"type" },
     { key:"faint",          label:"희미한 글자",         variable:"--faint",                          fallback:"#A3A8BA", group:"type" },
@@ -6154,37 +6154,54 @@ ${gallery}
   function gradientMate(hex){ const h=hexToHsl(hex); return hslToHex(h.h+22,Math.max(.40,Math.min(.84,h.s*.92+.06)),Math.max(.38,Math.min(.70,h.l+.06))); }
   function contrastInk(hex, darkMode){ const h=hexToHsl(hex); if(darkMode) return hslToHex(h.h,Math.max(.14,h.s*.30),.92); return h.l < .62 ? "#FFFFFF" : hslToHex(h.h,Math.max(.22,h.s*.54),.22); }
   function recommendCustomPalette(mainA,mainB,mode){
+    // 메인 두 색만으로 전체 구조 팔레트를 추천합니다.
+    // 원칙: ① 색조(hue)는 두 색의 중간값 하나로 고정해 어떤 조합에서도 색이 튀지 않게 하고,
+    //       ② 역할이 같은 배경/그림자/제목은 같은 값으로 묶어 일관된 결과(=평타)를 보장합니다.
     const start=normalizeThemeHex(mainA,"#2F6FD0"), end=normalizeThemeHex(mainB,gradientMate(start));
-    const a=hexToHsl(start),b=hexToHsl(end),mid=blendHsl(start,end,.5),dark=mode==="dark";
-    const H=mid.h,S=Math.max(.30,mid.s),hueA=a.h,hueB=b.h;
-    const out={mainA:start,mainB:end};
+    const mid=blendHsl(start,end,.5), dark=mode==="dark";
+    const H=mid.h;
+    const S=Math.max(.30,Math.min(.90,mid.s)); // 채도: 하한으로 칙칙함 방지, 상한으로 과채도 방지
+    const L=(sat,light)=>hslToHex(H,Math.max(0,Math.min(1,sat)),Math.max(0,Math.min(1,light)));
+    const out={mainA:start,mainB:end,logoCore:contrastInk(start,dark)};
     if(!dark){
-      const titleInk=hslToHex(H,Math.max(.28,S*.48),.245), muted=hslToHex(H,Math.max(.18,S*.30),.39), soft=hslToHex(H,Math.max(.10,S*.24),.915);
+      const tint=L(S*.40,.930), tintHi=L(S*.30,.955);       // 통합 틴트 배경
+      const shadow=L(Math.max(.30,S*.42),.52);              // 통합 그림자
+      const titleInk=L(Math.max(.30,S*.46),.235);           // 통합 진한 제목
+      const inkC=L(Math.max(.28,S*.42),.180);
+      const mutedC=L(Math.max(.16,S*.26),.420);
+      const faintC=L(Math.max(.12,S*.18),.620);
+      const lineC=L(S*.20,.892), lineSoftC=L(S*.13,.942);
       Object.assign(out,{
-        logoCore:contrastInk(start,false),
-        bg:hslToHex(H,S*.16,.978), bg2:hslToHex(lerpHue(hueA,hueB,.30),S*.22,.952), paper:hslToHex(lerpHue(hueA,hueB,.62),S*.09,.995),
-        surface:hslToHex(H,S*.11,.998), surface2:hslToHex(lerpHue(hueB,hueA,.24),S*.20,.968), surface3:hslToHex(H,S*.26,.932),
-        barBg:hslToHex(hueA,S*.10,.998), barBg2:hslToHex(hueB,S*.16,.982), barLine:hslToHex(H,S*.21,.885),
-        topbarShadow:hslToHex(H,Math.max(.23,S*.38),.48), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.58),S*.12,.982), memoCodeIconBg:hslToHex(lerpHue(hueA,hueB,.54),Math.max(.13,S*.28),.922),
-        sectionTitleBg:soft, sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.12,S*.25),.928),
-        sidebarSectionGradientStart:hslToHex(lerpHue(hueA,hueB,.18),Math.max(.12,S*.28),.918), sidebarCountBg:hslToHex(lerpHue(hueA,hueB,.46),Math.max(.12,S*.25),.91),
-        memoTitle:titleInk, homeSectionTitle:muted, homeSectionTitleBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.12,S*.27),.925), homeShadow:hslToHex(H,Math.max(.20,S*.34),.50), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.12,S*.27),.91), homeSortBg:hslToHex(lerpHue(hueB,hueA,.35),Math.max(.12,S*.28),.91), modalTitle:titleInk, newNoteIconBg:hslToHex(lerpHue(hueA,hueB,.55),Math.max(.14,S*.30),.914),
-        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.30,S*.52),.205), settingsShadow:hslToHex(H,Math.max(.22,S*.36),.48), settingsPressedBg:hslToHex(lerpHue(hueA,hueB,.35),Math.max(.14,S*.24),.94), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted, faint:hslToHex(H,Math.max(.12,S*.18),.61),
-        line:hslToHex(H,S*.18,.892), lineSoft:hslToHex(H,S*.12,.942)
+        bg:L(S*.14,.978), bg2:L(S*.18,.953), paper:L(S*.07,.994),
+        surface:L(S*.08,.999), surface2:L(S*.14,.968), surface3:L(S*.20,.936),
+        barBg:L(S*.07,.998), barBg2:L(S*.12,.983), barLine:lineC,
+        topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
+        memoCodeBg:L(S*.08,.986), memoCodeIconBg:tint,
+        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
+        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tintHi, newNoteIconBg:tint, settingsPressedBg:tintHi,
+        memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
+        homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
+        ink:inkC, muted:mutedC, faint:faintC, line:lineC, lineSoft:lineSoftC
       });
     } else {
-      const titleInk=hslToHex(H,Math.max(.12,S*.18),.965), muted=hslToHex(H,Math.max(.10,S*.14),.70), soft=hslToHex(H,Math.max(.13,S*.20),.20);
+      const tint=L(S*.30,.205), tintHi=L(S*.26,.175);
+      const shadow=L(Math.max(.30,S*.42),.030);
+      const titleInk=L(Math.max(.12,S*.18),.950);
+      const inkC=L(Math.max(.11,S*.16),.930);
+      const mutedC=L(Math.max(.10,S*.14),.690);
+      const faintC=L(Math.max(.08,S*.10),.480);
+      const lineC=L(S*.22,.260), lineSoftC=L(S*.16,.195);
       Object.assign(out,{
-        logoCore:contrastInk(start,true),
-        bg:hslToHex(H,S*.27,.072), bg2:hslToHex(lerpHue(hueA,hueB,.28),S*.30,.102), paper:hslToHex(H,S*.20,.092),
-        surface:hslToHex(H,S*.25,.135), surface2:hslToHex(lerpHue(hueB,hueA,.25),S*.28,.178), surface3:hslToHex(H,S*.27,.225),
-        barBg:hslToHex(hueA,S*.34,.145), barBg2:hslToHex(hueB,S*.35,.188), barLine:hslToHex(H,S*.26,.275),
-        topbarShadow:hslToHex(H,Math.max(.25,S*.38),.025), memoCodeBg:hslToHex(lerpHue(hueA,hueB,.55),S*.22,.105), memoCodeIconBg:hslToHex(lerpHue(hueA,hueB,.52),Math.max(.18,S*.30),.24),
-        sectionTitleBg:soft, sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.34),Math.max(.15,S*.24),.19),
-        sidebarSectionGradientStart:hslToHex(lerpHue(hueA,hueB,.20),Math.max(.15,S*.27),.225), sidebarCountBg:hslToHex(lerpHue(hueA,hueB,.47),Math.max(.16,S*.28),.235),
-        memoTitle:titleInk, homeSectionTitle:muted, homeSectionTitleBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.17,S*.28),.225), homeShadow:hslToHex(H,Math.max(.24,S*.34),.025), projectCountBg:hslToHex(lerpHue(hueA,hueB,.48),Math.max(.17,S*.30),.24), homeSortBg:hslToHex(lerpHue(hueB,hueA,.36),Math.max(.16,S*.30),.24), modalTitle:titleInk, newNoteIconBg:hslToHex(lerpHue(hueA,hueB,.54),Math.max(.20,S*.34),.255),
-        settingsGroupTitle:muted, settingsRowTitle:hslToHex(H,Math.max(.13,S*.18),.94), settingsShadow:hslToHex(H,Math.max(.26,S*.36),.035), settingsPressedBg:hslToHex(lerpHue(hueA,hueB,.35),Math.max(.18,S*.28),.25), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted, faint:hslToHex(H,Math.max(.08,S*.10),.48),
-        line:hslToHex(H,S*.23,.258), lineSoft:hslToHex(H,S*.18,.195)
+        bg:L(S*.26,.075), bg2:L(S*.28,.105), paper:L(S*.20,.092),
+        surface:L(S*.24,.135), surface2:L(S*.26,.178), surface3:L(S*.27,.225),
+        barBg:L(S*.30,.145), barBg2:L(S*.32,.188), barLine:lineC,
+        topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
+        memoCodeBg:L(S*.20,.105), memoCodeIconBg:tint,
+        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
+        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tintHi, newNoteIconBg:tint, settingsPressedBg:tintHi,
+        memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
+        homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
+        ink:inkC, muted:mutedC, faint:faintC, line:lineC, lineSoft:lineSoftC
       });
     }
     return out;
@@ -6236,6 +6253,7 @@ ${gallery}
     out.mainB=normalizeThemeHex(src.mainB,ref.mainB||gradientMate(legacyMain));
     const recommended=recommendCustomPalette(out.mainA,out.mainB,mode==="dark"?"dark":"light");
     CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{
+      if(item.derived){ out[item.key]=normalizeThemeHex(recommended[item.key],item.fallback); return; }
       const missingRole=["logoCore","sectionTitleBg","sidebarFootBg","sidebarSectionGradientStart","sidebarCountBg","topbarShadow","memoCodeBg","memoCodeIconBg","memoTitle","homeSectionTitle","homeSectionTitleBg","homeShadow","projectCountBg","homeSortBg","modalTitle","newNoteIconBg","settingsGroupTitle","settingsRowTitle","settingsShadow","settingsPressedBg"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
@@ -6283,7 +6301,7 @@ ${gallery}
   function openCustomThemeStudio(seed,initialMode){
     const before=cloneThemeObject(currentCustomTheme()), beforeAccent=st.accent; let draft=seed?normalizeCustomTheme(seed):(before.light.enabled||before.dark.enabled?cloneThemeObject(before):customThemeSeedFromActiveAccent()); draft.light.enabled=true; draft.dark.enabled=true; let mode=initialMode==="dark"?"dark":"light";
     const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
-    const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const items=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key).map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
+    const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const groupItems=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key&&!item.derived);if(!groupItems.length)return "";const items=groupItems.map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
     openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 작은 섹션 제목 배경과 메모 제목도 이 화면에서 직접 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
     const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
