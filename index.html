@@ -2930,10 +2930,10 @@
   .accent-cell.accent-custom.is-custom .ac-sw { box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent),0 8px 16px rgba(31,40,68,.12); }
 
   .custom-theme-studio { margin:12px 0 15px; padding:13px; border:1px solid var(--line); border-radius:18px; background:var(--surface-2); }
-  .custom-theme-preview { --ct-bg:var(--bg); --ct-card:var(--surface); --ct-card-2:var(--surface-2); --ct-ink:var(--ink); --ct-muted:var(--muted); --ct-line:var(--line); --ct-bar:var(--bar-bg-2); position:relative; overflow:hidden; display:flex; align-items:center; gap:11px; min-height:78px; padding:13px; border:1px solid var(--ct-line); border-radius:15px; background:linear-gradient(135deg,var(--ct-bg),var(--ct-card)); box-shadow:inset 0 1px 0 rgba(255,255,255,.64); }
+  .custom-theme-preview { --ct-bg:var(--bg); --ct-card:var(--surface); --ct-card-2:var(--surface-2); --ct-ink:var(--ink); --ct-muted:var(--muted); --ct-line:var(--line); --ct-bar:var(--bar-bg-2); position:relative; overflow:hidden; display:flex; align-items:center; gap:11px; min-height:78px; padding:13px; border:1px solid var(--ct-line); border-radius:15px; background:linear-gradient(145deg,var(--ct-bg),var(--ct-card)); box-shadow:inset 0 1px 0 rgba(255,255,255,.64); }
   .custom-theme-preview::after { content:""; position:absolute; width:110px; height:110px; right:-48px; top:-58px; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--ct-bar) 75%,transparent),transparent 67%); pointer-events:none; }
   .custom-theme-preview.is-off { opacity:.62; filter:saturate(.55); }
-  .custom-theme-preview-mark { position:relative; z-index:1; width:47px; height:47px; display:grid; place-items:center; flex:0 0 auto; border-radius:15px; color:#fff; background:var(--grad-blue); box-shadow:0 8px 17px color-mix(in srgb,var(--accent) 30%,transparent); }
+  .custom-theme-preview-mark { position:relative; z-index:1; width:47px; height:47px; display:grid; place-items:center; flex:0 0 auto; border-radius:15px; color:#fff; background:linear-gradient(135deg,var(--ct-main-a,var(--accent)),var(--ct-main-b,var(--accent-2))); box-shadow:0 8px 17px color-mix(in srgb,var(--accent) 30%,transparent); }
   .custom-theme-preview-mark svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   .custom-theme-preview-copy { position:relative; z-index:1; min-width:0; }
   .custom-theme-preview-copy b { display:block; color:var(--ct-ink); font-size:14px; font-weight:840; }
@@ -2994,10 +2994,11 @@
 
   /* ===== v65.5 · themed icon extensions & quick-menu editor refinement ===== */
   /* The quick menu is intentionally denser than selection dialogs: its vector art fills the media tile. */
-  .quick-menu-slot > .quick-slot-media.has-library-icon { width:44px; height:44px; border-radius:14px; }
-  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.28); transform-origin:center; }
-  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon { width:40px; height:40px; border-radius:13px; }
-  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.22); }
+  /* Library vectors fill the same 39px/37px media tile used by default glyphs and uploaded images. */
+  .quick-menu-slot > .quick-slot-media.has-library-icon { width:39px; height:39px; border-radius:13px; }
+  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { width:100%; height:100%; transform:scale(1.285); transform-origin:center; }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon { width:37px; height:37px; border-radius:12px; }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.285); }
   .li-card-title { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:10px; font-weight:760; }
   .li-card-style { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--faint); font-size:8.5px; font-weight:700; letter-spacing:.015em; }
   .project-library-icon-card, .qm-library-card { min-height:98px; gap:3px; }
@@ -3011,33 +3012,41 @@
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn { border-color:color-mix(in srgb,var(--accent) 23%,var(--line)); background:color-mix(in srgb,var(--surface) 92%,var(--accent-soft) 8%); }
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn.danger { color:var(--danger); }
 
+  /* v65.7: icon art uses a true light/mid/deep palette.  --accent-deep is intentionally not used as a dark outline because v64.9 uses it as a light-mode pastel support token. */
   .li-vector-icon {
-    /* Bright, mid and deep values deliberately use different theme tokens: the 70 SVGs stay dimensional in both light and dark palettes. */
-    --li-icon-base:color-mix(in srgb,var(--accent) 54%,var(--accent-deep) 46%);
-    --li-icon-deep:color-mix(in srgb,var(--accent-deep) 78%,var(--ink) 22%);
-    --li-icon-accent:color-mix(in srgb,var(--accent) 68%,var(--accent-2) 32%);
-    --li-icon-highlight:color-mix(in srgb,var(--accent) 43%,white 57%);
-    --li-icon-mid:color-mix(in srgb,var(--accent) 77%,var(--accent-deep) 23%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent-deep) 47%,var(--accent) 53%);
-    --li-icon-mid-2:color-mix(in srgb,var(--accent) 47%,var(--accent-2) 38%,var(--accent-deep) 15%);
-    --li-icon-shadow:color-mix(in srgb,var(--accent-deep) 67%,var(--ink) 33%);
-    --li-icon-paper:color-mix(in srgb,var(--surface) 84%,white 16%);
-    --li-icon-paper-shadow:color-mix(in srgb,var(--surface-2) 69%,var(--accent-soft) 31%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,var(--surface) 56%,var(--accent-soft) 44%);
-    --li-icon-ink:color-mix(in srgb,var(--ink) 67%,var(--accent-deep) 33%);
-    --li-icon-gold:color-mix(in srgb,var(--accent-2) 57%,var(--accent) 25%,#f4d98b 18%);
-    --li-icon-gold-deep:color-mix(in srgb,var(--accent-deep) 41%,var(--accent-2) 40%,#8d6520 19%);
-    --li-icon-gold-ink:color-mix(in srgb,var(--ink) 61%,var(--accent-deep) 39%);
-    --li-icon-gold-light:color-mix(in srgb,white 43%,var(--accent-2) 57%);
-    --li-icon-glint:color-mix(in srgb,white 76%,var(--accent) 24%);
-    --li-icon-alert:color-mix(in srgb,#e07a87 48%,var(--accent) 52%);
-    --li-icon-alert-deep:color-mix(in srgb,#8f4054 45%,var(--accent-deep) 55%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 74%,var(--accent-2) 26%);
+    --li-icon-deep:color-mix(in srgb,var(--ink) 74%,var(--accent) 26%);
+    --li-icon-accent:color-mix(in srgb,var(--accent) 54%,var(--accent-2) 46%);
+    --li-icon-highlight:color-mix(in srgb,white 56%,var(--accent) 44%);
+    --li-icon-mid:color-mix(in srgb,white 34%,var(--accent) 66%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 70%,var(--li-icon-deep) 30%);
+    --li-icon-mid-2:color-mix(in srgb,var(--accent) 46%,var(--accent-2) 38%,white 16%);
+    --li-icon-shadow:color-mix(in srgb,var(--li-icon-deep) 72%,var(--accent) 28%);
+    --li-icon-paper:color-mix(in srgb,white 91%,var(--accent) 9%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 74%,var(--accent) 26%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,white 62%,var(--accent-2) 38%);
+    --li-icon-ink:color-mix(in srgb,var(--ink) 77%,var(--accent) 23%);
+    --li-icon-gold:color-mix(in srgb,#f4d98b 42%,var(--accent-2) 36%,var(--accent) 22%);
+    --li-icon-gold-deep:color-mix(in srgb,#8d6520 37%,var(--li-icon-deep) 63%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--li-icon-deep) 78%,#62481c 22%);
+    --li-icon-gold-light:color-mix(in srgb,white 49%,var(--accent-2) 51%);
+    --li-icon-glint:color-mix(in srgb,white 78%,var(--accent) 22%);
+    --li-icon-alert:color-mix(in srgb,#e07a87 50%,var(--accent) 50%);
+    --li-icon-alert-deep:color-mix(in srgb,#8f4054 42%,var(--li-icon-deep) 58%);
   }
   html[data-theme="dark"] .li-vector-icon {
-    --li-icon-paper:color-mix(in srgb,white 86%,var(--accent-soft) 14%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 62%,var(--accent-soft) 38%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 72%,var(--accent-soft) 28%);
-    --li-icon-highlight:color-mix(in srgb,var(--accent) 35%,white 65%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 73%,var(--accent-2) 27%);
+    --li-icon-deep:color-mix(in srgb,var(--bg) 68%,var(--accent) 32%);
+    --li-icon-accent:color-mix(in srgb,var(--accent) 50%,var(--accent-2) 50%);
+    --li-icon-highlight:color-mix(in srgb,white 70%,var(--accent) 30%);
+    --li-icon-mid:color-mix(in srgb,white 28%,var(--accent) 72%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 66%,var(--li-icon-deep) 34%);
+    --li-icon-mid-2:color-mix(in srgb,var(--accent) 44%,var(--accent-2) 40%,white 16%);
+    --li-icon-shadow:color-mix(in srgb,var(--bg) 74%,var(--accent) 26%);
+    --li-icon-paper:color-mix(in srgb,white 89%,var(--accent-soft) 11%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 61%,var(--accent) 39%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,white 72%,var(--accent-2) 28%);
+    --li-icon-ink:color-mix(in srgb,var(--bg) 72%,var(--accent) 28%);
   }
   .custom-theme-group-메인 { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
   .custom-theme-field-button.is-main { border-color:color-mix(in srgb,var(--accent) 46%,var(--line)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent); }
@@ -3045,6 +3054,17 @@
   .custom-theme-tools-stacked > div { display:flex; flex-wrap:wrap; gap:7px; }
   .custom-theme-auto.primary { color:#fff; background:var(--grad-blue); border-color:transparent; }
   html[data-theme="light"] .custom-theme-auto.primary { color:#fff; }
+
+
+  /* v65.7 · custom theme is also a logo theme: no preset selector is changed, this only activates while a custom mode is enabled. */
+  html[data-custom-theme] .brand-logo .niblogo { filter:var(--custom-logo-glow); }
+  html[data-custom-theme] .brand-logo .niblogo .nib-body { fill:var(--custom-logo-body); }
+  html[data-custom-theme] .brand-logo .niblogo .nib-ink { fill:var(--custom-logo-ink); }
+  html[data-custom-theme] .brand-logo .niblogo .nib-tip { fill:var(--custom-logo-tip); }
+  html[data-custom-theme] .brand-logo .word { color:var(--logo-ink); }
+  html[data-custom-theme] .brand-logo .bstar path { fill:var(--custom-main-b); }
+  .custom-theme-preview-mark { background:linear-gradient(135deg,var(--ct-main-a,var(--accent)),var(--ct-main-b,var(--accent-2))); }
+  .custom-theme-group-main { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
