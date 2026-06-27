@@ -690,8 +690,11 @@
   function logDraftFromEditor(n) {
     const d = jsonCopy((n && n.data) || {}) || {};
     d.content = $("logEdit").value;
-    d.personaNames = [...document.querySelectorAll("#logMaskNames .log-mask-name")].map((input) => input.value.trim()).filter(Boolean);
-    d.personaAlias = $("logMaskAlias").value;
+    // 이름 바꾸기 세트는 전용 팝업에서 즉시 저장합니다. 본문 자동저장은
+    // 이미 저장된 다섯 세트를 보존한 채 원문만 갱신합니다.
+    d.nameSets = normalizeLogNameSets(d.nameSets, d.personaNames, d.personaAlias);
+    d.personaNames = d.nameSets[0].names.slice();
+    d.personaAlias = d.nameSets[0].replacement;
     delete d.personaName;
     return d;
   }
@@ -2801,16 +2804,40 @@
     const list = allLogTemplates(n), id = n && n.data && n.data.templateId;
     return list.find((template) => template.id === id) || list[0] || normalizeLogTemplate({ kind: "lumink-log-template", schemaVersion: 1, id: "system-fallback", name: "기본", styles: {}, rules: [], persona: {} });
   }
+  const LOG_NAME_SET_COUNT = 5;
+  const LOG_NAME_SET_LIMIT = 20;
+  function normalizeLogNameSet(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const sourceNames = Array.isArray(src.names) ? src.names : (Array.isArray(src.personaNames) ? src.personaNames : []);
+    const names = [...new Set(sourceNames.map((name) => cleanImportedText(String(name || ""), 80).trim()).filter(Boolean))].slice(0, LOG_NAME_SET_LIMIT);
+    const replacement = cleanImportedText(src.replacement != null ? src.replacement : src.alias, 80).trim();
+    return { names, replacement };
+  }
+  function normalizeLogNameSets(rawSets, legacyNames, legacyAlias) {
+    const source = Array.isArray(rawSets) ? rawSets : [];
+    const out = Array.from({ length: LOG_NAME_SET_COUNT }, (_, index) => normalizeLogNameSet(source[index]));
+    const hasConfiguredSet = out.some((set) => set.names.length || set.replacement);
+    if (!hasConfiguredSet) {
+      out[0] = normalizeLogNameSet({ names: legacyNames, replacement: legacyAlias });
+    }
+    return out;
+  }
+  function logNameSetCount(sets) {
+    return normalizeLogNameSets(sets).reduce((count, set) => count + set.names.length, 0);
+  }
   function normalizeLogData(raw) {
     const src = raw && typeof raw === "object" ? raw : {};
     let snapshot = null;
     if (src.templateSnapshot) { try { snapshot = normalizeLogTemplate(src.templateSnapshot); } catch (e) {} }
     const rawNames = Array.isArray(src.personaNames) ? src.personaNames : (src.personaName ? [src.personaName] : []);
-    const personaNames = [...new Set(rawNames.map((name) => cleanImportedText(String(name), 80).trim()).filter(Boolean))].slice(0, 20);
+    const nameSets = normalizeLogNameSets(src.nameSets, rawNames, src.personaAlias);
     return {
       content: cleanImportedText(src.content, 500000),
       templateId: cleanImportedText(src.templateId, 80) || "system-ink-frame",
-      personaNames, personaAlias: cleanImportedText(src.personaAlias, 80),
+      nameSets,
+      // v65.9 이하 백업 및 외부 HTML 불러오기 호환 필드. 첫 세트와 항상 동기화합니다.
+      personaNames: nameSets[0].names.slice(),
+      personaAlias: nameSets[0].replacement,
       templateSnapshot: snapshot
     };
   }
@@ -2859,10 +2886,14 @@
     });
     return out;
   }
-  function applyLogPersonaNames(segments, template, data) {
-    const alias = (data.personaAlias || template.persona.maskText || "•••").trim();
-    [...(data.personaNames || [])].sort((a, b) => String(b).length - String(a).length).forEach((name) => {
-      segments = applyPersonaMask(segments, String(name || "").trim(), alias, template.persona.style);
+  function applyLogNameSets(segments, template, data) {
+    const fallback = (template.persona.maskText || "•••").trim();
+    normalizeLogNameSets(data && data.nameSets, data && data.personaNames, data && data.personaAlias).forEach((set) => {
+      const replacement = (set.replacement || fallback).trim();
+      if (!set.names.length || !replacement) return;
+      [...set.names].sort((a, b) => String(b).length - String(a).length).forEach((name) => {
+        segments = applyPersonaMask(segments, String(name || "").trim(), replacement, template.persona.style);
+      });
     });
     return segments;
   }
@@ -2873,12 +2904,12 @@
     }).join("");
   }
   function renderLogMaskedText(text, template, data) {
-    return renderLogSegments(applyLogPersonaNames([{ text: String(text || ""), style: {} }], template, data));
+    return renderLogSegments(applyLogNameSets([{ text: String(text || ""), style: {} }], template, data));
   }
   function renderLogLine(text, template, data) {
     let segments = [{ text: String(text || ""), style: {} }];
     template.rules.forEach((rule) => { segments = applyLogRule(segments, rule); });
-    return renderLogSegments(applyLogPersonaNames(segments, template, data));
+    return renderLogSegments(applyLogNameSets(segments, template, data));
   }
   function renderLogInlineHtml(n) {
     const data = normalizeLogData(n && n.data), template = getLogTemplate(n), styles = template.styles;
@@ -2903,26 +2934,63 @@
     if (!(n.data && n.data.content || "").trim()) { preview.innerHTML = '<div class="log-preview-empty">원본 텍스트를 입력하면 여기에 디자인이 적용됩니다.</div>'; return; }
     preview.innerHTML = renderLogInlineHtml(n);
   }
-  function currentLogMaskNames(includeEmpty) {
-    const names = [...document.querySelectorAll("#logMaskNames .log-mask-name")].map((input) => input.value.trim());
-    return includeEmpty ? names : names.filter(Boolean);
+  function renderLogRenameSets(sets) {
+    const host = $("logRenameSets"); if (!host) return;
+    const normalized = normalizeLogNameSets(sets);
+    host.innerHTML = normalized.map((set, index) => {
+      const count = set.names.length;
+      const subtitle = count
+        ? `${count}개 원본 → ${esc(set.replacement || "바꿀 이름 미지정")}`
+        : "원본 이름을 등록해 주세요";
+      return `<button class="log-rename-set" type="button" data-log-rename-set="${index}" aria-label="이름 바꾸기 세트 ${index + 1} 편집"><span class="log-rename-index">${String(index + 1).padStart(2, "0")}</span><span class="log-rename-copy"><b>이름 바꾸기 세트 ${index + 1}</b><small>${subtitle}</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`;
+    }).join("");
+    host.querySelectorAll("[data-log-rename-set]").forEach((button) => button.addEventListener("click", () => openLogNameSetEditor(Number(button.dataset.logRenameSet))));
   }
-  function renderLogMaskNames(names) {
-    const values = Array.isArray(names) && names.length ? names.slice(0, 20) : [""];
-    $("logMaskNames").innerHTML = values.map((name, index) => `<div class="log-mask-name-row"><input class="m-input log-mask-name" maxlength="80" value="${esc(name)}" placeholder="가릴 원본 이름${index ? ` ${index + 1}` : ""}"><button class="log-mask-remove" type="button" data-log-mask-remove="${index}" aria-label="원본 이름 삭제"${values.length === 1 ? " hidden" : ""}>×</button></div>`).join("");
+  function logSetNamesFromModal() {
+    return [...document.querySelectorAll("#logSetNames .log-set-name")].map((input) => input.value.trim()).filter(Boolean);
   }
-  function addLogMaskName() {
-    const names = currentLogMaskNames(true); if (names.length >= 20) { toast("원본 이름은 최대 20개까지 추가할 수 있어요"); return; }
-    names.push(""); renderLogMaskNames(names); const inputs = $("logMaskNames").querySelectorAll(".log-mask-name"); inputs[inputs.length - 1].focus(); scheduleLogSave();
+  function renderLogSetNames(names) {
+    const host = $("logSetNames"); if (!host) return;
+    const values = Array.isArray(names) && names.length ? names.slice(0, LOG_NAME_SET_LIMIT) : [""];
+    host.innerHTML = values.map((name, index) => `<div class="log-set-name-row"><input class="m-input log-set-name" maxlength="80" value="${esc(name)}" placeholder="원본 이름 ${index + 1}"><button class="log-set-name-remove" type="button" data-log-set-remove="${index}" aria-label="원본 이름 삭제"${values.length === 1 ? " hidden" : ""}>×</button></div>`).join("");
+    host.querySelectorAll("[data-log-set-remove]").forEach((button) => button.addEventListener("click", () => {
+      const namesNow = logSetNamesFromModal(); namesNow.splice(Number(button.dataset.logSetRemove), 1); renderLogSetNames(namesNow.length ? namesNow : [""]);
+    }));
   }
-  function removeLogMaskName(index) {
-    const names = currentLogMaskNames(true); names.splice(index, 1); renderLogMaskNames(names.length ? names : [""]); scheduleLogSave();
+  function openLogNameSetEditor(index) {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
+    const safeIndex = Math.max(0, Math.min(LOG_NAME_SET_COUNT - 1, Number(index) || 0));
+    const sets = normalizeLogNameSets(n.data && n.data.nameSets, n.data && n.data.personaNames, n.data && n.data.personaAlias);
+    const current = sets[safeIndex];
+    openModal(`<h3>이름 바꾸기 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트에 넣은 이름은 모두 아래 “바꿀 이름”으로 표시되며, 로그 템플릿의 이름 스타일을 그대로 따릅니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
+    renderLogSetNames(current.names);
+    const updateCount = () => { const label = $("logSetNameCount"); if (label) label.textContent = `${logSetNamesFromModal().length}/${LOG_NAME_SET_LIMIT}`; };
+    $("logSetNames").addEventListener("input", updateCount);
+    $on("logSetAdd", "click", () => {
+      const names = logSetNamesFromModal();
+      if (names.length >= LOG_NAME_SET_LIMIT) { toast(`원본 이름은 최대 ${LOG_NAME_SET_LIMIT}개까지 추가할 수 있어요`); return; }
+      names.push(""); renderLogSetNames(names); updateCount();
+      const inputs = $("logSetNames").querySelectorAll(".log-set-name"); if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    $on("logSetCancel", "click", closeModal);
+    $on("logSetSave", "click", async () => {
+      const replacement = $("logSetReplacement").value.trim();
+      const names = logSetNamesFromModal();
+      if (names.length && !replacement) { toast("바꿀 이름을 입력해 주세요"); $("logSetReplacement").focus(); return; }
+      sets[safeIndex] = normalizeLogNameSet({ names, replacement });
+      n.data = normalizeLogData(Object.assign({}, n.data || {}, { nameSets: sets }));
+      await saveLog(n, true);
+      closeModal(); renderLogRenameSets(n.data.nameSets);
+      if (!logEditMode) renderLogPreview(n);
+      toast(`이름 바꾸기 세트 ${safeIndex + 1}을 저장했어요`);
+    });
+    setTimeout(() => $("logSetReplacement").focus(), 80);
   }
   function renderLog() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") { back(); return; }
     n.data = normalizeLogData(n.data); const template = getLogTemplate(n);
     $("logTitle").textContent = n.title || "로그"; $("logEdit").value = n.data.content;
-    renderLogMaskNames(n.data.personaNames); $("logMaskAlias").value = n.data.personaAlias;
+    renderLogRenameSets(n.data.nameSets);
     $("logTemplateName").textContent = template.name; $("logTemplateDesc").textContent = template.description || template.author || "로그 디자인";
     $("logEditView").hidden = !logEditMode; $("logPreviewView").hidden = logEditMode;
     $("logModeLabel").textContent = logEditMode ? "원본 텍스트 편집 중" : "정규식 디자인 보기 중";
@@ -2949,7 +3017,9 @@
   async function toggleLogView() { await flushLog(); logEditMode = !logEditMode; renderLog(); }
   async function applyLogMask() {
     await flushLog(); const n = getNote(st.curNoteId); if (!n) return;
-    logEditMode = false; renderLog(); toast(n.data.personaNames.length ? `${n.data.personaNames.length}개 이름을 보기에서 가렸어요` : "가릴 이름을 비웠어요");
+    logEditMode = false; renderLog();
+    const count = logNameSetCount(n.data.nameSets);
+    toast(count ? `${count}개 원본 이름을 세트 규칙으로 바꿔 표시했어요` : "이름 바꾸기 세트가 비어 있어요");
   }
   async function selectLogTemplate(template) {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
@@ -4357,6 +4427,53 @@
     $on("cfNo", "click", closeModal);
     $on("cfYes", "click", () => { closeModal(); onOk(); });
   }
+  /* ---------- attachments ---------- */
+  /* ---------- top bar title quick rename ---------- */
+  let topTitleRenameCooldown = 0;
+  const TOP_TITLE_IDS = ["edTitle", "readTitle", "htmlTitle", "loreTitle", "logTitle", "perTitle", "charTitle", "ideaTitle"];
+  function titleKindLabel(n) {
+    if (!n) return "메모";
+    return ({ free:"메모", html:"HTML 작업실", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[n.type] || "메모";
+  }
+  async function saveTopTitleRename(n, value) {
+    const next = cleanImportedText(value, 80).trim(); if (!n || !next) return;
+    n.title = next; n.titleLocked = true;
+    if (n.type === "lorebook") await saveLore(n, true);
+    else if (n.type === "log") await saveLog(n, true);
+    else if (n.type === "persona") await savePersona(n, true);
+    else if (n.type === "character") await saveCharacter(n, true);
+    else await saveNote(n);
+    TOP_TITLE_IDS.forEach((id) => { const el = $(id); if (el) el.textContent = next; });
+    renderSidebar();
+    toast("제목을 고정했어요");
+  }
+  function openTopTitleRename() {
+    const nowAt = Date.now();
+    if (nowAt < topTitleRenameCooldown || $("modalScrim").classList.contains("open")) return;
+    const n = getNote(st.curNoteId); if (!n) return;
+    topTitleRenameCooldown = nowAt + 420;
+    renameModal(`${titleKindLabel(n)} 이름`, n.title || titleKindLabel(n), (value) => { void saveTopTitleRename(n, value); });
+  }
+  function bindTopTitleRename(id) {
+    const el = $(id); if (!el) return;
+    let lastTouch = 0, lastX = 0, lastY = 0, pointerHandledUntil = 0;
+    el.classList.add("title-quick-rename");
+    el.title = "더블클릭 또는 더블터치하여 이름 바꾸기";
+    el.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      if (Date.now() < pointerHandledUntil) return;
+      openTopTitleRename();
+    });
+    el.addEventListener("pointerup", (event) => {
+      if (event.pointerType === "mouse") return;
+      const at = Date.now(), dx = Math.abs(event.clientX - lastX), dy = Math.abs(event.clientY - lastY);
+      if (lastTouch && at - lastTouch < 340 && dx < 28 && dy < 28) {
+        pointerHandledUntil = at + 520; lastTouch = 0; event.preventDefault(); openTopTitleRename(); return;
+      }
+      lastTouch = at; lastX = event.clientX; lastY = event.clientY;
+    });
+  }
+
   function renameModal(title, current, onOk) {
     openModal(`<h3>${esc(title)}</h3><input class="m-input" id="rnInput" maxlength="80" value="${esc(current)}"><div class="m-row"><button class="m-btn" id="rnNo">취소</button><button class="m-btn primary" id="rnOk">저장</button></div>`);
     setTimeout(() => { const i = $("rnInput"); i.focus(); i.select(); }, 120);
@@ -6257,6 +6374,7 @@ ${gallery}
     $on("homeNewProject", "click", () => showProjectForm(null, () => { render(); renderSidebar(); }));
     document.querySelectorAll(".nav-back").forEach((b) => b.addEventListener("click", back));
     document.querySelectorAll(".nav-menu").forEach((b) => b.addEventListener("click", openSidebar));
+    TOP_TITLE_IDS.forEach(bindTopTitleRename);
     $on("pdMore", "click", () => openProjectSheet(st.curProjectId));
     $on("pdSelect", "click", () => { if (notesOf(st.curProjectId).length) enterSelMode("note", null); else toast("선택할 메모가 없어요"); });
     $on("pdFab", "click", () => showTypePicker(st.curProjectId));
@@ -6496,11 +6614,7 @@ ${gallery}
     // styled log
     $on("logEdit", "input", scheduleLogSave);
     $on("logEdit", "blur", () => flushLog());
-    $("logMaskNames").addEventListener("input", (e) => { if (e.target.classList.contains("log-mask-name")) scheduleLogSave(); });
-    $("logMaskNames").addEventListener("click", (e) => { const button = e.target.closest("[data-log-mask-remove]"); if (button) removeLogMaskName(Number(button.dataset.logMaskRemove)); });
-    $on("logMaskAlias", "input", scheduleLogSave);
-    $on("logMaskAdd", "click", addLogMaskName);
-    $on("logMaskApply", "click", applyLogMask);
+    // 이름 바꾸기 세트는 각 버튼의 팝업에서 즉시 저장합니다.
     $on("logTemplateBtn", "click", showLogTemplatePicker);
     $on("logViewToggle", "click", toggleLogView);
     $on("logMore", "click", () => openNoteSheet(st.curNoteId));

@@ -22,16 +22,16 @@
 
 # Lumi Ink v1.5
 
-루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v65.9**입니다.
+루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v66.0**입니다.
 
 ## 현재 버전
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: `v65.9`
-- 서비스워커 캐시: `ink-memo-v1.5-v65.9-quickmenu-art-palette`
+- 개발 기준 빌드: `v66.0`
+- 서비스워커 캐시: `ink-memo-v1.5-v66.0-log-rename-title-edit`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 최신 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 개발 변경 이력: `Lumi_Ink_v65.9_Release_Notes.md`
+- 개발 변경 이력: `Lumi_Ink_v66.0_Release_Notes.md`
 
 ## 주요 기능
 
@@ -130,7 +130,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v65.9_Release_Notes.md` (최신 개발 변경 이력)
+- `Lumi_Ink_v66.0_Release_Notes.md` (최신 개발 변경 이력)
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
@@ -170,3 +170,8 @@
 ### v65.6
 - 사용자 지정 테마: 메인 색상 + 라이트/다크 독립 팔레트 추천
 - SVG 아이콘: 밝은색/중간색/딥컬러/강조색 조합으로 라이트·다크 대비 강화
+
+
+## v66.0
+- 로그 저장 이름 바꾸기 세트 5개(세트별 원본 이름 최대 20개 → 바꿀 이름 1개)
+- 모든 메모 상단 제목의 더블클릭·더블터치 빠른 이름 변경

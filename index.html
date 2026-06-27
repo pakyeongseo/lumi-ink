@@ -2506,6 +2506,32 @@
   .log-mask-actions { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; }
   .log-mini-btn { border:0; border-radius:11px; padding:0 14px; background:var(--accent); color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
   .log-mode-note { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-size:11px; margin-top:9px; }
+  .log-rename-sets-wrap { margin-top:10px; padding:10px; border:1px solid color-mix(in srgb,var(--line) 78%,transparent); border-radius:13px; background:color-mix(in srgb,var(--surface2) 64%,transparent); }
+  .log-rename-sets-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
+  .log-rename-sets-head span:first-child { min-width:0; display:grid; gap:1px; }
+  .log-rename-sets-head b { color:var(--text); font-size:12px; }
+  .log-rename-sets-head small { color:var(--muted); font-size:10.5px; line-height:1.35; }
+  .log-rename-sets-mark { flex:0 0 auto; font-size:9px; font-weight:850; letter-spacing:.12em; color:var(--accent); }
+  .log-rename-sets { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+  .log-rename-set { min-width:0; min-height:56px; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:7px; padding:7px 7px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); text-align:left; font:inherit; cursor:pointer; transition:transform .16s ease,border-color .16s ease,background .16s ease; }
+  .log-rename-set:hover { border-color:color-mix(in srgb,var(--accent) 58%,var(--line)); background:color-mix(in srgb,var(--accent-soft) 34%,var(--surface)); }
+  .log-rename-set:active { transform:translateY(1px); }
+  .log-rename-set svg { width:14px; height:14px; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .log-rename-index { align-self:start; color:var(--accent); font-size:9px; font-weight:900; letter-spacing:.04em; }
+  .log-rename-copy { min-width:0; display:grid; gap:2px; }
+  .log-rename-copy b,.log-rename-copy small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .log-rename-copy b { font-size:10.5px; color:var(--text); }
+  .log-rename-copy small { color:var(--muted); font-size:9.5px; }
+  .log-set-modal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:15px; }
+  #logSetNameCount { color:var(--muted); font-size:11px; font-weight:700; }
+  .log-set-name-list { display:grid; gap:7px; max-height:min(42vh,360px); margin-top:7px; overflow:auto; padding-right:2px; }
+  .log-set-name-row { display:grid; grid-template-columns:minmax(0,1fr) 38px; gap:7px; }
+  .log-set-name-row .m-input { min-width:0; margin:0; }
+  .log-set-name-remove { border:1px solid var(--line); border-radius:10px; background:var(--surface2); color:var(--muted); font:inherit; font-size:18px; cursor:pointer; }
+  .log-set-add { width:100%; margin-top:9px; color:var(--accent); }
+  .title-quick-rename { cursor:text; touch-action:manipulation; -webkit-tap-highlight-color:transparent; position:relative; }
+  .title-quick-rename::after { content:""; display:inline-block; width:5px; height:5px; margin:0 0 3px 5px; border-radius:50%; background:var(--accent); opacity:.34; vertical-align:middle; transition:opacity .16s ease,transform .16s ease; }
+  .title-quick-rename:active::after { opacity:.85; transform:scale(1.3); }
   .log-editor-shell,.log-preview-shell { max-width:900px; min-height:calc(100vh - 245px); margin:0 auto; border:1px solid var(--line); border-radius:17px; background:var(--surface); overflow:hidden; }
   .log-edit { display:block; width:100%; min-height:calc(100vh - 250px); resize:vertical; border:0; outline:0; box-sizing:border-box; padding:20px; color:var(--text); background:transparent; font:inherit; font-size:15px; line-height:1.75; }
   .log-edit::placeholder { color:var(--faint); }
@@ -2545,12 +2571,13 @@
   html[data-theme="light"] .log-template-manager .m-input::placeholder { color:color-mix(in srgb,var(--logo-ink) 55%,var(--surface)); opacity:1; }
   html[data-theme="light"] .log-template-manager :where(.m-btn.primary,.log-template-del) { color:#fff; }
   html[data-theme="light"] .log-template-manager .log-template-del { color:var(--danger,#d94a62); }
+  @media (max-width:760px) { .log-rename-sets { grid-template-columns:repeat(3,minmax(0,1fr)); } }
   @media (max-width:560px) {
     .modal-scrim.log-template-open { padding:10px; }
     .modal.log-template-modal { height:calc((100dvh / var(--fs-zoom, 1)) - 20px); max-height:calc((100dvh / var(--fs-zoom, 1)) - 20px); padding:16px 14px calc(14px + var(--safe-bottom)); border-radius:18px; }
-    .log-mask-actions { grid-template-columns:1fr 1fr; }
-    .log-mask-actions .m-input { grid-column:1/-1; }
-    .log-mini-btn { min-height:40px; }
+    .log-rename-sets { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .log-rename-set:last-child { grid-column:1/-1; }
+    .log-set-add { min-height:40px; }
     .log-scroll { padding-left:10px; padding-right:10px; }
     .log-preview-shell { padding:8px; }
     .log-template-manager .m-sub { margin-bottom:8px; font-size:12px; }
@@ -3315,13 +3342,9 @@
         <div class="log-template-row">
           <button class="log-template-pick" id="logTemplateBtn"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg><span><b id="logTemplateName">템플릿</b><small id="logTemplateDesc">디자인 선택</small></span></button>
         </div>
-        <div class="log-mask-grid">
-          <div class="log-mask-list" id="logMaskNames"></div>
-          <div class="log-mask-actions">
-            <input class="m-input" id="logMaskAlias" maxlength="80" placeholder="대체 표시 (선택)">
-            <button class="m-btn" id="logMaskAdd" type="button">+ 원본 이름</button>
-            <button class="log-mini-btn" id="logMaskApply" type="button">이름 가림 적용</button>
-          </div>
+        <div class="log-rename-sets-wrap">
+          <div class="log-rename-sets-head"><span><b>이름 바꾸기 세트</b><small>세트마다 원본 이름 최대 20개 → 바꿀 이름 1개</small></span><span class="log-rename-sets-mark">5 SETS</span></div>
+          <div class="log-rename-sets" id="logRenameSets"></div>
         </div>
         <div class="log-mode-note"><span id="logModeLabel">원본 텍스트 편집 중</span><span>원본은 유지되고 보기에서만 꾸며집니다.</span></div>
       </div>
