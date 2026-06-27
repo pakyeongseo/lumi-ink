@@ -3064,52 +3064,54 @@
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn { border-color:color-mix(in srgb,var(--accent) 23%,var(--line)); background:color-mix(in srgb,var(--surface) 92%,var(--accent-soft) 8%); }
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn.danger { color:var(--danger); }
 
-  /* ===== v65.9 · gradient-first vector icon palette =====
-     모든 내장 SVG는 테마의 두 메인 그라데이션 색(--accent / --accent-2)을 중심으로 씁니다.
-     --ink, --bg, --accent-deep처럼 테마의 가장 어두운 구조색은 아이콘의 외곽선·그림자에 쓰지 않습니다.
-     따라서 파스텔은 탁해지지 않고, 딥 테마도 검은 윤곽선 대신 같은 색 계열의 농도차로 형태를 분리합니다.
-  */
+  /* ===== v66.6 · supplied v2 vector icon palette =====
+     The renewed 70-icon set only reads these runtime variables. No icon hard-codes a palette:
+     every preset and independent custom gradient recolours its background, paper, highlight and accents. */
   .li-vector-icon {
-    --li-icon-base:color-mix(in srgb,var(--accent) 61%,var(--accent-2) 39%);
-    --li-icon-deep:color-mix(in srgb,var(--accent) 40%,var(--accent-2) 60%);
-    --li-icon-accent:color-mix(in srgb,color-mix(in srgb,var(--accent) 57%,var(--accent-2) 43%) 83%,white 17%);
-    --li-icon-highlight:color-mix(in srgb,white 70%,var(--accent) 30%);
-    --li-icon-mid:color-mix(in srgb,white 41%,var(--accent) 59%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 76%,var(--accent-2) 24%);
-    --li-icon-mid-2:color-mix(in srgb,color-mix(in srgb,var(--accent) 54%,var(--accent-2) 46%) 72%,white 28%);
-    --li-icon-shadow:color-mix(in srgb,var(--accent) 55%,var(--accent-2) 45%);
-    --li-icon-paper:color-mix(in srgb,white 91%,var(--accent) 9%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 72%,var(--accent) 28%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 64%,var(--accent-2) 36%);
-    --li-icon-ink:color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%);
-    --li-icon-gold:color-mix(in srgb,color-mix(in srgb,var(--accent) 56%,var(--accent-2) 44%) 77%,white 23%);
-    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 65%,var(--accent-2) 35%);
-    --li-icon-gold-ink:color-mix(in srgb,var(--accent) 47%,var(--accent-2) 53%);
-    --li-icon-gold-light:color-mix(in srgb,white 54%,var(--accent-2) 46%);
-    --li-icon-glint:color-mix(in srgb,white 81%,var(--accent) 19%);
-    --li-icon-alert:color-mix(in srgb,color-mix(in srgb,var(--accent) 45%,var(--accent-2) 55%) 88%,white 12%);
-    --li-icon-alert-deep:color-mix(in srgb,var(--accent) 48%,var(--accent-2) 52%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 64%,white 36%);
+    --li-icon-base-deep:color-mix(in srgb,var(--accent) 57%,var(--accent-2) 43%);
+    --li-icon-deep:color-mix(in srgb,var(--accent-2) 63%,var(--accent) 37%);
+    --li-icon-glow:color-mix(in srgb,var(--accent) 70%,var(--accent-2) 30%);
+    --li-icon-gloss:color-mix(in srgb,white 78%,var(--accent) 22%);
+    --li-icon-highlight:color-mix(in srgb,white 68%,var(--accent) 32%);
+    --li-icon-main:color-mix(in srgb,var(--accent) 76%,white 24%);
+    --li-icon-main-deep:color-mix(in srgb,var(--accent) 47%,var(--accent-2) 53%);
+    --li-icon-mid:color-mix(in srgb,var(--accent) 53%,white 47%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 69%,var(--accent-2) 31%);
+    --li-icon-paper:color-mix(in srgb,white 93%,var(--accent) 7%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 75%,var(--accent-2) 25%);
+    --li-icon-gold-light:color-mix(in srgb,white 64%,var(--accent-2) 36%);
+    --li-icon-gold:color-mix(in srgb,var(--accent-2) 63%,var(--accent) 37%);
+    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 43%,var(--accent-2) 57%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--accent-2) 72%,var(--accent) 28%);
+    --li-icon-mint:color-mix(in srgb,white 54%,var(--accent) 46%);
+    --li-icon-mint-deep:color-mix(in srgb,var(--accent) 41%,var(--accent-2) 59%);
+    --li-icon-alert:color-mix(in srgb,var(--accent) 35%,var(--accent-2) 65%);
+    --li-icon-alert-deep:color-mix(in srgb,var(--accent-2) 78%,var(--accent) 22%);
+    --li-icon-ink:color-mix(in srgb,var(--accent) 38%,var(--accent-2) 62%);
   }
   html[data-theme="dark"] .li-vector-icon {
-    --li-icon-base:color-mix(in srgb,var(--accent) 57%,var(--accent-2) 43%);
-    --li-icon-deep:color-mix(in srgb,var(--accent) 37%,var(--accent-2) 63%);
-    --li-icon-accent:color-mix(in srgb,color-mix(in srgb,var(--accent) 56%,var(--accent-2) 44%) 77%,white 23%);
-    --li-icon-highlight:color-mix(in srgb,white 74%,var(--accent) 26%);
-    --li-icon-mid:color-mix(in srgb,white 34%,var(--accent) 66%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 70%,var(--accent-2) 30%);
-    --li-icon-mid-2:color-mix(in srgb,color-mix(in srgb,var(--accent) 53%,var(--accent-2) 47%) 78%,white 22%);
-    --li-icon-shadow:color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%);
-    --li-icon-paper:color-mix(in srgb,white 93%,var(--accent) 7%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 67%,var(--accent) 33%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 59%,var(--accent-2) 41%);
-    --li-icon-ink:color-mix(in srgb,var(--accent) 48%,var(--accent-2) 52%);
-    --li-icon-gold:color-mix(in srgb,color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%) 75%,white 25%);
-    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 59%,var(--accent-2) 41%);
-    --li-icon-gold-ink:color-mix(in srgb,var(--accent) 44%,var(--accent-2) 56%);
-    --li-icon-gold-light:color-mix(in srgb,white 57%,var(--accent-2) 43%);
-    --li-icon-glint:color-mix(in srgb,white 84%,var(--accent) 16%);
-    --li-icon-alert:color-mix(in srgb,color-mix(in srgb,var(--accent) 44%,var(--accent-2) 56%) 85%,white 15%);
-    --li-icon-alert-deep:color-mix(in srgb,var(--accent) 45%,var(--accent-2) 55%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 57%,white 43%);
+    --li-icon-base-deep:color-mix(in srgb,var(--accent) 54%,var(--accent-2) 46%);
+    --li-icon-deep:color-mix(in srgb,var(--accent-2) 60%,var(--accent) 40%);
+    --li-icon-glow:color-mix(in srgb,var(--accent) 67%,var(--accent-2) 33%);
+    --li-icon-gloss:color-mix(in srgb,white 82%,var(--accent) 18%);
+    --li-icon-highlight:color-mix(in srgb,white 72%,var(--accent) 28%);
+    --li-icon-main:color-mix(in srgb,var(--accent) 69%,white 31%);
+    --li-icon-main-deep:color-mix(in srgb,var(--accent) 45%,var(--accent-2) 55%);
+    --li-icon-mid:color-mix(in srgb,var(--accent) 48%,white 52%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 65%,var(--accent-2) 35%);
+    --li-icon-paper:color-mix(in srgb,white 95%,var(--accent) 5%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 79%,var(--accent-2) 21%);
+    --li-icon-gold-light:color-mix(in srgb,white 68%,var(--accent-2) 32%);
+    --li-icon-gold:color-mix(in srgb,var(--accent-2) 60%,var(--accent) 40%);
+    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 41%,var(--accent-2) 59%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--accent-2) 74%,var(--accent) 26%);
+    --li-icon-mint:color-mix(in srgb,white 59%,var(--accent) 41%);
+    --li-icon-mint-deep:color-mix(in srgb,var(--accent) 39%,var(--accent-2) 61%);
+    --li-icon-alert:color-mix(in srgb,var(--accent) 32%,var(--accent-2) 68%);
+    --li-icon-alert-deep:color-mix(in srgb,var(--accent-2) 80%,var(--accent) 20%);
+    --li-icon-ink:color-mix(in srgb,var(--accent) 35%,var(--accent-2) 65%);
   }
   .custom-theme-group-메인 { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
   .custom-theme-field-button.is-main { border-color:color-mix(in srgb,var(--accent) 46%,var(--line)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent); }
@@ -3216,6 +3218,110 @@
   .log-rename-state { position:absolute; right:7px; bottom:7px; width:5px; height:5px; background:color-mix(in srgb,var(--line) 80%,transparent); }
   .log-rename-set.is-configured .log-rename-state { box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent); }
   @media (max-width:380px) { .log-rename-sets { gap:4px; padding:4px; } .log-rename-set { min-height:53px; } .log-rename-index { font-size:11px; } }
+
+
+
+  /* ===== v66.6 · seven-slot edge menu / log preview direct-edit ===== */
+  .quick-menu { max-height:calc(100svh - 24px); }
+  .quick-menu-panel { max-height:calc(100svh - 24px); display:flex; flex-direction:column; }
+  .quick-menu-slots { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:2px; scrollbar-width:thin; }
+  .quick-menu-foot { flex:0 0 auto; }
+  .log-preview { touch-action:manipulation; }
+
+  /* ===== v66.4 · quick-menu art render contract / complete custom-theme role coverage =====
+     Quick-menu artwork is a separate rendering mode. It deliberately does NOT inherit
+     the common function-glyph tile, in every context: opened menu, slot manager and editor preview. */
+  .quick-slot-media.qm-art-media,
+  .quick-menu-slot > .quick-slot-media.qm-art-media,
+  .qm-manager-slot > .quick-slot-media.qm-art-media,
+  .qm-entry-preview > .quick-slot-media.qm-art-media,
+  .qm-choice > .quick-slot-media.qm-art-media,
+  .qm-function-row > .quick-slot-media.qm-art-media {
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    border-color:transparent !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    outline:0 !important;
+    isolation:isolate;
+  }
+  .quick-slot-media.qm-art-media::before,
+  .quick-slot-media.qm-art-media::after,
+  .quick-slot-media.qm-art-media > img::before,
+  .quick-slot-media.qm-art-media > img::after { content:none !important; display:none !important; }
+  .quick-slot-media.qm-art-media > img {
+    width:100% !important;
+    height:100% !important;
+    display:block !important;
+    object-fit:cover !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+  /* A library SVG is intentionally 4/5 of the former thumbnail scale. The same transform
+     is shared by the actual menu and the editor preview, so there is no scale mismatch. */
+  .quick-slot-media.qm-art-media .li-vector-icon {
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    display:block !important;
+    transform:scale(.858) !important;
+    transform-origin:center !important;
+    filter:none !important;
+  }
+  .quick-slot-media.qm-art-media .li-vector-icon > svg,
+  .quick-slot-media.qm-art-media .quick-menu-custom-icon > svg,
+  .quick-slot-media.qm-art-media .quick-menu-custom-icon .qm-custom-art > svg {
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    display:block !important;
+  }
+  .quick-slot-media.qm-art-media .quick-menu-custom-icon,
+  .quick-slot-media.qm-art-media .quick-menu-library-icon { filter:none !important; background:transparent !important; border:0 !important; box-shadow:none !important; }
+
+  /* The following variables only activate for the independent user theme. Preset CSS keeps
+     its original v64.9 palette and placement untouched. */
+  html[data-custom-theme] .topbar { box-shadow:0 2px 7px color-mix(in srgb,var(--topbar-shadow-color) 58%,transparent) !important; }
+  html[data-custom-theme] #screen-editor .code-area,
+  html[data-custom-theme] #screen-charcreator .code-area,
+  html[data-custom-theme] .char-creator-code { background:var(--memo-code-bg) !important; }
+  html[data-custom-theme] .sb-section-box { background:linear-gradient(135deg,var(--sidebar-section-grad-a),transparent) !important; }
+  html[data-custom-theme] .sb-item .sb-num { background:var(--sidebar-count-bg) !important; }
+  html[data-custom-theme] .sec-chip,
+  html[data-custom-theme] .section-label { color:var(--home-section-title-color) !important; }
+  html[data-custom-theme] .home-scroll .action-card:not(.primary),
+  html[data-custom-theme] .home-project-box,
+  html[data-custom-theme] .proj-card,
+  html[data-custom-theme] .hm-recent { box-shadow:0 5px 15px -10px color-mix(in srgb,var(--home-shadow-color) 68%,transparent) !important; }
+  html[data-custom-theme] .pc-count,
+  html[data-custom-theme] .pd-count { background:var(--project-count-bg) !important; }
+  html[data-custom-theme] .sort-btn { background:var(--home-sort-bg) !important; }
+  html[data-custom-theme] .modal h3 { color:var(--modal-title-color) !important; }
+  html[data-custom-theme] .chip-section-label {
+    background:var(--note-type-divider-bg) !important;
+    color:var(--note-type-divider-text) !important;
+  }
+  html[data-custom-theme] .chip-section-label .csl-dot { background:var(--note-type-divider-dot) !important; opacity:1 !important; }
+  html[data-custom-theme] .chip-section-label .csl-count { color:var(--note-type-divider-count) !important; }
+
+  /* Log rename sets: a short five-tab binder rhythm, with the active/configured gradient
+     only at the top edge so the buttons read as a compact control rather than five cards. */
+  .log-rename-sets-wrap { padding:12px; border-radius:18px; background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 88%,var(--accent-soft) 12%),var(--surface-2)); }
+  .log-rename-sets { gap:7px; padding:4px; border:0; border-radius:14px; background:color-mix(in srgb,var(--surface-2) 76%,transparent); }
+  .log-rename-set { min-height:58px; padding:8px 3px 7px; border-radius:12px 12px 10px 10px; background:linear-gradient(165deg,var(--surface),var(--surface-2)); box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 32%,transparent),0 6px 12px -14px rgba(0,0,0,.42); }
+  .log-rename-set::before { height:3px; inset:0 3px auto; border-radius:0 0 999px 999px; opacity:1; background:color-mix(in srgb,var(--line) 82%,transparent); }
+  .log-rename-set::after { content:""; position:absolute; left:50%; bottom:8px; width:18px; height:1px; transform:translateX(-50%); background:color-mix(in srgb,var(--line) 80%,transparent); }
+  .log-rename-set.is-configured { border-color:color-mix(in srgb,var(--accent) 44%,var(--line)); background:linear-gradient(165deg,color-mix(in srgb,var(--surface) 93%,var(--accent-soft) 7%),color-mix(in srgb,var(--surface-2) 84%,var(--accent-soft) 16%)); }
+  .log-rename-set.is-configured::before { background:linear-gradient(90deg,var(--accent),var(--accent-2)); }
+  .log-rename-set.is-configured::after { background:color-mix(in srgb,var(--accent) 72%,transparent); }
+  .log-rename-index { font-family:var(--font-mono,ui-monospace,monospace); font-size:11px; letter-spacing:.08em; }
+  .log-rename-label { font-size:8px; letter-spacing:.16em; }
+  .log-rename-state { right:7px; bottom:7px; z-index:2; }
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
@@ -3840,11 +3946,11 @@
     <div class="quick-menu-panel" id="quickMenuPanel">
       <div class="quick-menu-head">
         <span class="quick-menu-headmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span>
-        <span class="quick-menu-headcopy"><b>퀵 메뉴</b><small>SWIPE · 5 SLOTS</small></span>
+        <span class="quick-menu-headcopy"><b>퀵 메뉴</b><small>SWIPE · 7 SLOTS</small></span>
         <button type="button" class="quick-menu-edit" id="quickMenuEdit" aria-label="퀵 메뉴 편집" title="퀵 메뉴 편집"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg></button>
       </div>
       <div class="quick-menu-slots" id="quickMenuSlots"></div>
-      <div class="quick-menu-foot"><span id="quickMenuCount">0 / 5 등록</span><button type="button" id="quickMenuManage">편집하기</button></div>
+      <div class="quick-menu-foot"><span id="quickMenuCount">0 / 7 등록</span><button type="button" id="quickMenuManage">편집하기</button></div>
     </div>
   </aside>
 
