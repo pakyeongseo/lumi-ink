@@ -3012,26 +3012,39 @@
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn.danger { color:var(--danger); }
 
   .li-vector-icon {
-    --li-icon-base:color-mix(in srgb,var(--accent-deep) 73%,#263957 27%);
-    --li-icon-deep:color-mix(in srgb,var(--accent-deep) 86%,#101725 14%);
-    --li-icon-accent:color-mix(in srgb,var(--accent) 62%,var(--accent-2) 38%);
-    --li-icon-highlight:color-mix(in srgb,var(--accent) 27%,white 73%);
-    --li-icon-mid:color-mix(in srgb,var(--accent) 64%,var(--accent-deep) 36%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent-deep) 62%,var(--accent) 38%);
-    --li-icon-mid-2:color-mix(in srgb,var(--accent) 48%,var(--accent-2) 24%,var(--accent-deep) 28%);
-    --li-icon-shadow:color-mix(in srgb,var(--accent-deep) 78%,#17233d 22%);
-    --li-icon-paper:color-mix(in srgb,white 89%,var(--accent-soft) 11%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 66%,var(--accent-soft) 34%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 73%,var(--accent-soft) 27%);
-    --li-icon-ink:color-mix(in srgb,var(--accent-deep) 84%,#101421 16%);
-    --li-icon-gold:color-mix(in srgb,var(--accent-2) 64%,#f2df9d 36%);
-    --li-icon-gold-deep:color-mix(in srgb,var(--accent-2) 56%,var(--accent-deep) 44%);
-    --li-icon-gold-ink:color-mix(in srgb,var(--accent-deep) 65%,var(--accent-2) 35%);
-    --li-icon-gold-light:color-mix(in srgb,white 52%,var(--accent-2) 48%);
-    --li-icon-glint:color-mix(in srgb,white 83%,var(--accent-2) 17%);
-    --li-icon-alert:color-mix(in srgb,#d86c79 58%,var(--accent) 42%);
-    --li-icon-alert-deep:color-mix(in srgb,#833d50 58%,var(--accent-deep) 42%);
+    /* Bright, mid and deep values deliberately use different theme tokens: the 70 SVGs stay dimensional in both light and dark palettes. */
+    --li-icon-base:color-mix(in srgb,var(--accent) 54%,var(--accent-deep) 46%);
+    --li-icon-deep:color-mix(in srgb,var(--accent-deep) 78%,var(--ink) 22%);
+    --li-icon-accent:color-mix(in srgb,var(--accent) 68%,var(--accent-2) 32%);
+    --li-icon-highlight:color-mix(in srgb,var(--accent) 43%,white 57%);
+    --li-icon-mid:color-mix(in srgb,var(--accent) 77%,var(--accent-deep) 23%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent-deep) 47%,var(--accent) 53%);
+    --li-icon-mid-2:color-mix(in srgb,var(--accent) 47%,var(--accent-2) 38%,var(--accent-deep) 15%);
+    --li-icon-shadow:color-mix(in srgb,var(--accent-deep) 67%,var(--ink) 33%);
+    --li-icon-paper:color-mix(in srgb,var(--surface) 84%,white 16%);
+    --li-icon-paper-shadow:color-mix(in srgb,var(--surface-2) 69%,var(--accent-soft) 31%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,var(--surface) 56%,var(--accent-soft) 44%);
+    --li-icon-ink:color-mix(in srgb,var(--ink) 67%,var(--accent-deep) 33%);
+    --li-icon-gold:color-mix(in srgb,var(--accent-2) 57%,var(--accent) 25%,#f4d98b 18%);
+    --li-icon-gold-deep:color-mix(in srgb,var(--accent-deep) 41%,var(--accent-2) 40%,#8d6520 19%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--ink) 61%,var(--accent-deep) 39%);
+    --li-icon-gold-light:color-mix(in srgb,white 43%,var(--accent-2) 57%);
+    --li-icon-glint:color-mix(in srgb,white 76%,var(--accent) 24%);
+    --li-icon-alert:color-mix(in srgb,#e07a87 48%,var(--accent) 52%);
+    --li-icon-alert-deep:color-mix(in srgb,#8f4054 45%,var(--accent-deep) 55%);
   }
+  html[data-theme="dark"] .li-vector-icon {
+    --li-icon-paper:color-mix(in srgb,white 86%,var(--accent-soft) 14%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 62%,var(--accent-soft) 38%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,white 72%,var(--accent-soft) 28%);
+    --li-icon-highlight:color-mix(in srgb,var(--accent) 35%,white 65%);
+  }
+  .custom-theme-group-메인 { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
+  .custom-theme-field-button.is-main { border-color:color-mix(in srgb,var(--accent) 46%,var(--line)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent); }
+  .custom-theme-tools-stacked { align-items:flex-start; flex-direction:column; }
+  .custom-theme-tools-stacked > div { display:flex; flex-wrap:wrap; gap:7px; }
+  .custom-theme-auto.primary { color:#fff; background:var(--grad-blue); border-color:transparent; }
+  html[data-theme="light"] .custom-theme-auto.primary { color:#fff; }
 
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
