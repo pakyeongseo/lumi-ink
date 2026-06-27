@@ -2941,8 +2941,6 @@
   .custom-theme-swatches { position:relative; z-index:1; margin-left:auto; display:flex; gap:5px; }
   .custom-theme-swatches i { width:12px; height:12px; border-radius:50%; background:var(--ct-bg); border:1px solid var(--ct-line); box-shadow:0 0 0 2px var(--ct-card),0 2px 6px rgba(0,0,0,.14); }
   .custom-theme-swatches i:last-child { background:var(--ct-card-2); }
-  .custom-theme-enable { display:flex; align-items:center; gap:8px; margin:13px 2px 2px; color:var(--ink); font-size:12px; font-weight:780; cursor:pointer; }
-  .custom-theme-enable input { accent-color:var(--accent); width:16px; height:16px; }
   .custom-theme-fields { display:grid; gap:10px; margin-top:13px; }
   .custom-theme-group { margin:0; padding:11px; border:1px solid var(--line-soft); border-radius:13px; background:var(--surface); }
   .custom-theme-group h4 { margin:0 0 9px; color:var(--muted); font-size:10.5px; font-weight:840; letter-spacing:.06em; }
@@ -2991,6 +2989,18 @@
   .custom-theme-field-button i { width:32px; height:32px; border:1px solid color-mix(in srgb,var(--ink) 14%,transparent); border-radius:9px; box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
   .custom-theme-field-button svg { width:17px; height:17px; fill:none; stroke:var(--faint); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 
+
+  /* ===== v65.8 · function shortcuts & independent custom theme ===== */
+  .qm-function-picker { display:grid; gap:12px; max-height:min(60vh,560px); overflow:auto; padding:1px 1px 3px; }
+  .qm-function-group { display:grid; gap:7px; }
+  .qm-function-group h4 { margin:0 2px; color:var(--faint); font-size:10px; font-weight:850; letter-spacing:.09em; }
+  .qm-function-row { display:grid; grid-template-columns:39px minmax(0,1fr) 16px; align-items:center; gap:10px; text-align:left; }
+  .qm-function-row .quick-slot-media { width:39px; height:39px; border-radius:13px; }
+  .qm-function-row > span { display:grid; gap:3px; min-width:0; }
+  .qm-function-row b { color:var(--ink); font-size:12px; font-weight:820; }
+  .qm-function-row small { color:var(--muted); font-size:10.5px; line-height:1.35; }
+  .qm-function-row > i { color:var(--accent); font-style:normal; font-size:18px; text-align:right; }
+  .accent-cell.accent-custom.sel { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent); }
 
   /* ===== v65.5 · themed icon extensions & quick-menu editor refinement ===== */
   /* The quick menu is intentionally denser than selection dialogs: its vector art fills the media tile. */
@@ -3591,7 +3601,7 @@
           <div class="set-rval" id="setQuickMenuVal">기본형 ›</div>
         </div>
         <div class="set-row" id="setInstallIcon">
-          <div class="set-rtext"><div class="set-rlabel">앱 설치 아이콘</div><div class="set-rsub">설치 전 아이콘 스타일을 선택</div></div>
+          <div class="set-rtext"><div class="set-rlabel">앱 설치 아이콘</div><div class="set-rsub">설치 간판에서 홈 화면 아이콘 선택</div></div>
           <div class="set-rval">고르기 ›</div>
         </div>
       </div>

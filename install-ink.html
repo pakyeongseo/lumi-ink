@@ -1,5 +1,155 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#132244"><link rel="manifest" href="./manifest-ink.json"><title>루미잉크 설치 · 잉크 블루</title>
-<style>html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Segoe UI",sans-serif;background:#132244;color:#ffffff}body{display:grid;place-items:center;padding:24px;box-sizing:border-box}main{width:min(420px,100%);text-align:center;text-shadow:none}img{width:118px;height:118px;border-radius:28px;box-shadow:0 18px 44px rgba(0,0,0,.27)}h1{font-size:27px;margin:22px 0 8px}p{line-height:1.6;color:rgba(255,255,255,.82);margin:0 0 22px}button,a{display:inline-flex;justify-content:center;align-items:center;width:100%;box-sizing:border-box;min-height:52px;border:0;border-radius:15px;background:#fff;color:#132244;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer;margin-top:10px;text-shadow:none}.sub{background:rgba(255,255,255,.12);color:#ffffff;border:1px solid rgba(255,255,255,.20)}small{display:block;color:rgba(255,255,255,.65);line-height:1.5;margin:18px 5px 0}</style></head>
-<body><main><img src="./icon-ink-512.png" alt="잉크 블루 아이콘"><h1>루미잉크</h1><p><b>잉크 블루</b> 아이콘으로 설치합니다.</p><button id="installBtn">이 아이콘으로 설치</button><a class="sub" href="./">앱으로 돌아가기</a><small id="hint">설치 후 아이콘을 바꾸려면 기존 앱을 제거한 뒤 다른 아이콘으로 다시 설치해 주세요.</small></main><script>let promptEvent=null;const btn=document.getElementById('installBtn'),hint=document.getElementById('hint');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEvent=e;});btn.addEventListener('click',async()=>{if(promptEvent){promptEvent.prompt();await promptEvent.userChoice;promptEvent=null;return;}hint.textContent='브라우저 메뉴에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.';});window.addEventListener('appinstalled',()=>{hint.textContent='설치가 완료됐어요. 이제 루미잉크를 실행해 보세요.';btn.disabled=true;btn.textContent='설치 완료';});</script></body></html>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Nanum+Myeongjo&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:        #132244;
+  --bg-deep:   #0d162b;
+  --surface:   rgba(255,255,255,.05);
+  --surface-line: rgba(255,255,255,.12);
+  --ink-1:     #f5f3ec;
+  --ink-2:     rgba(245,243,236,.68);
+  --ink-3:     rgba(245,243,236,.42);
+  --accent:    #74b9ff;
+  --accent-deep: #4d7ec4;
+  --paper:     #f7f4ec;
+  --font-display: 'Nanum Myeongjo', 'Song Myung', serif;
+  --font-body: 'IBM Plex Sans KR', -apple-system, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; min-height:100%; }
+body{
+  min-height:100vh;
+  font-family:var(--font-body);
+  background:
+    radial-gradient(ellipse 700px 500px at 50% -8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+    var(--bg);
+  color:var(--ink-1);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:48px 24px 36px; position:relative; overflow-x:hidden;
+}
+/* 종이 결 그레인 */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.5; mix-blend-mode:overlay; z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+main{ width:min(380px,100%); text-align:center; position:relative; z-index:1; }
+
+.eyebrow{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 22px; opacity:0; animation:fadeUp .6s ease forwards; animation-delay:.1s;
+}
+
+/* 잉크병 + 앱 아이콘 결합 비주얼 */
+.mark-stage{
+  position:relative; width:168px; height:168px; margin:0 auto 26px;
+  opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.2s;
+}
+.mark-stage .vial-glow{
+  position:absolute; inset:0; border-radius:50%;
+  background:radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+  filter:blur(6px);
+}
+.mark-stage img{
+  position:relative; z-index:1; width:100%; height:100%; border-radius:30px;
+  box-shadow:0 22px 50px -14px rgba(0,0,0,.5), 0 0 0 1px var(--surface-line);
+}
+.mark-stage .vial-tag{
+  position:absolute; bottom:-10px; right:-10px; z-index:2;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--bg-deep); border:1px solid var(--surface-line);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 20px -6px rgba(0,0,0,.5);
+}
+.mark-stage .vial-tag svg{ width:24px; height:30px; }
+
+h1{
+  font-family:var(--font-display); font-weight:400;
+  font-size:clamp(22px,6.5vw,26px); line-height:1.4; letter-spacing:-.01em;
+  margin:0 0 10px;
+  opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.3s;
+}
+h1 .colorname{ color:var(--accent); }
+
+p.lede{
+  font-size:14px; line-height:1.75; color:var(--ink-2);
+  margin:0 0 32px; padding:0 6px;
+  opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.4s;
+}
+
+.actions{ opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.5s; }
+
+button, a.btn{
+  display:inline-flex; justify-content:center; align-items:center; gap:8px;
+  width:100%; box-sizing:border-box; min-height:54px;
+  border:0; border-radius:14px;
+  font-family:var(--font-body); font-weight:700; font-size:15px;
+  text-decoration:none; cursor:pointer; margin-top:11px;
+  transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+#installBtn{
+  background:var(--paper); color:var(--bg-deep);
+  box-shadow:0 18px 40px -12px rgba(0,0,0,.5);
+}
+#installBtn:hover{ transform:translateY(-2px); box-shadow:0 22px 48px -12px rgba(0,0,0,.55); }
+#installBtn:active{ transform:translateY(0); }
+#installBtn:disabled{ opacity:.6; cursor:default; transform:none; }
+.sub{
+  background:var(--surface); color:var(--ink-1); border:1px solid var(--surface-line);
+}
+.sub:hover{ background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); }
+
+small#hint{
+  display:block; font-family:var(--font-mono); font-size:11px; line-height:1.7;
+  color:var(--ink-3); margin:22px 4px 0;
+  opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.6s;
+}
+
+.divider-note{
+  margin-top:40px; display:flex; align-items:center; gap:10px; justify-content:center;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; color:var(--ink-3);
+  opacity:0; animation:fadeUp .7s ease forwards; animation-delay:.7s;
+}
+.divider-note .ln{ width:28px; height:1px; background:var(--surface-line); }
+
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; opacity:1 !important; }
+}
+</style></head>
+<body>
+<main>
+  <p class="eyebrow">Your ink, ready</p>
+
+  <div class="mark-stage">
+    <div class="vial-glow"></div>
+    <img src="./icon-ink-512.png" alt="잉크 블루 아이콘">
+    <div class="vial-tag">
+      <svg viewBox="0 0 46 58" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 3h12v11.5c5 3 8 9 8 15.5 0 12-6 23-15 23S7 42 7 30c0-6.5 3-12.5 8-15.5V3Z" fill="none" stroke="#74b9ff" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M9.4 33c1.6 9 7.2 15.6 13.6 15.6S35 42 36.6 33c-2.7 2.2-7.8 3.7-13.6 3.7S12.1 35.2 9.4 33Z" fill="#74b9ff" opacity=".9"/>
+        <rect x="17" y="3" width="12" height="4" fill="#132244" stroke="#74b9ff" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <h1>루미잉크를 <span class="colorname">잉크 블루</span>로<br>적어내려갑니다</h1>
+  <p class="lede">차분한 기본 펜촉. 이 색으로 홈 화면 아이콘과 앱의 첫 인상이 정해져요.</p>
+
+  <div class="actions">
+    <button id="installBtn">이 아이콘으로 설치</button>
+    <a class="btn sub" href="./">앱으로 돌아가기</a>
+  </div>
+
+  <small id="hint">설치 후 아이콘을 바꾸려면 기존 앱을 제거한 뒤 다른 아이콘으로 다시 설치해 주세요.</small>
+
+  <div class="divider-note"><span class="ln"></span><span>LUMI INK</span><span class="ln"></span></div>
+</main>
+<script>let promptEvent=null;const btn=document.getElementById('installBtn'),hint=document.getElementById('hint');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEvent=e;});btn.addEventListener('click',async()=>{if(promptEvent){promptEvent.prompt();await promptEvent.userChoice;promptEvent=null;return;}hint.textContent='브라우저 메뉴에서 “앱 설치” 또는 “홈 화면에 추가”를 선택해 주세요.';});window.addEventListener('appinstalled',()=>{hint.textContent='설치가 완료됐어요. 이제 루미잉크를 실행해 보세요.';btn.disabled=true;btn.textContent='설치 완료';});</script>
+</body></html>

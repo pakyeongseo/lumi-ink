@@ -93,6 +93,25 @@
   const QUICK_MENU_ICON_CATEGORIES = [
     ["all", "전체"], ["navigation", "이동"], ["action", "기능"], ["archive", "기록"], ["mood", "장식"]
   ];
+  // v65.8: 홈 단일 바로가기를 확장한 기능 바로가기 목록입니다.
+  // 설정 화면의 각 행과 1:1로 연결해, 자주 쓰는 기능을 퀵 메뉴에서 바로 실행할 수 있어요.
+  const QUICK_MENU_FUNCTIONS = Object.freeze([
+    { id:"home", group:"빠른 이동", label:"홈 바로가기", meta:"루미잉크 첫 화면으로 이동" },
+    { id:"settings", group:"빠른 이동", label:"설정 바로가기", meta:"설정 화면을 바로 열기" },
+    { id:"setting-theme", group:"화면 설정", label:"테마 전환", meta:"밝게 · 어둡게 즉시 전환" },
+    { id:"setting-accent", group:"화면 설정", label:"컬러 테마", meta:"프리셋 또는 사용자 지정 테마 고르기" },
+    { id:"setting-font", group:"화면 설정", label:"웹폰트", meta:"앱 글꼴 바꾸기" },
+    { id:"setting-toolbar", group:"화면 설정", label:"자유 메모 툴바", meta:"툴바 표시 방식 고르기" },
+    { id:"setting-quick-menu", group:"화면 설정", label:"퀵 메뉴 설정", meta:"슬롯과 표시 형태 편집" },
+    { id:"setting-install", group:"화면 설정", label:"앱 설치 아이콘", meta:"설치 간판 페이지에서 아이콘 고르기" },
+    { id:"setting-backup", group:"데이터 관리", label:"전체 백업", meta:"현재 데이터를 백업 파일로 저장" },
+    { id:"setting-restore", group:"데이터 관리", label:"백업 복원", meta:"백업 파일을 선택해 복원" },
+    { id:"setting-auto-backup", group:"데이터 관리", label:"자동 백업", meta:"저장된 자동 스냅샷 확인" },
+    { id:"setting-storage", group:"데이터 관리", label:"저장공간", meta:"브라우저 저장 용량 확인" },
+    { id:"setting-reset", group:"데이터 관리", label:"데이터 초기화", meta:"모든 로컬 데이터 삭제" },
+    { id:"setting-manual", group:"도움말", label:"상세 매뉴얼", meta:"사용법 문서 열기" }
+  ]);
+  const QUICK_MENU_FUNCTION_BY_ID = new Map(QUICK_MENU_FUNCTIONS.map((item) => [item.id, item]));
   let quickMenuImageSlot = null;
   let quickMenuIconRenderSerial = 0;
 
@@ -146,8 +165,10 @@
     return `<span class="li-vector-icon ${extraClass || ""}" data-li-icon="${esc(item.id)}" title="${esc(item.label || "아이콘")}">${uniquifyInlineSvgIds(safe, scope)}</span>`;
   }
 
+  function quickMenuFunctionId(value) { return QUICK_MENU_FUNCTION_BY_ID.has(String(value || "")) ? String(value) : "home"; }
+  function quickMenuFunction(value) { return QUICK_MENU_FUNCTION_BY_ID.get(quickMenuFunctionId(value)) || QUICK_MENU_FUNCTION_BY_ID.get("home"); }
   function emptyQuickMenuSlot(index) {
-    return { slotId: index + 1, kind: null, label: "", thumbnail: null, iconCode: null, libraryIconId: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
+    return { slotId: index + 1, kind: null, label: "", thumbnail: null, iconCode: null, libraryIconId: null, functionId: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
   }
   function normalizeQuickMenu(raw) {
     const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
@@ -155,7 +176,8 @@
     const slots = [];
     for (let i = 0; i < QUICK_MENU_MAX; i++) {
       const base = emptyQuickMenuSlot(i), item = list[i] && typeof list[i] === "object" ? list[i] : {};
-      const kind = ["home", "project", "note", "create"].includes(item.kind) ? item.kind : null;
+      // v65.8: 기존 홈 바로가기는 기능 바로가기 안의 home 항목으로 안전하게 승격합니다.
+      const kind = ["function", "project", "note", "create"].includes(item.kind) ? item.kind : (item.kind === "home" ? "function" : null);
       if (!kind) { slots.push(base); continue; }
       const thumb = safeImageSource(item.thumbnail);
       const slot = {
@@ -165,6 +187,7 @@
         thumbnail: thumb && thumb.length <= 900000 ? thumb : null,
         iconCode: normalizeQuickMenuIconCode(item.iconCode),
         libraryIconId: quickMenuLibraryIconId(item.libraryIconId),
+        functionId: kind === "function" ? quickMenuFunctionId(item.functionId || (item.kind === "home" ? "home" : "home")) : null,
         targetId: isSafeRecordId(item.targetId) ? item.targetId : null,
         createType: QUICK_MENU_ALLOWED_TYPES.has(item.createType) ? item.createType : "free",
         createMode: item.createMode === "collection" ? "collection" : "single",
@@ -174,7 +197,7 @@
       slots.push(slot);
     }
     return {
-      version: 4,
+      version: 5,
       updatedAt: Number(src.updatedAt) || 0,
       // v64.9: 기존 퀵 메뉴는 모두 기본형·사용 상태로 자연스럽게 승격합니다.
       enabled: src.enabled !== false,
@@ -191,7 +214,7 @@
   function quickMenuFilledCount() { return quickMenuConfig().slots.filter((slot) => !!slot.kind).length; }
   function quickMenuSlotActionName(slot) {
     if (!slot || !slot.kind) return "빈 슬롯";
-    if (slot.kind === "home") return "홈 바로가기";
+    if (slot.kind === "function") return "기능 바로가기";
     if (slot.kind === "project") return "프로젝트 바로가기";
     if (slot.kind === "note") return "내 글 바로가기";
     return "메모 바로 만들기";
@@ -205,14 +228,14 @@
   function quickMenuSlotLabel(slot) {
     if (!slot || !slot.kind) return "새 슬롯 등록";
     if (slot.label) return slot.label;
-    if (slot.kind === "home") return "홈";
+    if (slot.kind === "function") return quickMenuFunction(slot.functionId).label;
     if (slot.kind === "project") { const p = getProject(slot.targetId); return p ? p.name : "삭제된 프로젝트"; }
     if (slot.kind === "note") { const n = getNote(slot.targetId); return n ? (n.title || "제목 없는 메모") : "삭제된 메모"; }
     return `${quickMenuCreateTypeName(slot)} 만들기`;
   }
   function quickMenuSlotMeta(slot) {
     if (!slot || !slot.kind) return "누르면 바로 등록";
-    if (slot.kind === "home") return "루미잉크 첫 화면";
+    if (slot.kind === "function") return quickMenuFunction(slot.functionId).meta;
     if (slot.kind === "project") return "프로젝트 바로가기";
     if (slot.kind === "note") {
       const n = getNote(slot.targetId), p = n && getProject(n.projectId);
@@ -267,7 +290,26 @@
   }
   function quickMenuIcon(slot) {
     const kind = slot && slot.kind;
-    if (kind === "home") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>';
+    if (kind === "function") {
+      const id = quickMenuFunction(slot.functionId).id;
+      const art = {
+        home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/>',
+        settings:'<circle cx="12" cy="12" r="3.1"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/>',
+        'setting-theme':'<circle cx="12" cy="12" r="3.6"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+        'setting-accent':'<path d="M12 3a9 9 0 1 0 0 18 2.5 2.5 0 0 0 0-5h-1a2 2 0 0 1 0-4h2a3 3 0 0 0 0-6Z"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/><circle cx="10" cy="7.5" r=".8" fill="currentColor"/><circle cx="14.2" cy="7.2" r=".8" fill="currentColor"/>',
+        'setting-font':'<path d="M5 19 10 5h4l5 14M7.2 14h9.6"/>',
+        'setting-toolbar':'<path d="M4 6h16M4 12h11M4 18h16"/><circle cx="17" cy="12" r="2"/>',
+        'setting-quick-menu':'<path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/>',
+        'setting-install':'<path d="M12 3v11M8 10l4 4 4-4"/><path d="M5 18v2h14v-2"/>',
+        'setting-backup':'<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h8V4M8 18h8v-5H8z"/>',
+        'setting-restore':'<path d="M5 8V4h4M5 4a8 8 0 1 1-1 8"/><path d="M12 8v8M8.5 12 12 8l3.5 4"/>',
+        'setting-auto-backup':'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+        'setting-storage':'<path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3M8 16h7"/>',
+        'setting-reset':'<path d="M12 3 2.8 20h18.4Z"/><path d="M12 9v5M12 17h.01"/>',
+        'setting-manual':'<path d="M4 5.5c2.5-1 5.2-.6 8 1.2 2.8-1.8 5.5-2.2 8-1.2v13c-2.5-1-5.2-.6-8 1.2-2.8-1.8-5.5-2.2-8-1.2Z"/><path d="M12 6.7v13"/>'
+      }[id] || '<circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/>';
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${art}</svg>`;
+    }
     if (kind === "project") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18" opacity=".55"/></svg>';
     if (kind === "note") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg>';
     if (kind === "create") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9" opacity=".45"/></svg>';
@@ -383,10 +425,35 @@
       return canvas.toDataURL("image/jpeg", .86);
     } finally { URL.revokeObjectURL(url); }
   }
+  async function openQuickMenuStorageInfo() {
+    const val = $("setStorageVal")?.textContent || "저장공간", sub = $("setStorageSub")?.textContent || "브라우저 저장소 사용량을 확인합니다.";
+    openModal(`<h3>저장공간</h3><p class="m-sub"><b>${esc(val)}</b><br>${esc(sub)}<br><br>표시 용량은 이 사이트가 브라우저에 저장한 데이터와 자동 백업을 포함해요. 이미지가 많을수록 자동 백업도 함께 커집니다.</p><div class="m-row"><button class="m-btn primary" id="storageClose">확인</button></div>`);
+    $on("storageClose", "click", closeModal);
+  }
+  async function openInstallStartPage() { await flushPending(); window.location.href = "./lumi-ink-get-started.html?from=app"; }
+  async function openManualPage() { await flushPending(); window.location.href = "./Lumi_Ink_Manual_1.html?from=app"; }
+  async function runQuickMenuFunction(functionId) {
+    const id = quickMenuFunction(functionId).id;
+    setQuickMenuOpen(false);
+    if (id === "home") { await goHome(); return; }
+    if (id === "settings") { await flushPending(); go({ s:"settings" }); return; }
+    if (id === "setting-theme") { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); return; }
+    if (id === "setting-accent") { openAccentPicker(); return; }
+    if (id === "setting-font") { showFontDialog(); return; }
+    if (id === "setting-toolbar") { openFormatbarModePicker(); return; }
+    if (id === "setting-quick-menu") { openQuickMenuSettings(); return; }
+    if (id === "setting-install") { await openInstallStartPage(); return; }
+    if (id === "setting-backup") { await exportBackup(); return; }
+    if (id === "setting-restore") { $("restoreInput")?.click(); return; }
+    if (id === "setting-auto-backup") { openAutoBackupList(); return; }
+    if (id === "setting-storage") { await openQuickMenuStorageInfo(); return; }
+    if (id === "setting-reset") { resetData(); return; }
+    if (id === "setting-manual") { await openManualPage(); }
+  }
   async function runQuickMenuSlot(index) {
     const slot = quickMenuConfig().slots[index];
     if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
-    if (slot.kind === "home") { setQuickMenuOpen(false); await goHome(); return; }
+    if (slot.kind === "function") { await runQuickMenuFunction(slot.functionId); return; }
     if (slot.kind === "project") {
       const p = getProject(slot.targetId);
       if (!p) { await pruneQuickMenuReferences(true); toast("삭제된 프로젝트 바로가기를 정리했어요"); return; }
@@ -460,20 +527,35 @@
   function openQuickMenuSlotTypePicker(index) {
     const blank = emptyQuickMenuSlot(index);
     openModal(`<h3>슬롯 ${index + 1} 등록</h3><p class="m-sub">바로 실행할 동작을 고르세요. 썸네일과 표시 이름은 다음 화면에서 바꿀 수 있어요.</p><div class="qm-choice-list">
-      <button type="button" class="qm-choice" data-qm-kind="home">${quickMenuSlotMedia(Object.assign(blank,{kind:"home"}))}<span class="qm-choice-copy"><b>홈 바로가기</b><small>언제든 루미잉크 첫 화면으로 이동</small></span><span class="qm-choice-arrow">›</span></button>
+      <button type="button" class="qm-choice" data-qm-kind="function">${quickMenuSlotMedia(Object.assign(blank,{kind:"function",functionId:"home"}))}<span class="qm-choice-copy"><b>기능 바로가기</b><small>홈 · 설정 · 설정 목록의 기능을 바로 실행</small></span><span class="qm-choice-arrow">›</span></button>
       <button type="button" class="qm-choice" data-qm-kind="project">${quickMenuSlotMedia(Object.assign(blank,{kind:"project"}))}<span class="qm-choice-copy"><b>프로젝트 바로가기</b><small>특정 프로젝트를 한 번에 열기</small></span><span class="qm-choice-arrow">›</span></button>
       <button type="button" class="qm-choice" data-qm-kind="note">${quickMenuSlotMedia(Object.assign(blank,{kind:"note"}))}<span class="qm-choice-copy"><b>내 글 바로가기</b><small>특정 메모를 바로 열기 · 이동 경로 자동 반영</small></span><span class="qm-choice-arrow">›</span></button>
       <button type="button" class="qm-choice" data-qm-kind="create">${quickMenuSlotMedia(Object.assign(blank,{kind:"create"}))}<span class="qm-choice-copy"><b>메모 바로 만들기</b><small>메모 타입과 저장 위치를 미리 지정</small></span><span class="qm-choice-arrow">›</span></button>
     </div><div class="m-row"><button class="m-btn" id="qmTypeCancel">취소</button></div>`);
     $("modalBox").querySelectorAll("[data-qm-kind]").forEach((button) => button.addEventListener("click", async () => {
       const kind = button.dataset.qmKind;
-      if (kind === "home") { await setQuickMenuSlot(index, { kind: "home" }); openQuickMenuSlotEditor(index); }
+      if (kind === "function") openQuickMenuFunctionPicker(index);
       else if (kind === "project") openQuickMenuProjectPicker(index);
       else if (kind === "note") openQuickMenuNotePicker(index);
       else openQuickMenuCreateTypePicker(index);
     }));
     $on("qmTypeCancel", "click", closeModal);
   }
+  function openQuickMenuFunctionPicker(index) {
+    const blank = emptyQuickMenuSlot(index);
+    const groups = [...new Set(QUICK_MENU_FUNCTIONS.map((item) => item.group))];
+    const groupMarkup = groups.map((group) => {
+      const rows = QUICK_MENU_FUNCTIONS.filter((item) => item.group === group).map((item) => `<button type="button" class="qm-picker-row qm-function-row" data-qm-function="${esc(item.id)}">${quickMenuSlotMedia(Object.assign(blank,{kind:"function",functionId:item.id}))}<span><b>${esc(item.label)}</b><small>${esc(item.meta)}</small></span><i>›</i></button>`).join("");
+      return `<section class="qm-function-group"><h4>${esc(group)}</h4><div class="qm-picker-list">${rows}</div></section>`;
+    }).join("");
+    openModal(`<h3>기능 바로가기</h3><p class="m-sub">홈과 설정 화면, 그리고 설정 목록의 각 기능을 퀵 메뉴 슬롯에 바로 연결할 수 있어요.</p><div class="qm-function-picker">${groupMarkup}</div><div class="m-row"><button class="m-btn" id="qmFunctionBack">뒤로</button></div>`);
+    $("modalBox").querySelectorAll("[data-qm-function]").forEach((button) => button.addEventListener("click", async () => {
+      await setQuickMenuSlot(index, { kind:"function", functionId:button.dataset.qmFunction });
+      openQuickMenuSlotEditor(index);
+    }));
+    $on("qmFunctionBack", "click", () => openQuickMenuSlotTypePicker(index));
+  }
+
   function openQuickMenuProjectPicker(index) {
     const list = st.projects.slice().sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     openModal(`<h3>프로젝트 바로가기</h3><p class="m-sub">삭제되면 이 퀵 메뉴 슬롯도 자동으로 비워집니다.</p><div class="qm-picker-list">${list.length ? list.map((p) => `<button type="button" class="qm-picker-row" data-qm-project="${esc(p.id)}"><b>${esc(p.name)}</b><small>${esc(p.description || "프로젝트 열기")}</small></button>`).join("") : '<div class="qm-picker-empty">먼저 프로젝트를 만들어 주세요.</div>'}</div><div class="m-row"><button class="m-btn" id="qmProjectBack">뒤로</button></div>`);
@@ -5913,41 +5995,41 @@ ${gallery}
     const presetLight=capturePresetPalette(baseAccent,"light"),presetDark=capturePresetPalette(baseAccent,"dark");
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
-    return {version:5,baseAccent,
-      light:{enabled:oldLight.enabled===true,colors:normalizePalette(oldLight.colors,presetLight)},
-      dark:{enabled:oldDark.enabled===true,colors:normalizePalette(oldDark.colors,presetDark)},
+    const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
+    return {version:6,baseAccent,
+      light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight)},
+      dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark)},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const baseAccent=validAccentName(st.accent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:5,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:false,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:6,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){ return Object.assign(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,palette.colors[item.key]])),customThemeAccentVars(palette,mode)); }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
-  function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(palette.enabled){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
-  async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<5;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
-  function appearanceSnapshot(){return {version:5,accent:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
-  async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
-  function themeDisplayName(){const base=(ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name,cfg=currentCustomTheme(),labels=[];if(cfg.light.enabled)labels.push("라이트");if(cfg.dark.enabled)labels.push("다크");return labels.length?`사용자 지정 · ${labels.join(" · ")}`:base;}
-  function applyAccent(name){const accent=name===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(name);st.accent=accent;if(accent==="blue")document.documentElement.removeAttribute("data-accent");else document.documentElement.setAttribute("data-accent",accent);try{localStorage.setItem("luminkAccent",accent);}catch(e){}applyCustomTheme(st.customTheme,{persist:false});}
-  function detectAccent(){let name="blue",rawTheme=null;try{name=localStorage.getItem("luminkAccent")||"blue";const raw=localStorage.getItem("luminkCustomTheme");if(raw)rawTheme=JSON.parse(raw);}catch(e){}const cfg=normalizeCustomTheme(rawTheme||null);st.customTheme=cfg;if(name===LEGACY_CUSTOM_ACCENT){name=cfg.baseAccent;try{localStorage.setItem("luminkAccent",name);localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}applyAccent(name);}
+  function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
+  async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<6;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  function appearanceSnapshot(){return {version:6,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
+  async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
+  function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
+  function applyAccent(name){const custom=name===LEGACY_CUSTOM_ACCENT;const accent=custom?LEGACY_CUSTOM_ACCENT:validAccentName(name);st.accent=accent;if(custom||accent==="blue")document.documentElement.removeAttribute("data-accent");else document.documentElement.setAttribute("data-accent",accent);if(!custom&&st.customTheme){st.customTheme.baseAccent=accent;}try{localStorage.setItem("luminkAccent",accent);}catch(e){}applyCustomTheme(st.customTheme,{persist:false});}
+  function detectAccent(){let name="blue",rawTheme=null;try{name=localStorage.getItem("luminkAccent")||"blue";const raw=localStorage.getItem("luminkCustomTheme");if(raw)rawTheme=JSON.parse(raw);}catch(e){}const cfg=normalizeCustomTheme(rawTheme||null);st.customTheme=cfg;const configured=rawTheme&&!!((rawTheme.light&&rawTheme.light.enabled===true)||(rawTheme.dark&&rawTheme.dark.enabled===true));if(name!==LEGACY_CUSTOM_ACCENT&&configured)name=LEGACY_CUSTOM_ACCENT;applyAccent(name);}
   function customThemePreviewPaint(box,palette){if(!box)return;const c=palette.colors;Object.entries({"--ct-bg":c.bg,"--ct-card":c.surface,"--ct-card-2":c.surface2,"--ct-ink":c.ink,"--ct-muted":c.muted,"--ct-line":c.line,"--ct-bar":c.barBg2,"--ct-main-a":c.mainA,"--ct-main-b":c.mainB}).forEach(([k,v])=>box.style.setProperty(k,v));box.classList.toggle("is-off",!palette.enabled);}
   function openCustomThemeStudio(seed,initialMode){
-    const before=cloneThemeObject(currentCustomTheme()); let draft=seed?normalizeCustomTheme(seed):(before.light.enabled||before.dark.enabled?cloneThemeObject(before):customThemeSeedFromActiveAccent()); let mode=initialMode==="dark"?"dark":"light";
-    const restore=()=>{st.customTheme=cloneThemeObject(before);applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
+    const before=cloneThemeObject(currentCustomTheme()), beforeAccent=st.accent; let draft=seed?normalizeCustomTheme(seed):(before.light.enabled||before.dark.enabled?cloneThemeObject(before):customThemeSeedFromActiveAccent()); draft.light.enabled=true; draft.dark.enabled=true; let mode=initialMode==="dark"?"dark":"light";
+    const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
     const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const items=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key).map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${key==="main"?palette.colors[item.key]:palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
-    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><label class="custom-theme-enable"><input type="checkbox" id="customThemeEnabled"${palette.enabled?" checked":""}> ${mode==="dark"?"다크":"라이트"} 모드에서 사용자 지정 테마 사용</label><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 개별 색상은 아래에서 다시 미세 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><p class="custom-theme-note">적용한 모드에서만 독립 테마가 활성화됩니다. 다른 모드는 별도 탭에서 따로 설정할 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
-    const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]);if(st.theme===mode)applyCustomTheme(draft,{persist:false});};
+    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 개별 색상은 아래에서 다시 미세 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><p class="custom-theme-note">적용한 모드에서만 독립 테마가 활성화됩니다. 다른 모드는 별도 탭에서 따로 설정할 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
+    const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
     document.querySelectorAll("[data-custom-tab]").forEach((b)=>b.addEventListener("click",()=>openCustomThemeStudio(draft,b.dataset.customTab)));
     document.querySelectorAll("[data-custom-editor-key]").forEach((b)=>b.addEventListener("click",()=>{const key=b.dataset.customEditorKey,item=CUSTOM_THEME_COLOR_META.find((x)=>x.key===key);openAdvancedColorPicker(`${item.label} 색상`,draft[mode].colors[key],(value)=>{draft[mode].colors[key]=value;openCustomThemeStudio(draft,mode);},{prefix:"customThemeRole",saved:true,save:true,intro:"정사각형 색상판·HEX·RGB·스포이드로 정확하게 조절할 수 있어요."});}));
-    const enabled=$("customThemeEnabled");if(enabled)enabled.addEventListener("change",()=>{draft[mode].enabled=!!enabled.checked;preview();});
     $on("customThemeRecommend","click",()=>{draft[mode].colors=recommendCustomPalette(draft[mode].colors.mainA,draft[mode].colors.mainB,mode);draft[mode].enabled=true;openCustomThemeStudio(draft,mode);});
-    $on("customThemeReset","click",()=>{draft[mode].colors=capturePresetPalette(validAccentName(st.accent),mode);draft[mode].enabled=true;preview();openCustomThemeStudio(draft,mode);});
-    $on("customThemeCancel","click",closeModal);$on("customThemeApply","click",async()=>{try{const saved=await persistCustomTheme(draft);applyCustomTheme(saved,{persist:false});customThemePreviewRestore=null;closeModal();renderSettings();toast("사용자 지정 테마를 적용했어요");}catch(e){}});preview();
+    $on("customThemeReset","click",()=>{draft[mode].colors=capturePresetPalette(validAccentName(draft.baseAccent),mode);draft[mode].enabled=true;preview();openCustomThemeStudio(draft,mode);});
+    $on("customThemeCancel","click",closeModal);$on("customThemeApply","click",async()=>{try{draft.light.enabled=true;draft.dark.enabled=true;const saved=await persistCustomTheme(draft);applyAccent(LEGACY_CUSTOM_ACCENT);applyCustomTheme(saved,{persist:false});customThemePreviewRestore=null;closeModal();renderSettings();toast("사용자 지정 테마를 적용했어요");}catch(e){}});preview();
   }
-  function openAccentPicker(){const cur=validAccentName(st.accent||"blue"),cells=Object.keys(ACCENTS).map((key)=>`<div class="accent-cell${key===cur?" sel":""}" data-accent="${key}"><span class="ac-sw" style="background:${ACCENTS[key].grad}"></span><span class="ac-name">${ACCENTS[key].name}</span></div>`).join(""),customCfg=currentCustomTheme(),customCell=`<div class="accent-cell accent-custom${customCfg.light.enabled||customCfg.dark.enabled?" is-custom":""}" data-custom-light="1" style="--custom-preview-a:${customCfg.light.colors.mainA};--custom-preview-b:${customCfg.light.colors.mainB}"><span class="ac-sw"></span><span class="ac-name">사용자 지정</span></div>`;openModal(`<h3>컬러 테마</h3><p class="m-sub">프리셋은 v64.9 원래 색상 결을 유지합니다. <b>사용자 지정</b>은 두 메인 색상에서 출발하는 라이트·다크 독립 테마를 만듭니다.</p><div class="accent-grid">${cells}${customCell}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);$on("acClose","click",closeModal);document.querySelectorAll(".accent-cell[data-accent]").forEach((el)=>el.addEventListener("click",()=>{applyAccent(el.dataset.accent);document.querySelectorAll(".accent-cell[data-accent]").forEach((x)=>x.classList.toggle("sel",x===el));renderSettings();}));const cell=document.querySelector(".accent-cell[data-custom-light]");if(cell)cell.addEventListener("click",()=>{closeModal();openCustomThemeStudio();});}
+  function openAccentPicker(){const cur=st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent||"blue"),cells=Object.keys(ACCENTS).map((key)=>`<div class="accent-cell${key===cur?" sel":""}" data-accent="${key}"><span class="ac-sw" style="background:${ACCENTS[key].grad}"></span><span class="ac-name">${ACCENTS[key].name}</span></div>`).join(""),customCfg=currentCustomTheme(),customCell=`<div class="accent-cell accent-custom${cur===LEGACY_CUSTOM_ACCENT?" sel is-custom":""}" data-custom-light="1" style="--custom-preview-a:${customCfg.light.colors.mainA};--custom-preview-b:${customCfg.light.colors.mainB}"><span class="ac-sw"></span><span class="ac-name">사용자 지정</span></div>`;openModal(`<h3>컬러 테마</h3><p class="m-sub">프리셋은 v64.9 원래 색상 결을 유지합니다. <b>사용자 지정</b>을 선택하면 프리셋 선택은 해제되고, 라이트·다크 각각의 두 색 그라데이션 독립 테마가 적용됩니다.</p><div class="accent-grid">${cells}${customCell}</div><div class="m-row"><button class="m-btn" id="acClose">닫기</button></div>`);$on("acClose","click",closeModal);document.querySelectorAll(".accent-cell[data-accent]").forEach((el)=>el.addEventListener("click",()=>{applyAccent(el.dataset.accent);document.querySelectorAll(".accent-cell").forEach((x)=>x.classList.toggle("sel",x===el));renderSettings();}));const cell=document.querySelector(".accent-cell[data-custom-light]");if(cell)cell.addEventListener("click",()=>{applyAccent(LEGACY_CUSTOM_ACCENT);closeModal();openCustomThemeStudio();});}
 
   /* ---------- font scale ---------- */
   const FS_ZOOM = { small: 0.9, normal: 1, large: 1.12 };
@@ -5977,18 +6059,9 @@ ${gallery}
     $("modalBox").querySelectorAll(".toolbar-mode").forEach((item) => item.addEventListener("click", () => { applyFormatbarMode(item.dataset.v); closeModal(); }));
     $on("tbModeClose", "click", closeModal);
   }
-  function openInstallIconPicker() {
-    const choices = [
-      ["ink", "잉크 블루", "차분한 기본 펜촉"], ["gold", "골드", "온화한 금빛 펜촉"],
-      ["violet", "바이올렛", "몽환적인 보랏빛 펜촉"], ["rose", "로즈", "부드러운 장밋빛 펜촉"],
-      ["forest", "포레스트", "짙은 숲빛 펜촉"], ["pastel-blue", "파스텔 블루", "맑고 부드러운 하늘빛"],
-      ["pastel-pink", "파스텔 핑크", "포근한 솜사탕빛"], ["pastel-green", "파스텔 그린", "산뜻한 새잎빛"],
-      ["pastel-purple", "파스텔 퍼플", "은은한 라일락빛"], ["pastel-yellow", "파스텔 옐로우", "따스한 레몬빛"]
-    ];
-    openModal(`<h3>앱 설치 아이콘</h3><p class="m-sub">아이콘을 고르면 해당 설치 전용 페이지로 이동해요. 이미 설치한 앱의 아이콘을 바꾸려면 기존 앱을 삭제한 뒤 다시 설치해 주세요.</p><div class="install-icon-grid">${choices.map(([id,name,sub]) => `<button class="install-icon-choice" data-install-icon="${id}"><img src="./icon-${id}-192.png" alt="${name}"><span><b>${name}</b><small>${sub}</small></span></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="installIconClose">닫기</button></div>`);
-    $("modalBox").querySelectorAll("[data-install-icon]").forEach((button) => button.addEventListener("click", () => { window.location.href = `./install-${button.dataset.installIcon}.html`; }));
-    $on("installIconClose", "click", closeModal);
-  }
+  // 설치 아이콘 선택은 v65.8부터 간판 페이지에서 진행합니다.
+  // 컬러별 설치 페이지로 바로 점프하지 않아도 전체 소개와 색상 선택을 한 흐름으로 볼 수 있어요.
+  function openInstallIconPicker() { void openInstallStartPage(); }
 
   /* ---------- auto backup (user-selectable retention: 1–15 snapshots) ---------- */
   const AUTO_BACKUP_LIMIT_KEY = "luminkAutoBackupLimit";
@@ -6165,19 +6238,12 @@ ${gallery}
     $on("setRestore", "click", () => $("restoreInput").click());
     $on("setReset", "click", resetData);
     $on("setAutoBackup", "click", openAutoBackupList);
-    $on("setStorage", "click", () => {
-      const val = $("setStorageVal").textContent, sub = $("setStorageSub").textContent;
-      openModal(`<h3>저장공간</h3><p class="m-sub"><b>${esc(val)}</b><br>${esc(sub)}<br><br>표시 용량은 이 사이트가 브라우저에 저장한 데이터와 자동 백업을 포함해요. 이미지가 많을수록 자동 백업도 함께 커집니다.</p><div class="m-row"><button class="m-btn primary" id="storageClose">확인</button></div>`);
-      $on("storageClose", "click", closeModal);
-    });
+    $on("setStorage", "click", () => { void openQuickMenuStorageInfo(); });
     $on("setAccent", "click", openAccentPicker);
     $on("setQuickMenu", "click", openQuickMenuSettings);
     $on("setToolbarMode", "click", openFormatbarModePicker);
     $on("setInstallIcon", "click", openInstallIconPicker);
-    $on("setManual", "click", async () => {
-      await flushPending();
-      window.location.href = "./Lumi_Ink_Manual_1.html?from=app";
-    });
+    $on("setManual", "click", () => { void openManualPage(); });
     document.querySelectorAll("#fontSizeSeg button").forEach((b) => b.addEventListener("click", () => applyFontScale(b.dataset.fs)));
     $on("restoreInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) restoreBackup(f); e.target.value = ""; });
     // selection bar
