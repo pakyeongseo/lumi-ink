@@ -1944,10 +1944,10 @@
   .li-vector-icon { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; isolation:isolate; }
   .li-vector-icon > svg { width:100%; height:100%; display:block; }
   .quick-slot-media.has-library-icon { padding:0; background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 90%,var(--accent) 10%),var(--surface-2)); }
-  .quick-slot-media .quick-menu-library-icon { filter:drop-shadow(0 1px 1px rgba(8,20,42,.18)); }
+  .quick-slot-media .quick-menu-library-icon { filter:drop-shadow(0 1px 1px color-mix(in srgb,var(--accent) 30%,transparent)); }
   .pd-thumb .thumb-media { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; }
   .pd-thumb .thumb-media.has-library-icon { padding:8px; background:radial-gradient(circle at 28% 22%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 50%); }
-  .pd-thumb .project-library-icon { filter:drop-shadow(0 4px 8px rgba(10,24,46,.13)); }
+  .pd-thumb .project-library-icon { filter:drop-shadow(0 4px 8px color-mix(in srgb,var(--accent) 25%,transparent)); }
   .project-icon-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:14px 0 12px; padding:4px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); }
   .project-icon-tab { min-height:36px; border:0; border-radius:10px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
   .project-icon-tab.is-active { color:var(--accent-ink); background:var(--surface); box-shadow:0 2px 7px rgba(10,24,46,.07); }
@@ -1959,7 +1959,7 @@
   .project-library-icon-card, .qm-library-card { min-height:88px; padding:7px 5px 6px; border:1px solid var(--line); border-radius:14px; background:linear-gradient(145deg,var(--surface),var(--surface-2)); color:var(--ink); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; font:inherit; cursor:pointer; overflow:hidden; transition:transform .13s ease,border-color .16s ease,box-shadow .16s ease; }
   .project-library-icon-card:active, .qm-library-card:active { transform:scale(.96); }
   .project-library-icon-card.sel, .qm-library-card.is-selected { border-color:var(--accent); box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 28%,transparent),0 6px 14px rgba(10,24,46,.08); }
-  .project-library-art, .qm-library-art { width:52px; height:52px; filter:drop-shadow(0 3px 5px rgba(10,24,46,.13)); }
+  .project-library-art, .qm-library-art { width:52px; height:52px; filter:drop-shadow(0 3px 5px color-mix(in srgb,var(--accent) 25%,transparent)); }
   .project-library-icon-card > span:last-child, .qm-library-card > span:last-child { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:10px; font-weight:720; }
   .qm-library-grid { max-height:min(48vh,390px); overflow:auto; padding-right:2px; }
 
@@ -3002,13 +3002,22 @@
   .qm-function-row > i { color:var(--accent); font-style:normal; font-size:18px; text-align:right; }
   .accent-cell.accent-custom.sel { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent); }
 
-  /* ===== v65.5 · themed icon extensions & quick-menu editor refinement ===== */
-  /* The quick menu is intentionally denser than selection dialogs: its vector art fills the media tile. */
-  /* Library vectors fill the same 39px/37px media tile used by default glyphs and uploaded images. */
-  .quick-menu-slot > .quick-slot-media.has-library-icon { width:39px; height:39px; border-radius:13px; }
-  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { width:100%; height:100%; transform:scale(1.285); transform-origin:center; }
+  /* ===== v65.9 · quick-menu icon artwork ===== */
+  /*
+     내장 아이콘은 작은 심볼이 아니라 ‘미니 썸네일 그림’으로 취급합니다.
+     기본 글리프/업로드 이미지와 같은 39px(미니 37px) 미디어 타일을 쓰되,
+     SVG 안의 8px 안전 여백은 타일 안에서만 확대해 실제 그림이 카드 끝까지 차 보이게 합니다.
+  */
+  .quick-menu-slot > .quick-slot-media.has-library-icon { width:39px; height:39px; border-radius:13px; padding:0; }
+  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon {
+    position:absolute; inset:0; width:100%; height:100%;
+    transform:scale(1.34); transform-origin:center;
+  }
+  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon > svg {
+    width:100%; height:100%; max-width:none; max-height:none; display:block;
+  }
   .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon { width:37px; height:37px; border-radius:12px; }
-  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.285); }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.34); }
   .li-card-title { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:10px; font-weight:760; }
   .li-card-style { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--faint); font-size:8.5px; font-weight:700; letter-spacing:.015em; }
   .project-library-icon-card, .qm-library-card { min-height:98px; gap:3px; }
@@ -3022,41 +3031,52 @@
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn { border-color:color-mix(in srgb,var(--accent) 23%,var(--line)); background:color-mix(in srgb,var(--surface) 92%,var(--accent-soft) 8%); }
   html[data-theme="light"] #modalBox .qm-editor-actions .m-btn.danger { color:var(--danger); }
 
-  /* v65.7: icon art uses a true light/mid/deep palette.  --accent-deep is intentionally not used as a dark outline because v64.9 uses it as a light-mode pastel support token. */
+  /* ===== v65.9 · gradient-first vector icon palette =====
+     모든 내장 SVG는 테마의 두 메인 그라데이션 색(--accent / --accent-2)을 중심으로 씁니다.
+     --ink, --bg, --accent-deep처럼 테마의 가장 어두운 구조색은 아이콘의 외곽선·그림자에 쓰지 않습니다.
+     따라서 파스텔은 탁해지지 않고, 딥 테마도 검은 윤곽선 대신 같은 색 계열의 농도차로 형태를 분리합니다.
+  */
   .li-vector-icon {
-    --li-icon-base:color-mix(in srgb,var(--accent) 74%,var(--accent-2) 26%);
-    --li-icon-deep:color-mix(in srgb,var(--ink) 74%,var(--accent) 26%);
-    --li-icon-accent:color-mix(in srgb,var(--accent) 54%,var(--accent-2) 46%);
-    --li-icon-highlight:color-mix(in srgb,white 56%,var(--accent) 44%);
-    --li-icon-mid:color-mix(in srgb,white 34%,var(--accent) 66%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 70%,var(--li-icon-deep) 30%);
-    --li-icon-mid-2:color-mix(in srgb,var(--accent) 46%,var(--accent-2) 38%,white 16%);
-    --li-icon-shadow:color-mix(in srgb,var(--li-icon-deep) 72%,var(--accent) 28%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 61%,var(--accent-2) 39%);
+    --li-icon-deep:color-mix(in srgb,var(--accent) 40%,var(--accent-2) 60%);
+    --li-icon-accent:color-mix(in srgb,color-mix(in srgb,var(--accent) 57%,var(--accent-2) 43%) 83%,white 17%);
+    --li-icon-highlight:color-mix(in srgb,white 70%,var(--accent) 30%);
+    --li-icon-mid:color-mix(in srgb,white 41%,var(--accent) 59%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 76%,var(--accent-2) 24%);
+    --li-icon-mid-2:color-mix(in srgb,color-mix(in srgb,var(--accent) 54%,var(--accent-2) 46%) 72%,white 28%);
+    --li-icon-shadow:color-mix(in srgb,var(--accent) 55%,var(--accent-2) 45%);
     --li-icon-paper:color-mix(in srgb,white 91%,var(--accent) 9%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 74%,var(--accent) 26%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 62%,var(--accent-2) 38%);
-    --li-icon-ink:color-mix(in srgb,var(--ink) 77%,var(--accent) 23%);
-    --li-icon-gold:color-mix(in srgb,#f4d98b 42%,var(--accent-2) 36%,var(--accent) 22%);
-    --li-icon-gold-deep:color-mix(in srgb,#8d6520 37%,var(--li-icon-deep) 63%);
-    --li-icon-gold-ink:color-mix(in srgb,var(--li-icon-deep) 78%,#62481c 22%);
-    --li-icon-gold-light:color-mix(in srgb,white 49%,var(--accent-2) 51%);
-    --li-icon-glint:color-mix(in srgb,white 78%,var(--accent) 22%);
-    --li-icon-alert:color-mix(in srgb,#e07a87 50%,var(--accent) 50%);
-    --li-icon-alert-deep:color-mix(in srgb,#8f4054 42%,var(--li-icon-deep) 58%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 72%,var(--accent) 28%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,white 64%,var(--accent-2) 36%);
+    --li-icon-ink:color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%);
+    --li-icon-gold:color-mix(in srgb,color-mix(in srgb,var(--accent) 56%,var(--accent-2) 44%) 77%,white 23%);
+    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 65%,var(--accent-2) 35%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--accent) 47%,var(--accent-2) 53%);
+    --li-icon-gold-light:color-mix(in srgb,white 54%,var(--accent-2) 46%);
+    --li-icon-glint:color-mix(in srgb,white 81%,var(--accent) 19%);
+    --li-icon-alert:color-mix(in srgb,color-mix(in srgb,var(--accent) 45%,var(--accent-2) 55%) 88%,white 12%);
+    --li-icon-alert-deep:color-mix(in srgb,var(--accent) 48%,var(--accent-2) 52%);
   }
   html[data-theme="dark"] .li-vector-icon {
-    --li-icon-base:color-mix(in srgb,var(--accent) 73%,var(--accent-2) 27%);
-    --li-icon-deep:color-mix(in srgb,var(--bg) 68%,var(--accent) 32%);
-    --li-icon-accent:color-mix(in srgb,var(--accent) 50%,var(--accent-2) 50%);
-    --li-icon-highlight:color-mix(in srgb,white 70%,var(--accent) 30%);
-    --li-icon-mid:color-mix(in srgb,white 28%,var(--accent) 72%);
-    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 66%,var(--li-icon-deep) 34%);
-    --li-icon-mid-2:color-mix(in srgb,var(--accent) 44%,var(--accent-2) 40%,white 16%);
-    --li-icon-shadow:color-mix(in srgb,var(--bg) 74%,var(--accent) 26%);
-    --li-icon-paper:color-mix(in srgb,white 89%,var(--accent-soft) 11%);
-    --li-icon-paper-shadow:color-mix(in srgb,white 61%,var(--accent) 39%);
-    --li-icon-paper-shadow-2:color-mix(in srgb,white 72%,var(--accent-2) 28%);
-    --li-icon-ink:color-mix(in srgb,var(--bg) 72%,var(--accent) 28%);
+    --li-icon-base:color-mix(in srgb,var(--accent) 57%,var(--accent-2) 43%);
+    --li-icon-deep:color-mix(in srgb,var(--accent) 37%,var(--accent-2) 63%);
+    --li-icon-accent:color-mix(in srgb,color-mix(in srgb,var(--accent) 56%,var(--accent-2) 44%) 77%,white 23%);
+    --li-icon-highlight:color-mix(in srgb,white 74%,var(--accent) 26%);
+    --li-icon-mid:color-mix(in srgb,white 34%,var(--accent) 66%);
+    --li-icon-mid-deep:color-mix(in srgb,var(--accent) 70%,var(--accent-2) 30%);
+    --li-icon-mid-2:color-mix(in srgb,color-mix(in srgb,var(--accent) 53%,var(--accent-2) 47%) 78%,white 22%);
+    --li-icon-shadow:color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%);
+    --li-icon-paper:color-mix(in srgb,white 93%,var(--accent) 7%);
+    --li-icon-paper-shadow:color-mix(in srgb,white 67%,var(--accent) 33%);
+    --li-icon-paper-shadow-2:color-mix(in srgb,white 59%,var(--accent-2) 41%);
+    --li-icon-ink:color-mix(in srgb,var(--accent) 48%,var(--accent-2) 52%);
+    --li-icon-gold:color-mix(in srgb,color-mix(in srgb,var(--accent) 52%,var(--accent-2) 48%) 75%,white 25%);
+    --li-icon-gold-deep:color-mix(in srgb,var(--accent) 59%,var(--accent-2) 41%);
+    --li-icon-gold-ink:color-mix(in srgb,var(--accent) 44%,var(--accent-2) 56%);
+    --li-icon-gold-light:color-mix(in srgb,white 57%,var(--accent-2) 43%);
+    --li-icon-glint:color-mix(in srgb,white 84%,var(--accent) 16%);
+    --li-icon-alert:color-mix(in srgb,color-mix(in srgb,var(--accent) 44%,var(--accent-2) 56%) 85%,white 15%);
+    --li-icon-alert-deep:color-mix(in srgb,var(--accent) 45%,var(--accent-2) 55%);
   }
   .custom-theme-group-메인 { border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 89%,var(--accent-soft) 11%),var(--surface)); }
   .custom-theme-field-button.is-main { border-color:color-mix(in srgb,var(--accent) 46%,var(--line)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent); }

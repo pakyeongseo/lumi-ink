@@ -1,4 +1,10 @@
 
+## v65.9
+- 퀵메뉴 내장 아이콘을 작은 심볼이 아닌 미니 썸네일 그림처럼 타일 안에 꽉 차게 보정
+- 70종 SVG 아이콘 팔레트를 테마별 두 메인 그라데이션 색(`--accent`, `--accent-2`) 중심으로 재구성
+- 아이콘 외곽선·음영에서 `--ink`·`--accent-deep` 같은 최심부 구조색 의존 제거
+
+
 ## v65.8
 - 설치 간판 페이지 및 컬러별 설치 페이지 리뉴얼 통합
 - 퀵 메뉴 기능 바로가기와 설정 기능 단축 실행 추가
@@ -16,16 +22,16 @@
 
 # Lumi Ink v1.5
 
-루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v65.8**입니다.
+루미잉크는 프로젝트 단위로 여러 종류의 메모를 관리하는 로컬 웹앱/PWA입니다. 이 배포본의 사용자 버전은 **v1.5**이며, 기능 기준 개발 빌드는 **v65.9**입니다.
 
 ## 현재 버전
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: `v65.8`
-- 서비스워커 캐시: `ink-memo-v1.5-v65.8-install-function-shortcuts`
+- 개발 기준 빌드: `v65.9`
+- 서비스워커 캐시: `ink-memo-v1.5-v65.9-quickmenu-art-palette`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 최신 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 개발 변경 이력: `Lumi_Ink_v65.8_Release_Notes.md`
+- 개발 변경 이력: `Lumi_Ink_v65.9_Release_Notes.md`
 
 ## 주요 기능
 
@@ -124,7 +130,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v65.8_Release_Notes.md` (최신 개발 변경 이력)
+- `Lumi_Ink_v65.9_Release_Notes.md` (최신 개발 변경 이력)
 - `lumink-log-template-guide.md`
 - `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`
