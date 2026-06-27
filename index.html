@@ -2990,6 +2990,27 @@
   .custom-theme-field-button small { color:var(--faint); font:700 10px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.02em; }
   .custom-theme-field-button i { width:32px; height:32px; border:1px solid color-mix(in srgb,var(--ink) 14%,transparent); border-radius:9px; box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
   .custom-theme-field-button svg { width:17px; height:17px; fill:none; stroke:var(--faint); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+
+  /* ===== v65.5 · themed icon extensions & quick-menu editor refinement ===== */
+  /* The quick menu is intentionally denser than selection dialogs: its vector art fills the media tile. */
+  .quick-menu-slot > .quick-slot-media.has-library-icon { width:44px; height:44px; border-radius:14px; }
+  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.28); transform-origin:center; }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon { width:40px; height:40px; border-radius:13px; }
+  .quick-menu.is-mini .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon { transform:scale(1.22); }
+  .li-card-title { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); font-size:10px; font-weight:760; }
+  .li-card-style { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--faint); font-size:8.5px; font-weight:700; letter-spacing:.015em; }
+  .project-library-icon-card, .qm-library-card { min-height:98px; gap:3px; }
+  .project-library-icon-card > span:last-child, .qm-library-card > span:last-child { max-width:none; overflow:visible; text-overflow:clip; white-space:normal; color:inherit; font-size:inherit; font-weight:inherit; }
+  /* Slot editor's neutral controls must never fall back to browser black in light mode. */
+  html[data-theme="light"] #modalBox .qm-editor-actions .m-btn,
+  html[data-theme="light"] #modalBox .qm-editor-label,
+  html[data-theme="light"] #modalBox .qm-entry-preview-copy b,
+  html[data-theme="light"] #modalBox .qm-entry-preview-copy small,
+  html[data-theme="light"] #modalBox .qm-code-hint { color:var(--accent-ink); }
+  html[data-theme="light"] #modalBox .qm-editor-actions .m-btn { border-color:color-mix(in srgb,var(--accent) 23%,var(--line)); background:color-mix(in srgb,var(--surface) 92%,var(--accent-soft) 8%); }
+  html[data-theme="light"] #modalBox .qm-editor-actions .m-btn.danger { color:var(--danger); }
+
   .li-vector-icon {
     --li-icon-base:color-mix(in srgb,var(--accent-deep) 73%,#263957 27%);
     --li-icon-deep:color-mix(in srgb,var(--accent-deep) 86%,#101725 14%);

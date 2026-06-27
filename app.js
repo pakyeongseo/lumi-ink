@@ -98,6 +98,14 @@
 
   function quickMenuLibraryIconId(value) { return QUICK_MENU_ICON_BY_ID.has(String(value || "")) ? String(value) : null; }
   function quickMenuLibraryIcon(entryId) { return QUICK_MENU_ICON_BY_ID.get(quickMenuLibraryIconId(entryId)) || null; }
+  function quickMenuIconThemeLabel(item) { return cleanImportedText(String((item && item.themeLabel) || "루미 기본"), 18).trim() || "루미 기본"; }
+  function quickMenuIconCardMarkup(item, selected, scope) {
+    const target = scope === "project" ? "data-project-library-icon" : "data-qm-library-icon";
+    const classes = scope === "project" ? "project-library-icon-card" : "qm-library-card";
+    const artClass = scope === "project" ? "project-library-art" : "qm-library-art";
+    const selectedClass = scope === "project" ? (selected ? " sel" : "") : (selected ? " is-selected" : "");
+    return `<button type="button" class="${classes}${selectedClass}" ${target}="${esc(item.id)}">${quickMenuLibraryIconMarkup(item.id, artClass)}<span class="li-card-title">${esc(item.label)}</span><small class="li-card-style">${esc(quickMenuIconThemeLabel(item))}</small></button>`;
+  }
   function uniquifyInlineSvgIds(raw, scope) {
     const source = String(raw || "");
     if (!source) return "";
@@ -521,7 +529,8 @@
       const value = currentDraft();
       const safe = normalizeQuickMenuIconCode(value);
       if (!safe) { toast(svgMode ? "유효한 SVG 코드를 찾지 못했어요" : "유효한 CSS 아이콘 마크업과 CSS를 입력해 주세요"); return; }
-      quickMenuConfig().slots[index].iconCode = safe;
+      const current = quickMenuConfig().slots[index];
+      current.iconCode = safe; current.thumbnail = null; current.libraryIconId = null;
       await persistQuickMenu();
       openQuickMenuSlotEditor(index);
     });
@@ -531,8 +540,8 @@
     const active = QUICK_MENU_ICON_CATEGORIES.some((row) => row[0] === category) ? category : "all";
     const available = QUICK_MENU_ICON_LIBRARY.filter((item) => active === "all" || item.category === active);
     const tabs = QUICK_MENU_ICON_CATEGORIES.map(([key, label]) => `<button type="button" class="qm-library-tab ${key === active ? "is-active" : ""}" data-qm-library-tab="${key}">${label}</button>`).join("");
-    const cards = available.map((item) => `<button type="button" class="qm-library-card ${slot.libraryIconId === item.id ? "is-selected" : ""}" data-qm-library-icon="${esc(item.id)}">${quickMenuLibraryIconMarkup(item.id, "qm-library-art")}<span>${esc(item.label)}</span></button>`).join("");
-    openModal(`<h3>퀵메뉴 아이콘 모음</h3><p class="m-sub">루미잉크 기본 SVG 아이콘 30종입니다. 선택하면 해당 슬롯의 코드 아이콘과 이미지 썸네일은 해제되고, 벡터 아이콘으로 깔끔하게 바뀝니다.</p><div class="qm-library-tabs">${tabs}</div><div class="qm-library-grid">${cards}</div><div class="m-row"><button class="m-btn" id="qmLibraryBack">뒤로</button></div>`);
+    const cards = available.map((item) => quickMenuIconCardMarkup(item, slot.libraryIconId === item.id, "quick")).join("");
+    openModal(`<h3>퀵메뉴 아이콘 모음</h3><p class="m-sub">루미잉크 벡터 아이콘 ${QUICK_MENU_ICON_LIBRARY.length}종입니다. 선택하면 해당 슬롯의 코드 아이콘과 사용자 썸네일은 해제되고, 테마에 반응하는 벡터 아이콘으로 바뀝니다.</p><div class="qm-library-tabs">${tabs}</div><div class="qm-library-grid">${cards}</div><div class="m-row"><button class="m-btn" id="qmLibraryBack">뒤로</button></div>`);
     $("modalBox").querySelectorAll("[data-qm-library-tab]").forEach((button) => button.addEventListener("click", () => openQuickMenuBuiltinIconPicker(index, button.dataset.qmLibraryTab)));
     $("modalBox").querySelectorAll("[data-qm-library-icon]").forEach((button) => button.addEventListener("click", async () => {
       const id = quickMenuLibraryIconId(button.dataset.qmLibraryIcon); if (!id) return;
@@ -544,8 +553,7 @@
 
   function openQuickMenuSlotEditor(index) {
     const slot = quickMenuConfig().slots[index]; if (!slot || !slot.kind) { openQuickMenuSlotTypePicker(index); return; }
-    const hasCode = !!normalizeQuickMenuIconCode(slot.iconCode);
-    openModal(`<h3>슬롯 ${index + 1} 편집</h3><p class="m-sub">기본 아이콘, 사용자 썸네일, 또는 SVG/CSS 코드 아이콘 중 원하는 방식을 등록할 수 있어요.</p><div class="qm-entry-preview">${quickMenuSlotMedia(slot)}<span class="qm-entry-preview-copy"><b>${esc(quickMenuSlotLabel(slot))}</b><small>${esc(`${quickMenuSlotActionName(slot)} · ${quickMenuSlotMeta(slot)}`)}</small></span></div><label class="qm-editor-label" for="qmSlotLabel">표시 이름 <span style="font-weight:500">(비우면 대상 이름을 자동 표시)</span></label><input class="m-input" id="qmSlotLabel" maxlength="42" value="${esc(slot.label || "")}" placeholder="예: 진행 중인 세계관"><div class="qm-editor-actions"><button class="m-btn" id="qmChangeAction">동작 변경</button><button class="m-btn" id="qmBuiltinIcon">아이콘 모음</button><button class="m-btn" id="qmThumbPick">이미지 썸네일</button><button class="m-btn" id="qmCodeIcon">SVG/CSS 아이콘</button><button class="m-btn ${slot.libraryIconId ? "" : "hidden"}" id="qmBuiltinReset">아이콘 해제</button><button class="m-btn ${slot.thumbnail ? "" : "hidden"}" id="qmThumbReset">이미지 해제</button><button class="m-btn ${hasCode ? "" : "hidden"}" id="qmCodeReset">코드 해제</button><button class="m-btn danger qm-wide" id="qmSlotDelete">이 슬롯 비우기</button></div><div class="m-row"><button class="m-btn" id="qmEditorBack">목록</button><button class="m-btn primary" id="qmEditorSave">저장</button></div>`);
+    openModal(`<h3>슬롯 ${index + 1} 편집</h3><p class="m-sub">기본 아이콘, 사용자 썸네일, 또는 SVG/CSS 코드 아이콘 중 원하는 방식을 등록할 수 있어요.</p><div class="qm-entry-preview">${quickMenuSlotMedia(slot)}<span class="qm-entry-preview-copy"><b>${esc(quickMenuSlotLabel(slot))}</b><small>${esc(`${quickMenuSlotActionName(slot)} · ${quickMenuSlotMeta(slot)}`)}</small></span></div><label class="qm-editor-label" for="qmSlotLabel">표시 이름 <span style="font-weight:500">(비우면 대상 이름을 자동 표시)</span></label><input class="m-input" id="qmSlotLabel" maxlength="42" value="${esc(slot.label || "")}" placeholder="예: 진행 중인 세계관"><div class="qm-editor-actions"><button class="m-btn" id="qmChangeAction">동작 변경</button><button class="m-btn" id="qmBuiltinIcon">아이콘 모음</button><button class="m-btn" id="qmThumbPick">썸네일 업로드</button><button class="m-btn" id="qmCodeIcon">SVG/CSS 아이콘</button><button class="m-btn qm-wide" id="qmDefaultIcon">기본 설정</button><button class="m-btn danger qm-wide" id="qmSlotDelete">이 슬롯 비우기</button></div><div class="m-row"><button class="m-btn" id="qmEditorBack">목록</button><button class="m-btn primary" id="qmEditorSave">저장</button></div>`);
     const saveLabel = async (stay) => {
       const cfg = quickMenuConfig(), current = cfg.slots[index]; if (!current) return;
       current.label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu();
@@ -553,11 +561,9 @@
     };
     $on("qmChangeAction", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuSlotTypePicker(index); });
     $on("qmBuiltinIcon", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuBuiltinIconPicker(index); });
-    $on("qmBuiltinReset", "click", async () => { quickMenuConfig().slots[index].libraryIconId = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
     $on("qmThumbPick", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); quickMenuImageSlot = index; $("quickMenuImageInput").click(); });
     $on("qmCodeIcon", "click", async () => { quickMenuConfig().slots[index].label = cleanImportedText($("qmSlotLabel").value || "", 42).trim(); await persistQuickMenu(); openQuickMenuIconCodeEditor(index); });
-    $on("qmThumbReset", "click", async () => { quickMenuConfig().slots[index].thumbnail = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
-    $on("qmCodeReset", "click", async () => { quickMenuConfig().slots[index].iconCode = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); });
+    $on("qmDefaultIcon", "click", async () => { const current = quickMenuConfig().slots[index]; current.thumbnail = null; current.iconCode = null; current.libraryIconId = null; await persistQuickMenu(); toast("기본 아이콘으로 되돌렸어요"); openQuickMenuSlotEditor(index); });
     $on("qmSlotDelete", "click", () => confirmModal("퀵 메뉴 슬롯 비우기", `슬롯 ${index + 1}의 바로가기와 사용자 지정 아이콘을 지울까요?`, "비우기", true, async () => { await clearQuickMenuSlot(index); openQuickMenuManager(); }));
     $on("qmEditorBack", "click", () => { void saveLabel(true); });
     $on("qmEditorSave", "click", () => { void saveLabel(false); });
@@ -4367,7 +4373,7 @@
     } else {
       const cats = QUICK_MENU_ICON_CATEGORIES.map(([key, label]) => `<button type="button" class="project-icon-cat ${key === activeCat ? "is-active" : ""}" data-project-icon-cat="${key}">${label}</button>`).join("");
       const items = QUICK_MENU_ICON_LIBRARY.filter((item) => activeCat === "all" || item.category === activeCat);
-      content = `<div class="project-icon-cats">${cats}</div><div class="project-icon-library-grid">${items.map((item) => `<button type="button" class="project-library-icon-card ${p.iconLibraryId === item.id && !p.icon ? "sel" : ""}" data-project-library-icon="${esc(item.id)}">${quickMenuLibraryIconMarkup(item.id, "project-library-art")}<span>${esc(item.label)}</span></button>`).join("")}</div>`;
+      content = `<div class="project-icon-cats">${cats}</div><div class="project-icon-library-grid">${items.map((item) => quickMenuIconCardMarkup(item, p.iconLibraryId === item.id && !p.icon, "project")).join("")}</div>`;
     }
     openModal(`<h3>프로젝트 썸네일</h3><p class="m-sub">${esc(p.name)} · 기본 이미지와 루미잉크 아이콘 중에서 선택할 수 있어요.</p>${tabBar}${content}<div class="m-row"><button class="m-btn" id="iconClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-project-icon-tab]").forEach((el) => el.addEventListener("click", () => showIconPicker(pid, el.dataset.projectIconTab, activeCat)));
@@ -6098,7 +6104,7 @@ ${gallery}
     $on("quickMenuImageInput", "change", async (event) => {
       const file = event.target.files && event.target.files[0], index = quickMenuImageSlot; event.target.value = "";
       if (!file || !Number.isInteger(index)) return;
-      try { quickMenuConfig().slots[index].thumbnail = await quickThumbnailFromFile(file); await persistQuickMenu(); openQuickMenuSlotEditor(index); }
+      try { const current = quickMenuConfig().slots[index]; current.thumbnail = await quickThumbnailFromFile(file); current.iconCode = null; current.libraryIconId = null; await persistQuickMenu(); openQuickMenuSlotEditor(index); }
       catch (e) { toast((e && e.message) || "썸네일을 바꾸지 못했어요"); }
       finally { quickMenuImageSlot = null; }
     });
