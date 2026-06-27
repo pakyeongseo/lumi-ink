@@ -3149,6 +3149,74 @@
   .quick-slot-media.has-code-icon { border:0; box-shadow:none; background:transparent; }
   .quick-slot-media.has-library-icon .quick-menu-library-icon { filter:none; }
   @media (max-width:380px) { .custom-theme-file-actions { grid-template-columns:1fr; } }
+
+  /* ===== v66.3 · transparent quick-menu art / expanded custom roles / log set polish ===== */
+  /* 사용자 아이콘은 슬롯이라는 "프레임"을 받지 않고, 프로젝트 썸네일처럼 그림만 남깁니다. */
+  .quick-menu-slot > .quick-slot-media.has-library-icon,
+  .quick-menu-slot > .quick-slot-media.has-code-icon,
+  .qm-manager-slot .quick-slot-media.has-library-icon,
+  .qm-manager-slot .quick-slot-media.has-code-icon,
+  .qm-entry-preview .quick-slot-media.has-library-icon,
+  .qm-entry-preview .quick-slot-media.has-code-icon {
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+  }
+  .quick-menu-slot > .quick-slot-media.has-library-icon::before,
+  .quick-menu-slot > .quick-slot-media.has-code-icon::before,
+  .quick-menu-slot > .quick-slot-media.has-library-icon::after,
+  .quick-menu-slot > .quick-slot-media.has-code-icon::after { content:none !important; }
+  .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon,
+  .quick-menu-slot > .quick-slot-media.has-code-icon .quick-menu-custom-icon { filter:none !important; }
+
+  /* 사용자 지정 테마에서만 별도 롤을 적용해 프리셋의 기존 배치를 보존합니다. */
+  html[data-custom-theme] .sb-fbtn { background:var(--sidebar-foot-bg); }
+  html[data-custom-theme] .set-gtitle { color:var(--settings-group-title-color); }
+  html[data-custom-theme] .set-rlabel { color:var(--settings-row-title-color); }
+  html[data-custom-theme] .set-row.danger .set-rlabel { color:var(--danger); }
+
+  /* 고정 제목의 더블터치 안내점은 제거하고, 입력 커서 성격만 남깁니다. */
+  .title-quick-rename::after { content:none; display:none; }
+
+  /* 로그 치환 세트: 다섯 개의 작은 제본 탭처럼 읽히는 밀도와 상태 구분. */
+  .log-rename-sets {
+    gap:6px;
+    padding:5px;
+    border:1px solid color-mix(in srgb,var(--line) 86%,transparent);
+    border-radius:16px;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--surface-2) 88%,var(--accent-soft) 12%),var(--surface));
+  }
+  .log-rename-set {
+    min-height:56px;
+    padding:7px 3px 6px;
+    border:1px solid color-mix(in srgb,var(--line) 92%,transparent);
+    border-radius:11px 11px 13px 13px;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--surface) 96%,#fff 4%),var(--surface-2));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 36%,transparent),0 4px 10px -10px rgba(0,0,0,.36);
+  }
+  .log-rename-set::before {
+    opacity:1;
+    height:3px;
+    inset:0 0 auto;
+    border-radius:11px 11px 0 0;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--line) 85%,transparent),color-mix(in srgb,var(--accent) 42%,transparent),color-mix(in srgb,var(--line) 85%,transparent));
+  }
+  .log-rename-set:hover,
+  .log-rename-set.is-configured {
+    border-color:color-mix(in srgb,var(--accent) 48%,var(--line));
+    background:linear-gradient(160deg,color-mix(in srgb,var(--surface) 90%,var(--accent-soft) 10%),color-mix(in srgb,var(--surface-2) 82%,var(--accent-soft) 18%));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 42%,transparent),0 8px 16px -13px color-mix(in srgb,var(--accent) 86%,transparent);
+  }
+  .log-rename-set.is-configured::before { background:linear-gradient(90deg,var(--accent),var(--accent-2)); }
+  .log-rename-set.is-partial::before { background:linear-gradient(90deg,var(--warning,#d39c36),color-mix(in srgb,var(--warning,#d39c36) 32%,transparent)); }
+  .log-rename-index { font-size:12px; line-height:1; letter-spacing:.06em; color:var(--accent); }
+  .log-rename-label { font-size:8.5px; line-height:1; letter-spacing:.11em; color:var(--muted); text-transform:uppercase; }
+  .log-rename-state { position:absolute; right:7px; bottom:7px; width:5px; height:5px; background:color-mix(in srgb,var(--line) 80%,transparent); }
+  .log-rename-set.is-configured .log-rename-state { box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent); }
+  @media (max-width:380px) { .log-rename-sets { gap:4px; padding:4px; } .log-rename-set { min-height:53px; } .log-rename-index { font-size:11px; } }
+
 </style>
 <link rel="stylesheet" href="./idea-board-custom-templates.css">
 </head>

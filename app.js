@@ -98,6 +98,7 @@
   const QUICK_MENU_FUNCTIONS = Object.freeze([
     { id:"home", group:"빠른 이동", label:"홈 바로가기", meta:"루미잉크 첫 화면으로 이동" },
     { id:"settings", group:"빠른 이동", label:"설정 바로가기", meta:"설정 화면을 바로 열기" },
+    { id:"app-reload", group:"빠른 이동", label:"앱 새로고침", meta:"저장한 뒤 현재 화면을 다시 불러오기" },
     { id:"setting-theme", group:"화면 설정", label:"테마 전환", meta:"밝게 · 어둡게 즉시 전환" },
     { id:"setting-accent", group:"화면 설정", label:"컬러 테마", meta:"프리셋 또는 사용자 지정 테마 고르기" },
     { id:"setting-font", group:"화면 설정", label:"웹폰트", meta:"앱 글꼴 바꾸기" },
@@ -295,6 +296,7 @@
       const art = {
         home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/>',
         settings:'<circle cx="12" cy="12" r="3.1"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/>',
+        'app-reload':'<path d="M20 11a8.2 8.2 0 1 0 1.1 4.1"/><path d="M20 4v7h-7"/>',
         'setting-theme':'<circle cx="12" cy="12" r="3.6"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
         'setting-accent':'<path d="M12 3a9 9 0 1 0 0 18 2.5 2.5 0 0 0 0-5h-1a2 2 0 0 1 0-4h2a3 3 0 0 0 0-6Z"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/><circle cx="10" cy="7.5" r=".8" fill="currentColor"/><circle cx="14.2" cy="7.2" r=".8" fill="currentColor"/>',
         'setting-font':'<path d="M5 19 10 5h4l5 14M7.2 14h9.6"/>',
@@ -437,6 +439,7 @@
     setQuickMenuOpen(false);
     if (id === "home") { await goHome(); return; }
     if (id === "settings") { await flushPending(); go({ s:"settings" }); return; }
+    if (id === "app-reload") { await flushPending(); window.location.reload(); return; }
     if (id === "setting-theme") { applyTheme(st.theme === "light" ? "dark" : "light"); renderSettings(); return; }
     if (id === "setting-accent") { openAccentPicker(); return; }
     if (id === "setting-font") { showFontDialog(); return; }
@@ -2964,7 +2967,7 @@
       const partial = !!(set.names.length && !set.replacement);
       const state = ready ? " is-configured" : (partial ? " is-partial" : "");
       const stateLabel = ready ? "설정됨" : (partial ? "바꿀 이름 미지정" : "비어 있음");
-      return `<button class="log-rename-set${state}" type="button" data-log-rename-set="${index}" aria-label="이름 치환 세트 ${index + 1} 편집 · ${stateLabel}" title="이름 치환 세트 ${index + 1}"><span class="log-rename-index">${String(index + 1).padStart(2, "0")}</span><span class="log-rename-label">세트 ${index + 1}</span><span class="log-rename-state" aria-hidden="true"></span></button>`;
+      return `<button class="log-rename-set${state}" type="button" data-log-rename-set="${index}" aria-label="이름 치환 세트 ${index + 1} 편집 · ${stateLabel}" title="이름 치환 세트 ${index + 1}"><span class="log-rename-index">${String(index + 1).padStart(2, "0")}</span><span class="log-rename-label">세트</span><span class="log-rename-state" aria-hidden="true"></span></button>`;
     }).join("");
     host.querySelectorAll("[data-log-rename-set]").forEach((button) => button.addEventListener("click", () => openLogNameSetEditor(Number(button.dataset.logRenameSet))));
   }
@@ -6068,6 +6071,7 @@ ${gallery}
     { key:"mainA",          label:"메인 색상 1 · 시작",  variable:"--accent",            fallback:"#2F6FD0", group:"main" },
     { key:"mainB",          label:"메인 색상 2 · 끝",    variable:"--accent-2",          fallback:"#5A73D8", group:"main" },
     { key:"sectionTitleBg", label:"작은 섹션 제목 배경",  variable:"--section-title-bg", fallback:"#EAF0FF", group:"section" },
+    { key:"sidebarFootBg", label:"사이드바 하단 버튼 배경", variable:"--sidebar-foot-bg", fallback:"#E8EEF9", group:"sidebar" },
     { key:"bg",             label:"앱 배경",              variable:"--bg",                fallback:"#F3F4F8", group:"background" },
     { key:"bg2",      label:"보조 배경",           variable:"--bg-2",        fallback:"#ECEEF4", group:"background" },
     { key:"paper",    label:"문서 바탕",           variable:"--paper",       fallback:"#FCFCFD", group:"background" },
@@ -6078,6 +6082,8 @@ ${gallery}
     { key:"barBg2",   label:"상단바 보조",         variable:"--bar-bg-2",    fallback:"#F6F7FB", group:"bar" },
     { key:"barLine",  label:"상단바 경계",         variable:"--bar-line",    fallback:"#E1E3EC", group:"bar" },
     { key:"memoTitle", label:"메모 제목",           variable:"--memo-title-color", fallback:"#283A63", group:"type" },
+    { key:"settingsGroupTitle", label:"설정 그룹 제목", variable:"--settings-group-title-color", fallback:"#5E6377", group:"settings" },
+    { key:"settingsRowTitle", label:"설정 항목 제목", variable:"--settings-row-title-color", fallback:"#1B1D27", group:"settings" },
     { key:"ink",       label:"본문 글자",           variable:"--ink",              fallback:"#1B1D27", group:"type" },
     { key:"muted",     label:"보조 글자",           variable:"--muted",            fallback:"#5E6377", group:"type" },
     { key:"faint",    label:"희미한 글자",         variable:"--faint",       fallback:"#A3A8BA", group:"type" },
@@ -6085,8 +6091,8 @@ ${gallery}
     { key:"lineSoft", label:"옅은 경계선",         variable:"--line-soft",   fallback:"#EBEDF3", group:"line" }
   ]);
   const CUSTOM_THEME_GROUPS = Object.freeze([
-    ["main", "메인 그라데이션"], ["section", "섹션 제목"], ["background", "바탕"], ["card", "카드"],
-    ["bar", "상단바"], ["type", "글자"], ["line", "경계선"]
+    ["main", "메인 그라데이션"], ["section", "섹션 제목"], ["sidebar", "사이드바 하단"], ["background", "바탕"], ["card", "카드"],
+    ["bar", "상단바"], ["settings", "설정 제목"], ["type", "글자"], ["line", "경계선"]
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
     ...CUSTOM_THEME_COLOR_META.map((item) => item.variable),
@@ -6124,7 +6130,8 @@ ${gallery}
         surface:hslToHex(H,S*.11,.998), surface2:hslToHex(lerpHue(hueB,hueA,.24),S*.20,.968), surface3:hslToHex(H,S*.26,.932),
         barBg:hslToHex(hueA,S*.10,.998), barBg2:hslToHex(hueB,S*.16,.982), barLine:hslToHex(H,S*.21,.885),
         sectionTitleBg:hslToHex(lerpHue(hueA,hueB,.44),Math.max(.10,S*.25),.915),
-        memoTitle:hslToHex(H,Math.max(.28,S*.48),.245), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted:hslToHex(H,Math.max(.18,S*.30),.39), faint:hslToHex(H,Math.max(.12,S*.18),.61),
+        sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.36),Math.max(.12,S*.25),.928),
+        memoTitle:hslToHex(H,Math.max(.28,S*.48),.245), settingsGroupTitle:hslToHex(H,Math.max(.18,S*.30),.39), settingsRowTitle:hslToHex(H,Math.max(.30,S*.52),.205), ink:hslToHex(H,Math.max(.30,S*.52),.205), muted:hslToHex(H,Math.max(.18,S*.30),.39), faint:hslToHex(H,Math.max(.12,S*.18),.61),
         line:hslToHex(H,S*.18,.892), lineSoft:hslToHex(H,S*.12,.942)
       });
     } else {
@@ -6133,7 +6140,8 @@ ${gallery}
         surface:hslToHex(H,S*.25,.135), surface2:hslToHex(lerpHue(hueB,hueA,.25),S*.28,.178), surface3:hslToHex(H,S*.27,.225),
         barBg:hslToHex(hueA,S*.34,.145), barBg2:hslToHex(hueB,S*.35,.188), barLine:hslToHex(H,S*.26,.275),
         sectionTitleBg:hslToHex(H,Math.max(.13,S*.20),.20),
-        memoTitle:hslToHex(H,Math.max(.12,S*.18),.965), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted:hslToHex(H,Math.max(.10,S*.14),.70), faint:hslToHex(H,Math.max(.08,S*.10),.48),
+        sidebarFootBg:hslToHex(lerpHue(hueA,hueB,.34),Math.max(.15,S*.24),.19),
+        memoTitle:hslToHex(H,Math.max(.12,S*.18),.965), settingsGroupTitle:hslToHex(H,Math.max(.10,S*.14),.70), settingsRowTitle:hslToHex(H,Math.max(.13,S*.18),.94), ink:hslToHex(H,Math.max(.13,S*.18),.94), muted:hslToHex(H,Math.max(.10,S*.14),.70), faint:hslToHex(H,Math.max(.08,S*.10),.48),
         line:hslToHex(H,S*.23,.258), lineSoft:hslToHex(H,S*.18,.195)
       });
     }
@@ -6159,7 +6167,7 @@ ${gallery}
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
   function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
-    const sourceVar=item.key==="sectionTitleBg"?"--accent-soft":item.key==="memoTitle"?"--logo-ink":item.variable;
+    const sourceVar=({ sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", memoTitle:"--logo-ink", settingsGroupTitle:"--muted", settingsRowTitle:"--ink" })[item.key] || item.variable;
     return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
   }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
   function normalizePalette(raw,fallback,mode){
@@ -6169,7 +6177,7 @@ ${gallery}
     out.mainB=normalizeThemeHex(src.mainB,ref.mainB||gradientMate(legacyMain));
     const recommended=recommendCustomPalette(out.mainA,out.mainB,mode==="dark"?"dark":"light");
     CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{
-      const missingRole=item.key==="sectionTitleBg"||item.key==="memoTitle";
+      const missingRole=["sectionTitleBg","sidebarFootBg","memoTitle","settingsGroupTitle","settingsRowTitle"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
     return out;
@@ -6182,21 +6190,21 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:7,baseAccent,
+    return {version:8,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:7,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:8,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){ return Object.assign(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,palette.colors[item.key]])),customThemeAccentVars(palette,mode)); }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<7;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
-  function appearanceSnapshot(){return {version:7,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<8;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  function appearanceSnapshot(){return {version:8,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
   function applyAccent(name){const custom=name===LEGACY_CUSTOM_ACCENT;const accent=custom?LEGACY_CUSTOM_ACCENT:validAccentName(name);st.accent=accent;if(custom||accent==="blue")document.documentElement.removeAttribute("data-accent");else document.documentElement.setAttribute("data-accent",accent);if(!custom&&st.customTheme){st.customTheme.baseAccent=accent;}try{localStorage.setItem("luminkAccent",accent);}catch(e){}applyCustomTheme(st.customTheme,{persist:false});}
