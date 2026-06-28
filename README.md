@@ -5,18 +5,18 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.20**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.20-sort-text-theme-role`
+- 개발 기준 빌드: **v66.21**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.21-markdown-render-preview`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.20_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.21_Release_Notes.md`
 
 ## 핵심 기능
 
 - 자유 메모, HTML·JSON·Markdown 원문을 통합하는 코드 작업실, 로어북, 로그 저장, 페르소나·캐릭터, 아이디어 보드
 - 프로젝트별 관리와 전체/프로젝트 백업·복원, 자동 백업
 - 로그 디자인 템플릿 100종과 사용자 템플릿 업로드 · 이름 가림 디자인 5종 · 게시판용 PNG 내보내기
-- 사이드바 **열기**는 Android 파일 선택기에서 모든 파일을 표시하고, 앱 안에서 HTML · JSON · Markdown · 일반 텍스트를 판별합니다.
+- 사이드바 **열기**는 Android 파일 선택기에서 모든 파일을 표시하고, 앱 안에서 HTML · JSON · Markdown · 일반 텍스트를 판별합니다. Markdown은 코드 작업실에서 렌더링 미리보기로 확인할 수 있습니다.
 - 사이드바 열기에서 일반 JSON 원문을 메모 또는 코드 작업실로 안전하게 열기
 - 아이디어 보드 이미지 배경, PNG 캡처, HTML 내보내기
 - 10종 PWA 설치 아이콘과 설치 간판 페이지
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.21
+
+- 코드 작업실에서 Markdown 원문을 열면 PREVIEW·SPLIT 보기에서 제목, 목록, 인용문, 체크리스트, 표, 코드 블록, 링크, 이미지를 렌더링한 문서로 확인합니다.
+- Markdown의 HTML 태그와 스크립트는 실행하지 않으며, 원문 편집·`.md` 내보내기는 그대로 유지합니다.
+- Markdown 형식을 선택해 파일로 저장할 때 실제로 `.md` 확장자와 `text/markdown` MIME을 사용하도록 저장 분기를 보정했습니다.
 
 ## v66.20
 

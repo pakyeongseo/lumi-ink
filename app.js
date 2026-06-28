@@ -1614,15 +1614,129 @@
     return "<!doctype html>\n" + doc.documentElement.outerHTML;
   }
   function buildPlainCodePreview(source, format) {
-    const label = format === "json" ? "JSON 원문 보기" : "Markdown 원문 보기";
-    const color = format === "json" ? "#87b5ff" : "#a9d79a";
+    const label = format === "json" ? "JSON 원문 보기" : "원문 보기";
+    const color = "#87b5ff";
     return `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${label}</title><style>html,body{margin:0;min-height:100%;background:#101622;color:#e8edf8;font-family:ui-monospace,SFMono-Regular,Consolas,'D2Coding',monospace}header{position:sticky;top:0;padding:11px 14px;background:#161f31;border-bottom:1px solid #29364e;color:${color};font:700 12px/1.4 -apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;letter-spacing:.08em}pre{margin:0;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.72;tab-size:2}</style><body><header>${label} · 렌더링 없이 원문만 표시</header><pre>${esc(String(source || ""))}</pre></body></html>`;
+  }
+  function markdownPreviewEscape(value) {
+    return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function markdownPreviewUrl(value, image) {
+    const raw = String(value == null ? "" : value).trim();
+    if (!raw) return "";
+    if (/^data:image\/(?:png|gif|jpe?g|webp|avif);base64,/i.test(raw)) return image ? raw : "";
+    try {
+      const parsed = new URL(raw, window.location.href);
+      const protocol = String(parsed.protocol || "").toLowerCase();
+      if (protocol === "http:" || protocol === "https:") return raw;
+      if (!image && protocol === "mailto:") return raw;
+    } catch (e) {}
+    return "";
+  }
+  function markdownPreviewInline(value) {
+    let source = String(value == null ? "" : value);
+    const slots = [];
+    const slot = (html) => {
+      const token = `\uE000${slots.length}\uE001`;
+      slots.push(html); return token;
+    };
+    source = source.replace(/`([^`\n]+)`/g, (all, code) => slot(`<code>${markdownPreviewEscape(code)}</code>`));
+    source = source.replace(/!\[([^\]]*)\]\(\s*<?([^\s>)]+)>?(?:\s+['\"][^'\"]*['\"])?\s*\)/g, (all, alt, url) => {
+      const safe = markdownPreviewUrl(url, true);
+      return safe ? slot(`<img src="${markdownPreviewEscape(safe)}" alt="${markdownPreviewEscape(alt)}" loading="lazy">`) : markdownPreviewEscape(all);
+    });
+    source = source.replace(/\[([^\]]+)\]\(\s*<?([^\s>)]+)>?(?:\s+['\"][^'\"]*['\"])?\s*\)/g, (all, label, url) => {
+      const safe = markdownPreviewUrl(url, false);
+      return safe ? slot(`<a href="${markdownPreviewEscape(safe)}" target="_blank" rel="noopener noreferrer">${markdownPreviewEscape(label)}</a>`) : markdownPreviewEscape(all);
+    });
+    source = markdownPreviewEscape(source);
+    source = source.replace(/~~([^~\n]+)~~/g, "<del>$1</del>");
+    source = source.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    source = source.replace(/__([^_\n]+)__/g, "<strong>$1</strong>");
+    source = source.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+    source = source.replace(/(^|[^_\w])_([^_\n]+)_/g, "$1<em>$2</em>");
+    return source.replace(/\uE000(\d+)\uE001/g, (all, index) => slots[Number(index)] || "");
+  }
+  function markdownPreviewTableCells(line) {
+    let row = String(line == null ? "" : line).trim();
+    if (row.startsWith("|")) row = row.slice(1);
+    if (row.endsWith("|")) row = row.slice(0, -1);
+    return row.split("|").map((cell) => cell.trim());
+  }
+  function markdownPreviewIsTableDivider(line) {
+    const cells = markdownPreviewTableCells(line);
+    return cells.length > 0 && cells.every((cell) => /^:?-{2,}:?$/.test(cell));
+  }
+  function markdownPreviewHtml(source) {
+    const lines = String(source == null ? "" : source).replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").split("\n");
+    const out = []; let i = 0; let paragraph = [];
+    const flushParagraph = () => {
+      if (!paragraph.length) return;
+      out.push(`<p>${paragraph.map(markdownPreviewInline).join("<br>")}</p>`);
+      paragraph = [];
+    };
+    const isFence = (line) => /^\s*```/.test(line);
+    while (i < lines.length) {
+      const raw = lines[i];
+      const trimmed = raw.trim();
+      if (!trimmed) { flushParagraph(); i++; continue; }
+      if (isFence(raw)) {
+        flushParagraph();
+        const language = (raw.match(/^\s*```\s*([^\s`]*)/) || ["", ""])[1].replace(/[^a-z0-9_+-]/gi, "").slice(0, 32);
+        const code = []; i++;
+        while (i < lines.length && !isFence(lines[i])) { code.push(lines[i]); i++; }
+        if (i < lines.length) i++;
+        out.push(`<pre class="md-code"><code${language ? ` class="language-${language}"` : ""}>${markdownPreviewEscape(code.join("\n"))}</code></pre>`);
+        continue;
+      }
+      const heading = raw.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+      if (heading) { flushParagraph(); const level = heading[1].length; out.push(`<h${level}>${markdownPreviewInline(heading[2])}</h${level}>`); i++; continue; }
+      if (/^\s*(?:---+|\*\*\*+|___+)\s*$/.test(raw)) { flushParagraph(); out.push("<hr>"); i++; continue; }
+      if (i + 1 < lines.length && /\|/.test(raw) && markdownPreviewIsTableDivider(lines[i + 1])) {
+        flushParagraph();
+        const headers = markdownPreviewTableCells(raw), aligns = markdownPreviewTableCells(lines[i + 1]);
+        const alignFor = (cell) => cell.startsWith(":") && cell.endsWith(":") ? "center" : cell.endsWith(":") ? "right" : cell.startsWith(":") ? "left" : "left";
+        const rows = []; i += 2;
+        while (i < lines.length && lines[i].trim() && /\|/.test(lines[i])) { rows.push(markdownPreviewTableCells(lines[i])); i++; }
+        out.push(`<div class="md-table-wrap"><table><thead><tr>${headers.map((cell, index) => `<th style="text-align:${alignFor(aligns[index] || "")}">${markdownPreviewInline(cell)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((_, index) => `<td style="text-align:${alignFor(aligns[index] || "")}">${markdownPreviewInline(row[index] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+        continue;
+      }
+      if (/^\s*>/.test(raw)) {
+        flushParagraph(); const quote = [];
+        while (i < lines.length && /^\s*>/.test(lines[i])) { quote.push(lines[i].replace(/^\s*>\s?/, "")); i++; }
+        out.push(`<blockquote>${quote.map(markdownPreviewInline).join("<br>")}</blockquote>`);
+        continue;
+      }
+      const listMatch = raw.match(/^(\s*)([-+*]|\d+[.)])\s+(.+)$/);
+      if (listMatch) {
+        flushParagraph(); const ordered = /\d/.test(listMatch[2]); const items = [];
+        while (i < lines.length) {
+          const current = lines[i].match(/^(\s*)([-+*]|\d+[.)])\s+(.+)$/);
+          if (!current || /\d/.test(current[2]) !== ordered) break;
+          const task = current[3].match(/^\[([ xX])\]\s+(.*)$/);
+          items.push(task
+            ? `<li class="task-item"><input type="checkbox" disabled ${/[xX]/.test(task[1]) ? "checked" : ""}><span>${markdownPreviewInline(task[2])}</span></li>`
+            : `<li>${markdownPreviewInline(current[3])}</li>`);
+          i++;
+        }
+        out.push(`<${ordered ? "ol" : "ul"}>${items.join("")}</${ordered ? "ol" : "ul"}>`);
+        continue;
+      }
+      paragraph.push(raw); i++;
+    }
+    flushParagraph();
+    return out.join("\n") || '<p class="md-empty">미리볼 Markdown 내용이 없습니다.</p>';
+  }
+  function buildMarkdownPreview(source) {
+    const body = markdownPreviewHtml(source);
+    const csp = "default-src 'none'; img-src https: http: data: blob:; style-src 'unsafe-inline'; font-src https: http: data:; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; script-src 'none'; object-src 'none'";
+    return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${csp}"><title>Markdown 미리보기</title><style>:root{color-scheme:light dark}*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{background:#eef2f8;color:#202735;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;line-height:1.78}.md-document{min-height:100vh;max-width:940px;margin:0 auto;padding:clamp(22px,5vw,56px);background:#fff;box-shadow:0 0 0 1px rgba(28,44,72,.05)}h1,h2,h3,h4,h5,h6{color:#19243a;line-height:1.35;margin:1.45em 0 .6em;font-weight:800;letter-spacing:-.02em}h1{font-size:2em;padding-bottom:.38em;border-bottom:2px solid #d9e2f1}h2{font-size:1.56em;padding-bottom:.3em;border-bottom:1px solid #e0e7f1}h3{font-size:1.27em}h4{font-size:1.08em}h5,h6{font-size:1em}h1:first-child,h2:first-child,h3:first-child{margin-top:0}p{margin:.1em 0 1em}a{color:#265fb8;text-decoration:underline;text-decoration-color:rgba(38,95,184,.3);text-underline-offset:2px}a:hover{color:#143c7c}code{font-family:ui-monospace,SFMono-Regular,Consolas,'D2Coding',monospace;font-size:.9em;background:#f0f4fa;color:#204c87;padding:.14em .36em;border-radius:5px;overflow-wrap:anywhere}.md-code{margin:1.15em 0;padding:15px 17px;overflow:auto;border:1px solid #202a3a;border-radius:12px;background:#101622;color:#dfe9f8;box-shadow:0 9px 22px rgba(20,31,49,.18)}.md-code code{display:block;padding:0;background:transparent;color:inherit;font-size:12.5px;line-height:1.7;white-space:pre}blockquote{margin:1.1em 0;padding:.72em 1em;border-left:4px solid #7d9dce;background:#f5f8fc;color:#4c5a70;border-radius:0 10px 10px 0}hr{border:0;border-top:1px solid #d9e2ef;margin:2em 0}ul,ol{margin:.35em 0 1.15em;padding-left:1.5em}li{margin:.32em 0}.task-item{list-style:none;margin-left:-1.25em;display:flex;align-items:flex-start;gap:.55em}.task-item input{margin:.46em 0 0;accent-color:#477bca}img{display:block;max-width:100%;height:auto;margin:1.15em 0;border-radius:12px;border:1px solid #dbe3f0;background:#f3f6fb;box-shadow:0 9px 24px rgba(32,50,78,.12)}.md-table-wrap{overflow:auto;margin:1.15em 0;border:1px solid #d8e1ee;border-radius:11px}table{border-collapse:collapse;width:100%;min-width:480px;font-size:.94em}th,td{padding:.64em .74em;border-bottom:1px solid #e2e8f1;vertical-align:top}th{background:#eef3fa;color:#223555;font-weight:800}tr:last-child td{border-bottom:0}.md-empty{color:#7b8799;font-style:italic}@media (prefers-color-scheme:dark){body{background:#0d131d;color:#dce5f3}.md-document{background:#111a27;box-shadow:none}h1,h2,h3,h4,h5,h6{color:#f1f6ff}h1{border-color:#32445d}h2{border-color:#2a3a50}a{color:#9ac2ff}a:hover{color:#d1e4ff}code{background:#1a2940;color:#b9d7ff}blockquote{background:#162337;color:#b9c8dc;border-color:#7fa2d9}.md-code{border-color:#37475f;background:#0b1018}.md-table-wrap{border-color:#32435a}th,td{border-color:#2b3b51}th{background:#18263a;color:#deebff}img{border-color:#34465f;background:#151f2d}}</style></head><body><main class="md-document">${body}</main></body></html>`;
   }
   function refreshHtmlPreview(source, format) {
     const frame = $("htmlPreview"); if (!frame) return;
     const note = getNote(st.curNoteId);
     const kind = format || htmlExportFormatOf(note);
-    try { frame.srcdoc = kind === "html" ? buildSandboxPreview(source) : buildPlainCodePreview(source, kind); }
+    try { frame.srcdoc = kind === "html" ? buildSandboxPreview(source) : kind === "md" ? buildMarkdownPreview(source) : buildPlainCodePreview(source, "json"); }
     catch (e) { frame.srcdoc = "<!doctype html><meta charset='utf-8'><pre>미리보기를 만들지 못했어요.</pre>"; }
   }
   function openHtmlPreviewPage() {
@@ -1731,9 +1845,9 @@
       pageButton.setAttribute("aria-label", pageButton.title);
     }
     const previewKicker = $("htmlPreviewKicker"), previewNote = $("htmlPreviewNote"), frame = $("htmlPreview");
-    if (previewKicker) previewKicker.textContent = format === "html" ? "Sandbox preview" : "Raw text view";
-    if (previewNote) previewNote.textContent = format === "html" ? "JavaScript · 폼 · 앱 접근 차단" : "렌더링 없이 원문만 표시";
-    if (frame) frame.title = format === "html" ? "코드 작업실 HTML 미리보기" : `${htmlSourceKindLabel(note)} 원문 보기`;
+    if (previewKicker) previewKicker.textContent = format === "html" ? "Sandbox preview" : format === "md" ? "Markdown preview" : "Raw text view";
+    if (previewNote) previewNote.textContent = format === "html" ? "JavaScript · 폼 · 앱 접근 차단" : format === "md" ? "Markdown 렌더링 · HTML 실행 차단" : "렌더링 없이 원문만 표시";
+    if (frame) frame.title = format === "html" ? "코드 작업실 HTML 미리보기" : format === "md" ? "코드 작업실 Markdown 미리보기" : `${htmlSourceKindLabel(note)} 원문 보기`;
   }
   function renderHtmlWorkshop() {
     const n = getNote(st.curNoteId);
@@ -1745,7 +1859,7 @@
   }
   async function saveHtmlWorkshopFile(id, format, requestedName) {
     const n = getNote(id); if (!n || n.type !== "html") return false;
-    const chosen = format === "json" ? "json" : "html";
+    const chosen = format === "json" ? "json" : format === "md" ? "md" : "html";
     await flushHtmlSave(true, id);
     const source = (activeHtmlSession(id) && $("htmlSource")) ? $("htmlSource").value : htmlSourceOf(n);
     if (chosen === "json") {
