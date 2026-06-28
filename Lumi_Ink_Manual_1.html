@@ -679,7 +679,7 @@ table code{ font-size:.82em; }
 <a class="toc-link appendix" href="#sec-updates"><span class="num">HIS</span><span>이전 주요 변경 이력</span></a>
 <div class="toc-divider"></div>
 <div class="toc-label">부록</div>
-<a class="toc-link appendix" href="#app-a"><span class="num">A</span><span>기본 로그 템플릿 50종</span></a>
+<a class="toc-link appendix" href="#app-a"><span class="num">A</span><span>기본 로그 템플릿 80종</span></a>
 <a class="toc-link appendix" href="#app-b"><span class="num">B</span><span>가장 중요한 백업 원칙</span></a>
 </nav>
 </aside>
@@ -730,9 +730,9 @@ table code{ font-size:.82em; }
 <div class="table-wrap"><table><thead><tr><th>영역</th><th>주된 용도</th><th>대표 기능</th><th>주요 내보내기·보존 방식</th></tr></thead><tbody>
 <tr><td><strong>프로젝트</strong></td><td>작품·세션·세계관별 자료 묶기</td><td>태그, 색상, 썸네일, 프레임, 고정, 복제</td><td>전체 백업·프로젝트 패키지</td></tr>
 <tr><td><strong>자유 메모</strong></td><td>문서·레퍼런스 작성</td><td>리치 서식, 사진·동영상, 링크, 코드 블록, 첨부, 미디어 픽셀 리사이즈</td><td>일반 HTML · 안전 정화 후 재가져오기</td></tr>
-<tr><td><strong>HTML 작업실</strong></td><td>상태창·배너·홍보글 등 원본 HTML 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, 격리 미리보기</td><td>원본 <code>.html</code> 그대로 내보내기</td></tr>
+<tr><td><strong>HTML 작업실</strong></td><td>상태창·배너·홍보글·JSON 등 원본 코드 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, 격리 미리보기</td><td>원문 <code>.html</code> / <code>.json</code> 선택 저장</td></tr>
 <tr><td><strong>로어북</strong></td><td>SillyTavern용 World Info 작성</td><td>키워드, constant, Depth, 토큰 계산, 경량 마크다운</td><td>World Info JSON</td></tr>
-<tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림, 50종 템플릿, 사용자 템플릿</td><td>인라인 HTML · 재가져오기 가능한 HTML</td></tr>
+<tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림 5종, 80종 템플릿, 사용자 템플릿</td><td>인라인 HTML · 재가져오기 가능한 HTML</td></tr>
 <tr><td><strong>인물 카드</strong></td><td>페르소나·캐릭터의 단일/다인 자료 관리</td><td>국·영문 설정, 포트레이트, 갤러리, 크리에이터 노트, 단일/다인 전환, 타입 전환</td><td>재가져오기 가능한 HTML</td></tr>
 <tr><td><strong>아이디어 보드</strong></td><td>러프 콜라주·자료 배치</td><td>메모지, 이미지·GIF, 음악, 영상, 첨부, 메모 링크, 다중선택·그룹·스냅, PNG 장면 저장</td><td>꾸며진 HTML · PNG · 전체 백업 · 프로젝트 패키지</td></tr>
 <tr><td><strong>전체 데이터</strong></td><td>보존·기기 이전</td><td>수동 백업, 자동 백업, 병합/교체 복원</td><td>전체 백업 HTML</td></tr>
@@ -823,7 +823,7 @@ table code{ font-size:.82em; }
 </div>
 <h3>4.5 저장 상태 표시</h3>
 <p>각 편집 화면의 상단에는 <code>기록 중</code>, <code>저장됨</code> 상태가 잠시 표시됩니다. 일반적인 텍스트 입력은 약 0.55초 동안 추가 입력이 없으면 자동 저장됩니다. 화면을 떠날 때에도 남아 있는 편집 내용을 저장합니다.</p>
-<p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 저장할 수 있습니다. 이 단축키는 자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 화면에서 동작합니다.</p>
+<p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 <strong>앱 내부</strong>에 저장할 수 있습니다. 이 단축키는 자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 화면에서 동작합니다. HTML 작업실에서 파일로 내려받으려면 상단 작업 막대의 <code>파일 저장</code> 또는 <code>Ctrl/⌘+Shift+S</code>를 사용합니다.</p>
 </section>
 <!-- ============================================================ -->
 <!-- 5. 프로젝트 관리 -->
@@ -1050,20 +1050,20 @@ table code{ font-size:.82em; }
 <!-- 8. 로어북 -->
 <!-- ============================================================ -->
 <section class="section" id="sec-html">
-<div class="section-head"><div class="nib-num">07+</div><h2>HTML 작업실</h2></div>
-<p>HTML 작업실은 상태창, 배너, 홍보글, 커스텀 카드처럼 <strong>소스 코드 자체가 작업물</strong>인 파일을 위한 전용 메모입니다. 자유 메모와 달리 원본을 리치 에디터의 <code>innerHTML</code>로 다시 직렬화하지 않으며, 가져온 문자열을 그대로 보관합니다.</p>
+<div class="section-head"><div class="nib-num">07+</div><h2>HTML · JSON 작업실</h2></div>
+<p>HTML 작업실은 상태창, 배너, 홍보글, 커스텀 카드, JSON 원문처럼 <strong>소스 코드 자체가 작업물</strong>인 파일을 위한 전용 메모입니다. 자유 메모와 달리 원본을 리치 에디터의 <code>innerHTML</code>로 다시 직렬화하지 않으며, 가져온 문자열을 그대로 보관합니다.</p>
 <div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>원본 보존과 화면 안전성은 분리됩니다.</strong> 저장하는 소스는 손대지 않지만, 미리보기는 별도 샌드박스 안에서 위험 요소를 제거한 사본으로 렌더링합니다.</p></div>
-<h3>HTML 작업실로 가져오기</h3>
+<h3>HTML · JSON 원문으로 가져오기</h3>
 <ol class="steps">
 <li>사이드바의 <code>열기</code>에서 HTML 파일을 선택합니다.</li>
 <li><code>HTML 작업실로 원본 가져오기</code>를 선택합니다.</li>
-<li>파일 내용이 정화되지 않은 원본 문자열로 저장됩니다.</li>
+<li>파일 내용이 정화되지 않은 원본 문자열로 저장됩니다. JSON 파일은 원본 작업실을 선택하면 <code>.json</code> 저장이 기본값으로 잡힙니다.</li>
 </ol>
 <h3>소스 · 미리보기 · 분할 보기</h3>
 <p>상단의 <code>SOURCE</code>, <code>PREVIEW</code>, <code>SPLIT</code> 버튼으로 화면을 전환합니다. 소스 화면에서는 코드를 직접 편집하고, 미리보기에서는 현재 소스의 렌더 결과를 확인하며, 분할 보기에서는 둘을 나란히 볼 수 있습니다.</p>
 <p>미리보기는 <code>iframe sandbox</code> 안에서 동작합니다. 스크립트, 이벤트 속성, 프레임, 폼, 자동 새로고침과 위험한 URL은 미리보기 사본에서 제거되며, 네트워크 연결·앱 저장공간 접근·팝업 실행을 허용하지 않습니다. 외부 이미지·폰트·정적 스타일은 표시될 수 있으므로 디자인 확인에는 유용하지만, 최종 실행 환경의 동작을 완전히 대신하지는 않습니다.</p>
 <h3>저장·내보내기·제한</h3>
-<p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 더보기 메뉴에서 원본 코드 복사, 원본 <code>.html</code> 내보내기, 이동·복제를 사용할 수 있습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
+<p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 작업 막대의 <code>파일 저장</code> 또는 더보기 메뉴에서 파일 이름과 <code>.html</code>/<code>.json</code> 확장자를 선택할 수 있습니다. <code>.json</code>은 저장 전 문법을 검사하며, 문법 오류가 있으면 파일을 만들지 않습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
 </section>
 <section class="section" id="sec-8">
 <div class="section-head">
@@ -1185,17 +1185,17 @@ table code{ font-size:.82em; }
 <li>이름 비교는 대소문자를 구분하는 정확한 문자열 검색입니다.</li>
 <li>단어 경계를 따로 보지 않으므로 다른 단어 안에 포함된 문자열도 치환될 수 있습니다.</li>
 <li>대체 표시를 비워 두면 템플릿이 지정한 기본 가림 문자열을 사용합니다.</li>
-<li>모든 이름은 같은 대체 문자열과 같은 템플릿 가림 스타일을 사용합니다.</li>
+<li>모든 이름은 같은 대체 문자열과 같은 템플릿 가림 스타일을 사용합니다.</li><li>가림 스타일은 <code>솔리드 칩</code>, <code>아웃라인</code>, <code>언더라인</code>, <code>소프트 틴트</code>, <code>마커 하이라이트</code>의 5종 중에서 고릅니다.</li>
 <li>이름 가림은 본문뿐 아니라 꾸며진 로그의 제목 영역에도 적용됩니다.</li>
 <li>원문과 메모의 실제 제목 데이터는 바뀌지 않고 보기·복사·내보내기 결과에서만 가립니다.</li>
 </ul>
-<h3>9.4 기본 제공 템플릿 50종</h3>
-<p>템플릿 선택 창의 <code>기본</code> 탭에는 50종이 들어 있습니다. 목록은 이름순으로 정렬할 수 있으며, 별도의 <code>50종 소개 보기</code> 페이지에서 샘플과 설명을 확인할 수 있습니다.</p>
+<h3>9.4 기본 제공 템플릿 80종</h3>
+<p>템플릿 선택 창의 <code>기본</code> 탭에는 80종이 들어 있습니다. 목록은 이름순으로 정렬할 수 있으며, 별도의 <code>80종 소개 보기</code> 페이지에서 본문 샘플과 이름 가림 5종을 함께 비교할 수 있습니다.</p>
 <p>전체 이름은 <a href="#app-a">부록 A</a>에 정리되어 있습니다.</p>
 <h3>9.5 템플릿 선택 창</h3>
 <p>템플릿 창은 세 탭으로 구성됩니다.</p>
 <div class="kv-list">
-<div class="kv-row"><div class="k">기본</div><div class="v">앱에 포함된 50종</div></div>
+<div class="kv-row"><div class="k">기본</div><div class="v">앱에 포함된 80종</div></div>
 <div class="kv-row"><div class="k">사용자</div><div class="v">사용자가 올린 템플릿과 현재 메모에 보존된 사용자 템플릿</div></div>
 <div class="kv-row"><div class="k">즐겨찾기</div><div class="v">길게 눌러 고정한 템플릿</div></div>
 </div>
@@ -1208,7 +1208,7 @@ table code{ font-size:.82em; }
 <li>사용자 템플릿 삭제</li>
 <li>JSON 템플릿 업로드</li>
 <li>제작 가이드 다운로드</li>
-<li>50종 소개 페이지 열기</li>
+<li>80종 소개 페이지 열기</li>
 </ul>
 <p>창을 닫았다가 다시 열면 <code>기본 탭</code>, <code>빈 검색어</code>, <code>이름 오름차순</code>으로 초기화됩니다. 사용자 템플릿과 즐겨찾기 정보만 지속적으로 보존됩니다.</p>
 <h3>9.6 사용자 템플릿</h3>
@@ -1780,7 +1780,7 @@ table code{ font-size:.82em; }
 <tr><td>캐릭터 HTML</td><td><code>.html</code></td><td>인물 카드(캐릭터 / 다인 캐릭터)로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>단일·다인 카드 공유·이전</td></tr>
 <tr><td>프로젝트 HTML</td><td><code>.html</code></td><td>새 프로젝트 사본으로 재가져오기 가능</td><td>모두 포함</td><td>포함</td><td>프로젝트 단위 공유·이전</td></tr>
 <tr><td>전체 백업</td><td><code>.html</code></td><td>전체 구조 복원</td><td>모두 포함</td><td>포함</td><td>기기 이전·재해 복구</td></tr>
-<tr><td>HTML 작업실 원본</td><td><code>.html</code></td><td>원본 문자열로 다시 열기 가능</td><td>코드에 포함된 방식 그대로</td><td>해당 없음</td><td>상태창·배너·디자인 HTML 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
+<tr><td>HTML 작업실 원본</td><td><code>.html</code> / <code>.json</code></td><td>원본 문자열로 다시 열기 가능</td><td>코드에 포함된 방식 그대로</td><td>해당 없음</td><td>상태창·배너·디자인 HTML 및 JSON 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
 </table>
 </div>
 </section>
@@ -1874,8 +1874,8 @@ table code{ font-size:.82em; }
 <!-- v1.5 current baseline -->
 <!-- ============================================================ -->
 <section class="section" id="sec-v15">
-<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.9</h2></div>
-<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.5</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
+<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.13</h2></div>
+<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.13</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
 <h3>새 메모 생성기</h3>
 <ul>
 <li>상단 설명은 <strong>생성할 메모 타입을 골라주세요</strong>이며, <strong>자유 메모</strong> 빠른 생성 카드는 즉시 자유 메모 생성 흐름으로 들어갑니다. 기존 블루 그라데이션·흰색 아이콘/텍스트 디자인을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
@@ -1901,62 +1901,92 @@ table code{ font-size:.82em; }
 <section class="section" id="app-a">
 <div class="section-head">
 <div class="nib-num">A</div>
-<h2>부록 A · 기본 로그 템플릿 50종</h2>
+<h2>부록 A · 기본 로그 템플릿 80종</h2>
 </div>
-<p>아래 목록은 템플릿 선택 창의 이름순 기준입니다.</p>
+<p>아래 목록은 템플릿 선택 창의 이름순 기준입니다. 각 템플릿은 이름 가림 디자인 5종을 제공합니다.</p>
 <div class="template-list">
-<div class="template-item"><span class="tnum">01</span><div><span class="tname">그랜드파더 클락</span><span class="tdesc">월넛 가구와 황동 시계판의 앤틱 괘종시계 로그</span></div></div>
-<div class="template-item"><span class="tnum">02</span><div><span class="tname">네온 터미널</span><span class="tdesc">시안·마젠타 네온 사이버펑크 터미널</span></div></div>
-<div class="template-item"><span class="tnum">03</span><div><span class="tname">레인폴 글래스</span><span class="tdesc">비 내리는 창의 차분한 회청색 로그</span></div></div>
-<div class="template-item"><span class="tnum">04</span><div><span class="tname">레퀴엠</span><span class="tdesc">창백한 차콜과 백합빛 세이지의 안식 로그</span></div></div>
-<div class="template-item"><span class="tnum">05</span><div><span class="tname">로얄 크림슨</span><span class="tdesc">크림슨과 리치 골드의 왕가 로그</span></div></div>
-<div class="template-item"><span class="tnum">06</span><div><span class="tname">로즈 코트</span><span class="tdesc">크림·로즈·골드의 공주풍 로그</span></div></div>
-<div class="template-item"><span class="tnum">07</span><div><span class="tname">리본 캔디</span><span class="tdesc">여러 파스텔을 사용한 밝은 로그</span></div></div>
-<div class="template-item"><span class="tnum">08</span><div><span class="tname">리와인드 스레드</span><span class="tdesc">청록·골드의 빙의·회귀물 로그</span></div></div>
-<div class="template-item"><span class="tnum">09</span><div><span class="tname">리프 캐빈</span><span class="tdesc">잎사귀 그린과 크림 우드의 일상 로그</span></div></div>
-<div class="template-item"><span class="tnum">10</span><div><span class="tname">메이플 오텀</span><span class="tdesc">단풍 진홍과 황금빛의 가을 로그</span></div></div>
-<div class="template-item"><span class="tnum">11</span><div><span class="tname">모노 컨트라스트</span><span class="tdesc">순백과 순흑의 강한 대비 로그</span></div></div>
-<div class="template-item"><span class="tnum">12</span><div><span class="tname">모브 다이얼로그</span><span class="tdesc">따뜻한 모브빛 일상·로맨스 로그</span></div></div>
-<div class="template-item"><span class="tnum">13</span><div><span class="tname">묵향 죽간</span><span class="tdesc">한지, 먹, 주사 인장의 동양풍 로그</span></div></div>
-<div class="template-item"><span class="tnum">14</span><div><span class="tname">버던트 서머</span><span class="tdesc">짙은 숲과 에메랄드의 여름 로그</span></div></div>
-<div class="template-item"><span class="tnum">15</span><div><span class="tname">벨럼 스크롤</span><span class="tdesc">세피아 양피지와 봉랍의 고문서 로그</span></div></div>
-<div class="template-item"><span class="tnum">16</span><div><span class="tname">보르도 빈티지</span><span class="tdesc">보르도와 더스티 로즈의 와인 셀러 로그</span></div></div>
-<div class="template-item"><span class="tnum">17</span><div><span class="tname">브라스 코그</span><span class="tdesc">황동, 녹청, 증기의 스팀펑크 로그</span></div></div>
-<div class="template-item"><span class="tnum">18</span><div><span class="tname">사쿠라 스프링</span><span class="tdesc">벚꽃 분홍과 새순 연두의 봄 로그</span></div></div>
-<div class="template-item"><span class="tnum">19</span><div><span class="tname">스노우플레이크 윈터</span><span class="tdesc">화이트와 페일 아이스블루의 겨울 로그</span></div></div>
-<div class="template-item"><span class="tnum">20</span><div><span class="tname">스모크 &amp; 위스키</span><span class="tdesc">연기와 호박색의 하드보일드 로그</span></div></div>
-<div class="template-item"><span class="tnum">21</span><div><span class="tname">스타리 나이트</span><span class="tdesc">인디고 밤하늘과 금빛 별의 로그</span></div></div>
-<div class="template-item"><span class="tnum">22</span><div><span class="tname">스타십 HUD</span><span class="tdesc">우주선 콘솔형 하드 SF 로그</span></div></div>
-<div class="template-item"><span class="tnum">23</span><div><span class="tname">스토리북 길트</span><span class="tdesc">크림과 금별의 동화책 로그</span></div></div>
-<div class="template-item"><span class="tnum">24</span><div><span class="tname">심야 타자기</span><span class="tdesc">빛바랜 종이와 검정 활자의 느와르 로그</span></div></div>
-<div class="template-item"><span class="tnum">25</span><div><span class="tname">아오하루 스카이</span><span class="tdesc">맑은 여름 하늘빛 청춘 로그</span></div></div>
-<div class="template-item"><span class="tnum">26</span><div><span class="tname">애시폴 시그널</span><span class="tdesc">콘크리트와 경고 앰버의 종말물 로그</span></div></div>
-<div class="template-item"><span class="tnum">27</span><div><span class="tname">어메시스트 럭스</span><span class="tdesc">자수정과 샴페인 골드의 보석 로그</span></div></div>
-<div class="template-item"><span class="tnum">28</span><div><span class="tname">올드 라이브러리</span><span class="tdesc">마호가니 서가와 가죽 장정의 로그</span></div></div>
-<div class="template-item"><span class="tnum">29</span><div><span class="tname">운해옥검</span><span class="tdesc">옥빛 운무의 선협 로그</span></div></div>
-<div class="template-item"><span class="tnum">30</span><div><span class="tname">웨딩 마치</span><span class="tdesc">순백, 샴페인 골드, 블러쉬의 웨딩 로그</span></div></div>
-<div class="template-item"><span class="tnum">31</span><div><span class="tname">잉크 프레임</span><span class="tdesc">짙은 잉크색 바탕의 기본 로그</span></div></div>
-<div class="template-item"><span class="tnum">32</span><div><span class="tname">천계의 서판</span><span class="tdesc">화이트·골드 발광의 신화·천상계 로그</span></div></div>
-<div class="template-item"><span class="tnum">33</span><div><span class="tname">청춘 노트</span><span class="tdesc">공책 마진선과 형광펜의 학원물 로그</span></div></div>
-<div class="template-item"><span class="tnum">34</span><div><span class="tname">캐롯 패치</span><span class="tdesc">당근 오렌지와 잎 그린의 발랄한 로그</span></div></div>
-<div class="template-item"><span class="tnum">35</span><div><span class="tname">콘체르토 스테이지</span><span class="tdesc">버건디와 샴페인 골드의 연주 로그</span></div></div>
-<div class="template-item"><span class="tnum">36</span><div><span class="tname">퀘스트 보드</span><span class="tdesc">RPG 인터페이스형 모던 게임 로그</span></div></div>
-<div class="template-item"><span class="tnum">37</span><div><span class="tname">크림 기록지</span><span class="tdesc">밝고 편안한 게시용 기록지</span></div></div>
-<div class="template-item"><span class="tnum">38</span><div><span class="tname">클린 라인</span><span class="tdesc">절제된 중립형 게시용 로그</span></div></div>
-<div class="template-item"><span class="tnum">39</span><div><span class="tname">팝 개그</span><span class="tdesc">원색과 만화 테두리의 명랑개그 로그</span></div></div>
-<div class="template-item"><span class="tnum">40</span><div><span class="tname">퍼스트 로즈</span><span class="tdesc">장미 레드와 잎 그린의 첫사랑 로그</span></div></div>
-<div class="template-item"><span class="tnum">41</span><div><span class="tname">페이 스프링</span><span class="tdesc">에메랄드 샘물과 요정빛의 몽환 로그</span></div></div>
-<div class="template-item"><span class="tnum">42</span><div><span class="tname">페인터 캔버스</span><span class="tdesc">아이보리 캔버스와 유화 물감의 로그</span></div></div>
-<div class="template-item"><span class="tnum">43</span><div><span class="tname">폐옥의 속삭임</span><span class="tdesc">탁한 차콜과 핏빛의 호러 로그</span></div></div>
-<div class="template-item"><span class="tnum">44</span><div><span class="tname">프리즘 하트</span><span class="tdesc">비비드 파스텔의 마법소녀 로그</span></div></div>
-<div class="template-item"><span class="tnum">45</span><div><span class="tname">플레인 모노</span><span class="tdesc">색을 비운 무채색 미니멀 로그</span></div></div>
-<div class="template-item"><span class="tnum">46</span><div><span class="tname">픽셀 콘솔</span><span class="tdesc">남보라 CRT와 라임 프레임의 레트로 게임 로그</span></div></div>
-<div class="template-item"><span class="tnum">47</span><div><span class="tname">한가위 문</span><span class="tdesc">남색 밤하늘과 보름달빛의 추석 로그</span></div></div>
-<div class="template-item"><span class="tnum">48</span><div><span class="tname">홀리 나이트</span><span class="tdesc">에버그린, 홀리 레드, 금빛 전구의 로그</span></div></div>
-<div class="template-item"><span class="tnum">49</span><div><span class="tname">황금 칙령</span><span class="tdesc">네이비·골드의 왕실 하이 판타지 로그</span></div></div>
-<div class="template-item"><span class="tnum">50</span><div><span class="tname">흑요석 성소</span><span class="tdesc">검보랏빛 고딕 다크 판타지 로그</span></div></div>
+<div class="template-item"><span class="tnum">01</span><div><span class="tname">과학 논문</span><span class="tdesc">흰 바탕 세리프와 청색 참조의 학술 논문 로그. LaTeX 조판처럼 단정한 무드.</span></div></div>
+<div class="template-item"><span class="tnum">02</span><div><span class="tname">그래피티</span><span class="tdesc">콘크리트 벽에 스프레이로 휘갈긴 스트리트 로그. 형광 태그의 도시 힙합 무드.</span></div></div>
+<div class="template-item"><span class="tnum">03</span><div><span class="tname">그랜드파더 클락</span><span class="tdesc">월넛 가구와 황동 시계판의 앤틱 괘종시계 로그.</span></div></div>
+<div class="template-item"><span class="tnum">04</span><div><span class="tname">그리모어</span><span class="tdesc">암갈색 가죽과 에메랄드·금박의 연금술 마도서. 비전 지식이 적힌 고서 무드.</span></div></div>
+<div class="template-item"><span class="tnum">05</span><div><span class="tname">글리치</span><span class="tdesc">RGB가 분리된 디지털 붕괴 로그. 시안-마젠타 색수차의 해킹·오류 미학.</span></div></div>
+<div class="template-item"><span class="tnum">06</span><div><span class="tname">네온 강호</span><span class="tdesc">먹빛 바탕에 주홍·청록 네온이 흐르는 동양 사이버 무협 로그.</span></div></div>
+<div class="template-item"><span class="tnum">07</span><div><span class="tname">네온 터미널</span><span class="tdesc">시안-마젠타 네온 사이버펑크 로그. 모노스페이스 터미널 톤.</span></div></div>
+<div class="template-item"><span class="tnum">08</span><div><span class="tname">다크 아카데미아</span><span class="tdesc">버건디와 앤티크 골드의 음울한 학구열. 고전 세리프의 어두운 서재 무드.</span></div></div>
+<div class="template-item"><span class="tnum">09</span><div><span class="tname">레인폴 글래스</span><span class="tdesc">창에 흐르는 빗물의 차분한 회청 로그. 멜랑콜리한 정적과 절제된 강조.</span></div></div>
+<div class="template-item"><span class="tnum">10</span><div><span class="tname">레퀴엠</span><span class="tdesc">창백한 차콜과 백합빛 세이지의 안식 로그.</span></div></div>
+<div class="template-item"><span class="tnum">11</span><div><span class="tname">로얄 크림슨</span><span class="tdesc">선명한 크림슨과 리치 골드의 왕가 로그.</span></div></div>
+<div class="template-item"><span class="tnum">12</span><div><span class="tname">로즈 코트</span><span class="tdesc">크림-로즈-골드의 사랑스러운 공주님 로그. 우아한 세리프와 금장 악센트.</span></div></div>
+<div class="template-item"><span class="tnum">13</span><div><span class="tname">로파이 카세트</span><span class="tdesc">베이지 테이프와 오렌지 라벨의 90년대 카세트 로파이 무드. 따뜻한 노이즈.</span></div></div>
+<div class="template-item"><span class="tnum">14</span><div><span class="tname">리본 캔디</span><span class="tdesc">보들보들 멀티 파스텔의 깜찍 로그.</span></div></div>
+<div class="template-item"><span class="tnum">15</span><div><span class="tname">리와인드 스레드</span><span class="tdesc">청록-골드 톤의 빙의·회귀물 로그. 회차 표기와 운명의 실 무드.</span></div></div>
+<div class="template-item"><span class="tnum">16</span><div><span class="tname">리프 캐빈</span><span class="tdesc">잎사귀 그린과 크림 우드의 힐링 일상 로그. 둥글둥글 따뜻한 자연 톤.</span></div></div>
+<div class="template-item"><span class="tnum">17</span><div><span class="tname">마카롱 디저트</span><span class="tdesc">파스텔 핑크와 민트, 초콜릿의 달콤한 카페 로그. 둥글고 부드러운 무드.</span></div></div>
+<div class="template-item"><span class="tnum">18</span><div><span class="tname">메이플 오텀</span><span class="tdesc">단풍 진홍과 황금빛의 가을 로그.</span></div></div>
+<div class="template-item"><span class="tnum">19</span><div><span class="tname">모노 컨트라스트</span><span class="tdesc">순백과 순흑의 강렬한 대비 로그.</span></div></div>
+<div class="template-item"><span class="tnum">20</span><div><span class="tname">모브 다이얼로그</span><span class="tdesc">따뜻한 모브빛 일상·로맨스 로그. 대사는 부드러운 말풍선 톤.</span></div></div>
+<div class="template-item"><span class="tnum">21</span><div><span class="tname">묵향 죽간</span><span class="tdesc">한지빛 바탕에 먹과 주사(朱砂) 인장 톤의 무협·동양풍 로그.</span></div></div>
+<div class="template-item"><span class="tnum">22</span><div><span class="tname">밀리터리 브리핑</span><span class="tdesc">올리브 카키와 앰버 모노의 작전 보고서. 전술 브리핑 무드의 로그.</span></div></div>
+<div class="template-item"><span class="tnum">23</span><div><span class="tname">바이오메드</span><span class="tdesc">청록 홀로그램과 화이트 데이터의 미래 의료 로그. 무기질 바이오 SF 무드.</span></div></div>
+<div class="template-item"><span class="tnum">24</span><div><span class="tname">밤벚꽃</span><span class="tdesc">어둠 속 조명 받은 벚꽃의 야경 로그. 다크 네이비에 번지는 분홍빛 정취.</span></div></div>
+<div class="template-item"><span class="tnum">25</span><div><span class="tname">버던트 서머</span><span class="tdesc">짙은 숲 그늘과 에메랄드의 여름 녹음 로그.</span></div></div>
+<div class="template-item"><span class="tnum">26</span><div><span class="tname">벨럼 스크롤</span><span class="tdesc">갈변한 세피아 양피지와 봉랍 톤의 고문서 로그. 난외 주석과 이중 테두리.</span></div></div>
+<div class="template-item"><span class="tnum">27</span><div><span class="tname">벨벳 극장</span><span class="tdesc">진홍 벨벳 커튼과 금장식의 극장 로그. 막이 오르는 무대의 장중한 무드.</span></div></div>
+<div class="template-item"><span class="tnum">28</span><div><span class="tname">보르도 빈티지</span><span class="tdesc">깊은 보르도와 더스티 로즈의 와인 셀러 로그.</span></div></div>
+<div class="template-item"><span class="tnum">29</span><div><span class="tname">보태니컬 표본</span><span class="tdesc">크림과 세이지 그린의 식물 도감. 학술 표본 라벨처럼 단정한 로그.</span></div></div>
+<div class="template-item"><span class="tnum">30</span><div><span class="tname">브라스 코그</span><span class="tdesc">황동과 녹청, 증기의 빅토리안 스팀펑크 로그.</span></div></div>
+<div class="template-item"><span class="tnum">31</span><div><span class="tname">블루프린트</span><span class="tdesc">청사진 그리드 위의 설계도 로그. 시안 라인과 모노 타이포의 공학적 무드.</span></div></div>
+<div class="template-item"><span class="tnum">32</span><div><span class="tname">사막 황혼</span><span class="tdesc">모래와 테라코타, 석양 오렌지의 사막 모험 로그. 따뜻한 황혼 무드.</span></div></div>
+<div class="template-item"><span class="tnum">33</span><div><span class="tname">사쿠라 스프링</span><span class="tdesc">벚꽃 분홍과 새순 연두의 봄 로그.</span></div></div>
+<div class="template-item"><span class="tnum">34</span><div><span class="tname">스노우플레이크 윈터</span><span class="tdesc">눈 화이트와 페일 아이스블루의 겨울 로그.</span></div></div>
+<div class="template-item"><span class="tnum">35</span><div><span class="tname">스모크 &amp; 위스키</span><span class="tdesc">담배 연기와 위스키 호박색의 하드보일드 로그. 강한 명암과 1인칭 독백 톤.</span></div></div>
+<div class="template-item"><span class="tnum">36</span><div><span class="tname">스타리 나이트</span><span class="tdesc">인디고 밤하늘과 금빛 별의 낭만 로그.</span></div></div>
+<div class="template-item"><span class="tnum">37</span><div><span class="tname">스타십 HUD</span><span class="tdesc">딥스페이스 네이비와 아이스블루 홀로그램의 하드 SF 로그. 우주선 콘솔 인터페이스 톤.</span></div></div>
+<div class="template-item"><span class="tnum">38</span><div><span class="tname">스테인드글라스</span><span class="tdesc">납선 금테와 루비·사파이어 색유리. 고딕 성당의 장엄한 종교 무드.</span></div></div>
+<div class="template-item"><span class="tnum">39</span><div><span class="tname">스토리북 길트</span><span class="tdesc">따뜻한 크림과 금별의 동화책 로그.</span></div></div>
+<div class="template-item"><span class="tnum">40</span><div><span class="tname">시티팝 선셋</span><span class="tdesc">마젠타-인디고 그라데이션과 청록 네온. 80년대 시티팝 레트로퓨처 로그.</span></div></div>
+<div class="template-item"><span class="tnum">41</span><div><span class="tname">신문 스크랩</span><span class="tdesc">누런 신문지와 검정 잉크의 특종 기사체. 탐정·누아르 보도 무드.</span></div></div>
+<div class="template-item"><span class="tnum">42</span><div><span class="tname">심야 타자기</span><span class="tdesc">빛바랜 종이와 검정 활자의 느와르·추리 로그. 검열 인장 톤의 강조.</span></div></div>
+<div class="template-item"><span class="tnum">43</span><div><span class="tname">심해</span><span class="tdesc">청록 인광이 번지는 심해 미스터리. 깊은 남청 바탕의 해양 SF 로그.</span></div></div>
+<div class="template-item"><span class="tnum">44</span><div><span class="tname">아오하루 스카이</span><span class="tdesc">맑은 여름 하늘빛 청춘 로그.</span></div></div>
+<div class="template-item"><span class="tnum">45</span><div><span class="tname">애시폴 시그널</span><span class="tdesc">잿빛 콘크리트와 경고 앰버의 종말물 로그. 생존자 무전 톤의 모노스페이스.</span></div></div>
+<div class="template-item"><span class="tnum">46</span><div><span class="tname">어메시스트 럭스</span><span class="tdesc">자수정과 샴페인 골드가 반짝이는 보석 럭셔리 로그.</span></div></div>
+<div class="template-item"><span class="tnum">47</span><div><span class="tname">오로라</span><span class="tdesc">청록과 자주의 극광이 흐르는 밤하늘 로그. 차가운 북극의 신비로운 빛.</span></div></div>
+<div class="template-item"><span class="tnum">48</span><div><span class="tname">온천 료칸</span><span class="tdesc">인디고 밤과 등불 호박색의 전통 료칸 로그. 다다미와 김 서린 온천의 정취.</span></div></div>
+<div class="template-item"><span class="tnum">49</span><div><span class="tname">올드 라이브러리</span><span class="tdesc">마호가니 서가와 가죽 장정의 도서관 로그.</span></div></div>
+<div class="template-item"><span class="tnum">50</span><div><span class="tname">운해옥검</span><span class="tdesc">옥빛 운무가 흐르는 청량한 선협 로그.</span></div></div>
+<div class="template-item"><span class="tnum">51</span><div><span class="tname">웨딩 마치</span><span class="tdesc">순백과 샴페인 골드, 블러쉬의 웨딩 로그.</span></div></div>
+<div class="template-item"><span class="tnum">52</span><div><span class="tname">유리 온실</span><span class="tdesc">햇빛 가득한 화이트 유리 온실 로그. 세이지 그린 식물과 투명한 빛의 정원.</span></div></div>
+<div class="template-item"><span class="tnum">53</span><div><span class="tname">잉크 프레임</span><span class="tdesc">짙은 잉크색 바탕과 은은한 테두리의 기본 로그</span></div></div>
+<div class="template-item"><span class="tnum">54</span><div><span class="tname">천계의 서판</span><span class="tdesc">화이트-골드 발광 톤의 천상계·신화 로그. 후광 강조와 성스러운 여백.</span></div></div>
+<div class="template-item"><span class="tnum">55</span><div><span class="tname">청춘 노트</span><span class="tdesc">밝고 산뜻한 학원물 로그. 공책 마진선과 형광펜 강조.</span></div></div>
+<div class="template-item"><span class="tnum">56</span><div><span class="tname">캐롯 패치</span><span class="tdesc">비비드 당근 오렌지와 싱싱한 잎 그린의 발랄 텃밭 로그.</span></div></div>
+<div class="template-item"><span class="tnum">57</span><div><span class="tname">코티지 레이스</span><span class="tdesc">크림과 더스티 로즈, 레이스의 핸드메이드 코티지코어 로그. 포근한 수공예 무드.</span></div></div>
+<div class="template-item"><span class="tnum">58</span><div><span class="tname">콘체르토 스테이지</span><span class="tdesc">버건디 무대와 샴페인 골드의 음악 연주 로그.</span></div></div>
+<div class="template-item"><span class="tnum">59</span><div><span class="tname">퀘스트 보드</span><span class="tdesc">다크 슬레이트와 바이올렛·골드 등급색의 모던 게임 UI 로그. RPG 인터페이스 톤.</span></div></div>
+<div class="template-item"><span class="tnum">60</span><div><span class="tname">크림 기록지</span><span class="tdesc">게시글에 편안하게 어울리는 밝은 기록지</span></div></div>
+<div class="template-item"><span class="tnum">61</span><div><span class="tname">클린 라인</span><span class="tdesc">어떤 게시판에도 붙이기 쉬운 절제된 중립형 로그</span></div></div>
+<div class="template-item"><span class="tnum">62</span><div><span class="tname">타로 미스틱</span><span class="tdesc">자정 보라와 금빛의 점성·타로 로그. 운명을 점치는 신비주의 카드 무드.</span></div></div>
+<div class="template-item"><span class="tnum">63</span><div><span class="tname">테라코타 공예</span><span class="tdesc">흙갈색과 점토 오렌지의 도예 공방 로그. 손으로 빚은 따뜻한 공예 무드.</span></div></div>
+<div class="template-item"><span class="tnum">64</span><div><span class="tname">팝 개그</span><span class="tdesc">원색 팝과 굵은 만화 테두리의 명랑개그 로그. 글로우 없는 코믹 효과음 박스.</span></div></div>
+<div class="template-item"><span class="tnum">65</span><div><span class="tname">퍼스트 로즈</span><span class="tdesc">장미 레드와 짙은 잎 그린의 첫사랑 로그.</span></div></div>
+<div class="template-item"><span class="tnum">66</span><div><span class="tname">페이 스프링</span><span class="tdesc">에메랄드 샘물과 요정의 반짝임이 흐르는 몽환 로그.</span></div></div>
+<div class="template-item"><span class="tnum">67</span><div><span class="tname">페인터 캔버스</span><span class="tdesc">아이보리 캔버스와 유화 물감색의 화가 로그.</span></div></div>
+<div class="template-item"><span class="tnum">68</span><div><span class="tname">폐옥의 속삭임</span><span class="tdesc">탁한 차콜·시체빛 호러 로그. 어긋난 굵은 좌측선과 핏빛 대사.</span></div></div>
+<div class="template-item"><span class="tnum">69</span><div><span class="tname">프리즘 하트</span><span class="tdesc">비비드 파스텔과 별빛 글로우의 마법소녀 로그. 발랄한 다색 강조.</span></div></div>
+<div class="template-item"><span class="tnum">70</span><div><span class="tname">플레인 모노</span><span class="tdesc">색을 비운 무채색 미니멀 로그. 건조한 서술과 절제된 강조.</span></div></div>
+<div class="template-item"><span class="tnum">71</span><div><span class="tname">픽셀 콘솔</span><span class="tdesc">남보라 CRT 바탕과 라임 그린 프레임의 레트로 게임 로그. 도트 대사창 톤.</span></div></div>
+<div class="template-item"><span class="tnum">72</span><div><span class="tname">필름 누아르</span><span class="tdesc">흑백 시네마의 모노크롬 로그. 고전 누아르 영화의 음영과 정적.</span></div></div>
+<div class="template-item"><span class="tnum">73</span><div><span class="tname">한가위 문</span><span class="tdesc">남색 밤하늘과 보름달빛의 추석 로그.</span></div></div>
+<div class="template-item"><span class="tnum">74</span><div><span class="tname">한지 서간</span><span class="tdesc">미색 한지와 인주 빨강의 한국 고전 서간체. 명조의 단아한 편지 무드.</span></div></div>
+<div class="template-item"><span class="tnum">75</span><div><span class="tname">항해 해도</span><span class="tdesc">세피아 해도와 나침반의 대항해 로그. 빛바랜 양피지 지도 위의 모험 무드.</span></div></div>
+<div class="template-item"><span class="tnum">76</span><div><span class="tname">해파리 수족관</span><span class="tdesc">형광 보라와 청록이 떠다니는 아쿠아리움 로그. 발광하는 해파리의 몽환.</span></div></div>
+<div class="template-item"><span class="tnum">77</span><div><span class="tname">홀리 나이트</span><span class="tdesc">에버그린과 홀리 레드, 금빛 전구의 크리스마스 로그.</span></div></div>
+<div class="template-item"><span class="tnum">78</span><div><span class="tname">황금 칙령</span><span class="tdesc">네이비-골드 하이 판타지 왕실 로그. 격식 있는 세리프와 금장 테두리.</span></div></div>
+<div class="template-item"><span class="tnum">79</span><div><span class="tname">흑요석 성소</span><span class="tdesc">검보랏빛 고딕 다크 판타지 로그. 핏빛 대사와 본골드 강조.</span></div></div>
+<div class="template-item"><span class="tnum">80</span><div><span class="tname">CRT 터미널</span><span class="tdesc">검은 화면에 인광 그린이 번지는 80년대 CRT 터미널 로그. 모노크롬 도스 무드.</span></div></div>
 </div>
-<p style="margin-top:20px;">더 자세한 시각 예시는 <code>50종 소개 페이지</code>에서 확인할 수 있습니다.</p>
+<p style="margin-top:20px;">더 자세한 시각 예시는 <code>80종 소개 페이지</code>에서 확인할 수 있습니다. 각 템플릿의 본문 렌더링과 이름 가림 디자인 5종을 함께 비교할 수 있습니다.</p>
 </section>
 <!-- ============================================================ -->
 <!-- 부록 B. 가장 중요한 백업 원칙 -->
@@ -1985,6 +2015,8 @@ table code{ font-size:.82em; }
 </section>
 
     <section class="section"><div class="section-head"><div class="nib-num">NEW</div><h2>v65.3 · SVG 아이콘 라이브러리</h2></div><p>퀵메뉴와 프로젝트 썸네일에서 사용할 수 있는 내장 SVG 아이콘 30종을 추가했습니다. 아이콘은 이동·기능·기록·장식 카테고리로 나뉘며, 선택한 아이콘은 원본 벡터 품질로 표시됩니다.</p></section>
+
+<section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #d3e2f4;border-radius:14px;background:linear-gradient(145deg,#f8fcff,#f2f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.13 · 로그 PNG 내보내기</h2><p style="margin:0 0 8px">로그 저장의 더보기 메뉴에서 <b>꾸며진 PNG 이미지로 저장</b>을 선택하면, 앱 조작 UI를 빼고 현재 템플릿·정규식·이름 치환이 적용된 로그 본문만 이미지로 저장합니다.</p><p style="margin:0">게시판 폭은 <code>520px</code>·<code>680px</code>(권장)·<code>840px</code> 중 선택합니다. 이름 치환 세트의 디자인 선택도 다섯 가지 고정 문구 <code>미리보기</code>를 한 줄로 비교하는 방식으로 바뀌었습니다.</p></section>
 </main>
 </div>
 <div aria-label="맨 위로" class="to-top" id="toTop" role="button">
@@ -2116,5 +2148,7 @@ table code{ font-size:.82em; }
 
 
 <section style="margin:28px 0;padding:18px 20px;border:1px solid #dfe5f0;border-radius:14px;background:#f8faff;color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 8px;font-size:17px">v66.4 · 퀵메뉴 아트와 사용자 지정 테마 세부 색상</h2><p style="margin:0 0 8px">퀵메뉴에 적용한 업로드 이미지·내장 SVG·사용자 SVG/CSS는 메뉴와 편집 미리보기에서 배경·테두리 없이 그림만 표시됩니다.</p><p style="margin:0">설정 → 컬러 테마 → 사용자 지정에서 로고 중심부, 상단바 그림자, 자유 메모 코드 보기, 사이드바·메인 화면·팝업의 세부 색상을 라이트/다크 각각 조절할 수 있습니다.</p></section>
+
+<section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #cddff7;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#f3f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.12 · JSON 원문 파일 저장</h2><p style="margin:0">HTML 작업실의 <b>파일 저장</b>에서 현재 원문을 <code>.html</code> 또는 <code>.json</code>으로 선택해 내려받을 수 있습니다. JSON 원본으로 연 작업실은 <code>.json</code>을 기본으로 제안하고, JSON 저장 전에는 문법을 검사합니다. 기존 <code>Ctrl/⌘+S</code>와 상단 저장 버튼은 앱 내부 저장을 유지하며, 파일 저장은 <code>Ctrl/⌘+Shift+S</code>로도 열 수 있습니다.</p></section>
 </body>
 </html>

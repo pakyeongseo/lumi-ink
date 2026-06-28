@@ -1502,7 +1502,7 @@
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
-          : type === "html" ? { source: "", previewPolicy: "sandbox-web" }
+          : type === "html" ? { source: "", previewPolicy: "sandbox-web", exportFormat: "html" }
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : (type === "persona" || type === "character") ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()], cardTypeVersion: 2 }
@@ -1539,6 +1539,30 @@
 
   /* ---------- HTML workshop: source stays a string, preview stays in an opaque sandbox ---------- */
   function htmlSourceOf(n) { return (n && n.data && typeof n.data.source === "string") ? n.data.source : ""; }
+  // HTML 작업실은 HTML뿐 아니라 JSON 원문도 보관합니다. exportFormat은 다음 파일 저장의 기본값이며,
+  // 실제 원문 문자열은 확장자 선택과 관계없이 절대 변형하지 않습니다.
+  function htmlExportFormatOf(n) { return n && n.data && n.data.exportFormat === "json" ? "json" : "html"; }
+  function htmlExportMime(format) { return format === "json" ? "application/json" : "text/html"; }
+  function htmlSourceKindLabel(n) { return htmlExportFormatOf(n) === "json" ? "JSON" : "RAW"; }
+  function htmlSourceHint(n) {
+    return htmlExportFormatOf(n) === "json"
+      ? "· JSON 원문 그대로 저장 · 파일 저장에서 .html / .json 선택"
+      : "· 필터링 없이 원본 문자열 그대로 저장 · 파일 저장에서 .html / .json 선택";
+  }
+  function htmlFileBaseName(name) {
+    const base = String(name || "html-workshop").replace(/\.(?:html?|json)$/i, "").replace(/[\\/:*?\"<>|]+/g, "_").trim();
+    return (base || "html-workshop").slice(0, 80);
+  }
+  function jsonSourceValidation(source) {
+    try {
+      JSON.parse(String(source || "").replace(/^\uFEFF/, ""));
+      return { ok: true, error: "" };
+    } catch (error) {
+      const message = String(error && error.message ? error.message : "JSON 형식이 올바르지 않아요");
+      const position = message.match(/position\s+(\d+)/i);
+      return { ok: false, error: position ? `JSON 문법 오류 · ${position[1]}번째 글자 부근을 확인해 주세요` : `JSON 문법 오류 · ${message}` };
+    }
+  }
   function htmlSourceSummary(n) {
     const source = htmlSourceOf(n);
     if (!source.trim()) return "";
@@ -1679,22 +1703,64 @@
     if (!n || n.type !== "html") { back(); return; }
     beginHtmlWorkshopSession(n);
     $("htmlTitle").textContent = n.title || "HTML 작업실";
+    const kind = $("htmlSourceKind"), hint = $("htmlSourceFormatHint");
+    if (kind) kind.textContent = htmlSourceKindLabel(n);
+    if (hint) hint.textContent = htmlSourceHint(n);
     setHtmlSaver(""); queueDraftRecovery(n, "html");
   }
-  function exportHtmlSource(id) {
-    const n = getNote(id); if (!n || n.type !== "html") return;
-    const safeName = (n.title || "html-workshop").replace(/[\\/:*?\"<>|]+/g, "_").slice(0, 80) || "html-workshop";
-    // 원본 문자열을 문서 래퍼 없이 바로 Blob으로 내보내므로, 앱이 태그·속성·서식을 덧붙이지 않습니다.
-    downloadDoc(htmlSourceOf(n), `${safeName}.html`, "text/html");
-    toast("원본 HTML을 저장했어요");
+  async function saveHtmlWorkshopFile(id, format, requestedName) {
+    const n = getNote(id); if (!n || n.type !== "html") return false;
+    const chosen = format === "json" ? "json" : "html";
+    await flushHtmlSave(true, id);
+    const source = (activeHtmlSession(id) && $("htmlSource")) ? $("htmlSource").value : htmlSourceOf(n);
+    if (chosen === "json") {
+      const check = jsonSourceValidation(source);
+      if (!check.ok) { toast(check.error); return false; }
+    }
+    const safeName = htmlFileBaseName(requestedName || n.title);
+    // 원본 문자열을 래핑·정화·재직렬화하지 않고, 사용자가 고른 확장자와 MIME으로만 저장합니다.
+    downloadDoc(source, `${safeName}.${chosen}`, htmlExportMime(chosen));
+    n.data = n.data || {}; n.data.exportFormat = chosen; n.data.previewPolicy = "sandbox-web";
+    await saveNote(n);
+    const kind = $("htmlSourceKind"), hint = $("htmlSourceFormatHint");
+    if (kind) kind.textContent = htmlSourceKindLabel(n);
+    if (hint) hint.textContent = htmlSourceHint(n);
+    toast(`${chosen.toUpperCase()} 파일을 저장했어요`);
+    return true;
   }
+  function showHtmlExportDialog(id) {
+    const n = getNote(id); if (!n || n.type !== "html") return;
+    let selected = htmlExportFormatOf(n);
+    const baseName = htmlFileBaseName(n.title || "html-workshop");
+    openModal(`<h3>파일로 저장</h3><p class="m-sub">현재 원문을 앱 내부 저장과 별도로 내려받습니다. <b>.json</b>을 선택하면 저장 전에 JSON 문법을 검사합니다.</p><div class="m-field-label">파일 이름</div><input class="m-input" id="htmlExportName" maxlength="80" value="${esc(baseName)}" autocapitalize="off" autocorrect="off"><div class="m-field-label">확장자</div><div class="type-card html-export-choice ${selected === "html" ? "is-selected" : ""}" id="htmlExportAsHtml"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg></div><div><div class="tc-name">HTML · .html</div><div class="tc-desc">웹페이지·상태창·배너 원문으로 저장</div></div><span class="tc-soon">${selected === "html" ? "선택됨" : "선택"}</span></div><div class="type-card html-export-choice ${selected === "json" ? "is-selected" : ""}" id="htmlExportAsJson"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M7 5 3 12l4 7M17 5l4 7-4 7M13.5 3 10.5 21"/></svg></div><div><div class="tc-name">JSON · .json</div><div class="tc-desc">정렬·공백을 유지한 JSON 원문으로 저장</div></div><span class="tc-soon">${selected === "json" ? "선택됨" : "선택"}</span></div><div class="m-row"><button class="m-btn" id="htmlExportCancel">취소</button><button class="m-btn primary" id="htmlExportOk">파일 저장</button></div>`);
+    const draw = () => {
+      [["htmlExportAsHtml", "html"], ["htmlExportAsJson", "json"]].forEach(([elId, format]) => {
+        const el = $(elId); if (!el) return;
+        const on = selected === format;
+        el.classList.toggle("is-selected", on);
+        const chip = el.querySelector(".tc-soon"); if (chip) chip.textContent = on ? "선택됨" : "선택";
+      });
+    };
+    $on("htmlExportAsHtml", "click", () => { selected = "html"; draw(); });
+    $on("htmlExportAsJson", "click", () => { selected = "json"; draw(); });
+    $on("htmlExportCancel", "click", closeModal);
+    $on("htmlExportOk", "click", async () => {
+      const button = $("htmlExportOk");
+      if (button) { button.disabled = true; button.textContent = "저장 중…"; }
+      const ok = await saveHtmlWorkshopFile(id, selected, $("htmlExportName").value);
+      if (ok) closeModal();
+      else if (button) { button.disabled = false; button.textContent = "파일 저장"; }
+    });
+    setTimeout(() => { const input = $("htmlExportName"); if (input) { input.focus(); input.select(); } }, 80);
+  }
+  function exportHtmlSource(id) { showHtmlExportDialog(id); }
   function openHtmlSheet(n) {
     openSheet(n.title, [
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("HTML 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.copy, label: "원본 코드 복사", fn: () => clipboardCopy(htmlSourceOf(n)).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")) },
-      { icon: IC.save, label: "원본 .html로 내보내기", fn: () => exportHtmlSource(n.id) },
+      { icon: IC.save, label: "파일로 저장 (.html / .json)", fn: () => exportHtmlSource(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("HTML 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
@@ -3072,26 +3138,26 @@
       const nextHost = $("logSetNames"); if (nextHost) nextHost.dispatchEvent(new Event("input", { bubbles:true }));
     }));
   }
-  function logSetDesignSample(replacement) {
-    const t = (replacement || "").trim();
-    return t ? t.slice(0, 10) : "이름";
-  }
+  // 이름 치환 디자인은 이름 자체가 아니라, 다섯 가지 표시 스타일의 차이를 빠르게 비교하는 용도입니다.
+  // 따라서 어떤 세트에서도 같은 샘플 텍스트를 사용합니다.
+  function logSetDesignSample() { return "미리보기"; }
   function logSetSelectedDesign() {
     const host = $("logSetDesigns");
     return host ? Math.max(0, Math.min(LOG_NAME_DESIGN_COUNT - 1, Number(host.dataset.selected) || 0)) : 0;
   }
-  function renderLogSetDesigns(template, selected, replacement) {
+  function renderLogSetDesigns(template, selected) {
     const host = $("logSetDesigns"); if (!host) return;
     const designs = (template && template.persona && template.persona.designs) || [];
     const canvas = (template && template.styles && template.styles.canvas) || {};
     const canvasBg = canvas["background"] || canvas["background-color"] || "#ffffff";
-    const sample = esc(logSetDesignSample(replacement));
-    const safeSelected = Math.max(0, Math.min(designs.length - 1, Number(selected) || 0));
+    const sample = esc(logSetDesignSample());
+    const safeSelected = Math.max(0, Math.min(Math.max(0, designs.length - 1), Number(selected) || 0));
     host.dataset.selected = String(safeSelected);
-    host.innerHTML = designs.map((d, index) => {
+    host.setAttribute("aria-label", "이름 표시 디자인 미리보기 5종");
+    host.innerHTML = designs.slice(0, LOG_NAME_DESIGN_COUNT).map((d, index) => {
       const styleAttr = esc(logStyleAttr(d.style));
       const active = index === safeSelected ? " is-active" : "";
-      return `<button type="button" class="log-set-design${active}" data-log-set-design="${index}" aria-pressed="${index === safeSelected ? "true" : "false"}"><span class="log-set-design-name">${esc(d.label)}</span><span class="log-set-design-chip" style="background:${esc(canvasBg)}"><span style="${styleAttr}">${sample}</span></span></button>`;
+      return `<button type="button" class="log-set-design${active}" data-log-set-design="${index}" aria-pressed="${index === safeSelected ? "true" : "false"}" aria-label="미리보기 ${index + 1}" title="미리보기 ${index + 1}"><span class="log-set-design-chip" style="background:${esc(canvasBg)}"><span style="${styleAttr}">${sample}</span></span></button>`;
     }).join("");
     host.querySelectorAll("[data-log-set-design]").forEach((button) => button.addEventListener("click", () => {
       host.dataset.selected = button.dataset.logSetDesign;
@@ -3118,9 +3184,9 @@
     const sets = normalizeLogNameSets(n.data && n.data.nameSets, n.data && n.data.personaNames, n.data && n.data.personaAlias);
     const current = normalizeLogNameSet(seed || sets[safeIndex]);
     const template = getLogTemplate(n);
-    openModal(`<h3>이름 치환 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있어요. 등록한 이름은 모두 아래 “바꿀 이름”으로 치환되고, 아래에서 고른 이름 표시 디자인이 이 세트에 적용됩니다. 원본 이름은 다른 세트와 중복 저장할 수 없습니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="m-field-label">이름 표시 디자인</div><div class="log-set-design-list" id="logSetDesigns"></div><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
+    openModal(`<h3>이름 치환 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있어요. 등록한 이름은 모두 아래 “바꿀 이름”으로 치환되고, 아래에서 고른 이름 표시 디자인이 이 세트에 적용됩니다. 원본 이름은 다른 세트와 중복 저장할 수 없습니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="m-field-label">미리보기</div><div class="log-set-design-list" id="logSetDesigns"></div><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
     renderLogSetNames(current.names);
-    renderLogSetDesigns(template, current.design, current.replacement);
+    renderLogSetDesigns(template, current.design);
     const updateCount = () => { const label = $("logSetNameCount"); if (label) label.textContent = `${logSetNamesFromModal().length}/${LOG_NAME_SET_LIMIT}`; };
     const updateConflict = () => {
       const host = $("logSetConflictHost"); const saveButton = $("logSetSave"); if (!host || !saveButton) return [];
@@ -3152,7 +3218,7 @@
       if (names.length && !replacement) { toast("바꿀 이름을 입력해 주세요"); $("logSetReplacement").focus(); return; }
       await saveLogNameSet(safeIndex, { names, replacement, design: logSetSelectedDesign() });
     });
-    $("logSetReplacement").addEventListener("input", () => renderLogSetDesigns(template, logSetSelectedDesign(), $("logSetReplacement").value));
+    // 미리보기 문구는 모든 디자인에서 고정하므로, 이름 입력 중에는 선택 상태를 다시 그릴 필요가 없습니다.
     setTimeout(() => $("logSetReplacement").focus(), 80);
   }
   function renderLog() {
@@ -3279,7 +3345,7 @@
   function showLogTemplatePicker() {
     const n = getNote(st.curNoteId); if (!n || n.type !== "log") return;
     logTemplateTab = "builtin"; logTemplateQuery = ""; logTemplateSortAsc = true;
-    openModal(`<div class="log-template-manager"><h3>로그 디자인 템플릿</h3><p class="m-sub">템플릿을 길게 누르면 즐겨찾기 상단에 고정됩니다.</p><div class="log-template-tabs" role="tablist" aria-label="템플릿 구분"><button data-log-tab="builtin" role="tab">기본 <small></small></button><button data-log-tab="custom" role="tab">사용자 <small></small></button><button data-log-tab="favorite" role="tab">즐겨찾기 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="logTemplateSearch" type="search" autocomplete="off" placeholder="템플릿 제목·내용 검색" value="${esc(logTemplateQuery)}"><button class="m-btn" id="logTemplateSort" type="button">이름순 ↑</button></div><div class="log-template-list" id="logTemplateList"></div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a><a class="m-btn log-template-gallery-link" href="./lumink-log-templates-50.html" target="_blank" rel="noopener">50종 소개 보기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div></div>`);
+    openModal(`<div class="log-template-manager"><h3>로그 디자인 템플릿</h3><p class="m-sub">템플릿을 길게 누르면 즐겨찾기 상단에 고정됩니다.</p><div class="log-template-tabs" role="tablist" aria-label="템플릿 구분"><button data-log-tab="builtin" role="tab">기본 <small></small></button><button data-log-tab="custom" role="tab">사용자 <small></small></button><button data-log-tab="favorite" role="tab">즐겨찾기 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="logTemplateSearch" type="search" autocomplete="off" placeholder="템플릿 제목·내용 검색" value="${esc(logTemplateQuery)}"><button class="m-btn" id="logTemplateSort" type="button">이름순 ↑</button></div><div class="log-template-list" id="logTemplateList"></div><div class="log-template-actions"><button class="m-btn primary" id="logTemplateUpload">JSON 템플릿 업로드</button><a class="m-btn" href="./lumink-log-template-guide.md" download>제작 가이드 받기</a><a class="m-btn log-template-gallery-link" href="./lumink-log-templates-80.html" target="_blank" rel="noopener">80종 소개 보기</a></div><div class="m-row"><button class="m-btn" id="logTemplateClose">닫기</button></div></div>`);
     $("modalBox").classList.add("log-template-modal");
     $("modalScrim").classList.add("log-template-open");
     const galleryLink = $("modalBox").querySelector(".log-template-gallery-link");
@@ -3317,6 +3383,123 @@
     const doc = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Lumink"><meta name="lumink-kind" content="log"><title>${esc(n.title || "로그")}</title></head><body style="margin:0;padding:24px;background:#f4f5f8">${renderLogInlineHtml(n)}<script type="application/json" id="lumink-log">${payload}<\/script></body></html>`;
     downloadDoc(doc, `${((n.title || "log").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 50) || "log")}.html`, "text/html"); toast("꾸며진 로그 HTML을 저장했어요");
   }
+
+  const LOG_IMAGE_EXPORT_SIZES = [
+    { width: 520, name: "좁은 인용글", desc: "520px · 모바일 게시판과 짧은 인용 박스" },
+    { width: 680, name: "기본 게시판", desc: "680px · 일반 게시글용 권장 폭", recommended: true },
+    { width: 840, name: "넓은 게시글", desc: "840px · 데스크톱 게시판과 긴 문단" }
+  ];
+  function logImageFileStem(value) {
+    return (String(value || "log").replace(/[\\/:*?"<>|]+/g, "_").trim().slice(0, 80) || "log");
+  }
+  function downloadLogBlob(blob, name) {
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1600);
+  }
+  async function waitForLogPngAssets(root) {
+    const waits = [];
+    if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready.catch(() => {}));
+    (root ? root.querySelectorAll("img") : []).forEach((img) => {
+      if (img.complete && img.naturalWidth) return;
+      waits.push(new Promise((resolve) => { img.addEventListener("load", resolve, { once:true }); img.addEventListener("error", resolve, { once:true }); }));
+    });
+    await Promise.all(waits);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  function logPngCaptureScale(width, height) {
+    const desired = 2;
+    const maxSide = 8192;
+    const maxPixels = 30000000;
+    const bySide = maxSide / Math.max(1, width, height);
+    const byPixels = Math.sqrt(maxPixels / Math.max(1, width * height));
+    return Math.min(desired, bySide, byPixels);
+  }
+  async function exportLogPng(id, requestedWidth) {
+    if (st.curNoteId === id) await flushLog();
+    const n = getNote(id); if (!n || n.type !== "log") return;
+    if (!(n.data && String(n.data.content || "").trim())) { toast("이미지로 저장할 로그 원문을 입력해 주세요"); return; }
+    if (typeof window.html2canvas !== "function") { toast("PNG 캡처 도구를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요."); return; }
+
+    const width = Math.max(400, Math.min(960, Math.round(Number(requestedWidth) || 680)));
+    const safePadding = 34;
+    const host = document.createElement("div");
+    host.className = "lumink-log-png-capture";
+    host.setAttribute("aria-hidden", "true");
+    host.style.cssText = `position:fixed;left:-100000px;top:0;width:${width + safePadding * 2}px;box-sizing:border-box;padding:${safePadding}px;overflow:visible;pointer-events:none;z-index:-1;background:transparent;contain:layout paint style;`;
+    const wrap = document.createElement("div");
+    wrap.innerHTML = renderLogInlineHtml(n);
+    const card = wrap.firstElementChild;
+    if (!card) { toast("꾸며진 로그를 준비하지 못했어요"); return; }
+    card.style.width = `${width}px`;
+    card.style.maxWidth = "none";
+    card.style.margin = "0";
+    card.style.boxSizing = "border-box";
+    host.appendChild(card);
+    document.body.appendChild(host);
+
+    try {
+      toast("꾸며진 로그 PNG를 준비하고 있어요");
+      await waitForLogPngAssets(host);
+      const box = host.getBoundingClientRect();
+      const captureWidth = Math.max(1, Math.ceil(Math.max(host.scrollWidth, box.width)));
+      const captureHeight = Math.max(1, Math.ceil(Math.max(host.scrollHeight, box.height)));
+      const scale = logPngCaptureScale(captureWidth, captureHeight);
+      if (!(scale >= 0.5)) throw new Error("로그가 너무 길어 한 장 PNG로 만들 수 없어요");
+      const bitmap = await captureHtml2CanvasSafe(host, {
+        backgroundColor: null,
+        scale,
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        width: captureWidth,
+        height: captureHeight,
+        windowWidth: captureWidth,
+        windowHeight: captureHeight,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (doc, el) => {
+          const root = el || doc.body;
+          try { normalizeCloneColorFns(root); } catch (e) {}
+          try { rasterizeRepeatingGradients(root); } catch (e) {}
+          try { stripInsetShadows(root); } catch (e) {}
+        }
+      });
+      const png = await new Promise((resolve) => bitmap.toBlob(resolve, "image/png"));
+      if (!png) throw new Error("png encode failed");
+      downloadLogBlob(png, `${logImageFileStem(n.title)}-${width}px.png`);
+      const quality = scale >= 1.85 ? "2배 해상도" : `${Math.round(scale * 100)}% 해상도`;
+      toast(`꾸며진 로그 PNG를 저장했어요 · ${width}px · ${quality}`);
+    } catch (e) {
+      console.warn("log png export", e);
+      const message = (e && e.message) || "PNG 저장에 실패했어요";
+      toast(message.includes("너무 길어") ? `${message}. 로그를 나누거나 HTML로 저장해 주세요.` : "PNG 저장에 실패했어요. 글꼴 또는 템플릿을 다시 불러온 뒤 재시도해 주세요.", 3600);
+    } finally {
+      host.remove();
+    }
+  }
+  function openLogImageExportPicker(id) {
+    const n = getNote(id); if (!n || n.type !== "log") return;
+    let selected = 680;
+    const rows = LOG_IMAGE_EXPORT_SIZES.map((item) => `<button type="button" class="log-image-export-option${item.width === selected ? " is-selected" : ""}" data-log-image-width="${item.width}" aria-pressed="${item.width === selected ? "true" : "false"}"><span class="log-image-export-symbol">▣</span><span><b>${esc(item.name)}</b><small>${esc(item.desc)}</small></span>${item.recommended ? '<em>추천</em>' : ""}</button>`).join("");
+    openModal(`<div class="log-image-export-modal"><h3>꾸며진 로그 PNG 저장</h3><p class="m-sub">앱 상단바와 편집 도구는 제외하고, 현재 템플릿이 적용된 로그 본문만 PNG로 저장합니다. 폭을 고르면 해당 반응형 폭으로 다시 배치해 캡처합니다.</p><div class="log-image-export-options" role="group" aria-label="PNG 저장 폭">${rows}</div><div class="log-image-export-note"><span>✦</span><span>기본은 2배 해상도로 저장합니다. 아주 긴 로그는 한 장 제한 안에서 자동으로 해상도가 낮아질 수 있어요.</span></div><div class="m-row"><button class="m-btn" id="logImageExportCancel">취소</button><button class="m-btn primary" id="logImageExportSave">PNG 저장</button></div></div>`);
+    const draw = () => {
+      $("modalBox").querySelectorAll("[data-log-image-width]").forEach((button) => {
+        const on = Number(button.dataset.logImageWidth) === selected;
+        button.classList.toggle("is-selected", on);
+        button.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    };
+    $("modalBox").querySelectorAll("[data-log-image-width]").forEach((button) => button.addEventListener("click", () => { selected = Number(button.dataset.logImageWidth) || 680; draw(); }));
+    $("logImageExportCancel").addEventListener("click", closeModal);
+    $("logImageExportSave").addEventListener("click", async () => {
+      const button = $("logImageExportSave");
+      if (button) { button.disabled = true; button.textContent = "PNG 준비 중…"; }
+      closeModal();
+      await exportLogPng(id, selected);
+    });
+  }
+
   function openLogSheet(n) {
     openSheet(n.title, [
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
@@ -3325,6 +3508,7 @@
       { icon: IC.icon, label: "디자인 템플릿", fn: showLogTemplatePicker },
       { icon: IC.copy, label: "인라인 HTML 코드 복사", fn: () => void copyLogInlineHtml(n.id) },
       { icon: IC.save, label: "꾸며진 HTML 파일로 저장", fn: () => void exportLogHtml(n.id) },
+      { icon: IC.icon, label: "꾸며진 PNG 이미지로 저장", fn: () => openLogImageExportPicker(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("로그 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
@@ -5131,7 +5315,7 @@
       if (attachments.length) note.data.attachments = attachments;
     } else if (type === "html") {
       // 백업·프로젝트 가져오기에서도 raw source를 sanitize/DOM serialization 없이 문자열 그대로 되살립니다.
-      note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web" };
+      note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web", exportFormat: data.exportFormat === "json" ? "json" : "html" };
     } else if (type === "lorebook") {
       note.data = {
         content: cleanImportedText(data.content, 500000),
@@ -5956,7 +6140,7 @@ ${gallery}
       n.title = jsonImportedTitle(file);
       n.titleLocked = true;
       // HTML 작업실에는 파일의 공백·정렬을 포함한 원본 문자열을 그대로 보관합니다.
-      n.data = { source: raw, previewPolicy: "sandbox-web" };
+      n.data = { source: raw, previewPolicy: "sandbox-web", exportFormat: "json" };
       await saveNote(n);
       st.curNoteId = n.id; st.curProjectId = pid;
       toast("JSON 원본을 HTML 작업실로 열었어요");
@@ -6202,7 +6386,7 @@ ${gallery}
       if (raw.length > HTML_SOURCE_MAX) { toast("HTML 원본은 5MB 이하만 가져올 수 있어요"); return; }
       const n = await createNote("html", pid);
       n.title = cleanImportedText(name, 180) || "불러온 HTML"; n.titleLocked = true;
-      n.data = { source: raw, previewPolicy: "sandbox-web" };
+      n.data = { source: raw, previewPolicy: "sandbox-web", exportFormat: "html" };
       await saveNote(n); st.curNoteId = n.id; st.curProjectId = pid;
       toast("원본 HTML을 작업실로 가져왔어요"); go({ s: "html" });
     });
@@ -6746,6 +6930,9 @@ ${gallery}
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
         const s = curView().s;
+        if (s === "html" && e.shiftKey) {
+          e.preventDefault(); showHtmlExportDialog(st.curNoteId); return;
+        }
         if (s === "editor" || s === "html" || s === "lore" || s === "log" || s === "persona" || s === "character" || s === "idea") {
           e.preventDefault();
           if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else if (s === "idea") flushIdeaBoard(); else flushCharacter();
@@ -6816,6 +7003,7 @@ ${gallery}
     $on("htmlSave", "click", () => { const s = htmlWorkshopSession; if (s && s.active) void flushHtmlSave(false, s.noteId); });
     $on("htmlMore", "click", () => openNoteSheet(st.curNoteId));
     $on("htmlCopy", "click", () => clipboardCopy($("htmlSource").value).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")));
+    $on("htmlExport", "click", () => showHtmlExportDialog(st.curNoteId));
     $on("htmlReload", "click", () => { refreshHtmlPreview($("htmlSource").value); toast("미리보기를 새로고침했어요"); });
     $on("htmlOpenPage", "click", openHtmlPreviewPage);
     $on("htmlModeSource", "click", () => setHtmlView("source"));
