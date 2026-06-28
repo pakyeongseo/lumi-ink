@@ -6101,9 +6101,23 @@ ${gallery}
   // 내용을 확인해야 하는 원본 문서이기도 합니다. 구조형 가져오기와 원문 열기를 분리합니다.
   const JSON_OPEN_MAX = HTML_SOURCE_MAX;
   function isJsonFile(file) {
-    const name = String((file && file.name) || "");
-    const type = String((file && file.type) || "").toLowerCase();
-    return /\.json$/i.test(name) || /(?:application|text)\/json(?:;|$)/i.test(type);
+    // 모바일 파일 제공자는 MIME을 비워 두거나 application/octet-stream으로 넘기는 경우가 많습니다.
+    // 그래서 MIME만 믿지 않고 파일명 확장자와 흔한 JSON 계열 MIME을 함께 확인합니다.
+    const name = String((file && file.name) || "").trim();
+    const type = String((file && file.type) || "").toLowerCase().split(";")[0].trim();
+    return /\.json$/i.test(name)
+      || type === "application/json"
+      || type === "text/json"
+      || type === "application/ld+json"
+      || /\+json$/i.test(type);
+  }
+  function looksLikeJsonText(raw) {
+    // 확장자·MIME이 유실된 모바일 공유 파일도 내용이 JSON이면 JSON 열기 흐름으로 보냅니다.
+    const text = String(raw == null ? "" : raw).replace(/^\uFEFF/, "").trimStart();
+    if (!text) return false;
+    if (text[0] !== "{" && text[0] !== "[") return false;
+    try { JSON.parse(text); return true; }
+    catch (e) { return true; } // JSON처럼 보이지만 문법이 깨졌다면 원본 작업실에서 점검할 수 있게 둡니다.
   }
   function jsonImportedTitle(file) {
     const name = cleanImportedText(String((file && file.name) || ""), 220).trim().replace(/\.json$/i, "");
@@ -6174,15 +6188,28 @@ ${gallery}
     showJsonOpenChoice(raw, file, payload, parseError);
   }
   function importHtmlFile(file) {
-    if (isJsonFile(file) && Number(file.size || 0) > JSON_OPEN_MAX) { toast("JSON 파일은 5MB 이하만 열 수 있어요"); return; }
+    const declaredJson = isJsonFile(file);
+    const size = Number(file && file.size || 0);
+    if (declaredJson && size > JSON_OPEN_MAX) { toast("JSON 파일은 5MB 이하만 열 수 있어요"); return; }
+    if (!file) { toast("열 파일을 찾지 못했어요"); return; }
     const fr = new FileReader();
     fr.onload = () => {
       const raw = String(fr.result || "");
-      if (isJsonFile(file)) importJsonFile(raw, file);
-      else importHtmlPayload(raw, file);
+      // .json 확장자/MIME이 사라진 파일도 실제 내용이 JSON이면 일반 JSON 열기 창으로 보냅니다.
+      const jsonCandidate = declaredJson || looksLikeJsonText(raw);
+      if (jsonCandidate) {
+        if (raw.length > JSON_OPEN_MAX) { toast("JSON 원본은 5MB 이하만 열 수 있어요"); return; }
+        importJsonFile(raw, file);
+        return;
+      }
+      importHtmlPayload(raw, file);
     };
-    fr.onerror = () => toast("파일을 읽지 못했어요");
-    fr.readAsText(file, "UTF-8");
+    fr.onerror = () => {
+      const reason = (fr.error && (fr.error.name || fr.error.message)) ? ` (${fr.error.name || fr.error.message})` : "";
+      toast(`파일을 읽지 못했어요${reason}`);
+    };
+    try { fr.readAsText(file, "UTF-8"); }
+    catch (e) { toast("파일 열기를 시작하지 못했어요"); }
   }
   function importWorldInfo(raw, file) {
     let data; try { data = JSON.parse(String(raw || "").replace(/^\uFEFF/, "")); } catch (e) { toast("JSON을 읽지 못했어요"); return; }
@@ -6399,7 +6426,15 @@ ${gallery}
       toast("문서 메모로 가져왔어요"); go({ s: "editor" });
     });
   }
-  $on("fileInput", "change", (e) => { const f = e.target.files && e.target.files[0]; if (f) importHtmlFile(f); e.target.value = ""; closeSidebar(); });
+  $on("fileInput", "change", (e) => {
+    const input = e.target;
+    const f = input && input.files && input.files[0];
+    // Android 파일 선택기는 값을 즉시 비우거나 패널을 닫을 때 파일 접근이 끊기는 구현이 있어,
+    // File 객체를 먼저 잡고 다음 프레임에서 읽기를 시작합니다.
+    if (input) input.value = "";
+    closeSidebar();
+    if (f) requestAnimationFrame(() => importHtmlFile(f));
+  });
 
   /* ---------- sidebar / theme ---------- */
   function openSidebar() { renderSidebar(); document.body.classList.add("sidebar-open"); }
