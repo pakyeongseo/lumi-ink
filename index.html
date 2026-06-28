@@ -1710,6 +1710,82 @@
     #screen-html[data-html-view="split"] .html-source-pane { border-right: 1px solid var(--line); }
   }
 
+  .regex-workshop .html-work-label b { color: #9ee7d8; }
+  .regex-workshop .html-workbar .html-mode.active { background: linear-gradient(135deg, #23c4a8, #6f9dff); }
+  .regex-form-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 14px; background: var(--paper); }
+  .regex-field {
+    margin: 0 0 12px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 8px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+  }
+  .regex-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+  .regex-label-row label, .regex-field legend {
+    color: var(--ink); font-size: 11px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .regex-field legend { padding: 0 4px; }
+  .regex-input, .regex-area, .regex-select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; outline: none;
+    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 13px;
+  }
+  .regex-input, .regex-select { height: 36px; padding: 0 10px; }
+  .regex-area {
+    min-height: 92px; resize: vertical; padding: 10px 11px; line-height: 1.62;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    tab-size: 2; white-space: pre; overflow: auto;
+  }
+  .regex-area.tall { min-height: 130px; }
+  .regex-area.compact { min-height: 68px; }
+  .regex-input:focus, .regex-area:focus, .regex-select:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent); }
+  .regex-mini-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .regex-mini-row > * { flex: 1 1 160px; }
+  .regex-check {
+    min-height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 9px;
+    border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface-2);
+    font-size: 12px; font-weight: 700; cursor: pointer; user-select: none;
+  }
+  .regex-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .regex-status {
+    flex: 0 0 auto; max-width: 58%; color: var(--muted); font-size: 11px; text-align: right;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .regex-status.ok { color: #4ad18d; }
+  .regex-status.bad { color: var(--danger); }
+  .regex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .regex-action-btn {
+    min-height: 34px; border: 1px solid var(--line); border-radius: 8px; padding: 0 11px;
+    background: var(--surface-2); color: var(--accent); font: inherit; font-size: 12px; font-weight: 800;
+    cursor: pointer;
+  }
+  .regex-action-btn.primary { border-color: transparent; background: var(--grad-blue); color: #fff; }
+  .regex-action-btn:active { transform: scale(.97); }
+  .regex-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .regex-preview-status {
+    padding: 10px 14px; border-bottom: 1px solid var(--line-soft);
+    color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent);
+    font-size: 12px; line-height: 1.5;
+  }
+  .regex-captures {
+    max-height: 150px; overflow: auto; display: grid; gap: 6px; padding: 10px 14px;
+    border-bottom: 1px solid var(--line-soft); background: var(--paper);
+  }
+  .regex-capture-row {
+    display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 9px; align-items: start;
+    font-size: 12px; color: var(--muted);
+  }
+  .regex-capture-row b { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .regex-capture-row span { min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+  #screen-regex[data-regex-view="edit"] .regex-preview-pane { display: none; }
+  #screen-regex[data-regex-view="preview"] .regex-source-pane { display: none; }
+  @media (min-width: 1100px) {
+    #screen-regex[data-regex-view="split"] .html-stage { flex-direction: row; }
+    #screen-regex[data-regex-view="split"] .html-pane { width: 50%; }
+    #screen-regex[data-regex-view="split"] .regex-source-pane { border-right: 1px solid var(--line); }
+  }
+  @media(max-width:700px){
+    .regex-form-scroll { padding: 10px; }
+    .regex-options-grid { grid-template-columns: 1fr; }
+    .regex-status { max-width: 46%; }
+  }
+
   .saver { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 6px; user-select: none; }
   .saver .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .3s; }
   .saver.dirty .dot { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
@@ -1758,7 +1834,7 @@
   html[data-theme="light"] .sb-memo { background: #f6f8fd; border-color: #e1e8f4; }
   .sb-memo:active { background: var(--surface-3); }
   .memo-tag { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; letter-spacing: 0; }
-  .memo-tag.t-free { background: #5b7cff; } .memo-tag.t-lorebook { background: #34c2e8; } .memo-tag.t-persona { background: #a779f0; } .memo-tag.t-character { background: var(--accent-2); }
+  .memo-tag.t-free { background: #5b7cff; } .memo-tag.t-lorebook { background: #34c2e8; } .memo-tag.t-regex { background: #2fc79f; } .memo-tag.t-persona { background: #a779f0; } .memo-tag.t-character { background: var(--accent-2); }
   .sb-memo .sb-memo-body { flex: 1; min-width: 0; }
   .sb-memo .sb-memo-title { font-size: 14px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
   .sb-memo .sb-memo-title .pin-star { width: 12px; height: 12px; margin-left: 5px; }
@@ -2726,8 +2802,10 @@
   /* v63.43: 아이디어 보드·코드 작업실 구분자는 현재 테마 기조에서 서로 다른 톤을 씁니다. */
   .memo-tag.t-idea { background:color-mix(in srgb,var(--accent) 70%,#f0bc47); color:color-mix(in srgb,var(--ink) 72%,#fff); }
   .memo-tag.t-html { background:color-mix(in srgb,var(--accent) 66%,#34c8bc); color:color-mix(in srgb,var(--ink) 76%,#fff); }
+  .memo-tag.t-regex { background:color-mix(in srgb,var(--accent) 48%,#2fc79f); color:color-mix(in srgb,var(--ink) 76%,#fff); }
   html[data-theme="dark"] .memo-tag.t-idea { color:#1d1820; }
   html[data-theme="dark"] .memo-tag.t-html { color:#102a2c; }
+  html[data-theme="dark"] .memo-tag.t-regex { color:#0d2620; }
 
   /* ===== v64.2: 새 메모 런처 / 자동 백업 보관 설정 ===== */
   .type-picker-modal { max-height: min(78dvh, 680px); overflow: auto; overscroll-behavior: contain; padding-right: 2px; }
@@ -3636,6 +3714,95 @@
     </div>
   </section>
 
+  <!-- ============ REGEX WORKSHOP ============ -->
+  <section class="screen" id="screen-regex" data-regex-view="edit">
+    <div class="topbar">
+      <button class="iconbtn nav-menu" aria-label="메뉴"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="iconbtn nav-back" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="tb-title" id="regexTitle">정규식 작업실</div>
+      <div class="saver" id="regexSaver"><span class="dot"></span><span id="regexSaverText"></span></div>
+      <button class="iconbtn" id="regexSave" aria-label="앱에 저장" title="앱에 저장"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 14h8v6H8z"/></svg></button>
+      <button class="iconbtn" id="regexMore" aria-label="더보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
+    </div>
+    <div class="html-workshop regex-workshop">
+      <div class="html-workbar">
+        <button class="html-mode active" id="regexModeEdit" type="button">EDIT</button>
+        <button class="html-mode" id="regexModePreview" type="button">PREVIEW</button>
+        <button class="html-mode" id="regexModeSplit" type="button">SPLIT</button>
+        <span class="html-work-label" title="SillyTavern 정규식 JSON으로 내보낼 수 있습니다"><b>REGEX</b> <span class="raw-note">· IN / OUT · 샌드박스 미리보기 · JSON 내보내기</span></span>
+        <span class="html-work-spacer"></span>
+        <button class="html-mini-btn" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+        <button class="html-mini-btn" id="regexTemplate" type="button" aria-label="템플릿" title="템플릿"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M4 8h16"/></svg></button>
+        <button class="html-mini-btn" id="regexExport" type="button" aria-label="SillyTavern JSON 저장" title="SillyTavern JSON 저장"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M12 10v7M8.5 13.5 12 17l3.5-3.5"/></svg></button>
+        <button class="html-mini-btn" id="regexReload" type="button" aria-label="미리보기 새로고침" title="미리보기 새로고침"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg></button>
+      </div>
+      <div class="html-stage">
+        <div class="html-pane regex-source-pane">
+          <div class="html-pane-head"><span class="html-pane-kicker">Regex source</span><span class="html-pane-note" id="regexMeta">0자 · 0캡처</span></div>
+          <div class="regex-form-scroll">
+            <div class="regex-field">
+              <div class="regex-label-row"><label for="regexScriptName">scriptName</label></div>
+              <input class="regex-input" id="regexScriptName" maxlength="120" placeholder="상태창">
+            </div>
+            <div class="regex-field">
+              <div class="regex-label-row">
+                <label for="regexFind">IN · findRegex</label>
+                <span class="regex-status" id="regexValidation">대기 중</span>
+              </div>
+              <textarea class="regex-area tall" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
+              <div class="regex-mini-row" style="margin-top:8px">
+                <label class="regex-check"><input type="checkbox" id="regexGlobal"> 글로벌 /g</label>
+                <button type="button" class="regex-action-btn" id="regexFromSample">샘플→IN</button>
+                <button type="button" class="regex-action-btn" id="regexAutoSample">샘플 자동</button>
+              </div>
+            </div>
+            <div class="regex-field">
+              <div class="regex-label-row"><label for="regexReplace">OUT · replaceString</label></div>
+              <textarea class="regex-area tall" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
+            </div>
+            <div class="regex-field">
+              <div class="regex-label-row"><label for="regexSample">sample</label><span class="regex-status" id="regexPreviewBadge">미리보기 대기</span></div>
+              <textarea class="regex-area compact" id="regexSample" spellcheck="false" placeholder="{{고정 텍스트}} [[바뀌는 값]]"></textarea>
+            </div>
+            <fieldset class="regex-field">
+              <legend>export options</legend>
+              <div class="regex-options-grid">
+                <label class="regex-check"><input type="checkbox" id="regexMarkdownOnly"> markdownOnly</label>
+                <label class="regex-check"><input type="checkbox" id="regexPromptOnly"> promptOnly</label>
+                <label class="regex-check"><input type="checkbox" id="regexRunOnEdit"> runOnEdit</label>
+                <label class="regex-check"><input type="checkbox" id="regexDisabled"> disabled</label>
+              </div>
+              <div class="regex-mini-row" style="margin-top:8px">
+                <select class="regex-select" id="regexPlacement" aria-label="placement">
+                  <option value="1,2">placement 1,2</option>
+                  <option value="1">placement 1</option>
+                  <option value="2">placement 2</option>
+                  <option value="">placement 없음</option>
+                </select>
+                <select class="regex-select" id="regexSubstituteRegex" aria-label="substituteRegex">
+                  <option value="0">substituteRegex 0</option>
+                  <option value="1">substituteRegex 1</option>
+                  <option value="2">substituteRegex 2</option>
+                </select>
+              </div>
+              <div class="regex-mini-row" style="margin-top:8px">
+                <input class="regex-input" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">
+                <input class="regex-input" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
+              </div>
+              <textarea class="regex-area compact" id="regexTrimStrings" spellcheck="false" placeholder="trimStrings · 한 줄에 하나"></textarea>
+            </fieldset>
+          </div>
+        </div>
+        <div class="html-pane regex-preview-pane">
+          <div class="html-pane-head"><span class="html-pane-kicker">Sandbox preview</span><span class="html-pane-note">JavaScript · 폼 · 앱 접근 차단</span></div>
+          <div class="regex-preview-status" id="regexPreviewStatus">IN, OUT, sample을 채우면 결과가 표시됩니다.</div>
+          <div class="regex-captures" id="regexCaptures"></div>
+          <div class="html-preview-shell"><iframe class="html-preview-frame" id="regexPreview" title="정규식 작업실 미리보기" sandbox="" referrerpolicy="no-referrer"></iframe></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ LOREBOOK ============ -->
   <section class="screen" id="screen-lore">
     <div class="topbar">
@@ -4120,7 +4287,7 @@
     purple: { name: "라벤더 퍼플",  c: "#c79bff" },
     grey:   { name: "미스티 그레이",c: "#b8bdcc" }
   };
-  const TYPE_LABEL = { free: "자유", html: "코드 작업실", lorebook: "로어북", log: "로그", persona: "페르소나", character: "캐릭터", idea: "아이디어 보드" };
+  const TYPE_LABEL = { free: "자유", html: "코드 작업실", regex: "정규식 작업실", lorebook: "로어북", log: "로그", persona: "페르소나", character: "캐릭터", idea: "아이디어 보드" };
 
   /* ---------- IndexedDB ---------- */
   const DB_NAME = "inkMemoDB", DB_VER = 5;

@@ -87,7 +87,7 @@
   /* ---------- right-edge quick menu · v65.2 code icon slots ---------- */
   const QUICK_MENU_SETTING_ID = "quickMenu";
   const QUICK_MENU_MAX = 7;
-  const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "lorebook", "log", "persona", "character", "idea"]);
+  const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "regex", "lorebook", "log", "persona", "character", "idea"]);
   const QUICK_MENU_ICON_LIBRARY = Array.isArray(window.__luminkQuickMenuIcons) ? window.__luminkQuickMenuIcons.filter((item) => item && typeof item.id === "string" && typeof item.svg === "string") : [];
   const QUICK_MENU_ICON_BY_ID = new Map(QUICK_MENU_ICON_LIBRARY.map((item) => [item.id, item]));
   const QUICK_MENU_ICON_CATEGORIES = [
@@ -585,7 +585,7 @@
   }
   function openQuickMenuCreateTypePicker(index) {
     const options = [
-      ["free", "single", "자유 메모", "바로 빈 문서 열기"], ["html", "single", "코드 작업실", "HTML · JSON · MD 원본 편집 시작"], ["lorebook", "single", "로어북", "World Info용 항목 만들기"], ["log", "single", "로그 저장", "대화 로그용 메모 만들기"],
+      ["free", "single", "자유 메모", "바로 빈 문서 열기"], ["html", "single", "코드 작업실", "HTML · JSON · MD 원본 편집 시작"], ["regex", "single", "정규식 작업실", "SillyTavern Regex 만들기"], ["lorebook", "single", "로어북", "World Info용 항목 만들기"], ["log", "single", "로그 저장", "대화 로그용 메모 만들기"],
       ["persona", "single", "페르소나", "단일 페르소나 카드"], ["persona", "collection", "다인 페르소나", "페르소나 모음 카드"], ["character", "single", "캐릭터", "단일 캐릭터 카드"], ["character", "collection", "다인 캐릭터", "캐릭터 모음 카드"], ["idea", "single", "아이디어 보드", "자유 배치 보드 만들기"]
     ];
     openModal(`<h3>만들 메모 타입</h3><p class="m-sub">실행하면 이 타입의 새 메모를 바로 만듭니다.</p><div class="qm-picker-list">${options.map(([type, mode, label, desc]) => `<button type="button" class="qm-picker-row" data-qm-create-type="${type}" data-qm-create-mode="${mode}"><b>${esc(label)}</b><small>${esc(desc)}</small></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="qmCreateTypeBack">뒤로</button></div>`);
@@ -692,6 +692,7 @@
   }
   function freeDraftFromEditor() { return { html: st.codeMode ? $("codeArea").value : $("editor").innerHTML }; }
   function htmlDraftFromEditor() { return { source: $("htmlSource").value }; }
+  function regexDraftFromEditor() { return regexDataFromEditor(); }
   function loreDraftFromEditor(n) { const d = jsonCopy((n && n.data) || {}) || {}; d.content = $("loreEdit").value; return d; }
   function logDraftFromEditor(n) {
     const d = jsonCopy((n && n.data) || {}) || {};
@@ -714,6 +715,7 @@
     if (!n || !d || !d.data) return false;
     if (d.type === "free") return !jsonSame({ html: noteHtml(n) }, d.data);
     if (d.type === "html") return !jsonSame({ source: htmlSourceOf(n) }, d.data);
+    if (d.type === "regex") return !jsonSame(normalizeRegexData(n.data || {}), normalizeRegexData(d.data || {}));
     if (d.type === "lorebook") return !jsonSame((n.data || {}).content || "", d.data.content || "");
     if (d.type === "log") return !jsonSame(n.data || {}, d.data);
     if (d.type === "persona") {
@@ -732,6 +734,9 @@
     } else if (d.type === "html") {
       n.data = n.data || {}; n.data.source = String((d.data && d.data.source) || "").slice(0, HTML_SOURCE_MAX);
       n.data.previewPolicy = "sandbox-web";
+      await saveNote(n);
+    } else if (d.type === "regex") {
+      n.data = normalizeRegexData(d.data || {});
       await saveNote(n);
     } else if (d.type === "lorebook") {
       n.data = Object.assign({}, n.data || {}, jsonCopy(d.data) || {});
@@ -783,8 +788,8 @@
   }
 
   /* ---------- routing ---------- */
-  const SCREENS = ["home", "project", "read", "editor", "html", "lore", "log", "persona", "character", "idea", "settings", "search"];
-  const NOTE_SCREENS = new Set(["read", "editor", "html", "lore", "log", "persona", "character", "idea"]);
+  const SCREENS = ["home", "project", "read", "editor", "html", "regex", "lore", "log", "persona", "character", "idea", "settings", "search"];
+  const NOTE_SCREENS = new Set(["read", "editor", "html", "regex", "lore", "log", "persona", "character", "idea"]);
   function showScreen(s) { SCREENS.forEach((x) => $("screen-" + x).classList.toggle("active", x === s)); }
   function curView() { return st.viewStack[st.viewStack.length - 1]; }
   function normalizeRouteView(view) {
@@ -804,6 +809,7 @@
     else if (v.s === "read") renderRead();
     else if (v.s === "editor") renderEditorMeta();
     else if (v.s === "html") renderHtmlWorkshop();
+    else if (v.s === "regex") renderRegexWorkshop();
     else if (v.s === "lore") renderLore();
     else if (v.s === "log") renderLog();
     else if (v.s === "persona") renderPersona();
@@ -831,6 +837,12 @@
       void (async () => { try { await leaveHtmlWorkshop(); commitGo(view); } finally { navTransition = false; } })();
       return;
     }
+    if (cur && cur.s === "regex" && view && view.s !== "regex") {
+      if (navTransition) return;
+      navTransition = true;
+      void (async () => { try { await leaveRegexWorkshop(); commitGo(view); } finally { navTransition = false; } })();
+      return;
+    }
     if (cur && cur.s === "idea" && view && view.s !== "idea") {
       if (navTransition) return;
       navTransition = true;
@@ -848,6 +860,7 @@
   async function flushCurrentView(cur) {
     if (cur === "editor") await leaveFreeEditor();
     else if (cur === "html") await leaveHtmlWorkshop();
+    else if (cur === "regex") await leaveRegexWorkshop();
     else if (cur === "lore") await flushLore();
     else if (cur === "log") await flushLog();
     else if (cur === "persona") await flushPersona();
@@ -1001,8 +1014,8 @@
   const PIN_SVG = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>';
   const PIN_STAR = '<svg class="pin-star" viewBox="0 0 24 24"><path d="M12 2l2.7 6.6 7 .5-5.4 4.5 1.8 6.9L12 17.3 5.9 21l1.8-6.9L2.3 9.1l7-.5z"/></svg>';
   const SORT_LABELS = { recent: "최신순", recent_asc: "오래된순", name: "이름 ㄱ→ㅎ", name_desc: "이름 ㅎ→ㄱ" };
-  const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb", idea: "#f0c967" };
-  const TYPE_TAG = { free: "F", html: "H", lorebook: "R", log: "L", persona: "P", character: "C", idea: "I" };
+  const TYPE_COLOR = { free: "#7b9bff", html: "#5eead4", regex: "#4ad1a7", lorebook: "#6ad0ff", log: "#f0a44d", persona: "#c79bff", character: "#ff9fcb", idea: "#f0c967" };
+  const TYPE_TAG = { free: "F", html: "H", regex: "X", lorebook: "R", log: "L", persona: "P", character: "C", idea: "I" };
   // Persona and character notes share the card editor, but stay separate memo types.
   function isCharacterCardType(n) { return !!n && (n.type === "character" || n.type === "persona"); }
   function characterMode(n) {
@@ -1015,7 +1028,7 @@
   function noteTypeLabel(n) { return TYPE_LABEL[visualMemoType(n)] || (n && n.type) || ""; }
   function noteTypeShortLabel(n) {
     const type = visualMemoType(n);
-    return ({ free:"자유메모", html:"HTML", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[type] || noteTypeLabel(n);
+    return ({ free:"자유메모", html:"HTML", regex:"정규식", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[type] || noteTypeLabel(n);
   }
   function noteSectionKey(n) { return n && n.type ? n.type : ""; }
   function memoTagHTML(n) { const type = visualMemoType(n); return `<span class="memo-tag t-${type}">${TYPE_TAG[type] || "?"}</span>`; }
@@ -1200,7 +1213,7 @@
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
-      meta = n.type === "idea" ? ideaBoardSummary(n) : n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 코드 원본") : (preview(noteHtml(n)) || "빈 메모");
+      meta = n.type === "idea" ? ideaBoardSummary(n) : n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 코드 원본") : n.type === "regex" ? (regexSourceSummary(n) || "빈 정규식") : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
@@ -1232,7 +1245,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그 저장"], ["lorebook", "로어북"], ["html", "코드 작업실"], ["idea", "아이디어 보드"], ["free", "자유 메모"]];
+    const SECTIONS = [["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그 저장"], ["lorebook", "로어북"], ["html", "코드 작업실"], ["regex", "정규식 작업실"], ["idea", "아이디어 보드"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => noteSectionKey(n) === t);
@@ -1297,6 +1310,7 @@
     try {
       if (curView().s === "editor") await leaveFreeEditor();
       else if (curView().s === "html") await leaveHtmlWorkshop();
+      else if (curView().s === "regex") await leaveRegexWorkshop();
       else if (curView().s === "log") await flushLog();
       else if (curView().s === "idea") await flushIdeaBoard();
       st.curProjectId = id; commitGo({ s: "project" }); renderSidebar();
@@ -1305,6 +1319,7 @@
   async function flushPending() {
     if (curView().s === "editor") await leaveFreeEditor();
     else if (curView().s === "html") await leaveHtmlWorkshop();
+    else if (curView().s === "regex") await leaveRegexWorkshop();
     else if (st.saveTimer || (freeEditorSession && freeEditorSession.active)) await flushSave(true);
     if (loreTimer) await flushLore();
     if (logTimer) await flushLog();
@@ -1321,6 +1336,7 @@
       st.curNoteId = id;
       if (n.type === "free") commitGo({ s: "read" });
       else if (n.type === "html") commitGo({ s: "html" });
+      else if (n.type === "regex") commitGo({ s: "regex" });
       else if (n.type === "lorebook") commitGo({ s: "lore" });
       else if (n.type === "log") { logEditMode = false; commitGo({ s: "log" }); }
       else if (isCharacterCardType(n)) { st.charEdit = false; commitGo({ s: "character" }); }
@@ -1333,7 +1349,7 @@
     if (navTransition) return;
     navTransition = true;
     try {
-      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "html") await leaveHtmlWorkshop(); else if (curView().s === "log") await flushLog(); else if (curView().s === "idea") await flushIdeaBoard();
+      closeSidebar(); if (curView().s === "editor") await leaveFreeEditor(); else if (curView().s === "html") await leaveHtmlWorkshop(); else if (curView().s === "regex") await leaveRegexWorkshop(); else if (curView().s === "log") await flushLog(); else if (curView().s === "idea") await flushIdeaBoard();
       st.viewStack = [{ s: "home" }]; history.replaceState({ d: 1 }, ""); render();
     } finally { navTransition = false; }
   }
@@ -1498,11 +1514,12 @@
     const personaTitle = characterModeOption === "single" ? "이름 없는 페르소나" : "이름 없는 페르소나 모음";
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? personaTitle : type === "character" ? characterTitle : type === "html" ? "제목 없는 코드 작업실" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? personaTitle : type === "character" ? characterTitle : type === "html" ? "제목 없는 코드 작업실" : type === "regex" ? "새 정규식 작업실" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
           : type === "html" ? { source: "", previewPolicy: "sandbox-web", exportFormat: "html" }
+          : type === "regex" ? makeRegexData()
           : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : (type === "persona" || type === "character") ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()], cardTypeVersion: 2 }
@@ -1914,6 +1931,536 @@
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("코드 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
     ]);
+  }
+
+  /* ---------- Regex workshop: SillyTavern findRegex / replaceString lab ---------- */
+  const REGEX_TRIM_MAX = 80;
+  function regexSplitLiteral(value) {
+    const text = String(value || "").trim();
+    if (!text.startsWith("/")) return null;
+    let escaped = false, inClass = false;
+    for (let i = 1; i < text.length; i++) {
+      const ch = text[i];
+      if (escaped) { escaped = false; continue; }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === "[") { inClass = true; continue; }
+      if (ch === "]") { inClass = false; continue; }
+      if (ch === "/" && !inClass) return { source: text.slice(1, i), flags: text.slice(i + 1), literal: true };
+    }
+    return { source: text.slice(1), flags: "", literal: true, unclosed: true };
+  }
+  function regexParseFind(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return { ok: false, error: "IN 정규식이 비어 있습니다.", source: "", flags: "" };
+    const literal = regexSplitLiteral(raw);
+    const source = literal ? literal.source : raw;
+    const flags = literal ? literal.flags : "";
+    if (literal && literal.unclosed) return { ok: false, error: "정규식 리터럴의 닫는 /가 없습니다.", source, flags };
+    try {
+      const re = new RegExp(source, flags);
+      return { ok: true, error: "", source, flags, regex: re, literal: !!literal };
+    } catch (error) {
+      return { ok: false, error: (error && error.message) ? error.message : "정규식 문법 오류입니다.", source, flags };
+    }
+  }
+  function regexCountCaptures(source) {
+    let count = 0, escaped = false, inClass = false;
+    const text = String(source || "");
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (escaped) { escaped = false; continue; }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === "[") { inClass = true; continue; }
+      if (ch === "]") { inClass = false; continue; }
+      if (ch !== "(" || inClass) continue;
+      if (text[i + 1] !== "?") { count++; continue; }
+      if (text[i + 2] === "<" && text[i + 3] !== "=" && text[i + 3] !== "!") count++;
+    }
+    return count;
+  }
+  function regexMaxReplacementIndex(value) {
+    let max = 0;
+    String(value || "").replace(/\$(\d{1,2})/g, (_, n) => { max = Math.max(max, Number(n) || 0); return _; });
+    return max;
+  }
+  function regexUniqueFlags(flags) {
+    const out = [];
+    String(flags || "").split("").forEach((flag) => { if (flag && !out.includes(flag)) out.push(flag); });
+    return out.join("");
+  }
+  function regexEscapeForLiteral(source) {
+    let out = "", escaped = false, inClass = false;
+    for (const ch of String(source || "")) {
+      if (escaped) { out += ch; escaped = false; continue; }
+      if (ch === "\\") { out += ch; escaped = true; continue; }
+      if (ch === "[") { inClass = true; out += ch; continue; }
+      if (ch === "]") { inClass = false; out += ch; continue; }
+      out += (ch === "/" && !inClass) ? "\\/" : ch;
+    }
+    return out;
+  }
+  function regexSetGlobalInFind(value, enabled) {
+    const raw = String(value || "").trim();
+    if (!raw) return enabled ? "//g" : "";
+    const literal = regexSplitLiteral(raw);
+    if (enabled) {
+      if (literal && !literal.unclosed) return `/${literal.source}/${regexUniqueFlags(literal.flags + "g")}`;
+      return `/${regexEscapeForLiteral(raw)}/g`;
+    }
+    if (literal && !literal.unclosed) return literal.source;
+    return raw;
+  }
+  function regexNullableNumber(value) {
+    const text = String(value == null ? "" : value).trim();
+    if (!text) return null;
+    const n = Number(text);
+    return Number.isFinite(n) ? Math.max(0, Math.min(999, Math.round(n))) : null;
+  }
+  function makeRegexData() {
+    return normalizeRegexData({
+      id: uid(), scriptName: "", findRegex: "", replaceString: "", sampleText: "", global: true,
+      trimStrings: [], placement: [1, 2], disabled: false, markdownOnly: true, promptOnly: false,
+      runOnEdit: true, substituteRegex: 0, minDepth: null, maxDepth: null
+    });
+  }
+  function normalizeRegexData(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const placement = Array.isArray(src.placement)
+      ? src.placement.map((n) => Number(n)).filter((n) => n === 1 || n === 2).slice(0, 2)
+      : [1, 2];
+    const trimSource = Array.isArray(src.trimStrings) ? src.trimStrings : (typeof src.trimStrings === "string" ? src.trimStrings.split(/\r?\n/) : []);
+    const findRegex = String(src.findRegex || "");
+    const literal = regexSplitLiteral(findRegex);
+    return {
+      id: String(src.id || src.stId || uid()).slice(0, 180),
+      scriptName: String(src.scriptName || "").slice(0, 180),
+      findRegex: findRegex.slice(0, HTML_SOURCE_MAX),
+      replaceString: String(src.replaceString || "").slice(0, HTML_SOURCE_MAX),
+      sampleText: String(src.sampleText || "").slice(0, HTML_SOURCE_MAX),
+      global: typeof src.global === "boolean" ? src.global : !!(literal && !literal.unclosed && /g/.test(literal.flags)),
+      trimStrings: trimSource.map((item) => String(item || "").trim()).filter(Boolean).slice(0, REGEX_TRIM_MAX),
+      placement: placement.length ? placement : [],
+      disabled: !!src.disabled,
+      markdownOnly: src.markdownOnly !== false,
+      promptOnly: !!src.promptOnly,
+      runOnEdit: src.runOnEdit !== false,
+      substituteRegex: Math.max(0, Math.min(2, Number(src.substituteRegex) || 0)),
+      minDepth: regexNullableNumber(src.minDepth),
+      maxDepth: regexNullableNumber(src.maxDepth)
+    };
+  }
+  function regexDataFromEditor() {
+    const current = getNote(st.curNoteId);
+    const placementValue = $("regexPlacement") ? $("regexPlacement").value : "1,2";
+    const placement = placementValue ? placementValue.split(",").map((v) => Number(v)).filter(Boolean) : [];
+    return normalizeRegexData({
+      id: (current && current.data && current.data.id) || (current && current.id),
+      scriptName: $("regexScriptName") ? $("regexScriptName").value : "",
+      findRegex: $("regexFind") ? $("regexFind").value : "",
+      replaceString: $("regexReplace") ? $("regexReplace").value : "",
+      sampleText: $("regexSample") ? $("regexSample").value : "",
+      global: $("regexGlobal") ? $("regexGlobal").checked : false,
+      trimStrings: $("regexTrimStrings") ? $("regexTrimStrings").value.split(/\r?\n/) : [],
+      placement,
+      disabled: $("regexDisabled") ? $("regexDisabled").checked : false,
+      markdownOnly: $("regexMarkdownOnly") ? $("regexMarkdownOnly").checked : true,
+      promptOnly: $("regexPromptOnly") ? $("regexPromptOnly").checked : false,
+      runOnEdit: $("regexRunOnEdit") ? $("regexRunOnEdit").checked : true,
+      substituteRegex: $("regexSubstituteRegex") ? $("regexSubstituteRegex").value : 0,
+      minDepth: $("regexMinDepth") ? $("regexMinDepth").value : null,
+      maxDepth: $("regexMaxDepth") ? $("regexMaxDepth").value : null
+    });
+  }
+  function setRegexEditorData(data) {
+    const d = normalizeRegexData(data);
+    $("regexScriptName").value = d.scriptName;
+    $("regexFind").value = d.findRegex;
+    $("regexReplace").value = d.replaceString;
+    $("regexSample").value = d.sampleText;
+    $("regexGlobal").checked = d.global;
+    $("regexMarkdownOnly").checked = d.markdownOnly;
+    $("regexPromptOnly").checked = d.promptOnly;
+    $("regexRunOnEdit").checked = d.runOnEdit;
+    $("regexDisabled").checked = d.disabled;
+    $("regexPlacement").value = d.placement.join(",");
+    $("regexSubstituteRegex").value = String(d.substituteRegex);
+    $("regexMinDepth").value = d.minDepth == null ? "" : String(d.minDepth);
+    $("regexMaxDepth").value = d.maxDepth == null ? "" : String(d.maxDepth);
+    $("regexTrimStrings").value = d.trimStrings.join("\n");
+  }
+  function regexFileBaseName(name) {
+    const base = String(name || "sillytavern-regex").replace(/\.json$/i, "").replace(/[\\/:*?"<>|]+/g, "_").trim();
+    return (base || "sillytavern-regex").slice(0, 80);
+  }
+  function regexSourceSummary(n) {
+    const d = normalizeRegexData(n && n.data ? n.data : {});
+    const name = (d.scriptName || "").trim();
+    if (name) return name.slice(0, 60);
+    const first = String(d.findRegex || "").split(/\r?\n/).map((line) => line.trim()).find(Boolean) || "";
+    return first ? first.slice(0, 60) : "";
+  }
+  function regexEscapeLiteral(text) { return String(text || "").replace(/[\\^$.*+?()[\]{}|]/g, "\\$&"); }
+  function regexFlexibleLiteral(text) {
+    let out = "";
+    for (const ch of String(text || "")) {
+      if (/\s/.test(ch)) out += "\\s*";
+      else if (ch === ",") out += "\\s*,\\s*";
+      else if (ch === "|") out += "\\s*\\|\\s*";
+      else if (ch === ":") out += "\\s*:\\s*";
+      else if (ch === "-") out += "\\s*-\\s*";
+      else if (ch === "/") out += "\\s*\\/\\s*";
+      else out += regexEscapeLiteral(ch);
+    }
+    return out.replace(/(?:\\s\*){2,}/g, "\\s*");
+  }
+  function regexPatternFromMarkedSample(sample) {
+    const raw = String(sample || "");
+    const token = /(\[\[[\s\S]*?\]\]|\{\{[\s\S]*?\}\})/g;
+    let index = 0, pattern = "", plain = "", captures = 0, match;
+    const addFixed = (value) => { if (!value) return; pattern += regexFlexibleLiteral(value); plain += value; };
+    while ((match = token.exec(raw))) {
+      addFixed(raw.slice(index, match.index));
+      const text = match[0], inner = text.slice(2, -2);
+      if (text.startsWith("[[")) { pattern += "\\s*([\\s\\S]+?)\\s*"; plain += inner; captures++; }
+      else addFixed(inner);
+      index = match.index + text.length;
+    }
+    addFixed(raw.slice(index));
+    return { pattern, plain, captures };
+  }
+  function regexSkipGroup(source, start) {
+    let depth = 0, escaped = false, inClass = false;
+    for (let i = start; i < source.length; i++) {
+      const ch = source[i];
+      if (escaped) { escaped = false; continue; }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === "[") { inClass = true; continue; }
+      if (ch === "]") { inClass = false; continue; }
+      if (inClass) continue;
+      if (ch === "(") depth++;
+      else if (ch === ")") {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return start;
+  }
+  function regexSkipQuantifier(source, index) {
+    let i = index + 1;
+    if ("?*+".includes(source[i])) return i;
+    if (source[i] === "{") {
+      while (i < source.length && source[i] !== "}") i++;
+      return Math.min(i, source.length - 1);
+    }
+    return index;
+  }
+  function regexSampleValue(index) {
+    const values = ["루미", "42", "100", "80", "마을", "밤", "길드", "진행 중"];
+    return values[(index - 1) % values.length] || `값${index}`;
+  }
+  function regexSampleFromPattern(source, replaceString) {
+    const needed = Math.max(regexCountCaptures(source), regexMaxReplacementIndex(replaceString), 1);
+    let out = "", capture = 0, escaped = false, inClass = false;
+    const text = String(source || "").replace(/^\^/, "").replace(/\$$/, "");
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (escaped) {
+        escaped = false;
+        if (ch === "n") out += "\n";
+        else if (ch === "t") out += "\t";
+        else if (ch === "r") out += "";
+        else if (ch === "s") out += " ";
+        else if (ch === "d") out += "1";
+        else if (ch === "w") out += "A";
+        else out += ch;
+        continue;
+      }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === "[") {
+        inClass = true;
+        while (i < text.length && text[i] !== "]") i++;
+        inClass = false;
+        out += regexSampleValue(Math.min(capture + 1, needed));
+        i = regexSkipQuantifier(text, i);
+        continue;
+      }
+      if (inClass) { if (ch === "]") inClass = false; continue; }
+      if (ch === "(") {
+        const nonCapture = text[i + 1] === "?" && !(text[i + 2] === "<" && text[i + 3] !== "=" && text[i + 3] !== "!");
+        const end = regexSkipGroup(text, i);
+        if (!nonCapture) { capture++; out += regexSampleValue(capture); }
+        i = regexSkipQuantifier(text, end);
+        continue;
+      }
+      if ("?*+{}".includes(ch)) continue;
+      if (ch === ".") { out += regexSampleValue(Math.min(capture + 1, needed)); continue; }
+      if (ch === "|") { out += " "; continue; }
+      out += ch;
+    }
+    return out.replace(/[ \t]{2,}/g, " ").replace(/\n\s+/g, "\n").trim() || regexSampleValue(1);
+  }
+  function regexValidationState(data) {
+    const parsed = regexParseFind(data.findRegex);
+    if (!parsed.ok) return Object.assign(parsed, { captureCount: 0, replacementMax: regexMaxReplacementIndex(data.replaceString) });
+    return Object.assign(parsed, {
+      captureCount: regexCountCaptures(parsed.source),
+      replacementMax: regexMaxReplacementIndex(data.replaceString)
+    });
+  }
+  function updateRegexMeta(data, validation) {
+    const sourceChars = String(data.findRegex || "").length + String(data.replaceString || "").length;
+    $("regexMeta").textContent = `${sourceChars.toLocaleString("ko-KR")}자 · ${validation.captureCount || 0}캡처`;
+    const v = $("regexValidation");
+    v.classList.toggle("ok", !!validation.ok);
+    v.classList.toggle("bad", !validation.ok);
+    v.textContent = validation.ok
+      ? `정상 · ${validation.captureCount}캡처`
+      : validation.error;
+  }
+  function regexPreviewFallback(message) {
+    return `<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:18px;background:#101622;color:#dbeaff;font:13px/1.7 -apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif}</style><body>${esc(message)}</body>`;
+  }
+  function refreshRegexPreview() {
+    const frame = $("regexPreview"); if (!frame) return;
+    const data = regexDataFromEditor();
+    const validation = regexValidationState(data);
+    updateRegexMeta(data, validation);
+    const badge = $("regexPreviewBadge"), status = $("regexPreviewStatus"), captures = $("regexCaptures");
+    captures.innerHTML = "";
+    if (!validation.ok) {
+      badge.className = "regex-status bad"; badge.textContent = "검증 실패";
+      status.textContent = validation.error;
+      frame.srcdoc = regexPreviewFallback(validation.error);
+      return;
+    }
+    if (!data.replaceString.trim() || !data.sampleText.trim()) {
+      badge.className = "regex-status"; badge.textContent = "미리보기 대기";
+      status.textContent = "IN, OUT, sample을 채우면 결과가 표시됩니다.";
+      frame.srcdoc = regexPreviewFallback("미리보기 대기 중");
+      return;
+    }
+    let matchCount = 0, first = null, replaced = "";
+    try {
+      const flags = validation.flags.includes("g") ? validation.flags : regexUniqueFlags(validation.flags + "g");
+      const counter = new RegExp(validation.source, flags);
+      let match, guard = 0;
+      while ((match = counter.exec(data.sampleText)) && guard < 500) {
+        if (!first) first = match;
+        matchCount++; guard++;
+        if (match[0] === "") counter.lastIndex++;
+      }
+      const runner = new RegExp(validation.source, validation.flags);
+      replaced = data.sampleText.replace(runner, data.replaceString);
+    } catch (error) {
+      const msg = error && error.message ? error.message : "미리보기를 만들지 못했습니다.";
+      badge.className = "regex-status bad"; badge.textContent = "미리보기 실패";
+      status.textContent = msg;
+      frame.srcdoc = regexPreviewFallback(msg);
+      return;
+    }
+    badge.className = matchCount ? "regex-status ok" : "regex-status bad";
+    badge.textContent = matchCount ? `${matchCount}개 매치` : "매치 없음";
+    status.textContent = matchCount
+      ? `${matchCount}개 매치 · OUT HTML을 샌드박스에서 렌더링했습니다.`
+      : "샘플에서 일치하는 범위를 찾지 못했습니다.";
+    if (first && first.length > 1) {
+      captures.innerHTML = first.slice(1).map((value, index) => `<div class="regex-capture-row"><b>$${index + 1}</b><span>${esc(value == null ? "" : String(value))}</span></div>`).join("");
+    }
+    frame.srcdoc = buildSandboxPreview(replaced);
+  }
+  let regexWorkshopSession = null, regexPreviewTimer = null, regexViewMode = "edit";
+  function setRegexSaver(mode) {
+    const s = $("regexSaver"); if (!s) return;
+    s.className = "saver " + mode;
+    $("regexSaverText").textContent = mode === "dirty" ? "기록 중" : mode === "saved" ? "저장됨" : "";
+    if (mode === "saved") setTimeout(() => { if (s.classList.contains("saved")) { s.className = "saver"; $("regexSaverText").textContent = ""; } }, 1500);
+  }
+  function queueRegexPreview() {
+    clearTimeout(regexPreviewTimer);
+    regexPreviewTimer = setTimeout(refreshRegexPreview, 180);
+  }
+  function setRegexView(mode) {
+    const screen = $("screen-regex");
+    const allowed = (mode === "preview" || mode === "split") ? mode : "edit";
+    regexViewMode = allowed; screen.dataset.regexView = allowed;
+    $("regexModeEdit").classList.toggle("active", allowed === "edit");
+    $("regexModePreview").classList.toggle("active", allowed === "preview");
+    $("regexModeSplit").classList.toggle("active", allowed === "split");
+    if (allowed !== "edit") refreshRegexPreview();
+  }
+  function beginRegexWorkshopSession(n) {
+    const data = normalizeRegexData(n.data || {});
+    const same = regexWorkshopSession && regexWorkshopSession.active && regexWorkshopSession.noteId === n.id;
+    if (!same) {
+      clearTimeout(st.saveTimer); st.saveTimer = null;
+      regexWorkshopSession = { noteId: n.id, active: true, dirty: false, revision: 0, lastQueuedRevision: -1, inFlight: Promise.resolve() };
+      setRegexEditorData(data);
+      refreshRegexPreview();
+      setRegexView(regexViewMode);
+    } else if (!regexWorkshopSession.dirty && !jsonSame(regexDataFromEditor(), data)) {
+      setRegexEditorData(data); refreshRegexPreview();
+    }
+  }
+  function activeRegexSession(expectedId) {
+    const session = regexWorkshopSession;
+    if (!session || !session.active || !session.noteId) return null;
+    if (expectedId && session.noteId !== expectedId) return null;
+    if (st.curNoteId !== session.noteId) return null;
+    return session;
+  }
+  function scheduleRegexSave() {
+    const session = activeRegexSession();
+    if (!session || curView().s !== "regex") return;
+    const n = getNote(session.noteId); if (!n || n.type !== "regex") return;
+    const literal = regexSplitLiteral($("regexFind").value);
+    if (literal && !literal.unclosed) $("regexGlobal").checked = /g/.test(literal.flags);
+    session.dirty = true; session.revision += 1;
+    const draft = regexDraftFromEditor();
+    writeDraft(n, "regex", draft); queueRegexPreview();
+    setRegexSaver("dirty"); clearTimeout(st.saveTimer);
+    const id = session.noteId, revision = session.revision;
+    st.saveTimer = setTimeout(() => {
+      if (activeRegexSession(id) === session && session.revision >= revision) void flushRegexSave(false, id);
+    }, 550);
+  }
+  function flushRegexSave(silent, expectedId) {
+    clearTimeout(st.saveTimer); st.saveTimer = null;
+    const session = activeRegexSession(expectedId);
+    if (!session || !session.dirty) return session && session.inFlight ? session.inFlight : Promise.resolve();
+    const noteId = session.noteId, n = getNote(noteId);
+    if (!n || n.type !== "regex") return Promise.resolve();
+    const draft = regexDraftFromEditor(), revision = session.revision;
+    if (session.lastQueuedRevision === revision) return session.inFlight || Promise.resolve();
+    session.lastQueuedRevision = revision;
+    const write = async () => {
+      const note = getNote(noteId); if (!note || note.type !== "regex") return;
+      if (jsonSame(normalizeRegexData(note.data || {}), draft)) {
+        if (regexWorkshopSession === session && session.revision === revision) { session.dirty = false; clearDraftIfSynced(note, "regex", draft); }
+        return;
+      }
+      note.data = normalizeRegexData(draft);
+      if (!note.titleLocked && note.data.scriptName.trim()) note.title = note.data.scriptName.trim().slice(0, 80);
+      await saveNote(note);
+      if (regexWorkshopSession === session && session.revision === revision) {
+        session.dirty = false; clearDraftIfSynced(note, "regex", draft); if (!silent) setRegexSaver("saved");
+      }
+    };
+    session.inFlight = (session.inFlight || Promise.resolve()).then(write, write);
+    return session.inFlight;
+  }
+  async function leaveRegexWorkshop() {
+    const session = regexWorkshopSession;
+    if (!session || !session.active) return;
+    await flushRegexSave(true, session.noteId);
+    if (regexWorkshopSession === session) {
+      session.active = false; session.noteId = null; session.dirty = false;
+      clearTimeout(st.saveTimer); st.saveTimer = null; clearTimeout(regexPreviewTimer);
+    }
+  }
+  function renderRegexWorkshop() {
+    const n = getNote(st.curNoteId);
+    if (!n || n.type !== "regex") { back(); return; }
+    beginRegexWorkshopSession(n);
+    $("regexTitle").textContent = n.title || "정규식 작업실";
+    setRegexSaver(""); queueDraftRecovery(n, "regex");
+  }
+  function regexBuildExportPayload(id) {
+    const n = getNote(id); if (!n || n.type !== "regex") return null;
+    const data = normalizeRegexData((activeRegexSession(id) && $("regexFind")) ? regexDataFromEditor() : (n.data || {}));
+    return {
+      id: data.id || n.id,
+      scriptName: data.scriptName || n.title || "Lumink Regex",
+      findRegex: regexSetGlobalInFind(data.findRegex, data.global),
+      replaceString: data.replaceString,
+      trimStrings: data.trimStrings,
+      placement: data.placement,
+      disabled: data.disabled,
+      markdownOnly: data.markdownOnly,
+      promptOnly: data.promptOnly,
+      runOnEdit: data.runOnEdit,
+      substituteRegex: data.substituteRegex,
+      minDepth: data.minDepth,
+      maxDepth: data.maxDepth
+    };
+  }
+  async function exportRegexJson(id) {
+    const n = getNote(id); if (!n || n.type !== "regex") return;
+    await flushRegexSave(true, id);
+    const payload = regexBuildExportPayload(id);
+    const check = regexParseFind(payload.findRegex);
+    if (!check.ok) { toast(check.error); return; }
+    const json = JSON.stringify(payload, null, 4).replace(/</g, "\\u003c");
+    downloadDoc(json, `${regexFileBaseName(payload.scriptName || n.title)}.json`, "application/json");
+    toast("SillyTavern JSON을 저장했어요");
+  }
+  function openRegexSheet(n) {
+    openSheet(n.title, [
+      { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("정규식 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
+      { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
+      { icon: IC.copy, label: "IN 복사", fn: () => clipboardCopy(normalizeRegexData(n.data || {}).findRegex).then((ok) => toast(ok ? "IN 정규식을 복사했어요" : "복사하지 못했어요")) },
+      { icon: IC.save, label: "SillyTavern JSON 내보내기", fn: () => void exportRegexJson(n.id) },
+      { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
+      { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("정규식 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+    ]);
+  }
+  function regexStatusTemplate(count) {
+    const rows = Array.from({ length: count }, (_, i) => `<div class="li-rx-stat"><span>항목 ${i + 1}</span><b>$${i + 1}</b></div>`).join("");
+    return `<div class="li-rx-status"><style>.li-rx-status{max-width:620px;margin:16px auto;padding:18px;border:1px solid rgba(74,209,167,.35);border-radius:14px;background:linear-gradient(180deg,#10213a,#0d1728);color:#edf8ff;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;box-shadow:0 16px 40px rgba(0,0,0,.28)}.li-rx-status h3{margin:0 0 14px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#91ffe0}.li-rx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.li-rx-stat{padding:10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}.li-rx-stat span{display:block;font-size:11px;color:#9bb2c8}.li-rx-stat b{display:block;margin-top:3px;font-size:18px;color:#fff;word-break:break-word}</style><h3>Status</h3><div class="li-rx-grid">${rows}</div></div>`;
+  }
+  function regexAlertTemplate(count) {
+    const rows = Array.from({ length: count }, (_, i) => `<li><span>$${i + 1}</span></li>`).join("");
+    return `<div class="li-rx-alert"><style>.li-rx-alert{max-width:520px;margin:18px auto;padding:16px 18px;border-radius:12px;background:#fff7e6;border:1px solid #f0c978;color:#3f2c0b;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;box-shadow:0 10px 26px rgba(104,72,20,.16)}.li-rx-alert strong{display:block;margin-bottom:9px;font-size:14px;color:#7a4c00}.li-rx-alert ul{margin:0;padding-left:18px}.li-rx-alert li{margin:6px 0}.li-rx-alert span{white-space:pre-wrap;overflow-wrap:anywhere}</style><strong>Notice</strong><ul>${rows}</ul></div>`;
+  }
+  function regexMessageTemplate(count) {
+    const rows = Array.from({ length: count }, (_, i) => `<p>$${i + 1}</p>`).join("");
+    return `<div class="li-rx-msg"><style>.li-rx-msg{max-width:560px;margin:16px auto;padding:16px;border-radius:14px;background:#f2f7fb;color:#223044;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif}.li-rx-msg .bubble{padding:12px 14px;border-radius:12px;background:#fff;border:1px solid #dbe7f2;box-shadow:0 8px 18px rgba(39,64,91,.12)}.li-rx-msg p{margin:.35em 0;white-space:pre-wrap;overflow-wrap:anywhere}</style><div class="bubble">${rows}</div></div>`;
+  }
+  function openRegexTemplatePicker() {
+    let selected = "status";
+    const maxByType = { status: 20, alert: 10, message: 5 };
+    const labelByType = { status: "상태창", alert: "알림창", message: "메시지창" };
+    const renderChoice = (type, desc) => `<button type="button" class="type-card regex-template-choice ${selected === type ? "is-selected" : ""}" data-regex-template="${type}"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></div><div><div class="tc-name">${labelByType[type]}</div><div class="tc-desc">${desc}</div></div><span class="tc-soon">${selected === type ? "선택됨" : "선택"}</span></button>`;
+    const draw = () => {
+      $("modalBox").querySelectorAll("[data-regex-template]").forEach((el) => {
+        const on = el.dataset.regexTemplate === selected;
+        el.classList.toggle("is-selected", on);
+        const chip = el.querySelector(".tc-soon"); if (chip) chip.textContent = on ? "선택됨" : "선택";
+      });
+      const input = $("regexTemplateCount"); if (input) { input.max = String(maxByType[selected]); if (Number(input.value) > maxByType[selected]) input.value = String(maxByType[selected]); }
+    };
+    openModal(`<h3>OUT 템플릿</h3><p class="m-sub">디자인을 고른 뒤 사용할 $n 개수를 정하세요.</p>
+      ${renderChoice("status", "$1~$20 상태 항목")}
+      ${renderChoice("alert", "$1~$10 알림 항목")}
+      ${renderChoice("message", "$1~$5 메시지 문단")}
+      <div class="m-field-label">$n 개수</div><input class="m-input" id="regexTemplateCount" type="number" min="1" max="20" value="6" inputmode="numeric">
+      <div class="m-row"><button class="m-btn" id="regexTemplateCancel">취소</button><button class="m-btn primary" id="regexTemplateApply">적용</button></div>`);
+    $("modalBox").querySelectorAll("[data-regex-template]").forEach((el) => el.addEventListener("click", () => { selected = el.dataset.regexTemplate; draw(); }));
+    $on("regexTemplateCancel", "click", closeModal);
+    $on("regexTemplateApply", "click", () => {
+      const max = maxByType[selected], count = Math.max(1, Math.min(max, Number($("regexTemplateCount").value) || 1));
+      const html = selected === "status" ? regexStatusTemplate(count) : selected === "alert" ? regexAlertTemplate(count) : regexMessageTemplate(count);
+      $("regexReplace").value = html;
+      closeModal(); scheduleRegexSave(); setRegexView("split"); toast(`${labelByType[selected]} 템플릿을 OUT에 적용했어요`);
+    });
+    draw();
+  }
+  function applyRegexFromSample() {
+    const sample = $("regexSample").value;
+    if (!sample.trim()) { toast("샘플을 먼저 입력해 주세요"); return; }
+    const built = regexPatternFromMarkedSample(sample);
+    $("regexFind").value = regexSetGlobalInFind(built.pattern, $("regexGlobal").checked);
+    $("regexSample").value = built.plain;
+    scheduleRegexSave();
+    toast(`IN 정규식을 만들었어요 · ${built.captures}캡처`);
+  }
+  function applyRegexAutoSample() {
+    const data = regexDataFromEditor(), parsed = regexParseFind(data.findRegex);
+    if (!parsed.ok || !data.replaceString.trim()) { toast("IN과 OUT을 먼저 채워 주세요"); return; }
+    $("regexSample").value = regexSampleFromPattern(parsed.source, data.replaceString);
+    scheduleRegexSave();
+    toast("샘플을 자동 작성했어요");
   }
 
   /* ---------- free-memo editor ---------- */
@@ -4768,6 +5315,7 @@
 
   function newNoteScreen(type) {
     if (type === "html") return "html";
+    if (type === "regex") return "regex";
     if (type === "lorebook") return "lore";
     if (type === "log") return "log";
     if (type === "character" || type === "persona") return "character";
@@ -4796,6 +5344,7 @@
       people: icon('<circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 21a6.2 6.2 0 0 1 11 0"/><path d="M13 20.5a4.5 4.5 0 0 1 7.5 0"/>'),
       lore: icon('<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/>'),
       html: icon('<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/>'),
+      regex: icon('<path d="M4 6h16M4 18h16"/><path d="M8 10v4M6 12h4M14 10l4 4M18 10l-4 4"/>'),
       free: icon('<path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>'),
       log: icon('<path d="M4 4h16v16H4z"/><path d="M7 8h10M7 12h7M7 16h9"/><path d="M4 7h16"/>'),
       idea: icon('<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 16.5l2.4-5.8 2.3 4.2 1.5-2.2 2.8 3.8"/><circle cx="15.8" cy="8.2" r="1.5"/><path d="M7 7.5h4"/>')
@@ -4824,6 +5373,7 @@
           <div class="type-pane-caption">Writing tools</div>
           ${card("lorebook", "", "로어북", "마크다운 · 키워드 · 토큰 · World Info 내보내기", icons.lore)}
           ${card("html", "", "코드 작업실", "원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기", icons.html)}
+          ${card("regex", "", "정규식 작업실", "IN 검증 · OUT HTML 미리보기 · SillyTavern JSON 내보내기", icons.regex)}
         </div>
         <div class="type-picker-pane" data-type-pane="atelier" role="tabpanel" hidden>
           <div class="type-pane-caption">Creative atelier</div>
@@ -4944,10 +5494,10 @@
   /* ---------- attachments ---------- */
   /* ---------- top bar title quick rename ---------- */
   let topTitleRenameCooldown = 0;
-  const TOP_TITLE_IDS = ["edTitle", "readTitle", "htmlTitle", "loreTitle", "logTitle", "perTitle", "charTitle", "ideaTitle"];
+  const TOP_TITLE_IDS = ["edTitle", "readTitle", "htmlTitle", "regexTitle", "loreTitle", "logTitle", "perTitle", "charTitle", "ideaTitle"];
   function titleKindLabel(n) {
     if (!n) return "메모";
-    return ({ free:"메모", html:"코드 작업실", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[n.type] || "메모";
+    return ({ free:"메모", html:"코드 작업실", regex:"정규식 작업실", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[n.type] || "메모";
   }
   async function saveTopTitleRename(n, value) {
     const next = cleanImportedText(value, 80).trim(); if (!n || !next) return;
@@ -5030,6 +5580,7 @@
     if (isCharacterCardType(n)) { openCharacterSheet(n); return; }
     if (n.type === "idea") { openIdeaBoardSheet(n); return; }
     if (n.type === "html") { openHtmlSheet(n); return; }
+    if (n.type === "regex") { openRegexSheet(n); return; }
     openSheet(n.title, [
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("메모 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
@@ -5220,6 +5771,7 @@
     if (n.type === "persona") { const d = n.data || {}, ko = d.ko || {}, en = d.en || {}; return [ko.name, (ko.tags || []).join(" "), ko.detail, en.name, (en.tags || []).join(" "), en.detail].filter(Boolean).join(" ").toLowerCase(); }
     if (isCharacterCardType(n)) { const d = ensureCharacterData(n); return d.pages.map((p) => [p.ko.name, (p.ko.tags || []).join(" "), p.ko.detail, p.en.name, (p.en.tags || []).join(" "), p.en.detail, p.creatorMemo].join(" ")).join(" ").toLowerCase(); }
     if (n.type === "html") return plainText(htmlSourceOf(n)).toLowerCase();
+    if (n.type === "regex") { const d = normalizeRegexData(n.data || {}); return [d.scriptName, d.findRegex, d.replaceString, d.sampleText, d.trimStrings.join(" ")].join(" ").toLowerCase(); }
     return plainText(noteHtml(n)).toLowerCase();
   }
   function doSearch(q) {
@@ -5439,12 +5991,12 @@
   }
   function normalizeImportedNote(raw) {
     if (!raw || !isSafeRecordId(raw.id) || !isSafeRecordId(raw.projectId)) return null;
-    const sourceType = ["free", "html", "lorebook", "log", "persona", "character", "idea"].includes(raw.type) ? raw.type : null;
+    const sourceType = ["free", "html", "regex", "lorebook", "log", "persona", "character", "idea"].includes(raw.type) ? raw.type : null;
     if (!sourceType) return null;
     const type = sourceType;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
-      title: cleanImportedText(raw.title, 180) || (sourceType === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 모음" : type === "html" ? "제목 없는 코드 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
+      title: cleanImportedText(raw.title, 180) || (sourceType === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 모음" : type === "html" ? "제목 없는 코드 작업실" : type === "regex" ? "새 정규식 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
       titleLocked: !!raw.titleLocked,
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
       createdAt: Number(raw.createdAt) || now(),
@@ -5465,6 +6017,8 @@
     } else if (type === "html") {
       // 백업·프로젝트 가져오기에서도 raw source를 sanitize/DOM serialization 없이 문자열 그대로 되살립니다.
       note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web", exportFormat: data.exportFormat === "json" || data.exportFormat === "md" ? data.exportFormat : "html" };
+    } else if (type === "regex") {
+      note.data = normalizeRegexData(data);
     } else if (type === "lorebook") {
       note.data = {
         content: cleanImportedText(data.content, 500000),
@@ -6337,14 +6891,45 @@ ${gallery}
       go({ s: "html" });
     });
   }
+  function isSillyTavernRegexPayload(payload) {
+    return !!(payload && typeof payload === "object" && typeof payload.findRegex === "string" && typeof payload.replaceString === "string");
+  }
+  function openJsonAsRegexWorkshop(raw, file, payload) {
+    if (!isSillyTavernRegexPayload(payload)) { toast("SillyTavern 정규식 JSON을 찾지 못했어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => {
+      const n = await createNote("regex", pid);
+      n.title = cleanImportedText(payload.scriptName, 180) || jsonImportedTitle(file) || "가져온 정규식";
+      n.titleLocked = true;
+      n.data = normalizeRegexData({
+        id: payload.id,
+        scriptName: payload.scriptName || n.title,
+        findRegex: payload.findRegex,
+        replaceString: payload.replaceString,
+        trimStrings: payload.trimStrings,
+        placement: payload.placement,
+        disabled: payload.disabled,
+        markdownOnly: payload.markdownOnly,
+        promptOnly: payload.promptOnly,
+        runOnEdit: payload.runOnEdit,
+        substituteRegex: payload.substituteRegex,
+        minDepth: payload.minDepth,
+        maxDepth: payload.maxDepth
+      });
+      await saveNote(n);
+      st.curNoteId = n.id; st.curProjectId = pid;
+      toast("정규식 작업실로 열었어요");
+      go({ s: "regex" });
+    });
+  }
   function showJsonOpenChoice(raw, file, payload, parseError) {
     const title = jsonImportedTitle(file);
     const worldInfoEntries = payload ? worldInfoEntriesFromPayload(payload) : [];
     const packagePreview = payload ? projectPackagePreview(payload) : null;
+    const regexPreview = payload && isSillyTavernRegexPayload(payload);
     const status = parseError
       ? "JSON 문법을 확인하지 못했어요. 구조형 가져오기는 할 수 없지만 원문은 열어 볼 수 있어요."
       : `원본 ${raw.length.toLocaleString("ko-KR")}자 · 메모 보기 또는 원본 작업실 중 선택하세요.`;
-    const structured = `${packagePreview ? `<div class="type-card" id="jsonAsProject"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18"/></svg></div><div><div class="tc-name">루미잉크 프로젝트로 가져오기</div><div class="tc-desc">프로젝트 · 메모 ${packagePreview.noteCount}개 · 첨부 ${packagePreview.fileCount}개</div></div></div>` : ""}${worldInfoEntries.length ? `<div class="type-card" id="jsonAsWorldInfo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5.5c2.5-1 5.2-.6 8 1.2 2.8-1.8 5.5-2.2 8-1.2v13c-2.5-1-5.2-.6-8 1.2-2.8-1.8-5.5-2.2-8-1.2Z"/><path d="M12 6.7v13"/></svg></div><div><div class="tc-name">로어북으로 가져오기</div><div class="tc-desc">인식한 World Info 항목 ${worldInfoEntries.length}개를 로어북으로 생성</div></div></div>` : ""}`;
+    const structured = `${packagePreview ? `<div class="type-card" id="jsonAsProject"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18"/></svg></div><div><div class="tc-name">루미잉크 프로젝트로 가져오기</div><div class="tc-desc">프로젝트 · 메모 ${packagePreview.noteCount}개 · 첨부 ${packagePreview.fileCount}개</div></div></div>` : ""}${regexPreview ? `<div class="type-card" id="jsonAsRegex"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 18h16"/><path d="M8 10v4M6 12h4M14 10l4 4M18 10l-4 4"/></svg></div><div><div class="tc-name">정규식 작업실로 가져오기</div><div class="tc-desc">findRegex · replaceString · SillyTavern 옵션을 편집</div></div></div>` : ""}${worldInfoEntries.length ? `<div class="type-card" id="jsonAsWorldInfo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5.5c2.5-1 5.2-.6 8 1.2 2.8-1.8 5.5-2.2 8-1.2v13c-2.5-1-5.2-.6-8 1.2-2.8-1.8-5.5-2.2-8-1.2Z"/><path d="M12 6.7v13"/></svg></div><div><div class="tc-name">로어북으로 가져오기</div><div class="tc-desc">인식한 World Info 항목 ${worldInfoEntries.length}개를 로어북으로 생성</div></div></div>` : ""}`;
     openModal(`<h3>JSON 열기</h3><p class="m-sub"><b>${esc(title)}</b><br>${esc(status)}</p>${structured}
       <div class="type-card" id="jsonAsFreeMemo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 12h8M8 16h8"/></svg></div><div><div class="tc-name">메모로 내용 보기</div><div class="tc-desc">읽기 쉬운 들여쓰기로 정리 · 코드 블록 형태로 안전하게 표시</div></div></div>
       <div class="type-card" id="jsonAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">코드 작업실로 원본 열기</div><div class="tc-desc">공백까지 보존 · JSON 원본을 그대로 편집·복사</div></div></div>
@@ -6352,6 +6937,7 @@ ${gallery}
     $on("jsonOpenCancel", "click", closeModal);
     $on("jsonAsFreeMemo", "click", () => { closeModal(); openJsonAsFreeMemo(raw, file, payload); });
     $on("jsonAsHtmlSource", "click", () => { closeModal(); openJsonAsHtmlWorkshop(raw, file); });
+    if (regexPreview) $on("jsonAsRegex", "click", () => { closeModal(); openJsonAsRegexWorkshop(raw, file, payload); });
     if (worldInfoEntries.length) $on("jsonAsWorldInfo", "click", () => { closeModal(); importWorldInfoData(payload, file); });
     if (packagePreview) $on("jsonAsProject", "click", () => { closeModal(); showProjectPackageImport(payload); });
   }
@@ -7195,9 +7781,12 @@ ${gallery}
         if (s === "html" && e.shiftKey) {
           e.preventDefault(); showHtmlExportDialog(st.curNoteId); return;
         }
-        if (s === "editor" || s === "html" || s === "lore" || s === "log" || s === "persona" || s === "character" || s === "idea") {
+        if (s === "regex" && e.shiftKey) {
+          e.preventDefault(); void exportRegexJson(st.curNoteId); return;
+        }
+        if (s === "editor" || s === "html" || s === "regex" || s === "lore" || s === "log" || s === "persona" || s === "character" || s === "idea") {
           e.preventDefault();
-          if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else if (s === "idea") flushIdeaBoard(); else flushCharacter();
+          if (s === "editor") flushSave(true); else if (s === "html") flushHtmlSave(true); else if (s === "regex") flushRegexSave(true); else if (s === "lore") flushLore(); else if (s === "log") flushLog(); else if (s === "persona") flushPersona(); else if (s === "idea") flushIdeaBoard(); else flushCharacter();
           toast("저장했어요");
         }
       }
@@ -7271,6 +7860,27 @@ ${gallery}
     $on("htmlModeSource", "click", () => setHtmlView("source"));
     $on("htmlModePreview", "click", () => setHtmlView("preview"));
     $on("htmlModeSplit", "click", () => setHtmlView("split"));
+
+    // regex workshop
+    ["regexScriptName", "regexFind", "regexReplace", "regexSample", "regexTrimStrings", "regexMinDepth", "regexMaxDepth"].forEach((id) => {
+      $on(id, "input", scheduleRegexSave);
+      $on(id, "blur", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
+    });
+    ["regexMarkdownOnly", "regexPromptOnly", "regexRunOnEdit", "regexDisabled", "regexPlacement", "regexSubstituteRegex"].forEach((id) => {
+      $on(id, "change", scheduleRegexSave);
+    });
+    $on("regexGlobal", "change", () => { $("regexFind").value = regexSetGlobalInFind($("regexFind").value, $("regexGlobal").checked); scheduleRegexSave(); });
+    $on("regexSave", "click", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
+    $on("regexMore", "click", () => openNoteSheet(st.curNoteId));
+    $on("regexCopyIn", "click", () => clipboardCopy($("regexFind").value).then((ok) => toast(ok ? "IN 정규식을 복사했어요" : "복사하지 못했어요")));
+    $on("regexTemplate", "click", openRegexTemplatePicker);
+    $on("regexExport", "click", () => void exportRegexJson(st.curNoteId));
+    $on("regexReload", "click", () => { refreshRegexPreview(); toast("미리보기를 새로고침했어요"); });
+    $on("regexFromSample", "click", applyRegexFromSample);
+    $on("regexAutoSample", "click", applyRegexAutoSample);
+    $on("regexModeEdit", "click", () => setRegexView("edit"));
+    $on("regexModePreview", "click", () => setRegexView("preview"));
+    $on("regexModeSplit", "click", () => setRegexView("split"));
 
 
 
