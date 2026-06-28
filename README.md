@@ -15,7 +15,7 @@
 
 - 자유 메모, HTML·JSON 원문 작업실, 로어북, 로그 저장, 페르소나·캐릭터, 아이디어 보드
 - 프로젝트별 관리와 전체/프로젝트 백업·복원, 자동 백업
-- 로그 디자인 템플릿 80종과 사용자 템플릿 업로드 · 이름 가림 디자인 5종 · 게시판용 PNG 내보내기
+- 로그 디자인 템플릿 100종과 사용자 템플릿 업로드 · 이름 가림 디자인 5종 · 게시판용 PNG 내보내기
 - 아이디어 보드 이미지 배경, PNG 캡처, HTML 내보내기
 - 10종 PWA 설치 아이콘과 설치 간판 페이지
 - 오른쪽 엣지 퀵메뉴, 사용자 지정 아이콘, 기능 바로가기
@@ -33,7 +33,7 @@
 
 ### 콘텐츠 자산
 
-- `log-templates/` — 파일 템플릿 77종 + 내장 3종 = 기본 로그 템플릿 80종
+- `log-templates/` — 파일 템플릿 97종 + 내장 3종 = 기본 로그 템플릿 100종
 - `idea-board-backgrounds/` — 기본 이미지 배경 19종
 - `idea-board-templates.js`, `idea-board-custom-templates.css`
 
@@ -42,7 +42,7 @@
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
 - `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`
-- `lumink-log-template-guide.md`, `lumink-log-templates-80.html`
+- `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
 
