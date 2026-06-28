@@ -6119,6 +6119,20 @@ ${gallery}
     try { JSON.parse(text); return true; }
     catch (e) { return true; } // JSON처럼 보이지만 문법이 깨졌다면 원본 작업실에서 점검할 수 있게 둡니다.
   }
+  function looksLikeBinaryText(raw) {
+    // 열기 선택기는 Android 파일 앱의 MIME 분류에 의존하지 않도록 전체 파일을 보이게 둡니다.
+    // 대신 앱 안에서 NUL·제어문자가 많은 이진 파일만 막아 HTML/JSON 원문 흐름이 깨지지 않게 합니다.
+    const text = String(raw == null ? "" : raw);
+    if (!text) return false;
+    const sample = text.slice(0, 8192);
+    if (sample.indexOf("\u0000") >= 0) return true;
+    let controls = 0;
+    for (let i = 0; i < sample.length; i++) {
+      const code = sample.charCodeAt(i);
+      if (code < 32 && code !== 9 && code !== 10 && code !== 13) controls++;
+    }
+    return controls > Math.max(6, Math.floor(sample.length * 0.03));
+  }
   function jsonImportedTitle(file) {
     const name = cleanImportedText(String((file && file.name) || ""), 220).trim().replace(/\.json$/i, "");
     return name || "불러온 JSON";
@@ -6195,6 +6209,10 @@ ${gallery}
     const fr = new FileReader();
     fr.onload = () => {
       const raw = String(fr.result || "");
+      if (looksLikeBinaryText(raw)) {
+        toast("열기는 HTML · JSON · 일반 텍스트 파일만 지원해요");
+        return;
+      }
       // .json 확장자/MIME이 사라진 파일도 실제 내용이 JSON이면 일반 JSON 열기 창으로 보냅니다.
       const jsonCandidate = declaredJson || looksLikeJsonText(raw);
       if (jsonCandidate) {
