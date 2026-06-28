@@ -5807,22 +5807,100 @@ ${gallery}
     const styleTag = scopedCss ? `<style data-lumink-user-style="1">${scopedCss.replace(/<\/style/gi, "")}</style>` : "";
     return { html: `${styleTag}${doc.body ? doc.body.innerHTML.trim() : ""}`.trim(), title: titleEl ? cleanImportedText(titleEl.textContent, 180).trim() : "" };
   }
+  /* ---------- file open: HTML / JSON ---------- */
+  // JSON은 월드인포만 가져오는 파일이 아니라, 설정·정규식·캐릭터 카드처럼
+  // 내용을 확인해야 하는 원본 문서이기도 합니다. 구조형 가져오기와 원문 열기를 분리합니다.
+  const JSON_OPEN_MAX = HTML_SOURCE_MAX;
+  function isJsonFile(file) {
+    const name = String((file && file.name) || "");
+    const type = String((file && file.type) || "").toLowerCase();
+    return /\.json$/i.test(name) || /(?:application|text)\/json(?:;|$)/i.test(type);
+  }
+  function jsonImportedTitle(file) {
+    const name = cleanImportedText(String((file && file.name) || ""), 220).trim().replace(/\.json$/i, "");
+    return name || "불러온 JSON";
+  }
+  function worldInfoEntriesFromPayload(data) {
+    const entries = (data && typeof data === "object" && data.entries) ? data.entries : data;
+    const list = Array.isArray(entries) ? entries : Object.values(entries || {});
+    return list.filter((entry) => entry && typeof entry === "object" && (("content" in entry) || ("key" in entry) || ("keys" in entry)));
+  }
+  function jsonReadableText(raw, payload) {
+    if (payload == null) return String(raw || "");
+    try { return JSON.stringify(payload, null, 2); }
+    catch (e) { return String(raw || ""); }
+  }
+  function openJsonAsFreeMemo(raw, file, payload) {
+    if (raw.length > JSON_OPEN_MAX) { toast("JSON 파일은 5MB 이하만 메모로 열 수 있어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => {
+      const n = await createNote("free", pid);
+      n.title = jsonImportedTitle(file);
+      n.titleLocked = true;
+      // 구조를 망가뜨리지 않도록 JSON을 HTML로 해석하지 않고, 코드 블록의 텍스트로만 넣습니다.
+      n.data.html = `<pre><code class="language-json">${esc(jsonReadableText(raw, payload))}</code></pre>`;
+      await saveNote(n);
+      st.curNoteId = n.id; st.curProjectId = pid;
+      toast("JSON 내용을 메모로 열었어요");
+      go({ s: "read" });
+    });
+  }
+  function openJsonAsHtmlWorkshop(raw, file) {
+    if (raw.length > JSON_OPEN_MAX) { toast("JSON 원본은 5MB 이하만 작업실로 열 수 있어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => {
+      const n = await createNote("html", pid);
+      n.title = jsonImportedTitle(file);
+      n.titleLocked = true;
+      // HTML 작업실에는 파일의 공백·정렬을 포함한 원본 문자열을 그대로 보관합니다.
+      n.data = { source: raw, previewPolicy: "sandbox-web" };
+      await saveNote(n);
+      st.curNoteId = n.id; st.curProjectId = pid;
+      toast("JSON 원본을 HTML 작업실로 열었어요");
+      go({ s: "html" });
+    });
+  }
+  function showJsonOpenChoice(raw, file, payload, parseError) {
+    const title = jsonImportedTitle(file);
+    const worldInfoEntries = payload ? worldInfoEntriesFromPayload(payload) : [];
+    const packagePreview = payload ? projectPackagePreview(payload) : null;
+    const status = parseError
+      ? "JSON 문법을 확인하지 못했어요. 구조형 가져오기는 할 수 없지만 원문은 열어 볼 수 있어요."
+      : `원본 ${raw.length.toLocaleString("ko-KR")}자 · 메모 보기 또는 원본 작업실 중 선택하세요.`;
+    const structured = `${packagePreview ? `<div class="type-card" id="jsonAsProject"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18"/></svg></div><div><div class="tc-name">루미잉크 프로젝트로 가져오기</div><div class="tc-desc">프로젝트 · 메모 ${packagePreview.noteCount}개 · 첨부 ${packagePreview.fileCount}개</div></div></div>` : ""}${worldInfoEntries.length ? `<div class="type-card" id="jsonAsWorldInfo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5.5c2.5-1 5.2-.6 8 1.2 2.8-1.8 5.5-2.2 8-1.2v13c-2.5-1-5.2-.6-8 1.2-2.8-1.8-5.5-2.2-8-1.2Z"/><path d="M12 6.7v13"/></svg></div><div><div class="tc-name">로어북으로 가져오기</div><div class="tc-desc">인식한 World Info 항목 ${worldInfoEntries.length}개를 로어북으로 생성</div></div></div>` : ""}`;
+    openModal(`<h3>JSON 열기</h3><p class="m-sub"><b>${esc(title)}</b><br>${esc(status)}</p>${structured}
+      <div class="type-card" id="jsonAsFreeMemo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 12h8M8 16h8"/></svg></div><div><div class="tc-name">메모로 내용 보기</div><div class="tc-desc">읽기 쉬운 들여쓰기로 정리 · 코드 블록 형태로 안전하게 표시</div></div></div>
+      <div class="type-card" id="jsonAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">HTML 작업실로 원본 열기</div><div class="tc-desc">공백까지 보존 · JSON 원본을 그대로 편집·복사</div></div></div>
+      <div class="m-row"><button class="m-btn" id="jsonOpenCancel">취소</button></div>`);
+    $on("jsonOpenCancel", "click", closeModal);
+    $on("jsonAsFreeMemo", "click", () => { closeModal(); openJsonAsFreeMemo(raw, file, payload); });
+    $on("jsonAsHtmlSource", "click", () => { closeModal(); openJsonAsHtmlWorkshop(raw, file); });
+    if (worldInfoEntries.length) $on("jsonAsWorldInfo", "click", () => { closeModal(); importWorldInfoData(payload, file); });
+    if (packagePreview) $on("jsonAsProject", "click", () => { closeModal(); showProjectPackageImport(payload); });
+  }
+  function importJsonFile(raw, file) {
+    let payload = null, parseError = null;
+    // UTF-8 BOM이 붙은 JSON도 흔하므로, 원본 보관 문자열은 유지하고 파싱용 사본에서만 제거합니다.
+    const parseSource = String(raw || "").replace(/^\uFEFF/, "");
+    try { payload = JSON.parse(parseSource); }
+    catch (e) { parseError = e; }
+    showJsonOpenChoice(raw, file, payload, parseError);
+  }
   function importHtmlFile(file) {
+    if (isJsonFile(file) && Number(file.size || 0) > JSON_OPEN_MAX) { toast("JSON 파일은 5MB 이하만 열 수 있어요"); return; }
     const fr = new FileReader();
     fr.onload = () => {
       const raw = String(fr.result || "");
-      const looksJson = /\.json$/i.test(file.name) || (raw.trim().startsWith("{") && raw.includes('"entries"'));
-      if (looksJson) importWorldInfo(raw, file);
+      if (isJsonFile(file)) importJsonFile(raw, file);
       else importHtmlPayload(raw, file);
     };
     fr.onerror = () => toast("파일을 읽지 못했어요");
     fr.readAsText(file, "UTF-8");
   }
   function importWorldInfo(raw, file) {
-    let data; try { data = JSON.parse(raw); } catch (e) { toast("JSON을 읽지 못했어요"); return; }
-    const entries = (data && data.entries) ? data.entries : data;
-    const list = Array.isArray(entries) ? entries : Object.values(entries || {});
-    const valid = list.filter((e) => e && typeof e === "object" && (("content" in e) || ("key" in e) || ("keys" in e)));
+    let data; try { data = JSON.parse(String(raw || "").replace(/^\uFEFF/, "")); } catch (e) { toast("JSON을 읽지 못했어요"); return; }
+    importWorldInfoData(data, file);
+  }
+  function importWorldInfoData(data, file) {
+    const valid = worldInfoEntriesFromPayload(data);
     if (!valid.length) { toast("월드인포 항목을 찾지 못했어요"); return; }
     pickTargetProject(st.curProjectId, async (pid) => {
       let cnt = 0;

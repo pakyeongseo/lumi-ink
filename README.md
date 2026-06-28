@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.8**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.8-appjs-divider-palette`
+- 개발 기준 빌드: **v66.9**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.9-json-open-viewer`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.8_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.9_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -41,7 +41,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.8_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-50.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -49,6 +49,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.9
+
+- 사이드바 `열기`에서 일반 `.json` 파일을 **코드 블록 메모** 또는 **원본 JSON 작업실**로 열 수 있도록 확장
+- World Info·루미잉크 프로젝트 JSON은 기존 구조형 가져오기를 보존하면서, 내용 확인 경로도 함께 제공
+- JSON 문법 오류 파일도 원문 점검용으로 열 수 있으며, 원본 편집 한도는 5MB
 
 ## v66.8
 
