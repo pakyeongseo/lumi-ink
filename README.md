@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.13**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.13-log-png-export`
+- 개발 기준 빌드: **v66.18**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.18-soft-accent-role`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.13_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.18_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.18
+
+- 사용자 지정 컬러 테마에 **옅은 강조·선택 배경** 색상 역할을 추가했습니다.
+- 이 한 색상이 선택된 글자 크기, 자유 메모 코드 보기 아이콘, 새 메모의 빠른 생성·타입 아이콘, 섹션·카운트·태그·칩·탭·활성 버튼 및 아이디어 보드의 선택 강조처럼 `--accent-soft`를 쓰는 모든 공통 UI에 적용됩니다.
+- 이전 사용자 테마는 기존의 작은 섹션 제목 배경 값을 자동 승계해, 갑작스러운 색 변화 없이 새 공통 역할로 마이그레이션합니다.
 
 ## v66.12
 

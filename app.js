@@ -6505,8 +6505,9 @@ ${gallery}
   const CUSTOM_THEME_COLOR_META = Object.freeze([
     { key:"mainA",          label:"메인 색상 1 · 시작", variable:"--accent",                         fallback:"#2F6FD0", group:"main" },
     { key:"mainB",          label:"메인 색상 2 · 끝",   variable:"--accent-2",                       fallback:"#5A73D8", group:"main" },
+    { key:"softAccentBg",   label:"옅은 강조·선택 배경", variable:"--accent-soft",                    fallback:"#EAF0FF", group:"highlight" },
     { key:"logoCore",       label:"로고 중심부",         variable:"--custom-logo-ink",                fallback:"#FFFFFF", group:"brand" },
-    { key:"sectionTitleBg", label:"작은 섹션 제목 배경", variable:"--section-title-bg",                fallback:"#EAF0FF", group:"section" },
+    { key:"sectionTitleBg", label:"작은 섹션 제목 배경", variable:"--section-title-bg",                fallback:"#EAF0FF", group:"section", derived:true },
     { key:"sidebarFootBg",  label:"사이드바 하단 버튼 배경", variable:"--sidebar-foot-bg",              fallback:"#E8EEF9", group:"sidebar", derived:true },
     { key:"sidebarSectionGradientStart", label:"사이드바 섹션 제목 그라데이션 1", variable:"--sidebar-section-grad-a", fallback:"#EAF0FF", group:"sidebar", derived:true },
     { key:"sidebarCountBg", label:"사이드바 메모 개수 배경", variable:"--sidebar-count-bg",             fallback:"#EAF0FF", group:"sidebar", derived:true },
@@ -6541,7 +6542,7 @@ ${gallery}
     { key:"lineSoft",       label:"옅은 경계선",         variable:"--line-soft",                      fallback:"#EBEDF3", group:"line" }
   ]);
   const CUSTOM_THEME_GROUPS = Object.freeze([
-    ["main", "메인 그라데이션"], ["brand", "로고"], ["section", "섹션 제목"], ["sidebar", "사이드바"], ["background", "바탕"], ["card", "카드"],
+    ["main", "메인 그라데이션"], ["highlight", "옅은 강조·선택 배경"], ["brand", "로고"], ["section", "섹션 제목"], ["sidebar", "사이드바"], ["background", "바탕"], ["card", "카드"],
     ["bar", "상단바"], ["memo", "자유 메모 코드"], ["home", "메인 화면"], ["popup", "팝업"], ["settings", "설정"], ["type", "글자"], ["line", "경계선"]
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
@@ -6554,6 +6555,14 @@ ${gallery}
     "--custom-note-divider-text", "--custom-note-divider-count"
   ]);
   const CUSTOM_THEME_FALLBACK_COLORS = Object.freeze(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item) => [item.key, item.fallback])));
+  const CUSTOM_THEME_SHARED_SOFT_KEYS = Object.freeze([
+    "sectionTitleBg", "sidebarFootBg", "sidebarSectionGradientStart", "sidebarCountBg",
+    "memoCodeIconBg", "homeSectionTitleBg", "projectCountBg", "homeSortBg",
+    "newNoteIconBg", "settingsPressedBg"
+  ]);
+  const CUSTOM_THEME_SHARED_SOFT_VARS = Object.freeze(Object.fromEntries(CUSTOM_THEME_COLOR_META
+    .filter((item) => CUSTOM_THEME_SHARED_SOFT_KEYS.includes(item.key))
+    .map((item) => [item.variable, item.key])));
   let customThemePreviewRestore = null;
 
   function normalizeThemeHex(value, fallback) {
@@ -6596,9 +6605,9 @@ ${gallery}
         surface:L(S*.08,.999), surface2:L(S*.14,.968), surface3:L(S*.20,.936),
         barBg:L(S*.07,.998), barBg2:L(S*.12,.983), barLine:lineC,
         topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
-        memoCodeBg:L(S*.08,.986), memoCodeIconBg:tint,
+        softAccentBg:tint, memoCodeBg:L(S*.08,.986), memoCodeIconBg:tint,
         sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
-        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tintHi, newNoteIconBg:tint, settingsPressedBg:tintHi,
+        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
         memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
         homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
         ink:inkC, muted:mutedC, faint:faintC, line:lineC, lineSoft:lineSoftC
@@ -6616,9 +6625,9 @@ ${gallery}
         surface:L(S*.24,.135), surface2:L(S*.26,.178), surface3:L(S*.27,.225),
         barBg:L(S*.30,.145), barBg2:L(S*.32,.188), barLine:lineC,
         topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
-        memoCodeBg:L(S*.20,.105), memoCodeIconBg:tint,
+        softAccentBg:tint, memoCodeBg:L(S*.20,.105), memoCodeIconBg:tint,
         sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
-        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tintHi, newNoteIconBg:tint, settingsPressedBg:tintHi,
+        sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
         memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
         homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
         ink:inkC, muted:mutedC, faint:faintC, line:lineC, lineSoft:lineSoftC
@@ -6646,7 +6655,8 @@ ${gallery}
   function customThemeAccentVars(palette,mode){
     const c=palette.colors, a=normalizeThemeHex(c.mainA,"#2F6FD0"), b=normalizeThemeHex(c.mainB,gradientMate(a));
     const mid=blendHsl(a,b,.5),dark=mode==="dark", deep=dark?hslToHex(mid.h,Math.max(.28,mid.s*.55),.23):hslToHex(mid.h,Math.max(.34,mid.s*.58),.30);
-    const soft=dark?hslToHex(mid.h,Math.max(.18,mid.s*.28),.18):hslToHex(mid.h,Math.max(.14,mid.s*.24),.91);
+    const suggestedSoft=dark?hslToHex(mid.h,Math.max(.18,mid.s*.28),.18):hslToHex(mid.h,Math.max(.14,mid.s*.24),.91);
+    const soft=normalizeThemeHex(c.softAccentBg,suggestedSoft);
     const logoBody=a,logoTip=b,logoInk=normalizeThemeHex(c.logoCore,contrastInk(a,dark)),word=dark?hslToHex(mid.h,Math.max(.15,mid.s*.22),.88):hslToHex(mid.h,Math.max(.24,mid.s*.42),.27);
     const quickA=dark?hslToHex(hexToHsl(a).h,Math.max(.24,hexToHsl(a).s*.54),.25):hslToHex(hexToHsl(a).h,Math.max(.16,hexToHsl(a).s*.32),.91);
     const quickB=dark?hslToHex(hexToHsl(b).h,Math.max(.22,hexToHsl(b).s*.48),.18):hslToHex(hexToHsl(b).h,Math.max(.14,hexToHsl(b).s*.28),.965);
@@ -6667,18 +6677,29 @@ ${gallery}
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
   function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
-    const sourceVar=({ logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
+    const sourceVar=({ softAccentBg:"--accent-soft", logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
     return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
   }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
   function normalizePalette(raw,fallback,mode){
     const src=raw&&typeof raw==="object"?raw:{}, ref=fallback||CUSTOM_THEME_FALLBACK_COLORS, out={};
+    // v66.18: older palettes exposed only a section title tint. Preserve it as the new shared
+    // light-accent background so existing user palettes do not suddenly change character.
+    const legacySharedSoft=src.softAccentBg||src.sectionTitleBg||src.memoCodeIconBg||src.homeSectionTitleBg||src.newNoteIconBg||src.sidebarCountBg||src.homeSortBg;
     const legacyMain=normalizeThemeHex(src.main||src.mainA,ref.mainA||"#2F6FD0");
     out.mainA=normalizeThemeHex(src.mainA||src.main,ref.mainA||legacyMain);
     out.mainB=normalizeThemeHex(src.mainB,ref.mainB||gradientMate(legacyMain));
     const recommended=recommendCustomPalette(out.mainA,out.mainB,mode==="dark"?"dark":"light");
     CUSTOM_THEME_COLOR_META.filter((item)=>item.key!=="mainA"&&item.key!=="mainB").forEach((item)=>{
+      if(item.key==="softAccentBg"){
+        out[item.key]=normalizeThemeHex(legacySharedSoft,recommended[item.key]||item.fallback);
+        return;
+      }
+      if(CUSTOM_THEME_SHARED_SOFT_KEYS.includes(item.key)){
+        out[item.key]=out.softAccentBg;
+        return;
+      }
       if(item.derived){ out[item.key]=normalizeThemeHex(recommended[item.key],item.fallback); return; }
-      const missingRole=["logoCore","sectionTitleBg","sidebarFootBg","sidebarSectionGradientStart","sidebarCountBg","topbarShadow","memoCodeBg","memoCodeIconBg","memoTitle","homeSectionTitle","homeSectionTitleBg","homeShadow","projectCountBg","homeSortBg","modalTitle","newNoteIconBg","settingsGroupTitle","settingsRowTitle","settingsShadow","settingsPressedBg"].includes(item.key);
+      const missingRole=["logoCore","topbarShadow","memoCodeBg","memoTitle","homeSectionTitle","homeShadow","modalTitle","settingsGroupTitle","settingsRowTitle","settingsShadow"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
     return out;
@@ -6691,14 +6712,20 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:10,baseAccent,
+    return {version:11,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:10,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
-  function customThemeStyleVars(palette,mode){ return Object.assign(Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,palette.colors[item.key]])),customThemeAccentVars(palette,mode)); }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:11,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeStyleVars(palette,mode){
+    const colors=palette.colors||{};
+    const soft=normalizeThemeHex(colors.softAccentBg,"#EAF0FF");
+    const direct=Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,colors[item.key]]));
+    const aliases=Object.fromEntries(Object.keys(CUSTOM_THEME_SHARED_SOFT_VARS).map((variable)=>[variable,soft]));
+    return Object.assign(direct,customThemeAccentVars(palette,mode),aliases);
+  }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
@@ -6727,7 +6754,7 @@ ${gallery}
     const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
     const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const groupItems=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key&&!item.derived);if(!groupItems.length)return "";const items=groupItems.map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
-    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 작은 섹션 제목 배경과 메모 제목도 이 화면에서 직접 조절할 수 있어요.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
+    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 옅은 강조·선택 배경 하나를 바꾸면 코드 보기 아이콘, 글자 크기 선택, 새 메모 아이콘, 카운트·태그·섹션 제목 배경까지 함께 정리됩니다.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
     const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
     document.querySelectorAll("[data-custom-tab]").forEach((b)=>b.addEventListener("click",()=>openCustomThemeStudio(draft,b.dataset.customTab)));
     document.querySelectorAll("[data-custom-editor-key]").forEach((b)=>b.addEventListener("click",()=>{const key=b.dataset.customEditorKey,item=CUSTOM_THEME_COLOR_META.find((x)=>x.key===key);openAdvancedColorPicker(`${item.label} 색상`,draft[mode].colors[key],(value)=>{draft[mode].colors[key]=value;openCustomThemeStudio(draft,mode);},{prefix:"customThemeRole",saved:true,save:true,intro:"정사각형 색상판·HEX·RGB·스포이드로 정확하게 조절할 수 있어요."});}));
