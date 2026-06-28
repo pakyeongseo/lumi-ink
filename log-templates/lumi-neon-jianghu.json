@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-neon-jianghu",
+  "name": "네온 강호",
+  "description": "먹빛 바탕에 주홍·청록 네온이 흐르는 동양 사이버 무협 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#16121a,#1a1020 55%,#120e16)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#e0d0d8",
+      "border": "1px solid #4a2a3a",
+      "border-radius": "8px",
+      "padding": "28px",
+      "box-shadow": "inset 0 0 50px rgba(255,90,58,.07), 0 16px 42px rgba(8,4,10,.5)",
+      "font-family": "'Nanum Myeongjo','Noto Serif KR',serif"
+    },
+    "header": {
+      "color": "#ff7a5a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".24em",
+      "text-shadow": "0 0 12px rgba(255,90,58,.45)",
+      "padding": "0 0 13px",
+      "margin": "0 0 17px",
+      "border-bottom": "1px solid #4a2a3a"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ff8a6a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5ad0c0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#3ad0c0",
+        "border": "1px solid #2a8a80",
+        "border-radius": "4px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffd0c0",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#b09098",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "강호인",
+    "style": {
+      "color": "#120a10",
+      "background-color": "#ff5a3a",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#120a10",
+          "background-color": "#ff5a3a",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#ffb5a6",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(255,90,58,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#ffb5a6",
+          "border-bottom": "2px solid rgba(255,90,58,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#ffb5a6",
+          "background-color": "rgba(255,90,58,0.22)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#ffb5a6",
+          "background": "linear-gradient(to top, rgba(255,90,58,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

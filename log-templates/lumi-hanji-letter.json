@@ -1,0 +1,174 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-hanji-letter",
+  "name": "한지 서간",
+  "description": "미색 한지와 인주 빨강의 한국 고전 서간체. 명조의 단아한 편지 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#f5efe0,#efe6d2)",
+      "line-height": "1.92",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#3a3228",
+      "border": "1px solid #ccbe9e",
+      "border-radius": "3px",
+      "padding": "30px 28px",
+      "box-shadow": "0 12px 34px rgba(120,100,60,.14)",
+      "font-family": "'Nanum Myeongjo','Noto Serif KR',serif"
+    },
+    "header": {
+      "color": "#8a2f28",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".22em",
+      "padding": "0 0 13px",
+      "margin": "0 0 18px",
+      "border-bottom": "1px solid #d6c08a"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a4a3a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a7058",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a2f28",
+        "border": "1px solid #c8a88a",
+        "border-radius": "2px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2a2218",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8a7a5a",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "○○",
+    "style": {
+      "color": "#f5efe0",
+      "background-color": "#8a2f28",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700",
+      "letter-spacing": ".06em"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#f5efe0",
+          "background-color": "#8a2f28",
+          "border-radius": "2px",
+          "padding": "1px 8px",
+          "font-weight": "700",
+          "letter-spacing": ".06em"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#8a2f28",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(138,47,40,0.85)",
+          "border-radius": "2px",
+          "padding": "0 7px",
+          "font-weight": "700",
+          "letter-spacing": ".06em"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#8a2f28",
+          "border-bottom": "2px solid rgba(138,47,40,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700",
+          "letter-spacing": ".06em"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#8a2f28",
+          "background-color": "rgba(138,47,40,0.16)",
+          "border-radius": "2px",
+          "padding": "1px 7px",
+          "font-weight": "700",
+          "letter-spacing": ".06em"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#8a2f28",
+          "background": "linear-gradient(to top, rgba(138,47,40,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700",
+          "letter-spacing": ".06em"
+        }
+      }
+    ]
+  }
+}

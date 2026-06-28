@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-onsen-ryokan",
+  "name": "온천 료칸",
+  "description": "인디고 밤과 등불 호박색의 전통 료칸 로그. 다다미와 김 서린 온천의 정취.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#1a2535,#141d2a)",
+      "line-height": "1.86",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#d8dde8",
+      "border": "1px solid #2e3a4e",
+      "border-radius": "6px",
+      "padding": "28px",
+      "box-shadow": "0 16px 40px rgba(6,12,22,.42)",
+      "font-family": "'Nanum Myeongjo','Noto Serif KR',serif"
+    },
+    "header": {
+      "color": "#d89a5a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".22em",
+      "padding": "0 0 13px",
+      "margin": "0 0 18px",
+      "border-bottom": "1px solid #34425a"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e8c088",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a9ab0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9ab4d0",
+        "border": "1px solid #3a4e68",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f0e0c8",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a0aec0",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "손님",
+    "style": {
+      "color": "#141d2a",
+      "background-color": "#d89a5a",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#141d2a",
+          "background-color": "#d89a5a",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#d89a5a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(216,154,90,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#d89a5a",
+          "border-bottom": "2px solid rgba(216,154,90,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#d89a5a",
+          "background-color": "rgba(216,154,90,0.22)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#d89a5a",
+          "background": "linear-gradient(to top, rgba(216,154,90,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

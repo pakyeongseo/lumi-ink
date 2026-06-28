@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-lofi-cassette",
+  "name": "로파이 카세트",
+  "description": "베이지 테이프와 오렌지 라벨의 90년대 카세트 로파이 무드. 따뜻한 노이즈.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#e8ddc8,#e0d2b8)",
+      "line-height": "1.74",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#4a3e30",
+      "border": "1px solid #c8b896",
+      "border-radius": "8px",
+      "padding": "26px",
+      "box-shadow": "0 12px 32px rgba(120,96,50,.16)",
+      "font-family": "'Space Mono','SFMono-Regular',Consolas,'D2Coding',monospace"
+    },
+    "header": {
+      "color": "#c0682a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".16em",
+      "text-transform": "uppercase",
+      "border-bottom": "2px dashed #c8a878",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b0541f",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a7a5a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a6a4a",
+        "border": "1px solid #b8a276",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#3a2e1e",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8a68",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "익명",
+    "style": {
+      "color": "#f4ecdc",
+      "background-color": "#d07a3a",
+      "border-radius": "3px",
+      "padding": "1px 8px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#f4ecdc",
+          "background-color": "#d07a3a",
+          "border-radius": "3px",
+          "padding": "1px 8px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#d07a3a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(208,122,58,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#d07a3a",
+          "border-bottom": "2px solid rgba(208,122,58,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#d07a3a",
+          "background-color": "rgba(208,122,58,0.16)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#d07a3a",
+          "background": "linear-gradient(to top, rgba(208,122,58,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

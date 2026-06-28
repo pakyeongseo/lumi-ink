@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-jellyfish-tank",
+  "name": "해파리 수족관",
+  "description": "형광 보라와 청록이 떠다니는 아쿠아리움 로그. 발광하는 해파리의 몽환.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "radial-gradient(120% 100% at 50% 30%,#1a1040,#0c0a24 76%)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#d0c8f0",
+      "border": "1px solid #2e2060",
+      "border-radius": "16px",
+      "padding": "26px",
+      "box-shadow": "inset 0 0 70px rgba(106,208,255,.1), 0 16px 44px rgba(4,2,16,.5)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#6ad0ff",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".18em",
+      "text-shadow": "0 0 14px rgba(208,106,255,.45)",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #2e2060"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a0e0ff",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d06aff",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d06aff",
+        "background-color": "rgba(208,106,255,.14)",
+        "border-radius": "8px",
+        "padding": "1px 7px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e8f4ff",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#c0a0e8",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "○해류○",
+    "style": {
+      "color": "#0a0820",
+      "background-color": "#6ad0ff",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#0a0820",
+          "background-color": "#6ad0ff",
+          "border-radius": "999px",
+          "padding": "1px 9px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#6ad0ff",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(106,208,255,0.85)",
+          "border-radius": "999px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#6ad0ff",
+          "border-bottom": "2px solid rgba(106,208,255,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#6ad0ff",
+          "background-color": "rgba(106,208,255,0.22)",
+          "border-radius": "7px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#6ad0ff",
+          "background": "linear-gradient(to top, rgba(106,208,255,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}

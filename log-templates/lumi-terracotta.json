@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-terracotta",
+  "name": "테라코타 공예",
+  "description": "흙갈색과 점토 오렌지의 도예 공방 로그. 손으로 빚은 따뜻한 공예 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#f2e2d4,#e8d0bc)",
+      "line-height": "1.8",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#4a3528",
+      "border": "1px solid #d4b89a",
+      "border-radius": "10px",
+      "padding": "28px",
+      "box-shadow": "0 12px 32px rgba(140,90,50,.15)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#c05a32",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".16em",
+      "border-bottom": "2px solid #d8b896",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a8492a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a7558",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a7a5a",
+        "border": "1px solid #ceae8a",
+        "border-radius": "4px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#3a2818",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8268",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "장인",
+    "style": {
+      "color": "#f6ece2",
+      "background-color": "#c05a32",
+      "border-radius": "4px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#f6ece2",
+          "background-color": "#c05a32",
+          "border-radius": "4px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#c05a32",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(192,90,50,0.85)",
+          "border-radius": "4px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#c05a32",
+          "border-bottom": "2px solid rgba(192,90,50,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#c05a32",
+          "background-color": "rgba(192,90,50,0.16)",
+          "border-radius": "4px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#c05a32",
+          "background": "linear-gradient(to top, rgba(192,90,50,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

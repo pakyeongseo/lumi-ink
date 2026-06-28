@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-botanical",
+  "name": "보태니컬 표본",
+  "description": "크림과 세이지 그린의 식물 도감. 학술 표본 라벨처럼 단정한 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#f6f3ea",
+      "line-height": "1.82",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#3a3a2e",
+      "border": "1px solid #c8ccb0",
+      "border-radius": "6px",
+      "padding": "28px",
+      "box-shadow": "0 10px 30px rgba(90,100,60,.12)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#5a7048",
+      "font-size": "13px",
+      "font-weight": "700",
+      "font-style": "italic",
+      "letter-spacing": ".1em",
+      "border-bottom": "1px solid #b8c098",
+      "padding": "0 0 12px",
+      "margin": "0 0 17px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4a6038",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a7560",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a6a3a",
+        "border": "1px solid #c0b088",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2e3a24",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a7558",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "Sp. ―",
+    "style": {
+      "color": "#f6f3ea",
+      "background-color": "#5a7048",
+      "border-radius": "3px",
+      "padding": "1px 8px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#f6f3ea",
+          "background-color": "#5a7048",
+          "border-radius": "3px",
+          "padding": "1px 8px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#5a7048",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(90,112,72,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#5a7048",
+          "border-bottom": "2px solid rgba(90,112,72,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#5a7048",
+          "background-color": "rgba(90,112,72,0.16)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#5a7048",
+          "background": "linear-gradient(to top, rgba(90,112,72,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

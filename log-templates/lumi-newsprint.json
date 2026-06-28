@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-newsprint",
+  "name": "신문 스크랩",
+  "description": "누런 신문지와 검정 잉크의 특종 기사체. 탐정·누아르 보도 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#ece6d8",
+      "line-height": "1.7",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#2a2620",
+      "border": "1px solid #b8ad96",
+      "border-top": "4px double #2a2620",
+      "border-radius": "2px",
+      "padding": "26px",
+      "font-family": "Georgia,'Times New Roman','Noto Serif KR',serif"
+    },
+    "header": {
+      "color": "#1a1a1a",
+      "font-size": "15px",
+      "font-weight": "800",
+      "letter-spacing": ".04em",
+      "text-transform": "uppercase",
+      "border-bottom": "3px double #2a2620",
+      "padding": "0 0 10px",
+      "margin": "0 0 16px",
+      "text-align": "center"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5a2a2a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#5a564a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2a2620",
+        "border-bottom": "2px solid #8a2a2a",
+        "padding": "0 1px 1px",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#000000",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#4a463a",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "익명 제보자",
+    "style": {
+      "color": "#ece6d8",
+      "background-color": "#2a2620",
+      "border-radius": "0",
+      "padding": "1px 7px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#ece6d8",
+          "background-color": "#2a2620",
+          "border-radius": "0",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#2a2620",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(42,38,32,0.85)",
+          "border-radius": "0",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#2a2620",
+          "border-bottom": "2px solid rgba(42,38,32,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#2a2620",
+          "background-color": "rgba(42,38,32,0.16)",
+          "border-radius": "0",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#2a2620",
+          "background": "linear-gradient(to top, rgba(42,38,32,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

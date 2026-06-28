@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-cottage-lace",
+  "name": "코티지 레이스",
+  "description": "크림과 더스티 로즈, 레이스의 핸드메이드 코티지코어 로그. 포근한 수공예 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#f8f0ec,#f2e6e2)",
+      "line-height": "1.84",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#5a4a48",
+      "border": "1px solid #e8d4cc",
+      "border-radius": "16px",
+      "padding": "28px",
+      "box-shadow": "0 12px 34px rgba(180,140,140,.15)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#c08090",
+      "font-size": "12px",
+      "font-weight": "700",
+      "font-style": "italic",
+      "letter-spacing": ".14em",
+      "border-bottom": "1px solid #ecd6ce",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b06878",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a9a7a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a9a7a",
+        "background-color": "rgba(138,154,122,.14)",
+        "border-radius": "9px",
+        "padding": "1px 7px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#4a3a38",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8480",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "○○",
+    "style": {
+      "color": "#fbf2ee",
+      "background-color": "#c08090",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#fbf2ee",
+          "background-color": "#c08090",
+          "border-radius": "999px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#c08090",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(192,128,144,0.85)",
+          "border-radius": "999px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#c08090",
+          "border-bottom": "2px solid rgba(192,128,144,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#c08090",
+          "background-color": "rgba(192,128,144,0.16)",
+          "border-radius": "7px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#c08090",
+          "background": "linear-gradient(to top, rgba(192,128,144,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

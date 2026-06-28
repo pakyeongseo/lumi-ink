@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-abyssal",
+  "name": "심해",
+  "description": "청록 인광이 번지는 심해 미스터리. 깊은 남청 바탕의 해양 SF 로그.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "radial-gradient(130% 100% at 50% 0%,#0a2a3a,#061824 72%)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#b8e0e8",
+      "border": "1px solid #1a4a5a",
+      "border-radius": "14px",
+      "padding": "26px",
+      "box-shadow": "inset 0 0 70px rgba(28,128,140,.12), 0 16px 42px rgba(2,12,18,.5)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#5ce0d0",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".18em",
+      "text-shadow": "0 0 14px rgba(56,214,196,.5)",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #1e5666"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7ff0e0",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a9aa8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#38d6c4",
+        "background-color": "rgba(56,214,196,.12)",
+        "border-radius": "6px",
+        "padding": "1px 7px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d0fff8",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#88c0c8",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "•심연•",
+    "style": {
+      "color": "#042028",
+      "background-color": "#38d6c4",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#042028",
+          "background-color": "#38d6c4",
+          "border-radius": "999px",
+          "padding": "1px 9px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#38d6c4",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(56,214,196,0.85)",
+          "border-radius": "999px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#38d6c4",
+          "border-bottom": "2px solid rgba(56,214,196,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#38d6c4",
+          "background-color": "rgba(56,214,196,0.22)",
+          "border-radius": "7px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#38d6c4",
+          "background": "linear-gradient(to top, rgba(56,214,196,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}

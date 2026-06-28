@@ -1,0 +1,171 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-glitch",
+  "name": "글리치",
+  "description": "RGB가 분리된 디지털 붕괴 로그. 시안-마젠타 색수차의 해킹·오류 미학.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#0a0a0e",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#d0d0d8",
+      "border": "1px solid #2a2a3a",
+      "border-radius": "4px",
+      "padding": "24px",
+      "box-shadow": "inset 0 0 0 1px rgba(255,58,106,.12), inset 0 0 0 2px rgba(42,240,224,.06)",
+      "font-family": "'Space Mono','SFMono-Regular',Consolas,'D2Coding',monospace"
+    },
+    "header": {
+      "color": "#ff3a6a",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".18em",
+      "text-shadow": "2px 0 #2af0e0,-2px 0 #ff3a6a",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #2a2a3a"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2af0e0",
+        "font-weight": "700",
+        "text-shadow": "0 0 8px rgba(42,240,224,.4)"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a4a8a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ff3a6a",
+        "border": "1px solid #b82a4a",
+        "border-radius": "2px",
+        "padding": "1px 6px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#ffffff",
+        "font-weight": "800",
+        "text-shadow": "1px 0 #2af0e0,-1px 0 #ff3a6a"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a6a8a",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "[E_R_R]",
+    "style": {
+      "color": "#0a0a0e",
+      "background-color": "#ff3a6a",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#0a0a0e",
+          "background-color": "#ff3a6a",
+          "border-radius": "2px",
+          "padding": "1px 8px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#ffa6bc",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(255,58,106,0.85)",
+          "border-radius": "2px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#ffa6bc",
+          "border-bottom": "2px solid rgba(255,58,106,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#ffa6bc",
+          "background-color": "rgba(255,58,106,0.22)",
+          "border-radius": "2px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#ffa6bc",
+          "background": "linear-gradient(to top, rgba(255,58,106,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}

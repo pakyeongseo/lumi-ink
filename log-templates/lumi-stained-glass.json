@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-stained-glass",
+  "name": "스테인드글라스",
+  "description": "납선 금테와 루비·사파이어 색유리. 고딕 성당의 장엄한 종교 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#142a30,#0e2028 60%,#16282e)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#d0e0d8",
+      "border": "2px solid #c8a040",
+      "border-radius": "8px",
+      "padding": "28px",
+      "box-shadow": "inset 0 0 50px rgba(200,160,64,.1), 0 16px 42px rgba(4,14,16,.5)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#d4a838",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".26em",
+      "text-align": "center",
+      "padding": "0 0 14px",
+      "margin": "0 0 18px",
+      "border-bottom": "1px solid #6a5a30"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#e08aa0",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6aa0c0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d4a838",
+        "border": "1px solid #b08828",
+        "border-radius": "4px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f0d890",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a0c0b0",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "✟성도✟",
+    "style": {
+      "color": "#142028",
+      "background-color": "#c8a040",
+      "border-radius": "4px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#142028",
+          "background-color": "#c8a040",
+          "border-radius": "4px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#c8a040",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(200,160,64,0.85)",
+          "border-radius": "4px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#c8a040",
+          "border-bottom": "2px solid rgba(200,160,64,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#c8a040",
+          "background-color": "rgba(200,160,64,0.22)",
+          "border-radius": "4px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#c8a040",
+          "background": "linear-gradient(to top, rgba(200,160,64,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

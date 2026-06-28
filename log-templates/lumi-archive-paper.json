@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-archive-paper",
+  "name": "과학 논문",
+  "description": "흰 바탕 세리프와 청색 참조의 학술 논문 로그. LaTeX 조판처럼 단정한 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#fbfaf6",
+      "line-height": "1.8",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#2a2a2e",
+      "border": "1px solid #d8d6cc",
+      "border-radius": "3px",
+      "padding": "30px 30px",
+      "box-shadow": "0 8px 24px rgba(40,40,50,.08)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#2a2a2e",
+      "font-size": "13px",
+      "font-weight": "700",
+      "letter-spacing": ".04em",
+      "text-align": "center",
+      "border-bottom": "1px solid #2a2a2e",
+      "padding": "0 0 11px",
+      "margin": "0 0 18px"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2a5ac0",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a6a72",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a2a2a",
+        "border": "1px solid #c8b0b0",
+        "border-radius": "2px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#000000",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#4a4a52",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "[익명 심사]",
+    "style": {
+      "color": "#fbfaf6",
+      "background-color": "#2a5ac0",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#fbfaf6",
+          "background-color": "#2a5ac0",
+          "border-radius": "2px",
+          "padding": "1px 8px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#2a5ac0",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(42,90,192,0.85)",
+          "border-radius": "2px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#2a5ac0",
+          "border-bottom": "2px solid rgba(42,90,192,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#2a5ac0",
+          "background-color": "rgba(42,90,192,0.16)",
+          "border-radius": "2px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#2a5ac0",
+          "background": "linear-gradient(to top, rgba(42,90,192,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}
