@@ -2458,7 +2458,6 @@
     if (!sample.trim()) { toast("샘플을 먼저 입력해 주세요"); return; }
     const built = regexPatternFromMarkedSample(sample);
     $("regexFind").value = regexSetGlobalInFind(built.pattern, $("regexGlobal").checked);
-    $("regexSample").value = built.plain;
     scheduleRegexSave();
     toast(`IN 정규식을 만들었어요 · ${built.captures}캡처`);
   }
