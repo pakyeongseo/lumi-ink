@@ -1710,78 +1710,268 @@
     #screen-html[data-html-view="split"] .html-source-pane { border-right: 1px solid var(--line); }
   }
 
-  .regex-workshop .html-work-label b { color: #9ee7d8; }
-  .regex-workshop .html-workbar .html-mode.active { background: linear-gradient(135deg, #23c4a8, #6f9dff); }
-  .regex-form-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 14px; background: var(--paper); }
-  .regex-field {
-    margin: 0 0 12px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 8px;
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
+  /* ============================================================
+     REGEX WORKSHOP · v66.24 redesign — "ink press line"
+     All selectors scoped to #screen-regex / .regex-workshop so the
+     shared HTML-workshop chrome is untouched. Colour comes from the
+     live theme tokens; a single brand-gold seal anchors the identity.
+     ============================================================ */
+  #screen-regex { --rx-seal: #d9b876; --rx-seal-deep: #b8954f; --rx-ink-plate: #0d131d; }
+  html[data-theme="light"] #screen-regex { --rx-seal: #c79a4a; --rx-seal-deep: #a87f33; }
+
+  /* ----- workbar : segmented composing control ----- */
+  .regex-workshop .html-workbar { gap: 9px; padding: 10px 12px; }
+  .regex-workshop .rx-seg {
+    flex: 0 0 auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px;
+    border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 60%, #07101c);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.34);
   }
-  .regex-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
-  .regex-label-row label, .regex-field legend {
-    color: var(--ink); font-size: 11px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase;
+  .regex-workshop .rx-seg .html-mode {
+    min-height: 30px; padding: 0 12px; border: 0; border-radius: 9px; background: transparent;
+    color: var(--muted); box-shadow: none; font-size: 11.5px; font-weight: 800; letter-spacing: .05em;
   }
-  .regex-label-tools { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
-  .regex-copy-btn {
-    width: 26px; height: 26px; display: inline-grid; place-items: center; flex: 0 0 auto;
-    border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2);
-    color: var(--muted); cursor: pointer;
+  .regex-workshop .rx-seg .html-mode::after { display: none; }
+  .regex-workshop .rx-seg .html-mode:hover { color: var(--ink); border-color: transparent; background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .regex-workshop .rx-seg .html-mode.active {
+    color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 2px 9px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.4);
+    text-shadow: 0 1px 2px rgba(8,16,30,.32);
   }
-  .regex-copy-btn:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); }
-  .regex-copy-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .regex-field legend { padding: 0 4px; }
-  .regex-input, .regex-area, .regex-select {
-    width: 100%; border: 1px solid var(--line); border-radius: 8px; outline: none;
-    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 13px;
+  .regex-workshop .html-work-label { margin-left: 2px; }
+  .regex-workshop .html-work-label b {
+    color: var(--rx-seal); letter-spacing: .16em;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--rx-seal) 16%, transparent), transparent);
+    border-color: color-mix(in srgb, var(--rx-seal) 42%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--rx-seal) 28%, transparent);
   }
-  .regex-input, .regex-select { height: 36px; padding: 0 10px; }
-  .regex-area {
-    min-height: 92px; resize: vertical; padding: 10px 11px; line-height: 1.62;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    tab-size: 2; white-space: pre-wrap; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere;
+
+  /* ----- scroll body ----- */
+  .regex-source-pane .regex-form-scroll,
+  .rx-scroll {
+    flex: 1 1 auto; min-height: 0; overflow: auto; padding: 18px 16px 30px;
+    background:
+      radial-gradient(120% 55% at 100% 0%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 62%),
+      var(--paper);
   }
-  #regexFind { white-space: pre; overflow: auto; overflow-wrap: normal; }
-  .regex-area.tall { min-height: 130px; }
-  .regex-area.compact { min-height: 68px; }
-  .regex-input:focus, .regex-area:focus, .regex-select:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent); }
-  .regex-mini-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .regex-mini-row > * { flex: 1 1 160px; }
-  .regex-check {
-    min-height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 9px;
-    border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface-2);
-    font-size: 12px; font-weight: 700; cursor: pointer; user-select: none;
+
+  /* ----- nameplate (scriptName) ----- */
+  .rx-plate-title {
+    position: relative; margin: 0 0 18px; padding: 15px 16px 15px 19px; border-radius: 14px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, var(--accent) 3%), var(--surface-2));
+    border: 1px solid var(--line);
+    box-shadow: 0 10px 24px -18px rgba(0,0,0,.66), inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
   }
-  .regex-check input { width: 16px; height: 16px; accent-color: var(--accent); }
-  .regex-status {
-    flex: 0 0 auto; max-width: 58%; color: var(--muted); font-size: 11px; text-align: right;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  .rx-plate-title::before {
+    content: ""; position: absolute; left: 0; top: 13px; bottom: 13px; width: 3px; border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, var(--rx-seal), var(--rx-seal-deep));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--rx-seal) 40%, transparent);
   }
-  .regex-status.ok { color: #4ad18d; }
-  .regex-status.bad { color: var(--danger); }
-  .regex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .regex-action-btn {
-    min-height: 34px; border: 1px solid var(--line); border-radius: 8px; padding: 0 11px;
-    background: var(--surface-2); color: var(--accent); font: inherit; font-size: 12px; font-weight: 800;
-    cursor: pointer;
+  .rx-plate-lbl { margin-bottom: 9px; }
+  .rx-plate-lbl label {
+    font: 800 10px/1 "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--rx-seal);
   }
-  .regex-action-btn.primary { border-color: transparent; background: var(--grad-blue); color: #fff; }
-  .regex-action-btn:active { transform: scale(.97); }
-  .regex-options-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .rx-name {
+    width: 100%; height: 44px; padding: 0 14px; border-radius: 11px; outline: none;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    font: 700 16px/1 inherit;
+  }
+  .rx-name::placeholder { color: var(--faint); font-weight: 500; }
+  .rx-name:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent); }
+
+  /* ----- press line : the ink spine + numbered stages ----- */
+  .rx-line { position: relative; padding-left: 30px; }
+  .rx-line::before {
+    content: ""; position: absolute; left: 11px; top: 8px; bottom: 30px; width: 2px; border-radius: 2px;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 78%, transparent),
+      color-mix(in srgb, var(--accent) 32%, transparent) 58%,
+      transparent);
+  }
+  .rx-stage { position: relative; margin: 0 0 16px; }
+  .rx-no {
+    position: absolute; left: -30px; top: 1px; width: 24px; height: 24px; border-radius: 50%; z-index: 2;
+    display: grid; place-items: center; color: #fff; text-shadow: 0 1px 2px rgba(8,16,30,.4);
+    font: 800 12px/1 "Space Mono", ui-monospace, monospace;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 2px 9px color-mix(in srgb, var(--accent) 48%, transparent),
+                inset 0 1px 0 rgba(255,255,255,.5),
+                0 0 0 4px var(--paper);
+  }
+
+  .rx-card {
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 86%, transparent), var(--surface-2));
+    box-shadow: 0 12px 28px -22px rgba(0,0,0,.78);
+  }
+  .rx-card-cap {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding: 11px 13px 10px; border-bottom: 1px solid var(--line-soft);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent);
+  }
+  .rx-card-nm { min-width: 0; display: inline-flex; align-items: baseline; gap: 8px; }
+  .rx-card-nm label {
+    font: 800 12px/1.15 inherit; letter-spacing: .02em; color: var(--ink); text-transform: none;
+  }
+  .rx-card-tools { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+  .rx-copy {
+    flex: 0 0 auto; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface-3); color: var(--muted); transition: color .14s, border-color .14s, box-shadow .14s;
+  }
+  .rx-copy:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 11%, transparent); }
+  .rx-copy:active { transform: scale(.92); }
+  .rx-copy svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ----- seal pill : validation / preview badge (#regexValidation, #regexPreviewBadge) ----- */
+  #screen-regex .regex-status {
+    flex: 0 0 auto; max-width: 100%; display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px; font: 700 10.5px/1.3 inherit; letter-spacing: .01em;
+    color: var(--muted); background: var(--surface-3); border: 1px solid var(--line);
+    white-space: normal; text-align: left; text-overflow: clip; overflow: visible;
+  }
+  #screen-regex .regex-status::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .7; flex: 0 0 auto;
+  }
+  #screen-regex .regex-status.ok {
+    color: #0c2c20; border-color: transparent;
+    background: linear-gradient(135deg, #7fe0a8, #54c98a);
+    box-shadow: 0 2px 8px rgba(84,201,138,.36), inset 0 1px 0 rgba(255,255,255,.42);
+  }
+  #screen-regex .regex-status.bad {
+    color: #fff; border-color: transparent;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--danger) 92%, #000), var(--danger));
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--danger) 40%, transparent), inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  #screen-regex .regex-status.ok::before, #screen-regex .regex-status.bad::before { opacity: .9; }
+
+  /* ----- code plate textarea ----- */
+  .rx-area {
+    display: block; width: 100%; border: 0; outline: 0; margin: 0; color: #dbeaff; caret-color: var(--accent);
+    font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px; line-height: 1.72; tab-size: 2;
+    padding: 13px 14px 13px 18px; white-space: pre; overflow: auto;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--accent) 32%, var(--rx-ink-plate)) 0 2px, transparent 2px),
+      radial-gradient(120% 80% at 100% 0%, #131c29, var(--rx-ink-plate) 62%);
+    box-shadow: inset 0 8px 16px -12px rgba(0,0,0,.7);
+  }
+  .rx-area.wrap { white-space: pre-wrap; overflow-x: hidden; overflow-wrap: anywhere; }
+  .rx-area.tall { min-height: 122px; resize: vertical; }
+  .rx-area.short { min-height: 66px; resize: vertical; }
+  .rx-area::selection { background: color-mix(in srgb, var(--accent) 38%, transparent); }
+  .rx-area::placeholder { color: #7e8da6; }
+  .rx-area:focus { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 8px 16px -12px rgba(0,0,0,.7); }
+
+  /* ----- stage footer (IN controls) ----- */
+  .rx-foot {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px;
+    border-top: 1px solid var(--line-soft); background: color-mix(in srgb, var(--surface) 68%, transparent);
+  }
+  .rx-spring { flex: 1 1 auto; min-width: 8px; }
+  .rx-switch { display: inline-flex; align-items: center; gap: 9px; font-size: 11.5px; font-weight: 700; color: var(--muted); cursor: pointer; user-select: none; }
+  .rx-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .rx-switch .rx-tr {
+    flex: 0 0 auto; width: 38px; height: 22px; border-radius: 999px; position: relative; transition: background .18s, border-color .18s;
+    background: var(--surface-3); border: 1px solid var(--line);
+  }
+  .rx-switch .rx-tr::after {
+    content: ""; position: absolute; left: 2px; top: 1.5px; width: 16px; height: 16px; border-radius: 50%;
+    background: #cdd6e6; box-shadow: 0 1px 3px rgba(0,0,0,.42); transition: left .18s, background .18s;
+  }
+  .rx-switch input:checked + .rx-tr { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+  .rx-switch input:checked + .rx-tr::after { left: 20px; background: #fff; }
+  .rx-switch input:focus-visible + .rx-tr { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+
+  .rx-btn {
+    min-height: 34px; border-radius: 9px; padding: 0 13px; cursor: pointer; transition: transform .1s, box-shadow .14s;
+    display: inline-flex; align-items: center; gap: 6px; font: 800 11.5px/1 inherit;
+    border: 1px solid var(--line); background: var(--surface-3); color: var(--accent);
+  }
+  .rx-btn:active { transform: scale(.96); }
+  .rx-btn.primary {
+    border-color: transparent; color: #fff; text-shadow: 0 1px 2px rgba(8,16,30,.3);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 2px 9px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.34);
+  }
+
+  /* ----- export options drawer (de-emphasised metadata) ----- */
+  .rx-drawer {
+    margin-top: 4px; border: 1px dashed color-mix(in srgb, var(--line) 72%, var(--accent));
+    border-radius: 14px; background: color-mix(in srgb, var(--surface) 50%, transparent); overflow: hidden;
+  }
+  .rx-drawer-head {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; list-style: none;
+  }
+  .rx-drawer-head::-webkit-details-marker { display: none; }
+  .rx-drawer-ic {
+    flex: 0 0 auto; width: 27px; height: 27px; border-radius: 8px; display: grid; place-items: center; color: var(--rx-seal);
+    background: color-mix(in srgb, var(--rx-seal) 13%, transparent); border: 1px solid color-mix(in srgb, var(--rx-seal) 32%, transparent);
+  }
+  .rx-drawer-ic svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .rx-drawer-tt {
+    flex: 1 1 auto; font: 800 12px/1.2 inherit; letter-spacing: .02em; color: var(--ink); text-transform: none;
+  }
+  .rx-drawer-chev { flex: 0 0 auto; color: var(--faint); display: grid; place-items: center; transition: transform .2s; }
+  .rx-drawer-chev svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .rx-drawer[open] .rx-drawer-chev { transform: rotate(180deg); }
+  .rx-drawer-body { padding: 2px 14px 14px; }
+  .rx-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+  .rx-chip {
+    display: inline-flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 10px; cursor: pointer; transition: .15s;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--muted);
+    font: 700 11px/1.1 "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .rx-chip input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .rx-chip .rx-bx { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--faint); position: relative; transition: .15s; }
+  .rx-chip input:checked + .rx-bx { background: var(--accent); border-color: var(--accent); }
+  .rx-chip input:checked + .rx-bx::after {
+    content: ""; position: absolute; left: 4.5px; top: 1px; width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .rx-chip:has(input:checked) {
+    color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+  }
+  .rx-two { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+  .rx-sel, .rx-num {
+    height: 38px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    font: 600 12px/1 "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; padding: 0 11px; outline: none;
+  }
+  .rx-sel:focus, .rx-num:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+  .rx-trim {
+    width: 100%; min-height: 56px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    font: 400 12px/1.55 "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; padding: 9px 11px; outline: none; resize: vertical;
+  }
+  .rx-trim:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+  .rx-trim::placeholder, .rx-num::placeholder { color: var(--faint); }
+
+  /* ----- preview pane ----- */
   .regex-preview-status {
-    padding: 10px 14px; border-bottom: 1px solid var(--line-soft);
-    color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent);
-    font-size: 12px; line-height: 1.5;
+    padding: 11px 15px; border-bottom: 1px solid var(--line-soft); color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 78%, transparent); font-size: 12px; line-height: 1.5;
   }
   .regex-captures {
-    max-height: 150px; overflow: auto; display: grid; gap: 6px; padding: 10px 14px;
+    max-height: 168px; overflow: auto; display: grid; gap: 7px; padding: 12px 14px;
     border-bottom: 1px solid var(--line-soft); background: var(--paper);
   }
   .regex-capture-row {
-    display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 9px; align-items: start;
-    font-size: 12px; color: var(--muted);
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0; align-items: stretch;
+    border: 1px solid var(--line); border-radius: 9px; overflow: hidden; font-size: 12px;
+    background: var(--surface-2);
   }
-  .regex-capture-row b { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .regex-capture-row span { min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .regex-capture-row b {
+    display: inline-flex; align-items: center; padding: 7px 11px; color: #fff;
+    font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .03em;
+    background: linear-gradient(135deg, var(--rx-seal), var(--rx-seal-deep));
+    box-shadow: inset -1px 0 0 color-mix(in srgb, #000 18%, transparent), inset 0 1px 0 rgba(255,255,255,.28);
+    text-shadow: 0 1px 1px rgba(60,40,0,.35);
+  }
+  .regex-capture-row span {
+    min-width: 0; padding: 7px 11px; color: var(--ink); overflow-wrap: anywhere; white-space: pre-wrap;
+    font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* ----- view switching (PRESERVED contract) ----- */
   #screen-regex[data-regex-view="edit"] .regex-preview-pane { display: none; }
   #screen-regex[data-regex-view="preview"] .regex-source-pane { display: none; }
   @media (min-width: 1100px) {
@@ -1789,10 +1979,10 @@
     #screen-regex[data-regex-view="split"] .html-pane { width: 50%; }
     #screen-regex[data-regex-view="split"] .regex-source-pane { border-right: 1px solid var(--line); }
   }
-  @media(max-width:700px){
-    .regex-form-scroll { padding: 10px; }
-    .regex-options-grid { grid-template-columns: 1fr; }
-    .regex-status { max-width: 46%; }
+  @media (max-width: 700px) {
+    .rx-scroll { padding: 16px 12px 28px; }
+    .rx-chips, .rx-two { grid-template-columns: 1fr; }
+  }
   }
 
   .saver { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 6px; user-select: none; }
@@ -3735,9 +3925,11 @@
     </div>
     <div class="html-workshop regex-workshop">
       <div class="html-workbar">
-        <button class="html-mode active" id="regexModeEdit" type="button">EDIT</button>
-        <button class="html-mode" id="regexModePreview" type="button">PREVIEW</button>
-        <button class="html-mode" id="regexModeSplit" type="button">SPLIT</button>
+        <div class="rx-seg">
+          <button class="html-mode active" id="regexModeEdit" type="button">EDIT</button>
+          <button class="html-mode" id="regexModePreview" type="button">PREVIEW</button>
+          <button class="html-mode" id="regexModeSplit" type="button">SPLIT</button>
+        </div>
         <span class="html-work-label" title="SillyTavern 정규식 JSON으로 내보낼 수 있습니다"><b>REGEX</b> <span class="raw-note">· IN / OUT · 샌드박스 미리보기 · JSON 내보내기</span></span>
         <span class="html-work-spacer"></span>
         <button class="html-mini-btn" id="regexExport" type="button" aria-label="SillyTavern JSON 저장" title="SillyTavern JSON 저장"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M12 10v7M8.5 13.5 12 17l3.5-3.5"/></svg></button>
@@ -3746,58 +3938,95 @@
       <div class="html-stage">
         <div class="html-pane regex-source-pane">
           <div class="html-pane-head"><span class="html-pane-kicker">Regex source</span><span class="html-pane-note" id="regexMeta">0자 · 0캡처</span></div>
-          <div class="regex-form-scroll">
-            <div class="regex-field">
-              <div class="regex-label-row"><label for="regexScriptName">scriptName</label></div>
-              <input class="regex-input" id="regexScriptName" maxlength="120" placeholder="상태창">
+          <div class="rx-scroll">
+
+            <div class="rx-plate-title">
+              <div class="rx-plate-lbl"><label for="regexScriptName">scriptName</label></div>
+              <input class="rx-name" id="regexScriptName" maxlength="120" placeholder="상태창">
             </div>
-            <div class="regex-field">
-              <div class="regex-label-row">
-                <span class="regex-label-tools"><label for="regexFind">IN · findRegex</label><button class="regex-copy-btn" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></span>
-                <span class="regex-status" id="regexValidation">대기 중</span>
+
+            <div class="rx-line">
+
+              <div class="rx-stage">
+                <div class="rx-no">1</div>
+                <div class="rx-card">
+                  <div class="rx-card-cap">
+                    <div class="rx-card-nm"><label for="regexFind">IN · findRegex</label></div>
+                    <div class="rx-card-tools">
+                      <span class="regex-status" id="regexValidation">대기 중</span>
+                      <button class="rx-copy" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+                    </div>
+                  </div>
+                  <textarea class="rx-area tall" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
+                  <div class="rx-foot">
+                    <label class="rx-switch"><input type="checkbox" id="regexGlobal"><span class="rx-tr"></span>글로벌 /g</label>
+                    <span class="rx-spring"></span>
+                    <button type="button" class="rx-btn primary" id="regexFromSample">샘플→IN</button>
+                    <button type="button" class="rx-btn" id="regexAutoSample">샘플 자동</button>
+                  </div>
+                </div>
               </div>
-              <textarea class="regex-area tall" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
-              <div class="regex-mini-row" style="margin-top:8px">
-                <label class="regex-check"><input type="checkbox" id="regexGlobal"> 글로벌 /g</label>
-                <button type="button" class="regex-action-btn" id="regexFromSample">샘플→IN</button>
-                <button type="button" class="regex-action-btn" id="regexAutoSample">샘플 자동</button>
+
+              <div class="rx-stage">
+                <div class="rx-no">2</div>
+                <div class="rx-card">
+                  <div class="rx-card-cap">
+                    <div class="rx-card-nm"><label for="regexReplace">OUT · replaceString</label></div>
+                    <div class="rx-card-tools">
+                      <button class="rx-copy" id="regexCopyOut" type="button" aria-label="OUT 복사" title="OUT 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
+                    </div>
+                  </div>
+                  <textarea class="rx-area tall wrap" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
+                </div>
               </div>
+
+              <div class="rx-stage">
+                <div class="rx-no">3</div>
+                <div class="rx-card">
+                  <div class="rx-card-cap">
+                    <div class="rx-card-nm"><label for="regexSample">sample</label></div>
+                    <div class="rx-card-tools"><span class="regex-status" id="regexPreviewBadge">미리보기 대기</span></div>
+                  </div>
+                  <textarea class="rx-area short wrap" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
+                </div>
+              </div>
+
             </div>
-            <div class="regex-field">
-              <div class="regex-label-row"><span class="regex-label-tools"><label for="regexReplace">OUT · replaceString</label><button class="regex-copy-btn" id="regexCopyOut" type="button" aria-label="OUT 복사" title="OUT 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></span></div>
-              <textarea class="regex-area tall" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
-            </div>
-            <div class="regex-field">
-              <div class="regex-label-row"><label for="regexSample">sample</label><span class="regex-status" id="regexPreviewBadge">미리보기 대기</span></div>
-              <textarea class="regex-area compact" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
-            </div>
-            <fieldset class="regex-field">
-              <legend>export options</legend>
-              <div class="regex-options-grid">
-                <label class="regex-check"><input type="checkbox" id="regexMarkdownOnly"> markdownOnly</label>
-                <label class="regex-check"><input type="checkbox" id="regexPromptOnly"> promptOnly</label>
-                <label class="regex-check"><input type="checkbox" id="regexRunOnEdit"> runOnEdit</label>
-                <label class="regex-check"><input type="checkbox" id="regexDisabled"> disabled</label>
+
+            <details class="rx-drawer" open>
+              <summary class="rx-drawer-head">
+                <span class="rx-drawer-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+                <span class="rx-drawer-tt">export options</span>
+                <span class="rx-drawer-chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+              </summary>
+              <div class="rx-drawer-body">
+                <div class="rx-chips">
+                  <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>markdownOnly</label>
+                  <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>promptOnly</label>
+                  <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>runOnEdit</label>
+                  <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>disabled</label>
+                </div>
+                <div class="rx-two">
+                  <select class="rx-sel" id="regexPlacement" aria-label="placement">
+                    <option value="1,2">placement 1,2</option>
+                    <option value="1">placement 1</option>
+                    <option value="2">placement 2</option>
+                    <option value="">placement 없음</option>
+                  </select>
+                  <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
+                    <option value="0">substituteRegex 0</option>
+                    <option value="1">substituteRegex 1</option>
+                    <option value="2">substituteRegex 2</option>
+                  </select>
+                </div>
+                <div class="rx-two">
+                  <input class="rx-num" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">
+                  <input class="rx-num" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
+                </div>
+                <textarea class="rx-trim" id="regexTrimStrings" spellcheck="false" placeholder="trimStrings · 한 줄에 하나"></textarea>
               </div>
-              <div class="regex-mini-row" style="margin-top:8px">
-                <select class="regex-select" id="regexPlacement" aria-label="placement">
-                  <option value="1,2">placement 1,2</option>
-                  <option value="1">placement 1</option>
-                  <option value="2">placement 2</option>
-                  <option value="">placement 없음</option>
-                </select>
-                <select class="regex-select" id="regexSubstituteRegex" aria-label="substituteRegex">
-                  <option value="0">substituteRegex 0</option>
-                  <option value="1">substituteRegex 1</option>
-                  <option value="2">substituteRegex 2</option>
-                </select>
-              </div>
-              <div class="regex-mini-row" style="margin-top:8px">
-                <input class="regex-input" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">
-                <input class="regex-input" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
-              </div>
-              <textarea class="regex-area compact" id="regexTrimStrings" spellcheck="false" placeholder="trimStrings · 한 줄에 하나"></textarea>
-            </fieldset>
+            </details>
+
           </div>
         </div>
         <div class="html-pane regex-preview-pane">
