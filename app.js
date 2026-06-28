@@ -2037,7 +2037,7 @@
       findRegex: findRegex.slice(0, HTML_SOURCE_MAX),
       replaceString: String(src.replaceString || "").slice(0, HTML_SOURCE_MAX),
       sampleText: String(src.sampleText || "").slice(0, HTML_SOURCE_MAX),
-      global: typeof src.global === "boolean" ? src.global : !!(literal && !literal.unclosed && /g/.test(literal.flags)),
+      global: !!(literal && !literal.unclosed && /g/.test(literal.flags)) || (typeof src.global === "boolean" ? src.global : false),
       trimStrings: trimSource.map((item) => String(item || "").trim()).filter(Boolean).slice(0, REGEX_TRIM_MAX),
       placement: placement.length ? placement : [],
       disabled: !!src.disabled,
@@ -2128,6 +2128,11 @@
     addFixed(raw.slice(index));
     return { pattern, plain, captures };
   }
+  function regexPlainSampleText(sample) {
+    return String(sample || "")
+      .replace(/\[\[([\s\S]*?)\]\]/g, "$1")
+      .replace(/\{\{([\s\S]*?)\}\}/g, "$1");
+  }
   function regexSkipGroup(source, start) {
     let depth = 0, escaped = false, inClass = false;
     for (let i = start; i < source.length; i++) {
@@ -2155,8 +2160,8 @@
     return index;
   }
   function regexSampleValue(index) {
-    const values = ["루미", "42", "100", "80", "마을", "밤", "길드", "진행 중"];
-    return values[(index - 1) % values.length] || `값${index}`;
+    const n = Math.max(1, Number(index) || 1);
+    return String(n);
   }
   function regexSampleFromPattern(source, replaceString) {
     const needed = Math.max(regexCountCaptures(source), regexMaxReplacementIndex(replaceString), 1);
@@ -2223,6 +2228,7 @@
   function refreshRegexPreview() {
     const frame = $("regexPreview"); if (!frame) return;
     const data = regexDataFromEditor();
+    const previewSample = regexPlainSampleText(data.sampleText);
     const validation = regexValidationState(data);
     updateRegexMeta(data, validation);
     const badge = $("regexPreviewBadge"), status = $("regexPreviewStatus"), captures = $("regexCaptures");
@@ -2233,7 +2239,7 @@
       frame.srcdoc = regexPreviewFallback(validation.error);
       return;
     }
-    if (!data.replaceString.trim() || !data.sampleText.trim()) {
+    if (!data.replaceString.trim() || !previewSample.trim()) {
       badge.className = "regex-status"; badge.textContent = "미리보기 대기";
       status.textContent = "IN, OUT, sample을 채우면 결과가 표시됩니다.";
       frame.srcdoc = regexPreviewFallback("미리보기 대기 중");
@@ -2244,13 +2250,13 @@
       const flags = validation.flags.includes("g") ? validation.flags : regexUniqueFlags(validation.flags + "g");
       const counter = new RegExp(validation.source, flags);
       let match, guard = 0;
-      while ((match = counter.exec(data.sampleText)) && guard < 500) {
+      while ((match = counter.exec(previewSample)) && guard < 500) {
         if (!first) first = match;
         matchCount++; guard++;
         if (match[0] === "") counter.lastIndex++;
       }
       const runner = new RegExp(validation.source, validation.flags);
-      replaced = data.sampleText.replace(runner, data.replaceString);
+      replaced = previewSample.replace(runner, data.replaceString);
     } catch (error) {
       const msg = error && error.message ? error.message : "미리보기를 만들지 못했습니다.";
       badge.className = "regex-status bad"; badge.textContent = "미리보기 실패";
@@ -2398,13 +2404,14 @@
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
       { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("정규식 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
-      { icon: IC.copy, label: "IN 복사", fn: () => clipboardCopy(normalizeRegexData(n.data || {}).findRegex).then((ok) => toast(ok ? "IN 정규식을 복사했어요" : "복사하지 못했어요")) },
       { icon: IC.save, label: "SillyTavern JSON 내보내기", fn: () => void exportRegexJson(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
       { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("정규식 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
     ]);
   }
+  // Regex OUT template UI is intentionally hidden for now.
+  // Keep these builders so the template feature can be restored later without rebuilding the designs.
   function regexStatusTemplate(count) {
     const rows = Array.from({ length: count }, (_, i) => `<div class="li-rx-stat"><span>항목 ${i + 1}</span><b>$${i + 1}</b></div>`).join("");
     return `<div class="li-rx-status"><style>.li-rx-status{max-width:620px;margin:16px auto;padding:18px;border:1px solid rgba(74,209,167,.35);border-radius:14px;background:linear-gradient(180deg,#10213a,#0d1728);color:#edf8ff;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;box-shadow:0 16px 40px rgba(0,0,0,.28)}.li-rx-status h3{margin:0 0 14px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#91ffe0}.li-rx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.li-rx-stat{padding:10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}.li-rx-stat span{display:block;font-size:11px;color:#9bb2c8}.li-rx-stat b{display:block;margin-top:3px;font-size:18px;color:#fff;word-break:break-word}</style><h3>Status</h3><div class="li-rx-grid">${rows}</div></div>`;
@@ -7873,7 +7880,7 @@ ${gallery}
     $on("regexSave", "click", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
     $on("regexMore", "click", () => openNoteSheet(st.curNoteId));
     $on("regexCopyIn", "click", () => clipboardCopy($("regexFind").value).then((ok) => toast(ok ? "IN 정규식을 복사했어요" : "복사하지 못했어요")));
-    $on("regexTemplate", "click", openRegexTemplatePicker);
+    $on("regexCopyOut", "click", () => clipboardCopy($("regexReplace").value).then((ok) => toast(ok ? "OUT을 복사했어요" : "복사하지 못했어요")));
     $on("regexExport", "click", () => void exportRegexJson(st.curNoteId));
     $on("regexReload", "click", () => { refreshRegexPreview(); toast("미리보기를 새로고침했어요"); });
     $on("regexFromSample", "click", applyRegexFromSample);

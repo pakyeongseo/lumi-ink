@@ -1721,6 +1721,14 @@
   .regex-label-row label, .regex-field legend {
     color: var(--ink); font-size: 11px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase;
   }
+  .regex-label-tools { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+  .regex-copy-btn {
+    width: 26px; height: 26px; display: inline-grid; place-items: center; flex: 0 0 auto;
+    border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2);
+    color: var(--muted); cursor: pointer;
+  }
+  .regex-copy-btn:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); }
+  .regex-copy-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .regex-field legend { padding: 0 4px; }
   .regex-input, .regex-area, .regex-select {
     width: 100%; border: 1px solid var(--line); border-radius: 8px; outline: none;
@@ -1730,8 +1738,9 @@
   .regex-area {
     min-height: 92px; resize: vertical; padding: 10px 11px; line-height: 1.62;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    tab-size: 2; white-space: pre; overflow: auto;
+    tab-size: 2; white-space: pre-wrap; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere;
   }
+  #regexFind { white-space: pre; overflow: auto; overflow-wrap: normal; }
   .regex-area.tall { min-height: 130px; }
   .regex-area.compact { min-height: 68px; }
   .regex-input:focus, .regex-area:focus, .regex-select:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent); }
@@ -3731,8 +3740,6 @@
         <button class="html-mode" id="regexModeSplit" type="button">SPLIT</button>
         <span class="html-work-label" title="SillyTavern 정규식 JSON으로 내보낼 수 있습니다"><b>REGEX</b> <span class="raw-note">· IN / OUT · 샌드박스 미리보기 · JSON 내보내기</span></span>
         <span class="html-work-spacer"></span>
-        <button class="html-mini-btn" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
-        <button class="html-mini-btn" id="regexTemplate" type="button" aria-label="템플릿" title="템플릿"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M4 8h16"/></svg></button>
         <button class="html-mini-btn" id="regexExport" type="button" aria-label="SillyTavern JSON 저장" title="SillyTavern JSON 저장"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M12 10v7M8.5 13.5 12 17l3.5-3.5"/></svg></button>
         <button class="html-mini-btn" id="regexReload" type="button" aria-label="미리보기 새로고침" title="미리보기 새로고침"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg></button>
       </div>
@@ -3746,7 +3753,7 @@
             </div>
             <div class="regex-field">
               <div class="regex-label-row">
-                <label for="regexFind">IN · findRegex</label>
+                <span class="regex-label-tools"><label for="regexFind">IN · findRegex</label><button class="regex-copy-btn" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></span>
                 <span class="regex-status" id="regexValidation">대기 중</span>
               </div>
               <textarea class="regex-area tall" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
@@ -3757,12 +3764,12 @@
               </div>
             </div>
             <div class="regex-field">
-              <div class="regex-label-row"><label for="regexReplace">OUT · replaceString</label></div>
+              <div class="regex-label-row"><span class="regex-label-tools"><label for="regexReplace">OUT · replaceString</label><button class="regex-copy-btn" id="regexCopyOut" type="button" aria-label="OUT 복사" title="OUT 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></span></div>
               <textarea class="regex-area tall" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
             </div>
             <div class="regex-field">
               <div class="regex-label-row"><label for="regexSample">sample</label><span class="regex-status" id="regexPreviewBadge">미리보기 대기</span></div>
-              <textarea class="regex-area compact" id="regexSample" spellcheck="false" placeholder="{{고정 텍스트}} [[바뀌는 값]]"></textarea>
+              <textarea class="regex-area compact" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
             </div>
             <fieldset class="regex-field">
               <legend>export options</legend>
