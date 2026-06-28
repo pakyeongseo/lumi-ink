@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-gallery",
+  "name": "미술관 갤러리",
+  "description": "화이트 큐브의 미니멀한 전시 공간 로그. 여백과 정적의 갤러리 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#fbfbfa",
+      "line-height": "1.82",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#2a2a2c",
+      "border": "1px solid #e2e2de",
+      "border-radius": "3px",
+      "padding": "32px 30px",
+      "box-shadow": "0 8px 26px rgba(40,40,44,.07)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#2a2a2c",
+      "font-size": "12px",
+      "font-weight": "600",
+      "letter-spacing": ".24em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #2a2a2c"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c04a3a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a7a7e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#6a6a6e",
+        "border": "1px solid #d2d2ce",
+        "border-radius": "2px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#1a1a1c",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5a5a5e",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "[관람객]",
+    "style": {
+      "color": "#fbfbfa",
+      "background-color": "#c04a3a",
+      "border-radius": "2px",
+      "padding": "1px 8px",
+      "font-weight": "600"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#fbfbfa",
+          "background-color": "#c04a3a",
+          "border-radius": "2px",
+          "padding": "1px 8px",
+          "font-weight": "600"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#c04a3a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(192,74,58,0.85)",
+          "border-radius": "2px",
+          "padding": "0 7px",
+          "font-weight": "600"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#c04a3a",
+          "border-bottom": "2px solid rgba(192,74,58,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "600"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#c04a3a",
+          "background-color": "rgba(192,74,58,0.16)",
+          "border-radius": "2px",
+          "padding": "1px 7px",
+          "font-weight": "600"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#c04a3a",
+          "background": "linear-gradient(to top, rgba(192,74,58,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "600"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-lavender-field",
+  "name": "라벤더 들판",
+  "description": "보라 물결과 세이지의 프로방스 들판 로그. 향기로운 여름 보랏빛.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#f0ecf6,#e8e0f0)",
+      "line-height": "1.8",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#4a4258",
+      "border": "1px solid #d6cce6",
+      "border-radius": "14px",
+      "padding": "28px",
+      "box-shadow": "0 12px 32px rgba(120,100,160,.14)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#8a6ac0",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".16em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #d2c4e6"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7050a8",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a8a6a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a6ac0",
+        "background-color": "rgba(138,106,192,.13)",
+        "border-radius": "8px",
+        "padding": "1px 7px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#3a324a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#8478a0",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "나그네",
+    "style": {
+      "color": "#f4f0f8",
+      "background-color": "#8a6ac0",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#f4f0f8",
+          "background-color": "#8a6ac0",
+          "border-radius": "999px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#8a6ac0",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(138,106,192,0.85)",
+          "border-radius": "999px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#8a6ac0",
+          "border-bottom": "2px solid rgba(138,106,192,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#8a6ac0",
+          "background-color": "rgba(138,106,192,0.16)",
+          "border-radius": "7px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#8a6ac0",
+          "background": "linear-gradient(to top, rgba(138,106,192,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

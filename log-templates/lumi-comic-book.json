@@ -1,0 +1,170 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-comic-book",
+  "name": "만화 코믹",
+  "description": "검정 잉크와 원색 팝의 아메코미 로그. 말풍선과 벤데이 도트의 코믹북 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "#fdfcf4",
+      "line-height": "1.72",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#1a1a1e",
+      "border": "2px solid #1a1a1e",
+      "border-radius": "6px",
+      "padding": "26px",
+      "box-shadow": "5px 5px 0 rgba(26,26,30,.85)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#e83a3a",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".06em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "text-transform": "uppercase",
+      "border-bottom": "2px solid #1a1a1e"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#2a6ad0",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a7a7e",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#1a1a1e",
+        "background-color": "#f0c01a",
+        "border-radius": "3px",
+        "padding": "0 7px",
+        "font-weight": "700",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#e83a3a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#5a5a5e",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "익명!",
+    "style": {
+      "color": "#fdfcf4",
+      "background-color": "#e83a3a",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#fdfcf4",
+          "background-color": "#e83a3a",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#e83a3a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(232,58,58,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#e83a3a",
+          "border-bottom": "2px solid rgba(232,58,58,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#e83a3a",
+          "background-color": "rgba(232,58,58,0.16)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#e83a3a",
+          "background": "linear-gradient(to top, rgba(232,58,58,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-disco",
+  "name": "디스코",
+  "description": "미러볼 골드와 퍼플의 70년대 디스코 로그. 반짝이는 플로어의 펑키 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#1e1430,#2a1640 50%,#1a1028)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#f0d8f0",
+      "border": "1px solid #5a3a6a",
+      "border-radius": "16px",
+      "padding": "26px",
+      "box-shadow": "0 16px 44px rgba(16,8,28,.45)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#f0c030",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".18em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "text-shadow": "0 0 12px rgba(240,192,48,.5)",
+      "border-bottom": "1px solid #5a3a6a"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#ffe070",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#c878d8",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d050d0",
+        "border": "1px solid #a83aa8",
+        "border-radius": "7px",
+        "padding": "1px 7px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#fff0c8",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d0a0d8",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "★게스트★",
+    "style": {
+      "color": "#1a1028",
+      "background-color": "#f0c030",
+      "border-radius": "999px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#1a1028",
+          "background-color": "#f0c030",
+          "border-radius": "999px",
+          "padding": "1px 9px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#f0c030",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(240,192,48,0.85)",
+          "border-radius": "999px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#f0c030",
+          "border-bottom": "2px solid rgba(240,192,48,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#f0c030",
+          "background-color": "rgba(240,192,48,0.22)",
+          "border-radius": "7px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#f0c030",
+          "background": "linear-gradient(to top, rgba(240,192,48,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}

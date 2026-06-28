@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-tea-house",
+  "name": "다도 찻집",
+  "description": "말차 녹색과 우드의 정갈한 다실 로그. 차 한 잔의 고요한 정취.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#eef0e6,#e4e8da)",
+      "line-height": "1.88",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#3a443a",
+      "border": "1px solid #c8cdb6",
+      "border-radius": "6px",
+      "padding": "30px 28px",
+      "box-shadow": "0 10px 30px rgba(80,100,60,.12)",
+      "font-family": "'Nanum Myeongjo','Noto Serif KR',serif"
+    },
+    "header": {
+      "color": "#5a7a4a",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".22em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #c0c8a8"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4a6a3a",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#7a7a62",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a7a5a",
+        "border": "1px solid #bcc0a0",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#2a342a",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#6a7458",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "객(客)",
+    "style": {
+      "color": "#eef0e6",
+      "background-color": "#5a7a4a",
+      "border-radius": "3px",
+      "padding": "1px 8px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#eef0e6",
+          "background-color": "#5a7a4a",
+          "border-radius": "3px",
+          "padding": "1px 8px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#5a7a4a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(90,122,74,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#5a7a4a",
+          "border-bottom": "2px solid rgba(90,122,74,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#5a7a4a",
+          "background-color": "rgba(90,122,74,0.16)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#5a7a4a",
+          "background": "linear-gradient(to top, rgba(90,122,74,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

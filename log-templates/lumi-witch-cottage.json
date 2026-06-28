@@ -1,0 +1,168 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-witch-cottage",
+  "name": "마녀의 오두막",
+  "description": "어두운 숲 속 물약 초록과 마법 보라의 마녀 오두막 로그. 가마솥의 코지 위치크래프트.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(165deg,#1c1828,#14101e)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#cac0d0",
+      "border": "1px solid #322a3e",
+      "border-radius": "10px",
+      "padding": "28px",
+      "box-shadow": "inset 0 0 50px rgba(106,192,80,.07), 0 16px 42px rgba(6,4,10,.5)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#6ac050",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".18em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "border-bottom": "1px solid #322a3e"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8ad070",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a86ad0",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#a86ad0",
+        "border": "1px solid #5a3a72",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#d8e8d0",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9a8ab0",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "방문객",
+    "style": {
+      "color": "#14101e",
+      "background-color": "#6ac050",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#14101e",
+          "background-color": "#6ac050",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#6ac050",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(106,192,80,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#6ac050",
+          "border-bottom": "2px solid rgba(106,192,80,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#6ac050",
+          "background-color": "rgba(106,192,80,0.22)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#6ac050",
+          "background": "linear-gradient(to top, rgba(106,192,80,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

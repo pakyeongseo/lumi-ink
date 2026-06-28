@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-courtroom",
+  "name": "법정 재판",
+  "description": "다크 우드와 황동의 무게감 있는 법정 로그. 판결을 기다리는 재판 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#2a2018,#1e1610)",
+      "line-height": "1.82",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#e0d0b8",
+      "border": "1px solid #4a3a26",
+      "border-radius": "5px",
+      "padding": "30px 28px",
+      "box-shadow": "0 16px 42px rgba(10,6,2,.48)",
+      "font-family": "Georgia,'Noto Serif KR','Nanum Myeongjo',serif"
+    },
+    "header": {
+      "color": "#c8a040",
+      "font-size": "12px",
+      "font-weight": "700",
+      "letter-spacing": ".2em",
+      "padding": "0 0 12px",
+      "margin": "0 0 16px",
+      "text-align": "center",
+      "border-bottom": "2px solid #5a4632"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#d8b860",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#9a8a6a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#b05050",
+        "border": "1px solid #6a3838",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#f0e0b8",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#a89878",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "피고",
+    "style": {
+      "color": "#1e1610",
+      "background-color": "#c8a040",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "700"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#1e1610",
+          "background-color": "#c8a040",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#c8a040",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(200,160,64,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#c8a040",
+          "border-bottom": "2px solid rgba(200,160,64,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#c8a040",
+          "background-color": "rgba(200,160,64,0.22)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "700"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#c8a040",
+          "background": "linear-gradient(to top, rgba(200,160,64,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "700"
+        }
+      }
+    ]
+  }
+}

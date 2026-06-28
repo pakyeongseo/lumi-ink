@@ -1,0 +1,169 @@
+{
+  "kind": "lumink-log-template",
+  "schemaVersion": 1,
+  "id": "lumi-metro",
+  "name": "지하철 메트로",
+  "description": "콘크리트와 노선 컬러의 도시 지하철 로그. 플랫폼을 오가는 메트로 무드.",
+  "author": "Anamel",
+  "styles": {
+    "canvas": {
+      "background": "linear-gradient(160deg,#22262c,#181c20)",
+      "line-height": "1.78",
+      "max-width": "740px",
+      "margin": "0 auto",
+      "white-space": "normal",
+      "color": "#d8dce0",
+      "border": "1px solid #34383e",
+      "border-radius": "6px",
+      "padding": "26px",
+      "box-shadow": "0 16px 40px rgba(4,6,8,.45)",
+      "font-family": "-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif"
+    },
+    "header": {
+      "color": "#e8902a",
+      "font-size": "12px",
+      "font-weight": "800",
+      "letter-spacing": ".18em",
+      "padding": "0 0 10px",
+      "margin": "0 0 16px",
+      "text-transform": "uppercase",
+      "border-bottom": "3px solid #4a9ad8"
+    },
+    "body": {
+      "white-space": "pre-wrap",
+      "overflow-wrap": "anywhere"
+    },
+    "paragraph": {
+      "margin": "0 0 12px"
+    },
+    "empty": {
+      "height": "11px"
+    }
+  },
+  "rules": [
+    {
+      "id": "dq",
+      "label": "큰따옴표(대사)",
+      "pattern": "\"([^\"\\n]+)\"",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#f0a850",
+        "font-weight": "700"
+      }
+    },
+    {
+      "id": "sq",
+      "label": "작은따옴표(속마음)",
+      "pattern": "'([^'\\n]+)'",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#8a929a",
+        "font-style": "italic"
+      }
+    },
+    {
+      "id": "br",
+      "label": "대괄호(상황)",
+      "pattern": "\\[([^\\]\\n]+)\\]",
+      "flags": "g",
+      "capture": 0,
+      "stripDelimiters": false,
+      "style": {
+        "color": "#4a9ad8",
+        "border": "1px solid #2e6a98",
+        "border-radius": "3px",
+        "padding": "1px 7px",
+        "font-size": "13px"
+      }
+    },
+    {
+      "id": "b",
+      "label": "굵게",
+      "pattern": "\\*\\*([^*\\n]+)\\*\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#eef2f6",
+        "font-weight": "800"
+      }
+    },
+    {
+      "id": "i",
+      "label": "기울임",
+      "pattern": "\\*([^*\\n]+)\\*",
+      "flags": "g",
+      "capture": 1,
+      "stripDelimiters": true,
+      "style": {
+        "color": "#9aa2aa",
+        "font-style": "italic"
+      }
+    }
+  ],
+  "persona": {
+    "maskText": "승객",
+    "style": {
+      "color": "#181c20",
+      "background-color": "#e8902a",
+      "border-radius": "3px",
+      "padding": "1px 9px",
+      "font-weight": "800"
+    },
+    "designs": [
+      {
+        "label": "솔리드 칩",
+        "style": {
+          "color": "#181c20",
+          "background-color": "#e8902a",
+          "border-radius": "3px",
+          "padding": "1px 9px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "아웃라인",
+        "style": {
+          "color": "#e8902a",
+          "background-color": "transparent",
+          "border": "1.5px solid rgba(232,144,42,0.85)",
+          "border-radius": "3px",
+          "padding": "0 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "언더라인",
+        "style": {
+          "color": "#e8902a",
+          "border-bottom": "2px solid rgba(232,144,42,0.9)",
+          "padding": "0 1px 1px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "소프트 틴트",
+        "style": {
+          "color": "#e8902a",
+          "background-color": "rgba(232,144,42,0.22)",
+          "border-radius": "3px",
+          "padding": "1px 7px",
+          "font-weight": "800"
+        }
+      },
+      {
+        "label": "마커 하이라이트",
+        "style": {
+          "color": "#e8902a",
+          "background": "linear-gradient(to top, rgba(232,144,42,0.42) 42%, transparent 42%)",
+          "padding": "0 3px",
+          "font-weight": "800"
+        }
+      }
+    ]
+  }
+}
