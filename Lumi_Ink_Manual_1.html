@@ -655,7 +655,7 @@ table code{ font-size:.82em; }
 <a class="toc-link" href="#sec-5"><span class="num">05</span><span>프로젝트 관리</span></a>
 <a class="toc-link" href="#sec-6"><span class="num">06</span><span>메모 만들기와 공통 관리</span></a>
 <a class="toc-link" href="#sec-7"><span class="num">07</span><span>자유 메모</span></a>
-<a class="toc-link" href="#sec-html"><span class="num">07+</span><span>HTML 작업실</span></a>
+<a class="toc-link" href="#sec-html"><span class="num">07+</span><span>코드 작업실</span></a>
 <a class="toc-link" href="#sec-8"><span class="num">08</span><span>로어북</span></a>
 <a class="toc-link" href="#sec-9"><span class="num">09</span><span>로그 저장</span></a>
 <a class="toc-link" href="#sec-10"><span class="num">10</span><span>인물 카드 · 페르소나 / 다인 페르소나</span></a>
@@ -704,7 +704,7 @@ table code{ font-size:.82em; }
 <div class="nib-num">01</div>
 <h2>루미잉크란 무엇인가</h2>
 </div>
-<p>루미잉크는 창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱입니다. 리치 문서형 자유 메모, 원본 코드 보존용 HTML 작업실, AI 롤플레이용 로어북·로그, 페르소나·캐릭터를 단일/다인으로 구성하는 인물 카드, 그리고 자유 배치형 아이디어 보드를 함께 제공합니다.</p>
+<p>루미잉크는 창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱입니다. 리치 문서형 자유 메모, 원본 코드 보존용 코드 작업실, AI 롤플레이용 로어북·로그, 페르소나·캐릭터를 단일/다인으로 구성하는 인물 카드, 그리고 자유 배치형 아이디어 보드를 함께 제공합니다.</p>
 <h3>앱의 기본 구조</h3>
 <ol class="steps">
 <li>가장 바깥에 <strong>프로젝트</strong>가 있습니다.</li>
@@ -730,7 +730,7 @@ table code{ font-size:.82em; }
 <div class="table-wrap"><table><thead><tr><th>영역</th><th>주된 용도</th><th>대표 기능</th><th>주요 내보내기·보존 방식</th></tr></thead><tbody>
 <tr><td><strong>프로젝트</strong></td><td>작품·세션·세계관별 자료 묶기</td><td>태그, 색상, 썸네일, 프레임, 고정, 복제</td><td>전체 백업·프로젝트 패키지</td></tr>
 <tr><td><strong>자유 메모</strong></td><td>문서·레퍼런스 작성</td><td>리치 서식, 사진·동영상, 링크, 코드 블록, 첨부, 미디어 픽셀 리사이즈</td><td>일반 HTML · 안전 정화 후 재가져오기</td></tr>
-<tr><td><strong>HTML 작업실</strong></td><td>상태창·배너·홍보글·JSON 등 원본 코드 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, 격리 미리보기</td><td>원문 <code>.html</code> / <code>.json</code> 선택 저장</td></tr>
+<tr><td><strong>코드 작업실</strong></td><td>상태창·배너·홍보글·JSON 등 원본 코드 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, 격리 미리보기</td><td>원문 <code>.html</code> / <code>.json</code> 선택 저장</td></tr>
 <tr><td><strong>로어북</strong></td><td>SillyTavern용 World Info 작성</td><td>키워드, constant, Depth, 토큰 계산, 경량 마크다운</td><td>World Info JSON</td></tr>
 <tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림 5종, 100종 템플릿, 사용자 템플릿</td><td>인라인 HTML · 재가져오기 가능한 HTML</td></tr>
 <tr><td><strong>인물 카드</strong></td><td>페르소나·캐릭터의 단일/다인 자료 관리</td><td>국·영문 설정, 포트레이트, 갤러리, 크리에이터 노트, 단일/다인 전환, 타입 전환</td><td>재가져오기 가능한 HTML</td></tr>
@@ -823,7 +823,7 @@ table code{ font-size:.82em; }
 </div>
 <h3>4.5 저장 상태 표시</h3>
 <p>각 편집 화면의 상단에는 <code>기록 중</code>, <code>저장됨</code> 상태가 잠시 표시됩니다. 일반적인 텍스트 입력은 약 0.55초 동안 추가 입력이 없으면 자동 저장됩니다. 화면을 떠날 때에도 남아 있는 편집 내용을 저장합니다.</p>
-<p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 <strong>앱 내부</strong>에 저장할 수 있습니다. 이 단축키는 자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 화면에서 동작합니다. HTML 작업실에서 파일로 내려받으려면 상단 작업 막대의 <code>파일 저장</code> 또는 <code>Ctrl/⌘+Shift+S</code>를 사용합니다.</p>
+<p>상단 저장 버튼을 누르거나 Windows/Linux에서는 <code>Ctrl+S</code>, macOS에서는 <code>⌘+S</code>를 누르면 즉시 <strong>앱 내부</strong>에 저장할 수 있습니다. 이 단축키는 자유 메모, 코드 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 화면에서 동작합니다. 코드 작업실에서 파일로 내려받으려면 상단 작업 막대의 <code>파일 저장</code> 또는 <code>Ctrl/⌘+Shift+S</code>를 사용합니다.</p>
 </section>
 <!-- ============================================================ -->
 <!-- 5. 프로젝트 관리 -->
@@ -851,7 +851,7 @@ table code{ font-size:.82em; }
 <li>프로젝트 태그</li>
 <li>유형별 메모 목록</li>
 </ul>
-<p>메모 섹션은 <strong>페르소나 → 캐릭터 → 로그 저장 → 로어북 → HTML 작업실 → 아이디어 보드 → 자유 메모</strong> 순서로 표시됩니다. 각 섹션 안에서는 먼저 고정된 메모가 나오고, 나머지 메모가 선택한 정렬 방식으로 배치됩니다.</p>
+<p>메모 섹션은 <strong>페르소나 → 캐릭터 → 로그 저장 → 로어북 → 코드 작업실 → 아이디어 보드 → 자유 메모</strong> 순서로 표시됩니다. 각 섹션 안에서는 먼저 고정된 메모가 나오고, 나머지 메모가 선택한 정렬 방식으로 배치됩니다.</p>
 <h3>5.3 프로젝트 정렬</h3>
 <p>홈의 정렬 버튼에서 다음 네 가지를 선택할 수 있습니다.</p>
 <div class="chip-row">
@@ -922,7 +922,7 @@ table code{ font-size:.82em; }
 <ol class="steps">
 <li>홈이나 사이드바에서 <code>새 메모</code>를 누릅니다.</li>
 <li>상단에는 <strong>생성할 메모 타입을 골라주세요</strong> 안내와 <strong>자유 메모</strong> 빠른 생성 카드가 표시됩니다. 빠른 생성 카드를 누르면 자유 메모 생성 흐름으로 바로 들어갑니다. 이 카드는 기존의 블루 그라데이션과 흰색 아이콘·텍스트 구성을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
-<li>유형을 고를 때는 <strong>캐릭터 · 작업실 · 아뜰리에</strong> 탭을 사용합니다. 캐릭터 탭에는 <strong>페르소나 · 다인 페르소나 · 캐릭터 · 다인 캐릭터</strong>, 작업실 탭에는 <strong>로어북 · HTML 작업실</strong>, 아뜰리에 탭에는 <strong>자유 메모 · 로그 저장 · 아이디어 보드</strong>가 있습니다.</li>
+<li>유형을 고를 때는 <strong>캐릭터 · 작업실 · 아뜰리에</strong> 탭을 사용합니다. 캐릭터 탭에는 <strong>페르소나 · 다인 페르소나 · 캐릭터 · 다인 캐릭터</strong>, 작업실 탭에는 <strong>로어북 · 코드 작업실</strong>, 아뜰리에 탭에는 <strong>자유 메모 · 로그 저장 · 아이디어 보드</strong>가 있습니다.</li>
 <li>저장할 프로젝트를 선택합니다.</li>
 <li>각 타입의 제목·내용을 작성하면 자동 저장됩니다.</li></ol>
 <h3>6.2 자동 제목과 수동 제목</h3>
@@ -1044,27 +1044,28 @@ table code{ font-size:.82em; }
 </ul>
 <p>선택 테두리와 입력 패널은 저장되지 않습니다. 실제 문서에는 이미지의 <code>width</code>와 <code>height</code> 스타일만 남으므로, HTML 저장·백업·복원 뒤에도 조정한 크기가 유지됩니다.</p>
 <h3>7.13 HTML을 문서로 가져올 때</h3>
-<p>외부 HTML을 자유 메모로 열면 문서 안전성을 위해 구조·정적 스타일·정적 SVG를 폭넓게 허용하면서 위험 요소를 제거합니다. 인라인 레이아웃과 대부분의 정적 디자인은 유지되지만, 스크립트·폼·iframe·외부 스타일시트·원격 실행 요소는 보존 대상이 아닙니다. 코드 원본 자체를 편집·보관하려면 다음의 <strong>HTML 작업실</strong>을 사용합니다.</p>
+<p>외부 HTML을 자유 메모로 열면 문서 안전성을 위해 구조·정적 스타일·정적 SVG를 폭넓게 허용하면서 위험 요소를 제거합니다. 인라인 레이아웃과 대부분의 정적 디자인은 유지되지만, 스크립트·폼·iframe·외부 스타일시트·원격 실행 요소는 보존 대상이 아닙니다. 코드 원본 자체를 편집·보관하려면 다음의 <strong>코드 작업실</strong>을 사용합니다.</p>
 </section>
 <!-- ============================================================ -->
 <!-- 8. 로어북 -->
 <!-- ============================================================ -->
 <section class="section" id="sec-html">
-<div class="section-head"><div class="nib-num">07+</div><h2>HTML · JSON 작업실</h2></div>
-<p>HTML 작업실은 상태창, 배너, 홍보글, 커스텀 카드, JSON 원문처럼 <strong>소스 코드 자체가 작업물</strong>인 파일을 위한 전용 메모입니다. 자유 메모와 달리 원본을 리치 에디터의 <code>innerHTML</code>로 다시 직렬화하지 않으며, 가져온 문자열을 그대로 보관합니다.</p>
+<div class="section-head"><div class="nib-num">07+</div><h2>코드 작업실</h2></div>
+<p>코드 작업실은 상태창, 배너, 홍보글, 커스텀 카드와 HTML·JSON·Markdown 원문처럼 <strong>소스 또는 문법 원문 자체가 작업물</strong>인 파일을 위한 전용 메모입니다. 자유 메모와 달리 원본을 리치 에디터의 <code>innerHTML</code>로 다시 직렬화하지 않으며, 가져온 문자열을 그대로 보관합니다.</p>
 <div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>원본 보존과 화면 안전성은 분리됩니다.</strong> 저장하는 소스는 손대지 않지만, 미리보기는 별도 샌드박스 안에서 위험 요소를 제거한 사본으로 렌더링합니다.</p></div>
-<h3>HTML · JSON 원문으로 가져오기</h3>
+<h3>HTML · JSON · Markdown 원문으로 가져오기</h3>
 <ol class="steps">
-<li>사이드바의 <code>열기</code>에서 HTML 또는 JSON 파일을 선택합니다.</li>
-<li>일반 JSON은 먼저 <code>JSON 열기</code> 창이 표시됩니다. <code>HTML 작업실로 원본 열기</code>를 선택하면 JSON 문자열을 그대로 편집할 수 있습니다.</li>
+<li>사이드바의 <code>열기</code>에서 HTML, JSON 또는 Markdown 파일을 선택합니다.</li>
+<li>일반 JSON은 먼저 <code>JSON 열기</code> 창이 표시됩니다. <code>코드 작업실로 원본 열기</code>를 선택하면 JSON 문자열을 그대로 편집할 수 있습니다.</li>
+<li>Markdown 파일(<code>.md</code>, <code>.markdown</code> 등)은 코드 작업실에서 바로 열립니다. 문서 내용을 해석하거나 변환하지 않고 원문 그대로 편집합니다.</li>
 <li>파일명 확장자·MIME 정보가 누락되어도 내용이 <code>{</code> 또는 <code>[</code>로 시작하는 JSON이면 JSON 열기 흐름으로 인식합니다. 문법이 깨진 JSON도 원문 작업실에서 점검할 수 있습니다.</li>
 <li>파일 내용은 정화되지 않은 원본 문자열로 저장됩니다. JSON 파일은 원본 작업실을 선택하면 <code>.json</code> 저장이 기본값으로 잡힙니다.</li>
 </ol>
 <h3>소스 · 미리보기 · 분할 보기</h3>
-<p>상단의 <code>SOURCE</code>, <code>PREVIEW</code>, <code>SPLIT</code> 버튼으로 화면을 전환합니다. 소스 화면에서는 코드를 직접 편집하고, 미리보기에서는 현재 소스의 렌더 결과를 확인하며, 분할 보기에서는 둘을 나란히 볼 수 있습니다.</p>
-<p>미리보기는 <code>iframe sandbox</code> 안에서 동작합니다. 스크립트, 이벤트 속성, 프레임, 폼, 자동 새로고침과 위험한 URL은 미리보기 사본에서 제거되며, 네트워크 연결·앱 저장공간 접근·팝업 실행을 허용하지 않습니다. 외부 이미지·폰트·정적 스타일은 표시될 수 있으므로 디자인 확인에는 유용하지만, 최종 실행 환경의 동작을 완전히 대신하지는 않습니다.</p>
+<p>상단의 <code>SOURCE</code>, <code>PREVIEW</code>, <code>SPLIT</code> 버튼으로 화면을 전환합니다. 소스 화면에서는 원문을 직접 편집하고, 분할 보기에서는 원문과 확인 화면을 나란히 볼 수 있습니다.</p>
+<p>HTML은 <code>iframe sandbox</code> 안에서 렌더링한 사본을 미리보기로 표시합니다. 스크립트, 이벤트 속성, 프레임, 폼, 자동 새로고침과 위험한 URL은 미리보기 사본에서 제거됩니다. JSON과 Markdown은 실행·렌더링하지 않고 원문만 안전하게 표시합니다. 따라서 Markdown 문법을 보존해 편집하기에 적합하며, HTML 전용 <code>웹페이지로 열기</code> 버튼은 JSON·Markdown에서 비활성화됩니다.</p>
 <h3>저장·내보내기·제한</h3>
-<p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 작업 막대의 <code>파일 저장</code> 또는 더보기 메뉴에서 파일 이름과 <code>.html</code>/<code>.json</code> 확장자를 선택할 수 있습니다. <code>.json</code>은 저장 전 문법을 검사하며, 문법 오류가 있으면 파일을 만들지 않습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
+<p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 작업 막대의 <code>파일 저장</code> 또는 더보기 메뉴에서 파일 이름과 <code>.html</code>/<code>.json</code>/<code>.md</code> 확장자를 선택할 수 있습니다. <code>.json</code>은 저장 전 문법을 검사하며, 문법 오류가 있으면 파일을 만들지 않습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
 </section>
 <section class="section" id="sec-8">
 <div class="section-head">
@@ -1484,7 +1485,7 @@ table code{ font-size:.82em; }
 <li>두 개 이상 선택해야 합니다.</li>
 <li>자유 메모·로어북·로그는 같은 메모 유형끼리만 합칠 수 있습니다.</li>
 <li><strong>통합 인물 카드</strong>는 페르소나 모드와 캐릭터 모음 모드를 섞어 선택할 수 있습니다. 결과는 항상 새 <strong>캐릭터 모음</strong>입니다.</li>
-<li>HTML 작업실과 아이디어 보드는 원본 코드·캔버스 배치 보존을 위해 합칠 수 없습니다.</li>
+<li>코드 작업실과 아이디어 보드는 원본 코드·캔버스 배치 보존을 위해 합칠 수 없습니다.</li>
 <li>합치기는 원본을 삭제하지 않고 새 메모를 만듭니다.</li>
 </ul>
 <h3>13.4 유형별 합치기 결과</h3>
@@ -1505,18 +1506,19 @@ table code{ font-size:.82em; }
 <div class="nib-num">14</div>
 <h2>열기와 형식 판별</h2>
 </div>
-<p>사이드바 하단의 <code>열기</code>는 <code>.html</code>, <code>.htm</code>, <code>.json</code> 파일을 받습니다. 파일 내용에 따라 다음처럼 처리합니다.</p>
+<p>사이드바 하단의 <code>열기</code>는 <code>.html</code>, <code>.htm</code>, <code>.json</code>, <code>.md</code> 및 일반 Markdown 확장자 파일을 받습니다. 파일 내용에 따라 다음처럼 처리합니다.</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>파일</th><th>처리 방식</th></tr></thead>
 <tbody>
 <tr><td>World Info JSON</td><td>항목별 로어북으로 가져오기</td></tr>
-<tr><td>일반 JSON</td><td>코드 블록 메모로 보기 또는 <code>HTML 작업실</code>에서 원문 그대로 열기</td></tr>
+<tr><td>일반 JSON</td><td>코드 블록 메모로 보기 또는 <code>코드 작업실</code>에서 원문 그대로 열기</td></tr>
+<tr><td>Markdown</td><td><code>코드 작업실</code>에서 원문 그대로 열기 · <code>.md</code>로 다시 저장</td></tr>
 <tr><td>루미잉크 프로젝트 HTML</td><td>메모와 첨부파일을 포함한 새 프로젝트로 복원</td></tr>
 <tr><td>루미잉크 페르소나 HTML</td><td>편집 가능한 페르소나로 복원</td></tr>
 <tr><td>루미잉크 캐릭터 HTML</td><td>편집 가능한 통합 인물 카드(캐릭터 모음 모드)로 복원</td></tr>
 <tr><td>루미잉크 로그 HTML</td><td>원문과 설정이 있는 로그로 복원</td></tr>
-<tr><td>일반 HTML</td><td>원본 보관용 <code>HTML 작업실</code> 또는 안전 정화된 자유 메모 중 선택</td></tr>
+<tr><td>일반 HTML</td><td>원본 보관용 <code>코드 작업실</code> 또는 안전 정화된 자유 메모 중 선택</td></tr>
 </tbody>
 </table>
 </div>
@@ -1526,7 +1528,7 @@ table code{ font-size:.82em; }
 <p>전체 백업 HTML은 일반 <code>열기</code>가 아니라 <code>설정 → 백업 복원</code>에서 가져와야 합니다.</p>
 </div>
 <p>설치형 PWA와 브라우저가 파일 핸들러 기능을 지원하는 환경에서는 운영체제의 <code>연결 프로그램</code> 또는 <code>다른 앱으로 열기</code>에서 루미잉크로 HTML 파일을 전달할 수도 있습니다. 전달받은 파일은 사이드바의 <code>열기</code>와 같은 형식 판별 절차를 거칩니다.</p>
-<div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>HTML 선택 기준:</strong> 소스·속성·외부 리소스 구조까지 보존해야 하면 HTML 작업실을 고릅니다. 내용을 안전한 문서로 읽고 수정하는 목적이면 자유 메모 문서로 가져옵니다.</p></div></section>
+<div class="callout note"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg><p><strong>코드 작업실 선택 기준:</strong> HTML·JSON·Markdown 원문, 속성, 공백, 외부 리소스 구조까지 보존해야 하면 코드 작업실을 고릅니다. 내용을 안전한 리치 문서로 읽고 수정하는 목적이면 HTML을 자유 메모 문서로 가져옵니다.</p></div></section>
 <!-- ============================================================ -->
 <!-- 15. 설정 -->
 <!-- ============================================================ -->
@@ -1580,7 +1582,7 @@ table code{ font-size:.82em; }
 <p>작업 데이터는 현재 사이트의 <strong>IndexedDB</strong>에 저장됩니다.</p>
 <div class="kv-list">
 <div class="kv-row"><div class="k"><code>projects</code></div><div class="v">프로젝트, 태그, 썸네일, 프레임, 고정 상태</div></div>
-<div class="kv-row"><div class="k"><code>notes</code></div><div class="v">자유 메모·HTML 작업실·로어북·로그·통합 인물 카드·아이디어 보드의 데이터와 본문·카드 이미지</div></div>
+<div class="kv-row"><div class="k"><code>notes</code></div><div class="v">자유 메모·코드 작업실·로어북·로그·통합 인물 카드·아이디어 보드의 데이터와 본문·카드 이미지</div></div>
 <div class="kv-row"><div class="k"><code>files</code></div><div class="v">자유 메모 첨부·아이디어 보드 이미지/GIF/음악/영상/파일/캔버스 배경 Blob</div></div>
 <div class="kv-row"><div class="k"><code>backups</code></div><div class="v">최근 자동 백업 스냅샷</div></div>
 </div>
@@ -1632,7 +1634,7 @@ table code{ font-size:.82em; }
 <p>보관 수는 <strong>최소 1개~최대 15개</strong>이며 기본값은 <strong>10개</strong>입니다. 저장할 때마다 최신 스냅샷을 남기고, 보관 수를 줄이면 가장 오래된 스냅샷부터 즉시 정리합니다.</p>
 <p>자동 백업은 같은 브라우저 저장공간 안에 있으므로 브라우저 사이트 데이터 자체를 삭제하면 함께 사라집니다. 기기 고장이나 브라우저 초기화에 대비하려면 외부 파일로 저장하는 전체 백업이 필요합니다.</p>
 <h3>16.5 저장되지 않은 임시 초안</h3>
-<p>자유 메모, HTML 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 중에는 localStorage에 별도의 임시 초안을 만듭니다.</p>
+<p>자유 메모, 코드 작업실, 로어북, 로그, 통합 인물 카드, 아이디어 보드 편집 중에는 localStorage에 별도의 임시 초안을 만듭니다.</p>
 <ul>
 <li>메모별로 분리 저장</li>
 <li>최대 보관 기간 14일</li>
@@ -1650,7 +1652,7 @@ table code{ font-size:.82em; }
 <p>현재 구현에서 테마·폰트 같은 표시 설정과 사용자 로그 템플릿 등 localStorage 항목은 작업 데이터 초기화 대상에 포함되지 않습니다. 완전한 사이트 초기화가 필요하면 전체 백업 후 브라우저의 해당 사이트 데이터 삭제 기능을 사용해야 합니다.</p>
 <h3>16.8 새 타입의 백업 범위</h3>
 <ul>
-<li><strong>HTML 작업실</strong>: 원본 소스 문자열과 제목·표식이 전체 백업 및 프로젝트 패키지에 포함됩니다.</li>
+<li><strong>코드 작업실</strong>: 원본 소스 문자열과 제목·표식이 전체 백업 및 프로젝트 패키지에 포함됩니다.</li>
 <li><strong>인물 카드</strong>: 페르소나·캐릭터의 단일/다인 모드, 페이지, 이미지, 갤러리, 크리에이터 노트, 호환 보관 필드가 포함됩니다.</li>
 <li><strong>아이디어 보드</strong>: 조각 위치·크기·회전·색상·메모지 내용·캔버스 설정과 연결된 파일 Blob이 모두 포함됩니다.</li>
 </ul>
@@ -1783,7 +1785,7 @@ table code{ font-size:.82em; }
 <tr><td>캐릭터 HTML</td><td><code>.html</code></td><td>인물 카드(캐릭터 / 다인 캐릭터)로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>단일·다인 카드 공유·이전</td></tr>
 <tr><td>프로젝트 HTML</td><td><code>.html</code></td><td>새 프로젝트 사본으로 재가져오기 가능</td><td>모두 포함</td><td>포함</td><td>프로젝트 단위 공유·이전</td></tr>
 <tr><td>전체 백업</td><td><code>.html</code></td><td>전체 구조 복원</td><td>모두 포함</td><td>포함</td><td>기기 이전·재해 복구</td></tr>
-<tr><td>HTML 작업실 원본</td><td><code>.html</code> / <code>.json</code></td><td>원본 문자열로 다시 열기 가능</td><td>코드에 포함된 방식 그대로</td><td>해당 없음</td><td>상태창·배너·디자인 HTML 및 JSON 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
+<tr><td>코드 작업실 원본</td><td><code>.html</code> / <code>.json</code></td><td>원본 문자열로 다시 열기 가능</td><td>코드에 포함된 방식 그대로</td><td>해당 없음</td><td>상태창·배너·디자인 HTML 및 JSON 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
 </table>
 </div>
 </section>
@@ -1800,7 +1802,7 @@ table code{ font-size:.82em; }
 <li>작품 또는 세션 이름으로 프로젝트를 만듭니다.</li>
 <li>프로젝트 태그, 색상, 썸네일을 지정합니다.</li>
 <li>세계관은 로어북, 플레이어·단일 인물은 페르소나 또는 캐릭터, 여러 NPC·집단은 다인 페르소나 또는 다인 캐릭터에 기록합니다.</li>
-<li>자유 메모에는 플롯·긴 문서·참고를, 원본 HTML은 HTML 작업실에, 흩어진 이미지·음악·링크·러프 아이디어는 아이디어 보드에 보관합니다.</li>
+<li>자유 메모에는 플롯·긴 문서·참고를, 원본 HTML은 코드 작업실에, 흩어진 이미지·음악·링크·러프 아이디어는 아이디어 보드에 보관합니다.</li>
 <li>대화 결과는 로그 저장에 원문 그대로 넣고 템플릿과 이름 가림을 적용합니다.</li>
 <li>프로젝트와 메모를 고정해 자주 쓰는 항목을 위에 둡니다.</li>
 <li>작업 중에는 자동 저장을 사용하되 큰 수정 뒤에는 <code>Ctrl/⌘+S</code>로 즉시 저장합니다.</li>
@@ -1832,7 +1834,7 @@ table code{ font-size:.82em; }
 <tr><td>자유 메모 일반 첨부</td><td>파일당 15MB 이하</td></tr><tr><td>자유 메모 본문 동영상</td><td>파일당 30MB 이하 · MP4/WebM/Ogg/MOV</td></tr>
 <tr><td>임시 초안</td><td>JSON 문자열 약 700,000자 이하, 최대 14일</td></tr>
 <tr><td>자동 백업</td><td>설정한 보관 수만큼 (1~15개, 기본 10개)</td></tr>
-<tr><td>HTML 작업실 원본</td><td>5MiB 이하</td></tr><tr><td>아이디어 보드 이미지·GIF·음악·영상·첨부</td><td>파일당 30MB 이하</td></tr><tr><td>아이디어 보드 캔버스 배경 이미지</td><td>30MB 이하 · 이미지 파일만</td></tr></tbody>
+<tr><td>코드 작업실 원본</td><td>5MiB 이하</td></tr><tr><td>아이디어 보드 이미지·GIF·음악·영상·첨부</td><td>파일당 30MB 이하</td></tr><tr><td>아이디어 보드 캔버스 배경 이미지</td><td>30MB 이하 · 이미지 파일만</td></tr></tbody>
 </table>
 </div>
 <p>표에 없는 본문·갤러리·캐릭터 페이지의 실질적인 최대치는 브라우저가 해당 사이트에 허용한 저장공간의 영향을 받습니다. 대량 이미지를 넣기 전에는 설정의 저장공간 표시를 확인하고 전체 백업을 만들어 두는 것이 안전합니다.</p>
@@ -1845,7 +1847,7 @@ table code{ font-size:.82em; }
 <p>아래는 현재 v1.5 이전의 주요 기반 기능을 요약한 기록입니다. 현재 사용 방법과 표기는 <a href="#sec-v15">v1.5 현재 기준</a>을 우선합니다.</p>
 <p>아래 이력은 현재 매뉴얼의 기능 기준을 빠르게 확인하기 위한 요약입니다. 이전 버전에서 작성한 데이터는 호환 경로를 통해 유지하는 것을 원칙으로 합니다.</p>
 <h3>v60 · HTML 보존 개선</h3>
-<ul><li>자유 메모의 HTML 정화 허용 범위를 넓혀 인라인 CSS, 구조 태그, 정적 SVG, 범위 제한 스타일을 더 폭넓게 유지합니다.</li><li>다만 자유 메모는 안전한 문서 편집기이므로 원본 코드 완전 보존용으로는 HTML 작업실을 사용합니다.</li></ul>
+<ul><li>자유 메모의 HTML 정화 허용 범위를 넓혀 인라인 CSS, 구조 태그, 정적 SVG, 범위 제한 스타일을 더 폭넓게 유지합니다.</li><li>다만 자유 메모는 안전한 문서 편집기이므로 원본 코드 완전 보존용으로는 코드 작업실을 사용합니다.</li></ul>
 <h3>v61.1 · 크리에이터 노트 안정화</h3>
 <ul><li>크리에이터 노트 팝업의 닫기 동작을 보강하고, 부가 기능 오류가 닫기 조작을 막지 않도록 이벤트 흐름을 정리했습니다.</li></ul>
 <h3>v62 · 통합 인물 카드</h3>
@@ -1882,7 +1884,7 @@ table code{ font-size:.82em; }
 <h3>새 메모 생성기</h3>
 <ul>
 <li>상단 설명은 <strong>생성할 메모 타입을 골라주세요</strong>이며, <strong>자유 메모</strong> 빠른 생성 카드는 즉시 자유 메모 생성 흐름으로 들어갑니다. 기존 블루 그라데이션·흰색 아이콘/텍스트 디자인을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
-<li>유형 선택은 <strong>캐릭터 / 작업실 / 아뜰리에</strong> 3탭입니다. 캐릭터에는 페르소나·다인 페르소나·캐릭터·다인 캐릭터, 작업실에는 로어북·HTML 작업실, 아뜰리에에는 자유 메모·로그 저장·아이디어 보드가 있습니다.</li>
+<li>유형 선택은 <strong>캐릭터 / 작업실 / 아뜰리에</strong> 3탭입니다. 캐릭터에는 페르소나·다인 페르소나·캐릭터·다인 캐릭터, 작업실에는 로어북·코드 작업실, 아뜰리에에는 자유 메모·로그 저장·아이디어 보드가 있습니다.</li>
 <li><strong>페르소나</strong>의 보조 설명은 <code>단일 페르소나 카드 · 국문/영문 · 이미지</code>로 표시합니다.</li>
 <li>탭 안의 타입 카드는 동일한 전체 폭으로 정렬되며, 카드 표면과 카드 안 아이콘 칩은 기존의 테마 배경색을 유지합니다.</li>
 <li>탭 안의 타입 카드는 기존의 카드 표면과 아이콘 칩 색상을 유지합니다. 각 카드는 내용 길이와 무관하게 팝업 폭을 끝까지 채우며, 제목은 기본 잉크색으로 표시됩니다.</li>
@@ -2041,7 +2043,10 @@ table code{ font-size:.82em; }
 
 <section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #d3e2f4;border-radius:14px;background:linear-gradient(145deg,#f8fcff,#f2f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.13 · 로그 PNG 내보내기</h2><p style="margin:0 0 8px">로그 저장의 더보기 메뉴에서 <b>꾸며진 PNG 이미지로 저장</b>을 선택하면, 앱 조작 UI를 빼고 현재 템플릿·정규식·이름 치환이 적용된 로그 본문만 이미지로 저장합니다.</p><p style="margin:0">게시판 폭은 <code>520px</code>·<code>680px</code>(권장)·<code>840px</code> 중 선택합니다. 이름 치환 세트의 디자인 선택도 다섯 가지 고정 문구 <code>미리보기</code>를 한 줄로 비교하는 방식으로 바뀌었습니다.</p></section>
 
+<section id="sec-v66-20" style="margin:18px auto 36px;max-width:880px;padding:18px 20px;border:1px solid color-mix(in srgb,var(--accent,#6380df) 28%,#dce4f0);border-radius:14px;background:linear-gradient(145deg,color-mix(in srgb,var(--surface,#fff) 88%,var(--accent-soft,#edf2ff) 12%),var(--surface,#fff));color:var(--ink,#24334e);font-family:inherit;line-height:1.7"><h2 style="margin:0 0 8px;font-size:17px">v66.20 · 정렬 글자색을 섹션 제목과 통합</h2><p style="margin:0">설정 → 컬러 테마 → 사용자 지정의 <b>메인 화면 섹션 제목·정렬 글자</b> 색상은 홈과 프로젝트 내부 화면의 정렬 버튼에 공통 적용됩니다. 글자와 정렬 아이콘 선색이 함께 바뀌며, 정렬 버튼의 배경은 기존의 옅은 강조·선택 배경 역할을 유지합니다.</p></section>
 <section id="sec-v66-18" style="margin:18px auto 36px;max-width:880px;padding:18px 20px;border:1px solid color-mix(in srgb,var(--accent,#6380df) 28%,#dce4f0);border-radius:14px;background:linear-gradient(145deg,color-mix(in srgb,var(--surface,#fff) 88%,var(--accent-soft,#edf2ff) 12%),var(--surface,#fff));color:var(--ink,#24334e);font-family:inherit;line-height:1.7"><h2 style="margin:0 0 8px;font-size:17px">v66.18 · 공통 옅은 강조·선택 배경</h2><p style="margin:0">설정 → 컬러 테마 → 사용자 지정에서 <b>옅은 강조·선택 배경</b>을 고르면, 글자 크기의 선택 상태·자유 메모 코드 보기 아이콘·새 메모 빠른 생성 및 타입 아이콘·섹션 제목·카운트·태그·칩·탭처럼 은은한 강조색을 공유하는 영역이 함께 바뀝니다. 기존 사용자 테마는 이전의 작은 섹션 제목 배경 값을 새 공통 색상으로 자동 이어받습니다.</p></section>
+
+<section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #cddff7;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#f3f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.19 · 코드 작업실 · Markdown 원문</h2><p style="margin:0">기존 HTML 작업실의 이름을 <b>코드 작업실</b>로 바꾸고, HTML·JSON·Markdown 원문을 한 화면에서 열고 편집할 수 있도록 통합했습니다. 파일 저장에서는 <code>.html</code>, <code>.json</code>, <code>.md</code>를 선택할 수 있습니다. HTML만 격리 웹 미리보기·새 창 열기를 제공하며, JSON과 Markdown은 원문 확인 보기로 안전하게 표시합니다.</p></section>
 </main>
 </div>
 <div aria-label="맨 위로" class="to-top" id="toTop" role="button">
@@ -2174,6 +2179,6 @@ table code{ font-size:.82em; }
 
 <section style="margin:28px 0;padding:18px 20px;border:1px solid #dfe5f0;border-radius:14px;background:#f8faff;color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 8px;font-size:17px">v66.4 · 퀵메뉴 아트와 사용자 지정 테마 세부 색상</h2><p style="margin:0 0 8px">퀵메뉴에 적용한 업로드 이미지·내장 SVG·사용자 SVG/CSS는 메뉴와 편집 미리보기에서 배경·테두리 없이 그림만 표시됩니다.</p><p style="margin:0">설정 → 컬러 테마 → 사용자 지정에서 로고 중심부, 상단바 그림자, 자유 메모 코드 보기, 사이드바·메인 화면·팝업의 세부 색상을 라이트/다크 각각 조절할 수 있습니다.</p></section>
 
-<section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #cddff7;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#f3f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.12 · JSON 원문 파일 저장</h2><p style="margin:0">HTML 작업실의 <b>파일 저장</b>에서 현재 원문을 <code>.html</code> 또는 <code>.json</code>으로 선택해 내려받을 수 있습니다. JSON 원본으로 연 작업실은 <code>.json</code>을 기본으로 제안하고, JSON 저장 전에는 문법을 검사합니다. 기존 <code>Ctrl/⌘+S</code>와 상단 저장 버튼은 앱 내부 저장을 유지하며, 파일 저장은 <code>Ctrl/⌘+Shift+S</code>로도 열 수 있습니다.</p></section>
+<section style="margin:18px auto 36px;max-width:880px;padding:18px;border:1px solid #cddff7;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#f3f8ff);color:#24334e;font-family:inherit;line-height:1.7"><h2 style="margin:0 0 9px">v66.12 · JSON 원문 파일 저장</h2><p style="margin:0">코드 작업실의 <b>파일 저장</b>에서 현재 원문을 <code>.html</code> 또는 <code>.json</code>으로 선택해 내려받을 수 있습니다. JSON 원본으로 연 작업실은 <code>.json</code>을 기본으로 제안하고, JSON 저장 전에는 문법을 검사합니다. 기존 <code>Ctrl/⌘+S</code>와 상단 저장 버튼은 앱 내부 저장을 유지하며, 파일 저장은 <code>Ctrl/⌘+Shift+S</code>로도 열 수 있습니다.</p></section>
 </body>
 </html>

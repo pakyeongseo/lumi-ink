@@ -5,19 +5,19 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.18**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.18-soft-accent-role`
+- 개발 기준 빌드: **v66.20**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.20-sort-text-theme-role`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.18_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.20_Release_Notes.md`
 
 ## 핵심 기능
 
-- 자유 메모, HTML·JSON 원문 작업실, 로어북, 로그 저장, 페르소나·캐릭터, 아이디어 보드
+- 자유 메모, HTML·JSON·Markdown 원문을 통합하는 코드 작업실, 로어북, 로그 저장, 페르소나·캐릭터, 아이디어 보드
 - 프로젝트별 관리와 전체/프로젝트 백업·복원, 자동 백업
 - 로그 디자인 템플릿 100종과 사용자 템플릿 업로드 · 이름 가림 디자인 5종 · 게시판용 PNG 내보내기
-- 사이드바 **열기**는 Android 파일 선택기에서 모든 파일을 표시하고, 앱 안에서 HTML · JSON · 일반 텍스트를 판별합니다.
-- 사이드바 열기에서 일반 JSON 원문을 메모 또는 HTML 작업실로 안전하게 열기
+- 사이드바 **열기**는 Android 파일 선택기에서 모든 파일을 표시하고, 앱 안에서 HTML · JSON · Markdown · 일반 텍스트를 판별합니다.
+- 사이드바 열기에서 일반 JSON 원문을 메모 또는 코드 작업실로 안전하게 열기
 - 아이디어 보드 이미지 배경, PNG 캡처, HTML 내보내기
 - 10종 PWA 설치 아이콘과 설치 간판 페이지
 - 오른쪽 엣지 퀵메뉴, 사용자 지정 아이콘, 기능 바로가기
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,18 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.20
+
+- 사용자 지정 컬러 테마의 **메인 화면 섹션 제목·정렬 글자** 역할을 하나로 묶었습니다.
+- 홈 화면과 프로젝트 내부 화면의 정렬 버튼은 이제 같은 `--home-section-title-color`를 사용하며, 글자와 정렬 아이콘이 함께 바뀝니다.
+
+## v66.19
+
+- 기존 **HTML 작업실**을 **코드 작업실**로 이름을 바꾸고, HTML · JSON · Markdown 원문을 하나의 편집 화면에서 보관·수정·내보낼 수 있게 통합했습니다.
+- `.md`, `.markdown`, `.mdown`, `.mkdn`, `.mkd` 파일은 코드 작업실에서 바로 열리며 원문 공백과 줄바꿈을 유지합니다.
+- 파일 저장에서 `.html` · `.json` · `.md`를 고를 수 있습니다. JSON 저장만 문법 검사를 수행합니다.
+- HTML은 기존 샌드박스 미리보기·웹페이지 새 창 열기를 유지하고, JSON·Markdown은 실행하지 않는 원문 보기로 안전하게 표시합니다.
 
 ## v66.18
 
@@ -60,8 +72,8 @@
 
 ## v66.12
 
-- HTML 작업실에서 원문을 내려받을 때 **`.html` 또는 `.json` 확장자**를 직접 선택할 수 있습니다.
-- JSON 원본으로 연 작업실은 `.json`을 기본 선택하며, 일반 HTML 작업실은 `.html`을 기본 선택합니다.
+- 코드 작업실에서 HTML·JSON·Markdown 원문을 열고, **`.html` · `.json` · `.md` 확장자**를 직접 선택해 저장할 수 있습니다.
+- JSON 원본으로 연 코드 작업실은 `.json`, Markdown 원본은 `.md`, 일반 HTML 원본은 `.html`을 기본 선택합니다.
 - `.json` 저장 전에는 JSON 문법을 검사합니다. 오류가 있으면 파일을 만들지 않고 오류 위치를 안내합니다.
 - 작업실 상단의 **파일 저장** 버튼, 더보기 메뉴, `Ctrl/Cmd + Shift + S`가 같은 저장 선택 창을 엽니다. 기존 `Ctrl/Cmd + S`와 상단 디스켓은 앱 내부 저장만 수행합니다.
 

@@ -27,7 +27,7 @@
   ];
   const FRAME_THEME_TOKEN = "theme";
   const FRAME_PUNCH_TOKEN = "punch";
-  const HTML_SOURCE_MAX = 5 * 1024 * 1024; // raw HTML 작업실: 원본 보존용 5 MiB 상한
+  const HTML_SOURCE_MAX = 5 * 1024 * 1024; // raw 코드 작업실: 원본 보존용 5 MiB 상한
   const FRAME_COLOR_BY_KEY = new Map(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([key, , color]) => [key, color.toLowerCase()]));
   const FRAME_COLOR_SET = new Set(FRAME_COLORS.filter(([key]) => key !== FRAME_PUNCH_TOKEN).map(([, , color]) => color.toLowerCase()));
   function frameById(id) { return FRAMES.find((f) => f.id === id) || null; }
@@ -224,7 +224,7 @@
     const type = slot && slot.createType;
     if (type === "persona") return slot.createMode === "collection" ? "다인 페르소나" : "페르소나";
     if (type === "character") return slot.createMode === "collection" ? "다인 캐릭터" : "캐릭터";
-    return ({ free: "자유 메모", html: "HTML 작업실", lorebook: "로어북", log: "로그 저장", idea: "아이디어 보드" })[type] || "메모";
+    return ({ free: "자유 메모", html: "코드 작업실", lorebook: "로어북", log: "로그 저장", idea: "아이디어 보드" })[type] || "메모";
   }
   function quickMenuSlotLabel(slot) {
     if (!slot || !slot.kind) return "새 슬롯 등록";
@@ -585,7 +585,7 @@
   }
   function openQuickMenuCreateTypePicker(index) {
     const options = [
-      ["free", "single", "자유 메모", "바로 빈 문서 열기"], ["html", "single", "HTML 작업실", "HTML 원본 작업 시작"], ["lorebook", "single", "로어북", "World Info용 항목 만들기"], ["log", "single", "로그 저장", "대화 로그용 메모 만들기"],
+      ["free", "single", "자유 메모", "바로 빈 문서 열기"], ["html", "single", "코드 작업실", "HTML · JSON · MD 원본 편집 시작"], ["lorebook", "single", "로어북", "World Info용 항목 만들기"], ["log", "single", "로그 저장", "대화 로그용 메모 만들기"],
       ["persona", "single", "페르소나", "단일 페르소나 카드"], ["persona", "collection", "다인 페르소나", "페르소나 모음 카드"], ["character", "single", "캐릭터", "단일 캐릭터 카드"], ["character", "collection", "다인 캐릭터", "캐릭터 모음 카드"], ["idea", "single", "아이디어 보드", "자유 배치 보드 만들기"]
     ];
     openModal(`<h3>만들 메모 타입</h3><p class="m-sub">실행하면 이 타입의 새 메모를 바로 만듭니다.</p><div class="qm-picker-list">${options.map(([type, mode, label, desc]) => `<button type="button" class="qm-picker-row" data-qm-create-type="${type}" data-qm-create-mode="${mode}"><b>${esc(label)}</b><small>${esc(desc)}</small></button>`).join("")}</div><div class="m-row"><button class="m-btn" id="qmCreateTypeBack">뒤로</button></div>`);
@@ -1200,7 +1200,7 @@
     } else {
       const dotStyle = col ? `background:${col};box-shadow:0 0 8px ${col}` : "";
       lead = `<span class="mc-dot" style="${dotStyle}"></span>`;
-      meta = n.type === "idea" ? ideaBoardSummary(n) : n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 HTML 소스") : (preview(noteHtml(n)) || "빈 메모");
+      meta = n.type === "idea" ? ideaBoardSummary(n) : n.type === "lorebook" ? `키워드 ${((n.data && n.data.keywords) || []).length}개${n.data && n.data.alwaysActive ? " · 항상 활성" : ""}` : n.type === "log" ? (String((n.data && n.data.content) || "").replace(/\s+/g, " ").trim().slice(0, 60) || "빈 로그") : n.type === "html" ? (htmlSourceSummary(n) || "빈 코드 원본") : (preview(noteHtml(n)) || "빈 메모");
     }
     chip.innerHTML = '<span class="sel-check"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>' + lead +
       `<div class="mc-body"><div class="mc-title">${esc(n.title)}${n.pinned ? PIN_STAR : ""}</div><div class="mc-meta">${fmtDate(n.updatedAt)} · ${esc(meta)}</div></div>` +
@@ -1232,7 +1232,7 @@
     const wrap = $("pdChips");
     if (!ns.length) { wrap.innerHTML = `<div class="grid-empty">이 프로젝트에 메모가 없어요.<br>아래 + 버튼으로 추가하세요.</div>`; return; }
     wrap.innerHTML = "";
-    const SECTIONS = [["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그 저장"], ["lorebook", "로어북"], ["html", "HTML 작업실"], ["idea", "아이디어 보드"], ["free", "자유 메모"]];
+    const SECTIONS = [["persona", "페르소나"], ["character", "캐릭터"], ["log", "로그 저장"], ["lorebook", "로어북"], ["html", "코드 작업실"], ["idea", "아이디어 보드"], ["free", "자유 메모"]];
     let firstSec = true;
     SECTIONS.forEach(([t, label]) => {
       const group = ns.filter((n) => noteSectionKey(n) === t);
@@ -1498,7 +1498,7 @@
     const personaTitle = characterModeOption === "single" ? "이름 없는 페르소나" : "이름 없는 페르소나 모음";
     const n = {
       id: uid(), projectId, type,
-      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? personaTitle : type === "character" ? characterTitle : type === "html" ? "제목 없는 HTML 작업실" : "제목 없는 메모",
+      title: type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : type === "idea" ? "새 아이디어 보드" : type === "persona" ? personaTitle : type === "character" ? characterTitle : type === "html" ? "제목 없는 코드 작업실" : "제목 없는 메모",
       titleLocked: type === "lorebook",
       chipColor: null, createdAt: now(), updatedAt: now(),
       data: type === "free" ? { html: "" }
@@ -1537,21 +1537,29 @@
 
 
 
-  /* ---------- HTML workshop: source stays a string, preview stays in an opaque sandbox ---------- */
+  /* ---------- Code workshop: source stays a string, preview is isolated or text-only ---------- */
+  // 내부 메모 타입은 기존 백업 호환을 위해 html을 유지하지만, 사용자 화면에서는 코드 작업실로 표시합니다.
+  // exportFormat은 열어 온 원본 형식과 다음 파일 저장의 기본값입니다. 원본 문자열은 절대 변형하지 않습니다.
   function htmlSourceOf(n) { return (n && n.data && typeof n.data.source === "string") ? n.data.source : ""; }
-  // HTML 작업실은 HTML뿐 아니라 JSON 원문도 보관합니다. exportFormat은 다음 파일 저장의 기본값이며,
-  // 실제 원문 문자열은 확장자 선택과 관계없이 절대 변형하지 않습니다.
-  function htmlExportFormatOf(n) { return n && n.data && n.data.exportFormat === "json" ? "json" : "html"; }
-  function htmlExportMime(format) { return format === "json" ? "application/json" : "text/html"; }
-  function htmlSourceKindLabel(n) { return htmlExportFormatOf(n) === "json" ? "JSON" : "RAW"; }
+  function htmlExportFormatOf(n) {
+    const format = n && n.data && n.data.exportFormat;
+    return format === "json" || format === "md" ? format : "html";
+  }
+  function htmlExportMime(format) {
+    return format === "json" ? "application/json;charset=utf-8" : format === "md" ? "text/markdown;charset=utf-8" : "text/html;charset=utf-8";
+  }
+  function htmlSourceKindLabel(n) {
+    return ({ html: "HTML", json: "JSON", md: "MARKDOWN" })[htmlExportFormatOf(n)] || "CODE";
+  }
   function htmlSourceHint(n) {
-    return htmlExportFormatOf(n) === "json"
-      ? "· JSON 원문 그대로 저장 · 파일 저장에서 .html / .json 선택"
-      : "· 필터링 없이 원본 문자열 그대로 저장 · 파일 저장에서 .html / .json 선택";
+    const format = htmlExportFormatOf(n);
+    if (format === "json") return "· JSON 원문 그대로 저장 · 파일 저장에서 .html / .json / .md 선택";
+    if (format === "md") return "· Markdown 원문 그대로 저장 · 파일 저장에서 .html / .json / .md 선택";
+    return "· HTML 원문 그대로 저장 · 파일 저장에서 .html / .json / .md 선택";
   }
   function htmlFileBaseName(name) {
-    const base = String(name || "html-workshop").replace(/\.(?:html?|json)$/i, "").replace(/[\\/:*?\"<>|]+/g, "_").trim();
-    return (base || "html-workshop").slice(0, 80);
+    const base = String(name || "code-workshop").replace(/\.(?:html?|json|md|markdown|mdown|mkdn|mkd)$/i, "").replace(/[\\/:*?\"<>|]+/g, "_").trim();
+    return (base || "code-workshop").slice(0, 80);
   }
   function jsonSourceValidation(source) {
     try {
@@ -1605,11 +1613,21 @@
     head.insertBefore(guard, csp.nextSibling);
     return "<!doctype html>\n" + doc.documentElement.outerHTML;
   }
-  function refreshHtmlPreview(source) {
+  function buildPlainCodePreview(source, format) {
+    const label = format === "json" ? "JSON 원문 보기" : "Markdown 원문 보기";
+    const color = format === "json" ? "#87b5ff" : "#a9d79a";
+    return `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${label}</title><style>html,body{margin:0;min-height:100%;background:#101622;color:#e8edf8;font-family:ui-monospace,SFMono-Regular,Consolas,'D2Coding',monospace}header{position:sticky;top:0;padding:11px 14px;background:#161f31;border-bottom:1px solid #29364e;color:${color};font:700 12px/1.4 -apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;letter-spacing:.08em}pre{margin:0;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.72;tab-size:2}</style><body><header>${label} · 렌더링 없이 원문만 표시</header><pre>${esc(String(source || ""))}</pre></body></html>`;
+  }
+  function refreshHtmlPreview(source, format) {
     const frame = $("htmlPreview"); if (!frame) return;
-    try { frame.srcdoc = buildSandboxPreview(source); } catch (e) { frame.srcdoc = "<!doctype html><meta charset='utf-8'><pre>미리보기를 만들지 못했어요.</pre>"; }
+    const note = getNote(st.curNoteId);
+    const kind = format || htmlExportFormatOf(note);
+    try { frame.srcdoc = kind === "html" ? buildSandboxPreview(source) : buildPlainCodePreview(source, kind); }
+    catch (e) { frame.srcdoc = "<!doctype html><meta charset='utf-8'><pre>미리보기를 만들지 못했어요.</pre>"; }
   }
   function openHtmlPreviewPage() {
+    const note = getNote(st.curNoteId);
+    if (!note || htmlExportFormatOf(note) !== "html") { toast("웹페이지로 열기는 HTML 원문에서만 사용할 수 있어요"); return; }
     const source = $("htmlSource").value || "<!doctype html><meta charset='utf-8'>";
     const blob = new Blob([source], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -1671,7 +1689,7 @@
     const noteId = session.noteId, n = getNote(noteId);
     if (!n || n.type !== "html") return Promise.resolve();
     const draft = htmlDraftFromEditor(), source = draft.source, revision = session.revision;
-    if (source.length > HTML_SOURCE_MAX) { toast("HTML 원본은 5MB 이하로 저장할 수 있어요"); return Promise.resolve(); }
+    if (source.length > HTML_SOURCE_MAX) { toast("코드 원본은 5MB 이하로 저장할 수 있어요"); return Promise.resolve(); }
     if (session.lastQueuedRevision === revision) return session.inFlight || Promise.resolve();
     session.lastQueuedRevision = revision;
     const write = async () => {
@@ -1698,14 +1716,31 @@
       clearTimeout(st.saveTimer); st.saveTimer = null; clearTimeout(htmlPreviewTimer);
     }
   }
+  function syncCodeWorkshopFormatUi(n) {
+    const note = n || getNote(st.curNoteId); if (!note || note.type !== "html") return;
+    const format = htmlExportFormatOf(note);
+    const kind = $("htmlSourceKind"), hint = $("htmlSourceFormatHint"), screen = $("screen-html");
+    if (kind) kind.textContent = htmlSourceKindLabel(note);
+    if (hint) hint.textContent = htmlSourceHint(note);
+    if (screen) screen.dataset.codeFormat = format;
+    const pageButton = $("htmlOpenPage");
+    if (pageButton) {
+      const enabled = format === "html";
+      pageButton.disabled = !enabled;
+      pageButton.title = enabled ? "웹페이지로 열기" : "웹페이지로 열기는 HTML 원문에서만 가능";
+      pageButton.setAttribute("aria-label", pageButton.title);
+    }
+    const previewKicker = $("htmlPreviewKicker"), previewNote = $("htmlPreviewNote"), frame = $("htmlPreview");
+    if (previewKicker) previewKicker.textContent = format === "html" ? "Sandbox preview" : "Raw text view";
+    if (previewNote) previewNote.textContent = format === "html" ? "JavaScript · 폼 · 앱 접근 차단" : "렌더링 없이 원문만 표시";
+    if (frame) frame.title = format === "html" ? "코드 작업실 HTML 미리보기" : `${htmlSourceKindLabel(note)} 원문 보기`;
+  }
   function renderHtmlWorkshop() {
     const n = getNote(st.curNoteId);
     if (!n || n.type !== "html") { back(); return; }
     beginHtmlWorkshopSession(n);
-    $("htmlTitle").textContent = n.title || "HTML 작업실";
-    const kind = $("htmlSourceKind"), hint = $("htmlSourceFormatHint");
-    if (kind) kind.textContent = htmlSourceKindLabel(n);
-    if (hint) hint.textContent = htmlSourceHint(n);
+    $("htmlTitle").textContent = n.title || "코드 작업실";
+    syncCodeWorkshopFormatUi(n);
     setHtmlSaver(""); queueDraftRecovery(n, "html");
   }
   async function saveHtmlWorkshopFile(id, format, requestedName) {
@@ -1722,19 +1757,18 @@
     downloadDoc(source, `${safeName}.${chosen}`, htmlExportMime(chosen));
     n.data = n.data || {}; n.data.exportFormat = chosen; n.data.previewPolicy = "sandbox-web";
     await saveNote(n);
-    const kind = $("htmlSourceKind"), hint = $("htmlSourceFormatHint");
-    if (kind) kind.textContent = htmlSourceKindLabel(n);
-    if (hint) hint.textContent = htmlSourceHint(n);
-    toast(`${chosen.toUpperCase()} 파일을 저장했어요`);
+    syncCodeWorkshopFormatUi(n);
+    refreshHtmlPreview(source, chosen);
+    toast(`${chosen === "md" ? "Markdown" : chosen.toUpperCase()} 파일을 저장했어요`);
     return true;
   }
   function showHtmlExportDialog(id) {
     const n = getNote(id); if (!n || n.type !== "html") return;
     let selected = htmlExportFormatOf(n);
-    const baseName = htmlFileBaseName(n.title || "html-workshop");
-    openModal(`<h3>파일로 저장</h3><p class="m-sub">현재 원문을 앱 내부 저장과 별도로 내려받습니다. <b>.json</b>을 선택하면 저장 전에 JSON 문법을 검사합니다.</p><div class="m-field-label">파일 이름</div><input class="m-input" id="htmlExportName" maxlength="80" value="${esc(baseName)}" autocapitalize="off" autocorrect="off"><div class="m-field-label">확장자</div><div class="type-card html-export-choice ${selected === "html" ? "is-selected" : ""}" id="htmlExportAsHtml"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg></div><div><div class="tc-name">HTML · .html</div><div class="tc-desc">웹페이지·상태창·배너 원문으로 저장</div></div><span class="tc-soon">${selected === "html" ? "선택됨" : "선택"}</span></div><div class="type-card html-export-choice ${selected === "json" ? "is-selected" : ""}" id="htmlExportAsJson"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M7 5 3 12l4 7M17 5l4 7-4 7M13.5 3 10.5 21"/></svg></div><div><div class="tc-name">JSON · .json</div><div class="tc-desc">정렬·공백을 유지한 JSON 원문으로 저장</div></div><span class="tc-soon">${selected === "json" ? "선택됨" : "선택"}</span></div><div class="m-row"><button class="m-btn" id="htmlExportCancel">취소</button><button class="m-btn primary" id="htmlExportOk">파일 저장</button></div>`);
+    const baseName = htmlFileBaseName(n.title || "code-workshop");
+    openModal(`<h3>파일로 저장</h3><p class="m-sub">현재 원문을 앱 내부 저장과 별도로 내려받습니다. <b>.json</b>을 고르면 저장 전에 JSON 문법을 검사하며, HTML·JSON·Markdown 중 원하는 확장자를 선택할 수 있습니다.</p><div class="m-field-label">파일 이름</div><input class="m-input" id="htmlExportName" maxlength="80" value="${esc(baseName)}" autocapitalize="off" autocorrect="off"><div class="m-field-label">확장자</div><div class="type-card html-export-choice ${selected === "html" ? "is-selected" : ""}" id="htmlExportAsHtml"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg></div><div><div class="tc-name">HTML · .html</div><div class="tc-desc">웹페이지·상태창·배너 원문으로 저장</div></div><span class="tc-soon">${selected === "html" ? "선택됨" : "선택"}</span></div><div class="type-card html-export-choice ${selected === "json" ? "is-selected" : ""}" id="htmlExportAsJson"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M7 5 3 12l4 7M17 5l4 7-4 7M13.5 3 10.5 21"/></svg></div><div><div class="tc-name">JSON · .json</div><div class="tc-desc">정렬·공백을 유지한 JSON 원문으로 저장</div></div><span class="tc-soon">${selected === "json" ? "선택됨" : "선택"}</span></div><div class="type-card html-export-choice ${selected === "md" ? "is-selected" : ""}" id="htmlExportAsMarkdown"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 16V9l2.5 3L13 9v7M15.5 10.5h1.5a1.5 1.5 0 0 1 0 3h-1.5v2.5"/></svg></div><div><div class="tc-name">Markdown · .md</div><div class="tc-desc">마크다운 문서 원문으로 저장</div></div><span class="tc-soon">${selected === "md" ? "선택됨" : "선택"}</span></div><div class="m-row"><button class="m-btn" id="htmlExportCancel">취소</button><button class="m-btn primary" id="htmlExportOk">파일 저장</button></div>`);
     const draw = () => {
-      [["htmlExportAsHtml", "html"], ["htmlExportAsJson", "json"]].forEach(([elId, format]) => {
+      [["htmlExportAsHtml", "html"], ["htmlExportAsJson", "json"], ["htmlExportAsMarkdown", "md"]].forEach(([elId, format]) => {
         const el = $(elId); if (!el) return;
         const on = selected === format;
         el.classList.toggle("is-selected", on);
@@ -1743,6 +1777,7 @@
     };
     $on("htmlExportAsHtml", "click", () => { selected = "html"; draw(); });
     $on("htmlExportAsJson", "click", () => { selected = "json"; draw(); });
+    $on("htmlExportAsMarkdown", "click", () => { selected = "md"; draw(); });
     $on("htmlExportCancel", "click", closeModal);
     $on("htmlExportOk", "click", async () => {
       const button = $("htmlExportOk");
@@ -1757,13 +1792,13 @@
   function openHtmlSheet(n) {
     openSheet(n.title, [
       { icon: IC.pin, label: n.pinned ? "고정 해제" : "상단 고정", fn: () => togglePinNote(n.id) },
-      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("HTML 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
+      { icon: IC.rename, label: "이름 바꾸기", fn: () => renameModal("코드 작업실 이름", n.title, async (v) => { if (v) { n.title = v; n.titleLocked = true; await saveNote(n); render(); } }) },
       { icon: IC.color, label: "색상 지정", fn: () => showChipPicker(n.id) },
       { icon: IC.copy, label: "원본 코드 복사", fn: () => clipboardCopy(htmlSourceOf(n)).then((ok) => toast(ok ? "원본 코드를 복사했어요" : "복사하지 못했어요")) },
-      { icon: IC.save, label: "파일로 저장 (.html / .json)", fn: () => exportHtmlSource(n.id) },
+      { icon: IC.save, label: "파일로 저장 (.html / .json / .md)", fn: () => exportHtmlSource(n.id) },
       { icon: IC.move, label: "다른 프로젝트로 이동", fn: () => pickTargetProject(n.projectId, (pid) => moveNote(n.id, pid).then(render)) },
       { icon: IC.copy, label: "선택 위치로 복제", fn: () => pickTargetProject(n.projectId, (pid) => duplicateNote(n.id, pid).then(render)) },
-      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("HTML 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
+      { icon: IC.del, label: "삭제", danger: true, fn: () => confirmModal("코드 작업실 삭제", `'${n.title}'를 삭제할까요?`, "삭제", true, async () => { await deleteNote(n.id); back(); }) }
     ]);
   }
 
@@ -4674,7 +4709,7 @@
         <div class="type-picker-pane" data-type-pane="studio" role="tabpanel" hidden>
           <div class="type-pane-caption">Writing tools</div>
           ${card("lorebook", "", "로어북", "마크다운 · 키워드 · 토큰 · World Info 내보내기", icons.lore)}
-          ${card("html", "", "HTML 작업실", "원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기", icons.html)}
+          ${card("html", "", "코드 작업실", "원본 코드 보존 · 샌드박스 미리보기 · 그대로 내보내기", icons.html)}
         </div>
         <div class="type-picker-pane" data-type-pane="atelier" role="tabpanel" hidden>
           <div class="type-pane-caption">Creative atelier</div>
@@ -4798,7 +4833,7 @@
   const TOP_TITLE_IDS = ["edTitle", "readTitle", "htmlTitle", "loreTitle", "logTitle", "perTitle", "charTitle", "ideaTitle"];
   function titleKindLabel(n) {
     if (!n) return "메모";
-    return ({ free:"메모", html:"HTML 작업실", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[n.type] || "메모";
+    return ({ free:"메모", html:"코드 작업실", lorebook:"로어북", log:"로그", persona:"페르소나", character:"캐릭터", idea:"아이디어 보드" })[n.type] || "메모";
   }
   async function saveTopTitleRename(n, value) {
     const next = cleanImportedText(value, 80).trim(); if (!n || !next) return;
@@ -5295,7 +5330,7 @@
     const type = sourceType;
     const note = {
       id: raw.id, projectId: raw.projectId, type,
-      title: cleanImportedText(raw.title, 180) || (sourceType === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 모음" : type === "html" ? "제목 없는 HTML 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
+      title: cleanImportedText(raw.title, 180) || (sourceType === "persona" ? "이름 없는 페르소나" : type === "character" ? "이름 없는 캐릭터 모음" : type === "html" ? "제목 없는 코드 작업실" : type === "lorebook" ? "이름 없는 로어북" : type === "log" ? "이름 없는 로그" : "제목 없는 메모"),
       titleLocked: !!raw.titleLocked,
       chipColor: CHIP[raw.chipColor] ? raw.chipColor : null,
       createdAt: Number(raw.createdAt) || now(),
@@ -5315,7 +5350,7 @@
       if (attachments.length) note.data.attachments = attachments;
     } else if (type === "html") {
       // 백업·프로젝트 가져오기에서도 raw source를 sanitize/DOM serialization 없이 문자열 그대로 되살립니다.
-      note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web", exportFormat: data.exportFormat === "json" ? "json" : "html" };
+      note.data = { source: cleanImportedText(data.source, HTML_SOURCE_MAX), previewPolicy: "sandbox-web", exportFormat: data.exportFormat === "json" || data.exportFormat === "md" ? data.exportFormat : "html" };
     } else if (type === "lorebook") {
       note.data = {
         content: cleanImportedText(data.content, 500000),
@@ -5600,7 +5635,7 @@
       return;
     }
     const type = notes[0].type;
-    if (type === "html" || type === "idea") { toast(type === "html" ? "HTML 작업실은 원본 보존을 위해 합치지 않아요" : "아이디어 보드는 캔버스 배치를 보존하기 위해 합치지 않아요"); return; }
+    if (type === "html" || type === "idea") { toast(type === "html" ? "코드 작업실은 원본 보존을 위해 합치지 않아요" : "아이디어 보드는 캔버스 배치를 보존하기 위해 합치지 않아요"); return; }
     if (!notes.every((n) => n.type === type)) { toast("같은 종류끼리만 합칠 수 있어요"); return; }
     const pid = notes[0].projectId;
     if (type === "lorebook") {
@@ -6137,6 +6172,19 @@ ${gallery}
     const name = cleanImportedText(String((file && file.name) || ""), 220).trim().replace(/\.json$/i, "");
     return name || "불러온 JSON";
   }
+  function isMarkdownFile(file) {
+    const name = String((file && file.name) || "").trim();
+    const type = String((file && file.type) || "").toLowerCase().split(";")[0].trim();
+    return /\.(?:md|markdown|mdown|mkdn|mkd)$/i.test(name)
+      || type === "text/markdown"
+      || type === "text/x-markdown"
+      || type === "application/markdown"
+      || type === "text/md";
+  }
+  function markdownImportedTitle(file) {
+    const name = cleanImportedText(String((file && file.name) || ""), 220).trim().replace(/\.(?:md|markdown|mdown|mkdn|mkd)$/i, "");
+    return name || "불러온 Markdown";
+  }
   function worldInfoEntriesFromPayload(data) {
     const entries = (data && typeof data === "object" && data.entries) ? data.entries : data;
     const list = Array.isArray(entries) ? entries : Object.values(entries || {});
@@ -6167,11 +6215,11 @@ ${gallery}
       const n = await createNote("html", pid);
       n.title = jsonImportedTitle(file);
       n.titleLocked = true;
-      // HTML 작업실에는 파일의 공백·정렬을 포함한 원본 문자열을 그대로 보관합니다.
+      // 코드 작업실에는 파일의 공백·정렬을 포함한 원본 문자열을 그대로 보관합니다.
       n.data = { source: raw, previewPolicy: "sandbox-web", exportFormat: "json" };
       await saveNote(n);
       st.curNoteId = n.id; st.curProjectId = pid;
-      toast("JSON 원본을 HTML 작업실로 열었어요");
+      toast("JSON 원본을 코드 작업실로 열었어요");
       go({ s: "html" });
     });
   }
@@ -6185,7 +6233,7 @@ ${gallery}
     const structured = `${packagePreview ? `<div class="type-card" id="jsonAsProject"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 10h18"/></svg></div><div><div class="tc-name">루미잉크 프로젝트로 가져오기</div><div class="tc-desc">프로젝트 · 메모 ${packagePreview.noteCount}개 · 첨부 ${packagePreview.fileCount}개</div></div></div>` : ""}${worldInfoEntries.length ? `<div class="type-card" id="jsonAsWorldInfo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M4 5.5c2.5-1 5.2-.6 8 1.2 2.8-1.8 5.5-2.2 8-1.2v13c-2.5-1-5.2-.6-8 1.2-2.8-1.8-5.5-2.2-8-1.2Z"/><path d="M12 6.7v13"/></svg></div><div><div class="tc-name">로어북으로 가져오기</div><div class="tc-desc">인식한 World Info 항목 ${worldInfoEntries.length}개를 로어북으로 생성</div></div></div>` : ""}`;
     openModal(`<h3>JSON 열기</h3><p class="m-sub"><b>${esc(title)}</b><br>${esc(status)}</p>${structured}
       <div class="type-card" id="jsonAsFreeMemo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 12h8M8 16h8"/></svg></div><div><div class="tc-name">메모로 내용 보기</div><div class="tc-desc">읽기 쉬운 들여쓰기로 정리 · 코드 블록 형태로 안전하게 표시</div></div></div>
-      <div class="type-card" id="jsonAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">HTML 작업실로 원본 열기</div><div class="tc-desc">공백까지 보존 · JSON 원본을 그대로 편집·복사</div></div></div>
+      <div class="type-card" id="jsonAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">코드 작업실로 원본 열기</div><div class="tc-desc">공백까지 보존 · JSON 원본을 그대로 편집·복사</div></div></div>
       <div class="m-row"><button class="m-btn" id="jsonOpenCancel">취소</button></div>`);
     $on("jsonOpenCancel", "click", closeModal);
     $on("jsonAsFreeMemo", "click", () => { closeModal(); openJsonAsFreeMemo(raw, file, payload); });
@@ -6201,16 +6249,36 @@ ${gallery}
     catch (e) { parseError = e; }
     showJsonOpenChoice(raw, file, payload, parseError);
   }
+  function openMarkdownAsHtmlWorkshop(raw, file) {
+    if (raw.length > HTML_SOURCE_MAX) { toast("Markdown 원본은 5MB 이하만 코드 작업실로 열 수 있어요"); return; }
+    pickTargetProject(st.curProjectId, async (pid) => {
+      const n = await createNote("html", pid);
+      n.title = markdownImportedTitle(file);
+      n.titleLocked = true;
+      n.data = { source: raw, previewPolicy: "sandbox-web", exportFormat: "md" };
+      await saveNote(n);
+      st.curNoteId = n.id; st.curProjectId = pid;
+      toast("Markdown 원본을 코드 작업실로 열었어요");
+      go({ s: "html" });
+    });
+  }
   function importHtmlFile(file) {
     const declaredJson = isJsonFile(file);
+    const declaredMarkdown = isMarkdownFile(file);
     const size = Number(file && file.size || 0);
     if (declaredJson && size > JSON_OPEN_MAX) { toast("JSON 파일은 5MB 이하만 열 수 있어요"); return; }
+    if (declaredMarkdown && size > HTML_SOURCE_MAX) { toast("Markdown 원본은 5MB 이하만 열 수 있어요"); return; }
     if (!file) { toast("열 파일을 찾지 못했어요"); return; }
     const fr = new FileReader();
     fr.onload = () => {
       const raw = String(fr.result || "");
       if (looksLikeBinaryText(raw)) {
-        toast("열기는 HTML · JSON · 일반 텍스트 파일만 지원해요");
+        toast("열기는 HTML · JSON · Markdown · 일반 텍스트 파일만 지원해요");
+        return;
+      }
+      // .md 확장자는 내용이 JSON처럼 보여도 Markdown 원문으로 우선 열어 파일 형식을 보존합니다.
+      if (declaredMarkdown) {
+        openMarkdownAsHtmlWorkshop(raw, file);
         return;
       }
       // .json 확장자/MIME이 사라진 파일도 실제 내용이 JSON이면 일반 JSON 열기 창으로 보냅니다.
@@ -6422,18 +6490,18 @@ ${gallery}
   function showHtmlImportChoice(raw, file, pid) {
     const name = file.name.replace(/\.(html?|HTML?)$/i, "") || "불러온 HTML";
     openModal(`<h3>HTML 가져오기 방식</h3><p class="m-sub"><b>${esc(name)}</b><br>문서로 정리할지, 원본 코드를 그대로 보관할지 선택하세요.</p>
-      <div class="type-card" id="importAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">HTML 작업실로 원본 가져오기</div><div class="tc-desc">정화하지 않음 · 원본 문자열 그대로 저장 · 샌드박스 미리보기</div></div></div>
+      <div class="type-card" id="importAsHtmlSource"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/><path d="M13 4l-2 16"/></svg></div><div><div class="tc-name">코드 작업실로 원본 가져오기</div><div class="tc-desc">정화하지 않음 · 원본 문자열 그대로 저장 · 샌드박스 미리보기</div></div></div>
       <div class="type-card" id="importAsFreeMemo"><div class="tc-ico"><svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/></svg></div><div><div class="tc-name">자유 메모 문서로 가져오기</div><div class="tc-desc">리치 에디터 정화 규칙 적용 · 문서형으로 편집</div></div></div>
       <div class="m-row"><button class="m-btn" id="htmlImportCancel">취소</button></div>`);
     $on("htmlImportCancel", "click", closeModal);
     $on("importAsHtmlSource", "click", async () => {
       closeModal();
-      if (raw.length > HTML_SOURCE_MAX) { toast("HTML 원본은 5MB 이하만 가져올 수 있어요"); return; }
+      if (raw.length > HTML_SOURCE_MAX) { toast("코드 원본은 5MB 이하만 가져올 수 있어요"); return; }
       const n = await createNote("html", pid);
       n.title = cleanImportedText(name, 180) || "불러온 HTML"; n.titleLocked = true;
       n.data = { source: raw, previewPolicy: "sandbox-web", exportFormat: "html" };
       await saveNote(n); st.curNoteId = n.id; st.curProjectId = pid;
-      toast("원본 HTML을 작업실로 가져왔어요"); go({ s: "html" });
+      toast("원본 HTML을 코드 작업실로 가져왔어요"); go({ s: "html" });
     });
     $on("importAsFreeMemo", "click", async () => {
       closeModal();
@@ -6524,7 +6592,7 @@ ${gallery}
     { key:"memoCodeBg",     label:"자유 메모 코드 보기 배경", variable:"--memo-code-bg",                  fallback:"#FCFCFD", group:"memo" },
     { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo", derived:true },
     { key:"memoTitle",      label:"메모 제목",           variable:"--memo-title-color",               fallback:"#283A63", group:"type" },
-    { key:"homeSectionTitle", label:"메인 화면 섹션 제목", variable:"--home-section-title-color",       fallback:"#5E6377", group:"home", derived:true },
+    { key:"homeSectionTitle", label:"메인 화면 섹션 제목·정렬 글자", variable:"--home-section-title-color", fallback:"#5E6377", group:"home", derived:true },
     { key:"homeSectionTitleBg", label:"메인 화면 섹션 제목 배경", variable:"--home-section-title-bg",   fallback:"#EAF0FF", group:"home", derived:true },
     { key:"homeShadow",     label:"메인 화면 그림자",     variable:"--home-shadow-color",              fallback:"#7690C2", group:"home", derived:true },
     { key:"projectCountBg", label:"프로젝트 메모 개수 배경", variable:"--project-count-bg",              fallback:"#EAF0FF", group:"home", derived:true },
@@ -6754,7 +6822,7 @@ ${gallery}
     const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
     const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const groupItems=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key&&!item.derived);if(!groupItems.length)return "";const items=groupItems.map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
-    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 옅은 강조·선택 배경 하나를 바꾸면 코드 보기 아이콘, 글자 크기 선택, 새 메모 아이콘, 카운트·태그·섹션 제목 배경까지 함께 정리됩니다.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
+    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 옅은 강조·선택 배경 하나를 바꾸면 코드 보기 아이콘, 글자 크기 선택, 새 메모 아이콘, 카운트·태그·섹션 제목 배경까지 함께 정리됩니다. 메인 화면 섹션 제목 색은 홈·프로젝트 내부의 정렬 글자와 아이콘에도 함께 적용됩니다.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
     const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
     document.querySelectorAll("[data-custom-tab]").forEach((b)=>b.addEventListener("click",()=>openCustomThemeStudio(draft,b.dataset.customTab)));
     document.querySelectorAll("[data-custom-editor-key]").forEach((b)=>b.addEventListener("click",()=>{const key=b.dataset.customEditorKey,item=CUSTOM_THEME_COLOR_META.find((x)=>x.key===key);openAdvancedColorPicker(`${item.label} 색상`,draft[mode].colors[key],(value)=>{draft[mode].colors[key]=value;openCustomThemeStudio(draft,mode);},{prefix:"customThemeRole",saved:true,save:true,intro:"정사각형 색상판·HEX·RGB·스포이드로 정확하게 조절할 수 있어요."});}));
