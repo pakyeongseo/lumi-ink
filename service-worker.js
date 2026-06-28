@@ -2,7 +2,7 @@
    업데이트를 배포할 때는 아래 CACHE 버전 숫자만 올리면
    기존 캐시가 정리되고 새 파일로 갱신됩니다. (예: v1 -> v2) */
 const CACHE_PREFIX = "ink-memo-";
-const CACHE = "ink-memo-v1.5-v66.9-json-open-viewer";
+const CACHE = "ink-memo-v1.5-v66.11-templates77";
 
 const ASSETS = [
   "./",
@@ -89,6 +89,36 @@ const ASSETS = [
   "./log-templates/lumi-requiem-rest.json",
   "./log-templates/lumi-royal-crimson.json",
   "./log-templates/lumi-starry-night.json",
+  "./log-templates/lumi-blueprint.json",
+  "./log-templates/lumi-dark-academia.json",
+  "./log-templates/lumi-abyssal.json",
+  "./log-templates/lumi-tarot-mystic.json",
+  "./log-templates/lumi-newsprint.json",
+  "./log-templates/lumi-citypop-sunset.json",
+  "./log-templates/lumi-hanji-letter.json",
+  "./log-templates/lumi-glitch.json",
+  "./log-templates/lumi-stained-glass.json",
+  "./log-templates/lumi-desert-dusk.json",
+  "./log-templates/lumi-botanical.json",
+  "./log-templates/lumi-military.json",
+  "./log-templates/lumi-macaron.json",
+  "./log-templates/lumi-film-noir.json",
+  "./log-templates/lumi-neon-jianghu.json",
+  "./log-templates/lumi-onsen-ryokan.json",
+  "./log-templates/lumi-grimoire.json",
+  "./log-templates/lumi-aurora.json",
+  "./log-templates/lumi-lofi-cassette.json",
+  "./log-templates/lumi-jellyfish-tank.json",
+  "./log-templates/lumi-night-sakura.json",
+  "./log-templates/lumi-graffiti.json",
+  "./log-templates/lumi-glass-greenhouse.json",
+  "./log-templates/lumi-archive-paper.json",
+  "./log-templates/lumi-terracotta.json",
+  "./log-templates/lumi-crt-terminal.json",
+  "./log-templates/lumi-velvet-theater.json",
+  "./log-templates/lumi-biomed.json",
+  "./log-templates/lumi-cottage-lace.json",
+  "./log-templates/lumi-nautical-chart.json",
   "./tokenizer.js",
   "./manifest.json",
   "./manifest-ink.json",

@@ -2740,6 +2740,76 @@
   function riskyLogPattern(pattern) {
     return pattern.length > 300 || /(\([^)]*[+*][^)]*\))[+*{]/.test(pattern) || /(\.\*){2,}|(\.\+){2,}/.test(pattern) || /\\[1-9]/.test(pattern);
   }
+  const LOG_NAME_DESIGN_COUNT = 5;
+  const LOG_NAME_DESIGN_LABELS = ["솔리드 칩", "아웃라인", "언더라인", "소프트 틴트", "마커 하이라이트"];
+  function logColorClamp(n) { return Math.max(0, Math.min(255, Math.round(Number(n) || 0))); }
+  function logParseColor(input) {
+    if (typeof input !== "string") return null;
+    let s = input.trim().toLowerCase();
+    if (!s) return null;
+    if (s[0] === "#") {
+      if (/^#[0-9a-f]{3}$/.test(s)) s = "#" + s.slice(1).split("").map((c) => c + c).join("");
+      if (/^#[0-9a-f]{6}$/.test(s)) return { r: parseInt(s.slice(1, 3), 16), g: parseInt(s.slice(3, 5), 16), b: parseInt(s.slice(5, 7), 16), a: 1 };
+      return null;
+    }
+    const m = s.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] != null ? +m[4] : 1 };
+    if (s === "white") return { r: 255, g: 255, b: 255, a: 1 };
+    if (s === "black") return { r: 0, g: 0, b: 0, a: 1 };
+    if (s === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
+    return null;
+  }
+  function logHexStr(c) { return "#" + [c.r, c.g, c.b].map((n) => logColorClamp(n).toString(16).padStart(2, "0")).join(""); }
+  function logRgbaStr(c, a) {
+    const alpha = Math.max(0, Math.min(1, a));
+    return `rgba(${logColorClamp(c.r)},${logColorClamp(c.g)},${logColorClamp(c.b)},${(+alpha.toFixed(3))})`;
+  }
+  function logMixColor(a, b, t) { return { r: a.r + (b.r - a.r) * t, g: a.g + (b.g - a.g) * t, b: a.b + (b.b - a.b) * t, a: 1 }; }
+  function logLuminance(c) { return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255; }
+  // 이름 표시 디자인 1종(기존 persona.style)에서 5종 변주를 자동 생성합니다.
+  // 칩 → 아웃라인 → 언더라인 → 소프트 틴트 → 마커 하이라이트.
+  function deriveNameDesigns(baseStyle) {
+    const base = cleanLogStyle(baseStyle);
+    const radius = base["border-radius"] || "999px";
+    const softRadius = radius === "999px" ? "7px" : radius;
+    const weight = base["font-weight"] || "800";
+    const spacing = base["letter-spacing"];
+    const family = base["font-family"];
+    const fill = logParseColor(base["background-color"]) || logParseColor(base["background"]);
+    const text = logParseColor(base["color"]);
+    const accent = (fill && fill.a > 0 ? fill : null) || text || logParseColor("#5967bd");
+    const light = logLuminance(accent) > 0.62;
+    const onAccent = (fill && fill.a > 0 ? (text || (light ? logParseColor("#1b2233") : logParseColor("#ffffff"))) : (light ? logParseColor("#1b2233") : logParseColor("#ffffff")));
+    const accentDeep = light ? logMixColor(accent, { r: 0, g: 0, b: 0 }, 0.4) : accent;
+    const common = (o) => { const s = Object.assign({}, o); if (spacing) s["letter-spacing"] = spacing; if (family) s["font-family"] = family; return s; };
+    const chip = (fill && fill.a > 0) ? common(Object.assign({}, base)) : common({ "color": logHexStr(onAccent), "background-color": logHexStr(accent), "border-radius": radius, "padding": base["padding"] || "1px 8px", "font-weight": weight });
+    const outline = common({ "color": logHexStr(accentDeep), "background-color": "transparent", "border": `1.5px solid ${logRgbaStr(accent, 0.85)}`, "border-radius": radius, "padding": "0 7px", "font-weight": weight });
+    const underline = common({ "color": logHexStr(accentDeep), "border-bottom": `2px solid ${logRgbaStr(accent, 0.9)}`, "padding": "0 1px 1px", "font-weight": weight });
+    const tint = common({ "color": logHexStr(accentDeep), "background-color": logRgbaStr(accent, 0.16), "border-radius": softRadius, "padding": "1px 7px", "font-weight": weight });
+    const marker = common({ "color": logHexStr(accentDeep), "background": `linear-gradient(to top, ${logRgbaStr(accent, 0.42)} 42%, transparent 42%)`, "padding": "0 3px", "font-weight": weight });
+    return [chip, outline, underline, tint, marker].map((style, i) => ({ label: LOG_NAME_DESIGN_LABELS[i], style: cleanLogStyle(style) }));
+  }
+  function normalizeLogPersona(rawPersona) {
+    const p = rawPersona && typeof rawPersona === "object" ? rawPersona : {};
+    const maskText = cleanImportedText(p.maskText, 80) || "•••";
+    const baseStyle = cleanLogStyle(p.style);
+    let designs = [];
+    if (Array.isArray(p.designs) && p.designs.length) {
+      designs = p.designs.slice(0, LOG_NAME_DESIGN_COUNT).map((d, i) => ({
+        label: cleanImportedText(d && d.label, 40) || LOG_NAME_DESIGN_LABELS[i] || `디자인 ${i + 1}`,
+        style: cleanLogStyle(d && d.style)
+      })).filter((d) => Object.keys(d.style).length);
+    }
+    if (!designs.length) {
+      designs = deriveNameDesigns(baseStyle);
+      if (Object.keys(baseStyle).length) designs[0] = { label: LOG_NAME_DESIGN_LABELS[0], style: baseStyle };
+    } else if (designs.length < LOG_NAME_DESIGN_COUNT) {
+      const derived = deriveNameDesigns(designs[0].style);
+      for (let i = designs.length; i < LOG_NAME_DESIGN_COUNT; i++) designs[i] = derived[i];
+    }
+    designs = designs.slice(0, LOG_NAME_DESIGN_COUNT).map((d, i) => ({ label: d.label || LOG_NAME_DESIGN_LABELS[i], style: d.style }));
+    return { maskText, designs, style: designs[0].style };
+  }
   function normalizeLogTemplate(raw) {
     if (!raw || raw.kind !== "lumink-log-template" || Number(raw.schemaVersion) !== 1) throw new Error("루미잉크 로그 템플릿 v1 형식이 아니에요");
     const id = String(raw.id || "").trim();
@@ -2758,12 +2828,11 @@
         stripDelimiters: !!rule.stripDelimiters, style: cleanLogStyle(rule.style)
       };
     });
-    const persona = raw.persona && typeof raw.persona === "object" ? raw.persona : {};
     return {
       kind: "lumink-log-template", schemaVersion: 1, id,
       name: cleanImportedText(raw.name, 100) || id,
       description: cleanImportedText(raw.description, 300), author: cleanImportedText(raw.author, 100),
-      styles, rules, persona: { maskText: cleanImportedText(persona.maskText, 80) || "•••", style: cleanLogStyle(persona.style) }
+      styles, rules, persona: normalizeLogPersona(raw.persona)
     };
   }
   function builtInLogTemplates() {
@@ -2827,7 +2896,8 @@
     const sourceNames = Array.isArray(src.names) ? src.names : (Array.isArray(src.personaNames) ? src.personaNames : []);
     const names = [...new Set(sourceNames.map((name) => cleanImportedText(String(name || ""), 80).trim()).filter(Boolean))].slice(0, LOG_NAME_SET_LIMIT);
     const replacement = cleanImportedText(src.replacement != null ? src.replacement : src.alias, 80).trim();
-    return { names, replacement };
+    const design = Math.max(0, Math.min(LOG_NAME_DESIGN_COUNT - 1, Math.floor(Number(src.design)) || 0));
+    return { names, replacement, design };
   }
   function normalizeLogNameSets(rawSets, legacyNames, legacyAlias) {
     const source = Array.isArray(rawSets) ? rawSets : [];
@@ -2847,7 +2917,7 @@
         if (!key || used.has(key)) return;
         used.add(key); names.push(String(name || "").trim());
       });
-      return { names, replacement: set.replacement || "" };
+      return { names, replacement: set.replacement || "", design: set.design || 0 };
     });
   }
   function logNameSetCount(sets) {
@@ -2915,12 +2985,16 @@
     return out;
   }
   function applyLogNameSets(segments, template, data) {
-    const fallback = (template.persona.maskText || "•••").trim();
+    const persona = template.persona || {};
+    const designs = (Array.isArray(persona.designs) && persona.designs.length) ? persona.designs : [{ style: persona.style || {} }];
+    const fallback = (persona.maskText || "•••").trim();
     normalizeLogNameSets(data && data.nameSets, data && data.personaNames, data && data.personaAlias).forEach((set) => {
       const replacement = (set.replacement || fallback).trim();
       if (!set.names.length || !replacement) return;
+      const design = designs[Math.max(0, Math.min(designs.length - 1, set.design || 0))] || designs[0];
+      const style = (design && design.style) || {};
       [...set.names].sort((a, b) => String(b).length - String(a).length).forEach((name) => {
-        segments = applyPersonaMask(segments, String(name || "").trim(), replacement, template.persona.style);
+        segments = applyPersonaMask(segments, String(name || "").trim(), replacement, style);
       });
     });
     return segments;
@@ -2998,6 +3072,34 @@
       const nextHost = $("logSetNames"); if (nextHost) nextHost.dispatchEvent(new Event("input", { bubbles:true }));
     }));
   }
+  function logSetDesignSample(replacement) {
+    const t = (replacement || "").trim();
+    return t ? t.slice(0, 10) : "이름";
+  }
+  function logSetSelectedDesign() {
+    const host = $("logSetDesigns");
+    return host ? Math.max(0, Math.min(LOG_NAME_DESIGN_COUNT - 1, Number(host.dataset.selected) || 0)) : 0;
+  }
+  function renderLogSetDesigns(template, selected, replacement) {
+    const host = $("logSetDesigns"); if (!host) return;
+    const designs = (template && template.persona && template.persona.designs) || [];
+    const canvas = (template && template.styles && template.styles.canvas) || {};
+    const canvasBg = canvas["background"] || canvas["background-color"] || "#ffffff";
+    const sample = esc(logSetDesignSample(replacement));
+    const safeSelected = Math.max(0, Math.min(designs.length - 1, Number(selected) || 0));
+    host.dataset.selected = String(safeSelected);
+    host.innerHTML = designs.map((d, index) => {
+      const styleAttr = esc(logStyleAttr(d.style));
+      const active = index === safeSelected ? " is-active" : "";
+      return `<button type="button" class="log-set-design${active}" data-log-set-design="${index}" aria-pressed="${index === safeSelected ? "true" : "false"}"><span class="log-set-design-name">${esc(d.label)}</span><span class="log-set-design-chip" style="background:${esc(canvasBg)}"><span style="${styleAttr}">${sample}</span></span></button>`;
+    }).join("");
+    host.querySelectorAll("[data-log-set-design]").forEach((button) => button.addEventListener("click", () => {
+      host.dataset.selected = button.dataset.logSetDesign;
+      host.querySelectorAll(".log-set-design").forEach((element) => {
+        const on = element === button; element.classList.toggle("is-active", on); element.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }));
+  }
   async function saveLogNameSet(index, draft) {
     const n=getNote(st.curNoteId); if(!n||n.type!=="log")return false;
     const safeIndex=Math.max(0,Math.min(LOG_NAME_SET_COUNT-1,Number(index)||0));
@@ -3015,8 +3117,10 @@
     const safeIndex = Math.max(0, Math.min(LOG_NAME_SET_COUNT - 1, Number(index) || 0));
     const sets = normalizeLogNameSets(n.data && n.data.nameSets, n.data && n.data.personaNames, n.data && n.data.personaAlias);
     const current = normalizeLogNameSet(seed || sets[safeIndex]);
-    openModal(`<h3>이름 치환 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있습니다. 이 세트의 원본 이름은 모두 아래 “바꿀 이름”으로 표시되고, 다섯 세트 모두 현재 로그 템플릿의 정규식 스타일 규칙을 함께 적용합니다. 원본 이름은 다른 세트와 중복 저장할 수 없습니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
+    const template = getLogTemplate(n);
+    openModal(`<h3>이름 치환 세트 ${safeIndex + 1}</h3><p class="m-sub">원본 이름은 최대 20개까지 묶을 수 있어요. 등록한 이름은 모두 아래 “바꿀 이름”으로 치환되고, 아래에서 고른 이름 표시 디자인이 이 세트에 적용됩니다. 원본 이름은 다른 세트와 중복 저장할 수 없습니다.</p><div class="m-field-label">바꿀 이름</div><input class="m-input" id="logSetReplacement" maxlength="80" value="${esc(current.replacement)}" placeholder="예: {{user}} 또는 주인공"><div class="m-field-label">이름 표시 디자인</div><div class="log-set-design-list" id="logSetDesigns"></div><div class="log-set-modal-head"><span class="m-field-label">원본 이름</span><span id="logSetNameCount">${current.names.length}/${LOG_NAME_SET_LIMIT}</span></div><div class="log-set-name-list" id="logSetNames"></div><button class="m-btn log-set-add" id="logSetAdd" type="button">+ 원본 이름 추가</button><div id="logSetConflictHost"></div><div class="m-row"><button class="m-btn" id="logSetCancel">취소</button><button class="m-btn primary" id="logSetSave">세트 저장</button></div>`);
     renderLogSetNames(current.names);
+    renderLogSetDesigns(template, current.design, current.replacement);
     const updateCount = () => { const label = $("logSetNameCount"); if (label) label.textContent = `${logSetNamesFromModal().length}/${LOG_NAME_SET_LIMIT}`; };
     const updateConflict = () => {
       const host = $("logSetConflictHost"); const saveButton = $("logSetSave"); if (!host || !saveButton) return [];
@@ -3046,8 +3150,9 @@
         return;
       }
       if (names.length && !replacement) { toast("바꿀 이름을 입력해 주세요"); $("logSetReplacement").focus(); return; }
-      await saveLogNameSet(safeIndex,{names,replacement});
+      await saveLogNameSet(safeIndex, { names, replacement, design: logSetSelectedDesign() });
     });
+    $("logSetReplacement").addEventListener("input", () => renderLogSetDesigns(template, logSetSelectedDesign(), $("logSetReplacement").value));
     setTimeout(() => $("logSetReplacement").focus(), 80);
   }
   function renderLog() {

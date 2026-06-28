@@ -14,7 +14,26 @@
     "lumi-verdant-summer.json", "lumi-wedding-march.json",
     "lumi-bordeaux-vintage.json", "lumi-carrot-patch.json", "lumi-first-rose.json", "lumi-grandfather-clock.json",
     "lumi-harvest-moon.json", "lumi-holy-night.json", "lumi-old-library.json", "lumi-requiem-rest.json",
-    "lumi-royal-crimson.json", "lumi-starry-night.json"
+    "lumi-royal-crimson.json", "lumi-starry-night.json",
+    "lumi-blueprint.json", "lumi-dark-academia.json", "lumi-abyssal.json", "lumi-tarot-mystic.json",
+    "lumi-newsprint.json", "lumi-citypop-sunset.json", "lumi-hanji-letter.json", "lumi-glitch.json",
+    "lumi-stained-glass.json", "lumi-desert-dusk.json", "lumi-botanical.json", "lumi-military.json",
+    "lumi-macaron.json", "lumi-film-noir.json", "lumi-neon-jianghu.json",
+    "lumi-onsen-ryokan.json",
+    "lumi-grimoire.json",
+    "lumi-aurora.json",
+    "lumi-lofi-cassette.json",
+    "lumi-jellyfish-tank.json",
+    "lumi-night-sakura.json",
+    "lumi-graffiti.json",
+    "lumi-glass-greenhouse.json",
+    "lumi-archive-paper.json",
+    "lumi-terracotta.json",
+    "lumi-crt-terminal.json",
+    "lumi-velvet-theater.json",
+    "lumi-biomed.json",
+    "lumi-cottage-lace.json",
+    "lumi-nautical-chart.json",
   ];
 
   window.__luminkLogBuiltins = [
@@ -39,7 +58,17 @@
         { id: "bold", label: "마크다운 굵게", pattern: "\\*\\*([^*\\n]+)\\*\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "color": "#ffffff", "font-weight": "800" } },
         { id: "italic", label: "마크다운 기울임", pattern: "\\*([^*\\n]+)\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "color": "#c8d3ff", "font-style": "italic" } }
       ],
-      persona: { maskText: "◆◆◆", style: { "color": "#111629", "background-color": "#9fb3ff", "border-radius": "999px", "padding": "1px 7px", "font-weight": "800", "letter-spacing": ".08em" } }
+      persona: {
+        maskText: "◆◆◆",
+        style: { "color": "#111629", "background-color": "#9fb3ff", "border-radius": "999px", "padding": "1px 7px", "font-weight": "800", "letter-spacing": ".08em" },
+        designs: [
+          { label: "솔리드 칩", style: { "color": "#111629", "background-color": "#9fb3ff", "border-radius": "999px", "padding": "1px 7px", "font-weight": "800", "letter-spacing": ".08em" } },
+          { label: "아웃라인", style: { "color": "#b7c6ff", "background-color": "transparent", "border": "1.5px solid #9fb3ff", "border-radius": "999px", "padding": "0 7px", "font-weight": "800", "letter-spacing": ".06em" } },
+          { label: "언더라인", style: { "color": "#cdd8ff", "border-bottom": "2px solid #9fb3ff", "padding": "0 1px 1px", "font-weight": "800", "letter-spacing": ".04em" } },
+          { label: "소프트 틴트", style: { "color": "#d3ddff", "background-color": "rgba(159,179,255,.18)", "border-radius": "7px", "padding": "1px 7px", "font-weight": "700", "letter-spacing": ".04em" } },
+          { label: "마커 하이라이트", style: { "color": "#e9edff", "background": "linear-gradient(to top, rgba(159,179,255,.4) 42%, transparent 42%)", "padding": "0 3px", "font-weight": "800" } }
+        ]
+      }
     },
     {
       kind: "lumink-log-template",
@@ -62,7 +91,17 @@
         { id: "bold", label: "마크다운 굵게", pattern: "\\*\\*([^*\\n]+)\\*\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "color": "#2e2923", "font-weight": "800" } },
         { id: "italic", label: "마크다운 기울임", pattern: "\\*([^*\\n]+)\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "color": "#755f47", "font-style": "italic" } }
       ],
-      persona: { maskText: "기록 불명", style: { "color": "#fffaf0", "background-color": "#765b3d", "border-radius": "4px", "padding": "1px 6px", "font-weight": "700" } }
+      persona: {
+        maskText: "기록 불명",
+        style: { "color": "#fffaf0", "background-color": "#765b3d", "border-radius": "4px", "padding": "1px 6px", "font-weight": "700" },
+        designs: [
+          { label: "솔리드 칩", style: { "color": "#fffaf0", "background-color": "#765b3d", "border-radius": "4px", "padding": "1px 6px", "font-weight": "700" } },
+          { label: "아웃라인", style: { "color": "#5e4830", "background-color": "transparent", "border": "1.5px solid #a98a5f", "border-radius": "4px", "padding": "0 6px", "font-weight": "700" } },
+          { label: "언더라인", style: { "color": "#5e4830", "border-bottom": "2px solid #a98a5f", "padding": "0 1px 1px", "font-weight": "700" } },
+          { label: "소프트 틴트", style: { "color": "#5e4830", "background-color": "rgba(118,91,61,.14)", "border-radius": "4px", "padding": "1px 6px", "font-weight": "700" } },
+          { label: "마커 하이라이트", style: { "color": "#4a3a26", "background": "linear-gradient(to top, rgba(168,138,95,.45) 42%, transparent 42%)", "padding": "0 3px", "font-weight": "700" } }
+        ]
+      }
     },
     {
       kind: "lumink-log-template",
@@ -85,7 +124,17 @@
         { id: "bold", label: "마크다운 굵게", pattern: "\\*\\*([^*\\n]+)\\*\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "font-weight": "800", "text-decoration": "underline" } },
         { id: "italic", label: "마크다운 기울임", pattern: "\\*([^*\\n]+)\\*", flags: "g", capture: 1, stripDelimiters: true, style: { "color": "#59616f", "font-style": "italic" } }
       ],
-      persona: { maskText: "•••", style: { "color": "#ffffff", "background-color": "#5967bd", "border-radius": "4px", "padding": "1px 6px", "font-weight": "800" } }
+      persona: {
+        maskText: "•••",
+        style: { "color": "#ffffff", "background-color": "#5967bd", "border-radius": "4px", "padding": "1px 6px", "font-weight": "800" },
+        designs: [
+          { label: "솔리드 칩", style: { "color": "#ffffff", "background-color": "#5967bd", "border-radius": "4px", "padding": "1px 6px", "font-weight": "800" } },
+          { label: "아웃라인", style: { "color": "#4654a8", "background-color": "transparent", "border": "1.5px solid #5967bd", "border-radius": "4px", "padding": "0 6px", "font-weight": "800" } },
+          { label: "언더라인", style: { "color": "#4654a8", "border-bottom": "2px solid #5967bd", "padding": "0 1px 1px", "font-weight": "800" } },
+          { label: "소프트 틴트", style: { "color": "#4654a8", "background-color": "rgba(89,103,189,.13)", "border-radius": "5px", "padding": "1px 6px", "font-weight": "700" } },
+          { label: "마커 하이라이트", style: { "color": "#36408a", "background": "linear-gradient(to top, rgba(89,103,189,.4) 42%, transparent 42%)", "padding": "0 3px", "font-weight": "800" } }
+        ]
+      }
     }
   ];
 })();
