@@ -5264,6 +5264,13 @@
 
   /* ---------- smart hyperlinks ---------- */
   const URL_RE = /^https?:\/\/[^\s]+$/i;
+  function applyFreeMemoNoteLinkColor(link, color) {
+    if (!link) return "";
+    const value = normalizeIdeaColorValue(color, ideaPreferredColor());
+    link.dataset.lumiNoteColor = value;
+    Object.entries(ideaColorVars(value, "")).forEach(([name, cssValue]) => link.style.setProperty(name, cssValue));
+    return value;
+  }
   function normalizeLinks(root) {
     if (!root) return;
     root.querySelectorAll("a").forEach((a) => {
@@ -5273,6 +5280,8 @@
         a.classList.add("lumi-note-link");
         a.setAttribute("href", `#lumi-note-${noteId}`);
         a.removeAttribute("target"); a.removeAttribute("rel");
+        const storedColor = String(a.dataset.lumiNoteColor || "").trim();
+        if (storedColor) applyFreeMemoNoteLinkColor(a, storedColor);
         return;
       }
       a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener noreferrer");
@@ -5315,13 +5324,23 @@
     normalizeLinks($("editor")); scheduleSave();
     return true;
   }
-  function freeMemoInternalLinkMarkup(note) {
+  function freeMemoInternalLinkMarkup(note, color) {
     const title = String(note && note.title || "제목 없는 메모");
     const type = noteTypeShortLabel(note);
     const project = note && getProject(note.projectId);
     const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
     const id = esc(note.id);
-    return `<a class="lumi-link lumi-note-link" href="#lumi-note-${id}" data-lumi-note-id="${id}" title="${esc(hint)}">${esc(title)}</a>&nbsp;`;
+    const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
+    return `<a class="lumi-link lumi-note-link" href="#lumi-note-${id}" data-lumi-note-id="${id}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${esc(title)}</a>&nbsp;`;
+  }
+  function freeMemoNoteLinkPreviewMarkup(note, color, id) {
+    const title = String(note && note.title || "제목 없는 메모");
+    const type = noteTypeShortLabel(note);
+    const project = note && getProject(note.projectId);
+    const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
+    const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
+    const attrs = id ? ` id="${esc(id)}"` : "";
+    return `<a${attrs} class="lumi-link lumi-note-link" href="#" data-lumi-note-id="preview" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${esc(title)}</a>`;
   }
   function normalizeFreeDividerConfig(input) {
     const src = input && typeof input === "object" ? input : {};
@@ -5393,6 +5412,38 @@
     });
     update();
   }
+  function openFreeMemoNoteLinkColorPicker(savedRange, note, initialColor) {
+    const config = { color: normalizeIdeaColorValue(initialColor, ideaPreferredColor()) };
+    const preview = () => `<div class="free-note-link-preview">${freeMemoNoteLinkPreviewMarkup(note, config.color, "freeNoteLinkColorPreview")}</div>`;
+    openModal(`<h3>바로가기 버튼 컬러</h3><p class="m-sub">자유 메모 본문에서 보일 버튼 컬러를 고릅니다. 연결 대상은 메모 ID를 따라가므로, 프로젝트를 옮겨도 유지됩니다.</p>`
+      + preview()
+      + `<div class="idea-options-label">버튼 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(config.color, "data-free-note-link-color", true)}</div>`
+      + `<div class="m-row"><button class="m-btn" id="freeNoteLinkColorBack">뒤로가기</button><button class="m-btn primary" id="freeNoteLinkColorDone">삽입</button></div>`);
+    const update = () => {
+      const target = $("freeNoteLinkColorPreview");
+      if (!target) return;
+      target.dataset.lumiNoteColor = config.color;
+      target.setAttribute("style", ideaColorStyleAttr(config.color, ""));
+    };
+    $("modalBox").querySelectorAll("[data-free-note-link-color]").forEach((button) => button.addEventListener("click", () => {
+      config.color = normalizeIdeaColorValue(button.dataset.freeNoteLinkColor, config.color);
+      $("modalBox").querySelectorAll("[data-free-note-link-color]").forEach((item) => item.classList.toggle("active", item === button));
+      update();
+    }));
+    $("modalBox").querySelectorAll('[data-idea-custom-color="data-free-note-link-color"]').forEach((button) => button.addEventListener("click", () => {
+      openIdeaCustomColorPicker("바로가기 버튼 컬러 직접 선택", config.color, (value) => {
+        config.color = normalizeIdeaColorValue(value, config.color);
+        openFreeMemoNoteLinkColorPicker(savedRange, note, config.color);
+      });
+    }));
+    $on("freeNoteLinkColorBack", "click", () => openFreeMemoNoteLinkPicker(savedRange));
+    $on("freeNoteLinkColorDone", "click", () => {
+      closeModal();
+      if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(note, config.color), savedRange)) toast("내 글 바로가기를 넣었어요");
+    });
+    update();
+  }
+
   function openFreeMemoNoteLinkPicker(savedRange) {
     const current = getNote(st.curNoteId);
     const candidates = st.notes.filter((note) => note.id !== (current && current.id));
@@ -5401,9 +5452,9 @@
     let tab = "all", selectedProjectId = null, query = "";
     const projectName = (projectId) => { const project = getProject(projectId); return project ? project.name : "프로젝트 없음"; };
     const pick = (id) => {
-      const target = getNote(id); closeModal();
+      const target = getNote(id);
       if (!target) { toast("연결할 메모를 찾지 못했어요"); return; }
-      if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(target), savedRange)) toast("내 글 바로가기를 넣었어요");
+      openFreeMemoNoteLinkColorPicker(savedRange, target, ideaPreferredColor());
     };
     const noteRows = (list) => list.length ? list.map((note) => `<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-free-note-link="${esc(note.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(note)}">${TYPE_TAG[visualMemoType(note)] || "?"}</span><b>${esc(note.title || "제목 없는 메모")}</b></span><small>${esc(projectName(note.projectId))} · ${esc(noteTypeShortLabel(note))} · ${esc(note.type === "idea" ? ideaBoardSummary(note) : preview(noteHtml(note)) || "내용 없음")}</small></button></div>`).join("") : '<div class="log-template-empty">검색 결과가 없어요.</div>';
     const projectRows = (list) => list.length ? list.map((project) => {
