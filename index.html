@@ -1711,7 +1711,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.26 UI tune — "ink press line"
+     REGEX WORKSHOP · v66.27 options labels — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -1909,7 +1909,15 @@
   .rx-drawer-chev svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .rx-drawer[open] .rx-drawer-chev { transform: rotate(180deg); }
   .rx-drawer-body { padding: 2px 14px 14px; }
+  .rx-option-group { margin-bottom: 11px; min-width: 0; }
+  .rx-two > .rx-option-group { margin-bottom: 0; }
+  .rx-option-title {
+    margin: 0 0 7px; color: var(--faint); font: 850 10px/1.1 inherit;
+    letter-spacing: .08em; text-transform: uppercase;
+  }
   .rx-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
+  .rx-option-group .rx-chips { margin-bottom: 0; }
+  .rx-placement-chips { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
   .rx-chip {
     display: inline-flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 10px; cursor: pointer; transition: .15s;
     border: 1px solid var(--line); background: var(--surface-2); color: var(--muted);
@@ -1928,7 +1936,7 @@
   }
   .rx-two { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
   .rx-sel, .rx-num {
-    height: 38px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+    width: 100%; height: 38px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
     font: 600 12px/1 "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace; padding: 0 11px; outline: none;
   }
   .rx-sel:focus, .rx-num:focus { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
@@ -4001,24 +4009,39 @@
                 <span class="rx-drawer-chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
               </summary>
               <div class="rx-drawer-body">
-                <div class="rx-chips">
-                  <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>markdownOnly</label>
-                  <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>promptOnly</label>
-                  <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>runOnEdit</label>
-                  <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>disabled</label>
+                <div class="rx-option-group">
+                  <div class="rx-option-title">Placement</div>
+                  <div class="rx-chips rx-placement-chips">
+                    <label class="rx-chip"><input type="checkbox" data-regex-placement="1"><span class="rx-bx"></span>사용자 입력</label>
+                    <label class="rx-chip"><input type="checkbox" data-regex-placement="2"><span class="rx-bx"></span>AI 출력</label>
+                    <label class="rx-chip"><input type="checkbox" data-regex-placement="3"><span class="rx-bx"></span>슬래시 명령</label>
+                    <label class="rx-chip"><input type="checkbox" data-regex-placement="5"><span class="rx-bx"></span>월드 인포</label>
+                    <label class="rx-chip"><input type="checkbox" data-regex-placement="6"><span class="rx-bx"></span>Reasoning</label>
+                  </div>
+                </div>
+                <div class="rx-option-group">
+                  <div class="rx-option-title">다른 옵션</div>
+                  <div class="rx-chips">
+                    <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
+                    <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>
+                  </div>
                 </div>
                 <div class="rx-two">
-                  <select class="rx-sel" id="regexPlacement" aria-label="placement">
-                    <option value="1,2">placement 1,2</option>
-                    <option value="1">placement 1</option>
-                    <option value="2">placement 2</option>
-                    <option value="">placement 없음</option>
-                  </select>
+                  <div class="rx-option-group">
+                    <div class="rx-option-title">Macros in Find Regex</div>
                   <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
-                    <option value="0">substituteRegex 0</option>
-                    <option value="1">substituteRegex 1</option>
-                    <option value="2">substituteRegex 2</option>
+                    <option value="0">Don't substitute</option>
+                    <option value="1">substitute (raw)</option>
+                    <option value="2">substitute (escaped)</option>
                   </select>
+                  </div>
+                  <div class="rx-option-group">
+                    <div class="rx-option-title">Ephemerality</div>
+                    <div class="rx-chips">
+                      <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>형식 표시만</label>
+                      <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>형식 프롬프트만</label>
+                    </div>
+                  </div>
                 </div>
                 <div class="rx-two">
                   <input class="rx-num" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">

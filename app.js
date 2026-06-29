@@ -1935,6 +1935,7 @@
 
   /* ---------- Regex workshop: SillyTavern findRegex / replaceString lab ---------- */
   const REGEX_TRIM_MAX = 80;
+  const REGEX_PLACEMENTS = [1, 2, 3, 5, 6];
   function regexSplitLiteral(value) {
     const text = String(value || "").trim();
     if (!text.startsWith("/")) return null;
@@ -2018,16 +2019,16 @@
   }
   function makeRegexData() {
     return normalizeRegexData({
-      id: uid(), scriptName: "", findRegex: "", replaceString: "", sampleText: "", global: true,
-      trimStrings: [], placement: [1, 2], disabled: false, markdownOnly: true, promptOnly: false,
-      runOnEdit: true, substituteRegex: 0, minDepth: null, maxDepth: null
+      id: uid(), scriptName: "", findRegex: "", replaceString: "", sampleText: "", global: false,
+      trimStrings: [], placement: [], disabled: false, markdownOnly: false, promptOnly: false,
+      runOnEdit: false, substituteRegex: 0, minDepth: null, maxDepth: null
     });
   }
   function normalizeRegexData(raw) {
     const src = raw && typeof raw === "object" ? raw : {};
     const placement = Array.isArray(src.placement)
-      ? src.placement.map((n) => Number(n)).filter((n) => n === 1 || n === 2).slice(0, 2)
-      : [1, 2];
+      ? Array.from(new Set(src.placement.map((n) => Number(n)).filter((n) => REGEX_PLACEMENTS.includes(n))))
+      : [];
     const trimSource = Array.isArray(src.trimStrings) ? src.trimStrings : (typeof src.trimStrings === "string" ? src.trimStrings.split(/\r?\n/) : []);
     const findRegex = String(src.findRegex || "");
     const literal = regexSplitLiteral(findRegex);
@@ -2041,9 +2042,9 @@
       trimStrings: trimSource.map((item) => String(item || "").trim()).filter(Boolean).slice(0, REGEX_TRIM_MAX),
       placement: placement.length ? placement : [],
       disabled: !!src.disabled,
-      markdownOnly: src.markdownOnly !== false,
+      markdownOnly: !!src.markdownOnly,
       promptOnly: !!src.promptOnly,
-      runOnEdit: src.runOnEdit !== false,
+      runOnEdit: !!src.runOnEdit,
       substituteRegex: Math.max(0, Math.min(2, Number(src.substituteRegex) || 0)),
       minDepth: regexNullableNumber(src.minDepth),
       maxDepth: regexNullableNumber(src.maxDepth)
@@ -2051,8 +2052,9 @@
   }
   function regexDataFromEditor() {
     const current = getNote(st.curNoteId);
-    const placementValue = $("regexPlacement") ? $("regexPlacement").value : "1,2";
-    const placement = placementValue ? placementValue.split(",").map((v) => Number(v)).filter(Boolean) : [];
+    const placement = Array.from(document.querySelectorAll("[data-regex-placement]:checked"))
+      .map((input) => Number(input.dataset.regexPlacement))
+      .filter((n) => REGEX_PLACEMENTS.includes(n));
     return normalizeRegexData({
       id: (current && current.data && current.data.id) || (current && current.id),
       scriptName: $("regexScriptName") ? $("regexScriptName").value : "",
@@ -2063,9 +2065,9 @@
       trimStrings: $("regexTrimStrings") ? $("regexTrimStrings").value.split(/\r?\n/) : [],
       placement,
       disabled: $("regexDisabled") ? $("regexDisabled").checked : false,
-      markdownOnly: $("regexMarkdownOnly") ? $("regexMarkdownOnly").checked : true,
+      markdownOnly: $("regexMarkdownOnly") ? $("regexMarkdownOnly").checked : false,
       promptOnly: $("regexPromptOnly") ? $("regexPromptOnly").checked : false,
-      runOnEdit: $("regexRunOnEdit") ? $("regexRunOnEdit").checked : true,
+      runOnEdit: $("regexRunOnEdit") ? $("regexRunOnEdit").checked : false,
       substituteRegex: $("regexSubstituteRegex") ? $("regexSubstituteRegex").value : 0,
       minDepth: $("regexMinDepth") ? $("regexMinDepth").value : null,
       maxDepth: $("regexMaxDepth") ? $("regexMaxDepth").value : null
@@ -2082,7 +2084,9 @@
     $("regexPromptOnly").checked = d.promptOnly;
     $("regexRunOnEdit").checked = d.runOnEdit;
     $("regexDisabled").checked = d.disabled;
-    $("regexPlacement").value = d.placement.join(",");
+    document.querySelectorAll("[data-regex-placement]").forEach((input) => {
+      input.checked = d.placement.includes(Number(input.dataset.regexPlacement));
+    });
     $("regexSubstituteRegex").value = String(d.substituteRegex);
     $("regexMinDepth").value = d.minDepth == null ? "" : String(d.minDepth);
     $("regexMaxDepth").value = d.maxDepth == null ? "" : String(d.maxDepth);
@@ -7872,9 +7876,10 @@ ${gallery}
       $on(id, "input", scheduleRegexSave);
       $on(id, "blur", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
     });
-    ["regexMarkdownOnly", "regexPromptOnly", "regexRunOnEdit", "regexDisabled", "regexPlacement", "regexSubstituteRegex"].forEach((id) => {
+    ["regexMarkdownOnly", "regexPromptOnly", "regexRunOnEdit", "regexDisabled", "regexSubstituteRegex"].forEach((id) => {
       $on(id, "change", scheduleRegexSave);
     });
+    document.querySelectorAll("[data-regex-placement]").forEach((input) => input.addEventListener("change", scheduleRegexSave));
     $on("regexGlobal", "change", () => { $("regexFind").value = regexSetGlobalInFind($("regexFind").value, $("regexGlobal").checked); scheduleRegexSave(); });
     $on("regexSave", "click", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
     $on("regexMore", "click", () => openNoteSheet(st.curNoteId));
