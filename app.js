@@ -88,6 +88,7 @@
   const QUICK_MENU_SETTING_ID = "quickMenu";
   const QUICK_MENU_MIN = 1;
   const QUICK_MENU_DEFAULT = 5;
+  const QUICK_MENU_LEGACY_DEFAULT = 7;
   const QUICK_MENU_MAX = 10;
   const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "regex", "lorebook", "log", "persona", "character", "idea"]);
   const QUICK_MENU_ICON_LIBRARY = Array.isArray(window.__luminkQuickMenuIcons) ? window.__luminkQuickMenuIcons.filter((item) => item && typeof item.id === "string" && typeof item.svg === "string") : [];
@@ -177,10 +178,19 @@
     const n = Math.round(Number(value));
     return Number.isFinite(n) ? Math.max(QUICK_MENU_MIN, Math.min(QUICK_MENU_MAX, n)) : QUICK_MENU_DEFAULT;
   }
+  function quickMenuHasStoredSlotCount(src) {
+    return !!(src && Object.prototype.hasOwnProperty.call(src, "slotCount") && Number.isFinite(Number(src.slotCount)));
+  }
+  function quickMenuInitialSlotCount(src, list) {
+    if (quickMenuHasStoredSlotCount(src)) return quickMenuSlotCount(src.slotCount);
+    const hasLegacyConfig = !!(src && typeof src === "object" && (Array.isArray(src.slots) || "enabled" in src || "displayMode" in src || "updatedAt" in src || "version" in src));
+    if (hasLegacyConfig) return Math.max(QUICK_MENU_LEGACY_DEFAULT, Math.min(QUICK_MENU_MAX, Array.isArray(list) ? list.length : QUICK_MENU_LEGACY_DEFAULT));
+    return QUICK_MENU_DEFAULT;
+  }
   function normalizeQuickMenu(raw) {
     const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
     const list = Array.isArray(src.slots) ? src.slots : [];
-    const slotCount = quickMenuSlotCount(src.slotCount);
+    const slotCount = quickMenuInitialSlotCount(src, list);
     const slots = [];
     for (let i = 0; i < slotCount; i++) {
       const base = emptyQuickMenuSlot(i), item = list[i] && typeof list[i] === "object" ? list[i] : {};
