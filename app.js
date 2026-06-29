@@ -5344,11 +5344,13 @@
 
   /* ---------- smart hyperlinks ---------- */
   const URL_RE = /^https?:\/\/[^\s]+$/i;
-  function applyFreeMemoNoteLinkColor(link, color) {
+  function applyFreeMemoNoteLinkColor(link, color, textColor) {
     if (!link) return "";
     const value = normalizeIdeaColorValue(color, ideaPreferredColor());
+    const ink = normalizeIdeaTextColorValue(textColor || link.dataset.lumiNoteTextColor || "auto");
     link.dataset.lumiNoteColor = value;
-    Object.entries(ideaColorVars(value, "")).forEach(([name, cssValue]) => link.style.setProperty(name, cssValue));
+    link.dataset.lumiNoteTextColor = ink;
+    Object.entries(ideaColorVars(value, ink)).forEach(([name, cssValue]) => link.style.setProperty(name, cssValue));
     return value;
   }
   function freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle) {
@@ -5382,7 +5384,8 @@
         a.setAttribute("href", `#lumi-note-${noteId}`);
         a.removeAttribute("target"); a.removeAttribute("rel");
         const storedColor = String(a.dataset.lumiNoteColor || "").trim();
-        if (storedColor) applyFreeMemoNoteLinkColor(a, storedColor);
+        const storedTextColor = String(a.dataset.lumiNoteTextColor || "").trim();
+        if (storedColor || storedTextColor) applyFreeMemoNoteLinkColor(a, storedColor || ideaPreferredColor(), storedTextColor || "auto");
         ensureFreeMemoNoteLinkCard(a);
         return;
       }
@@ -5426,23 +5429,25 @@
     normalizeLinks($("editor")); scheduleSave();
     return true;
   }
-  function freeMemoInternalLinkMarkup(note, color) {
+  function freeMemoInternalLinkMarkup(note, color, textColor) {
     const title = String(note && note.title || "제목 없는 메모");
     const type = noteTypeShortLabel(note);
     const project = note && getProject(note.projectId);
     const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
     const id = esc(note.id);
     const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
-    return `<div class="free-note-link-block"><a class="lumi-link lumi-note-link idea-quote-body" href="#lumi-note-${id}" data-lumi-note-id="${id}" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a></div><p><br></p>`;
+    const linkTextColor = normalizeIdeaTextColorValue(textColor);
+    return `<div class="free-note-link-block"><a class="lumi-link lumi-note-link idea-quote-body" href="#lumi-note-${id}" data-lumi-note-id="${id}" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" data-lumi-note-text-color="${esc(linkTextColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, linkTextColor)}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a></div><p><br></p>`;
   }
-  function freeMemoNoteLinkPreviewMarkup(note, color, id) {
+  function freeMemoNoteLinkPreviewMarkup(note, color, textColor, id) {
     const title = String(note && note.title || "제목 없는 메모");
     const type = noteTypeShortLabel(note);
     const project = note && getProject(note.projectId);
     const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
     const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
+    const linkTextColor = normalizeIdeaTextColorValue(textColor);
     const attrs = id ? ` id="${esc(id)}"` : "";
-    return `<a${attrs} class="lumi-link lumi-note-link idea-quote-body" href="#" data-lumi-note-id="preview" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a>`;
+    return `<a${attrs} class="lumi-link lumi-note-link idea-quote-body" href="#" data-lumi-note-id="preview" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" data-lumi-note-text-color="${esc(linkTextColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, linkTextColor)}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a>`;
   }
   function normalizeFreeDividerConfig(input) {
     const src = input && typeof input === "object" ? input : {};
@@ -5514,9 +5519,9 @@
     });
     update();
   }
-  function openFreeMemoNoteLinkColorPicker(savedRange, note, initialColor) {
-    const config = { color: normalizeIdeaColorValue(initialColor, ideaPreferredColor()) };
-    const preview = () => `<div class="free-note-link-preview">${freeMemoNoteLinkPreviewMarkup(note, config.color, "freeNoteLinkColorPreview")}</div>`;
+  function openFreeMemoNoteLinkColorPicker(savedRange, note, initialColor, initialTextColor) {
+    const config = { color: normalizeIdeaColorValue(initialColor, ideaPreferredColor()), textColor: normalizeIdeaTextColorValue(initialTextColor || "auto") };
+    const preview = () => `<div class="free-note-link-preview">${freeMemoNoteLinkPreviewMarkup(note, config.color, config.textColor, "freeNoteLinkColorPreview")}</div><div class="idea-options-label">글자색</div><div class="idea-color-grid palette-grid">${ideaTextColorChoicesMarkup(config.textColor, "data-free-note-link-text-color", true)}</div>`;
     openModal(`<h3>바로가기 버튼 컬러</h3><p class="m-sub">자유 메모 본문에서 보일 버튼 컬러를 고릅니다. 연결 대상은 메모 ID를 따라가므로, 프로젝트를 옮겨도 유지됩니다.</p>`
       + preview()
       + `<div class="idea-options-label">버튼 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(config.color, "data-free-note-link-color", true)}</div>`
@@ -5525,23 +5530,35 @@
       const target = $("freeNoteLinkColorPreview");
       if (!target) return;
       target.dataset.lumiNoteColor = config.color;
-      target.setAttribute("style", ideaColorStyleAttr(config.color, ""));
+      target.dataset.lumiNoteTextColor = config.textColor;
+      target.setAttribute("style", ideaColorStyleAttr(config.color, config.textColor));
     };
     $("modalBox").querySelectorAll("[data-free-note-link-color]").forEach((button) => button.addEventListener("click", () => {
       config.color = normalizeIdeaColorValue(button.dataset.freeNoteLinkColor, config.color);
       $("modalBox").querySelectorAll("[data-free-note-link-color]").forEach((item) => item.classList.toggle("active", item === button));
       update();
     }));
+    $("modalBox").querySelectorAll("[data-free-note-link-text-color]").forEach((button) => button.addEventListener("click", () => {
+      config.textColor = normalizeIdeaTextColorValue(button.dataset.freeNoteLinkTextColor);
+      $("modalBox").querySelectorAll("[data-free-note-link-text-color]").forEach((item) => item.classList.toggle("active", item === button));
+      update();
+    }));
     $("modalBox").querySelectorAll('[data-idea-custom-color="data-free-note-link-color"]').forEach((button) => button.addEventListener("click", () => {
       openIdeaCustomColorPicker("바로가기 버튼 컬러 직접 선택", config.color, (value) => {
         config.color = normalizeIdeaColorValue(value, config.color);
-        openFreeMemoNoteLinkColorPicker(savedRange, note, config.color);
+        openFreeMemoNoteLinkColorPicker(savedRange, note, config.color, config.textColor);
+      });
+    }));
+    $("modalBox").querySelectorAll('[data-idea-custom-color="data-free-note-link-text-color"]').forEach((button) => button.addEventListener("click", () => {
+      openIdeaCustomColorPicker("바로가기 버튼 글자색 직접 선택", ideaTextColorValue(config.textColor) || "#20242d", (value) => {
+        config.textColor = normalizeIdeaTextColorValue(value);
+        openFreeMemoNoteLinkColorPicker(savedRange, note, config.color, config.textColor);
       });
     }));
     $on("freeNoteLinkColorBack", "click", () => openFreeMemoNoteLinkPicker(savedRange));
     $on("freeNoteLinkColorDone", "click", () => {
       closeModal();
-      if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(note, config.color), savedRange)) toast("내 글 바로가기를 넣었어요");
+      if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(note, config.color, config.textColor), savedRange)) toast("내 글 바로가기를 넣었어요");
     });
     update();
   }
