@@ -1713,7 +1713,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.45 free note link text color — "ink press line"
+     REGEX WORKSHOP · v66.46 saver dot / docs refresh — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -2071,9 +2071,14 @@
     flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-width: max-content; height: 22px;
     font-size: 12px; line-height: 1; font-weight: 650; color: var(--muted); padding: 0 6px; white-space: nowrap; user-select: none;
   }
-  .saver .dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .3s; }
-  .saver.dirty .dot { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
-  .saver.saved .dot { background: #59d98b; }
+  .saver::before {
+    content: ""; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--faint); box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface) 70%, transparent);
+    transition: background .3s, transform .3s, box-shadow .3s;
+  }
+  .saver .dot { display: none; }
+  .saver.dirty::before { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+  .saver.saved::before { background: #59d98b; box-shadow: 0 0 8px color-mix(in srgb, #59d98b 64%, transparent); }
 
   /* ===== FAB ===== */
   .fab {
