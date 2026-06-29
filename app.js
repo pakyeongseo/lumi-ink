@@ -5344,14 +5344,16 @@
   function freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle) {
     const title = String((note && note.title) || fallbackTitle || "제목 없는 메모");
     const typeLabel = note ? noteTypeShortLabel(note) : "메모 없음";
-    return `<span class="idea-quote-mark" aria-hidden="true">↗</span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-preview">${esc(typeLabel)}</span></span><span class="idea-quote-go" aria-hidden="true">연결 메모</span>`;
+    return `<span class="idea-quote-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14 21 3"/><path d="M15 3h6v6"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-preview">${esc(typeLabel)}</span></span><span class="idea-quote-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>`;
   }
   function ensureFreeMemoNoteLinkCard(link) {
     if (!link) return;
     const noteId = String(link.dataset.lumiNoteId || "").trim();
     const note = noteId ? getNote(noteId) : null;
     const fallbackTitle = String(link.dataset.lumiNoteTitle || link.textContent || "").trim();
-    if (!link.querySelector(".idea-quote-copy")) link.innerHTML = freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle);
+    if (!link.querySelector(".idea-quote-copy") || !link.querySelector(".idea-quote-mark svg") || !link.querySelector(".idea-quote-go svg")) {
+      link.innerHTML = freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle);
+    }
     if (!link.dataset.lumiNoteTitle) link.dataset.lumiNoteTitle = String((note && note.title) || fallbackTitle || "제목 없는 메모");
     if (!link.closest(".free-note-link-block") && link.parentNode) {
       const block = document.createElement("div");

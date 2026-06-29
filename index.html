@@ -1713,7 +1713,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.42 sample scroll sync fix — "ink press line"
+     REGEX WORKSHOP · v66.43 free note link / saver restore — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -2067,8 +2067,11 @@
   }
   }
 
-  .saver { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 6px; user-select: none; }
-  .saver .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .3s; }
+  .saver {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-width: max-content; height: 22px;
+    font-size: 12px; line-height: 1; font-weight: 650; color: var(--muted); padding: 0 6px; white-space: nowrap; user-select: none;
+  }
+  .saver .dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .3s; }
   .saver.dirty .dot { background: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
   .saver.saved .dot { background: #59d98b; }
 
@@ -2355,17 +2358,24 @@
   .editor a.lumi-note-link.idea-quote-body, .read-body a.lumi-note-link.idea-quote-body {
     --lumi-note-a: var(--idea-color-a, var(--accent));
     --lumi-note-b: var(--idea-color-b, var(--accent));
-    appearance: none; box-sizing: border-box; width: 100%; min-height: 70px;
-    display: flex; align-items: center; gap: 12px; padding: 16px;
+    appearance: none; box-sizing: border-box; width: min(100%, 520px); max-width: 520px; min-height: 62px; height: auto;
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
     border: 0; border-left: 4px solid var(--idea-color-b, #82a7ff); border-radius: 5px 13px 13px 5px;
     background: var(--idea-chip-fill, rgba(250,252,255,.94));
     color: var(--idea-chip-ink, #25304a); box-shadow: 0 6px 12px color-mix(in srgb, var(--idea-color-b, #82a7ff) 16%, transparent);
-    text-align: left; text-decoration: none; cursor: pointer; overflow: hidden;
+    font: 750 13px/1.2 var(--user-font, inherit); text-align: left; text-decoration: none; cursor: pointer; overflow: hidden;
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
   }
   .editor a.lumi-note-link.idea-quote-body .idea-quote-mark,
   .read-body a.lumi-note-link.idea-quote-body .idea-quote-mark {
-    flex: 0 0 auto; font: 800 31px/1 Georgia, serif; color: var(--idea-color-b, #7399ee);
+    flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+    background: var(--idea-color-grad, linear-gradient(135deg, #7b9bff, #b58bff)); color: #fff;
+  }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-mark svg,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-mark svg,
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-go svg,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-go svg {
+    width: 17px; height: 17px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
   }
   .editor a.lumi-note-link.idea-quote-body .idea-quote-copy,
   .read-body a.lumi-note-link.idea-quote-body .idea-quote-copy {
@@ -2387,7 +2397,8 @@
   }
   .editor a.lumi-note-link.idea-quote-body .idea-quote-go,
   .read-body a.lumi-note-link.idea-quote-body .idea-quote-go {
-    margin-left: auto; flex: 0 0 auto; color: var(--idea-chip-ink, #20242d); opacity: .68; font-size: 11px;
+    margin-left: auto; flex: 0 0 auto; width: 26px; height: 26px; display: grid; place-items: center;
+    color: var(--idea-chip-ink, #20242d); opacity: .68; font-size: 11px;
   }
   .editor a.lumi-note-link.idea-quote-body { cursor: text; }
   .read-body a.lumi-note-link.idea-quote-body { transition: transform .15s ease, box-shadow .15s ease; }
@@ -3974,7 +3985,7 @@
   }
   .editor a.lumi-note-link.idea-quote-body,
   .read-body a.lumi-note-link.idea-quote-body {
-    width: 100%;
+    width: min(100%, 520px);
     max-width: 520px;
   }
   .free-note-link-preview .lumi-note-link.idea-quote-body {
