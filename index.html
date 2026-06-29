@@ -1711,7 +1711,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.27 options labels — "ink press line"
+     REGEX WORKSHOP · v66.28 IN-only sample — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -1722,8 +1722,8 @@
   /* ----- workbar : segmented composing control ----- */
   .regex-workshop .html-workbar { gap: 9px; padding: 10px 12px; }
   .regex-workshop .rx-seg {
-    flex: 0 0 auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px;
-    border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 60%, #07101c);
+    flex: 0 0 auto; display: inline-flex; gap: 2px; padding: 0; border-radius: 0;
+    border: 0; background: transparent; box-shadow: none;
   }
   .regex-workshop .rx-seg .html-mode {
     min-height: 30px; padding: 0 12px; border: 0; border-radius: 9px; background: transparent;
@@ -1823,12 +1823,13 @@
 
   /* ----- compact status text : validation / preview badge (#regexValidation, #regexPreviewBadge) ----- */
   #screen-regex .regex-status {
-    flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 5px;
-    padding: 0; border: 0; border-radius: 0; font: 760 5.5px/1.35 inherit; letter-spacing: .01em;
+    flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 3px;
+    padding: 0; border: 0; border-radius: 0; font: 800 4.75px/1.2 inherit; letter-spacing: 0;
     color: var(--muted); background: transparent; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   }
   #screen-regex .regex-status::before {
-    content: ""; width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .72; flex: 0 0 auto;
+    content: ""; width: 2.5px; height: 2.5px; border-radius: 50%; background: currentColor; opacity: .72; flex: 0 0 auto;
   }
   #screen-regex .regex-status.ok {
     color: color-mix(in srgb, #55d990 72%, var(--ink));
@@ -1954,6 +1955,7 @@
   }
   .regex-head-status .html-pane-note {
     min-width: 0; max-width: min(460px, 56vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 6px; line-height: 1.2; letter-spacing: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   }
   .regex-preview-status {
     display: none;
@@ -4010,7 +4012,11 @@
               </summary>
               <div class="rx-drawer-body">
                 <div class="rx-option-group">
-                  <div class="rx-option-title">Placement</div>
+                  <div class="rx-option-title">트림아웃</div>
+                  <textarea class="rx-trim" id="regexTrimStrings" spellcheck="false" placeholder="한 줄에 하나"></textarea>
+                </div>
+                <div class="rx-option-group">
+                  <div class="rx-option-title">플레이스먼트</div>
                   <div class="rx-chips rx-placement-chips">
                     <label class="rx-chip"><input type="checkbox" data-regex-placement="1"><span class="rx-bx"></span>사용자 입력</label>
                     <label class="rx-chip"><input type="checkbox" data-regex-placement="2"><span class="rx-bx"></span>AI 출력</label>
@@ -4019,35 +4025,35 @@
                     <label class="rx-chip"><input type="checkbox" data-regex-placement="6"><span class="rx-bx"></span>Reasoning</label>
                   </div>
                 </div>
-                <div class="rx-option-group">
-                  <div class="rx-option-title">다른 옵션</div>
-                  <div class="rx-chips">
-                    <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
-                    <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>
+                <div class="rx-two">
+                  <div class="rx-option-group">
+                    <div class="rx-option-title">최소 깊이</div>
+                    <input class="rx-num" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">
+                  </div>
+                  <div class="rx-option-group">
+                    <div class="rx-option-title">최대 깊이</div>
+                    <input class="rx-num" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
                   </div>
                 </div>
                 <div class="rx-two">
                   <div class="rx-option-group">
-                    <div class="rx-option-title">Macros in Find Regex</div>
-                  <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
-                    <option value="0">Don't substitute</option>
-                    <option value="1">substitute (raw)</option>
-                    <option value="2">substitute (escaped)</option>
-                  </select>
-                  </div>
-                  <div class="rx-option-group">
-                    <div class="rx-option-title">Ephemerality</div>
+                    <div class="rx-option-title">다른 옵션</div>
                     <div class="rx-chips">
+                      <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
+                      <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>
                       <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>형식 표시만</label>
                       <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>형식 프롬프트만</label>
                     </div>
                   </div>
+                  <div class="rx-option-group">
+                    <div class="rx-option-title">Macros in Find Regex</div>
+                    <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
+                      <option value="0">Don't substitute</option>
+                      <option value="1">substitute (raw)</option>
+                      <option value="2">substitute (escaped)</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="rx-two">
-                  <input class="rx-num" id="regexMinDepth" type="number" min="0" max="999" placeholder="minDepth">
-                  <input class="rx-num" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
-                </div>
-                <textarea class="rx-trim" id="regexTrimStrings" spellcheck="false" placeholder="trimStrings · 한 줄에 하나"></textarea>
               </div>
             </details>
 

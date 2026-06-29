@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.21**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.21-markdown-render-preview`
+- 개발 기준 빌드: **v66.29**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.29-regex-layout-manual-refresh`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.21_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.29_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`, `Lumi_Ink_v66.24_Release_Notes.md`~`Lumi_Ink_v66.29_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.29
+
+- 정규식 작업실의 보기 전환 탭 배경을 투명하게 정리하고, 검증·매치·오류 상태 문구를 더 작은 보조 정보로 조정했습니다.
+- 내보내기 옵션은 트림아웃, 플레이스먼트, 최소/최대 깊이, 다른 옵션·Macros 순서로 재배치했습니다.
+- 상세 매뉴얼에 정규식 작업실의 생성·가져오기·미리보기·옵션·JSON 내보내기 흐름을 추가했습니다.
 
 ## v66.21
 

@@ -2467,7 +2467,7 @@
   }
   function applyRegexAutoSample() {
     const data = regexDataFromEditor(), parsed = regexParseFind(data.findRegex);
-    if (!parsed.ok || !data.replaceString.trim()) { toast("IN과 OUT을 먼저 채워 주세요"); return; }
+    if (!parsed.ok) { toast("올바른 IN 정규식을 먼저 입력해 주세요"); return; }
     $("regexSample").value = regexSampleFromPattern(parsed.source, data.replaceString);
     scheduleRegexSave();
     toast("샘플을 자동 작성했어요");

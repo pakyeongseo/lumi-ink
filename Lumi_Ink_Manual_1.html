@@ -656,6 +656,7 @@ table code{ font-size:.82em; }
 <a class="toc-link" href="#sec-6"><span class="num">06</span><span>메모 만들기와 공통 관리</span></a>
 <a class="toc-link" href="#sec-7"><span class="num">07</span><span>자유 메모</span></a>
 <a class="toc-link" href="#sec-html"><span class="num">07+</span><span>코드 작업실</span></a>
+<a class="toc-link" href="#sec-regex"><span class="num">07R</span><span>정규식 작업실</span></a>
 <a class="toc-link" href="#sec-8"><span class="num">08</span><span>로어북</span></a>
 <a class="toc-link" href="#sec-9"><span class="num">09</span><span>로그 저장</span></a>
 <a class="toc-link" href="#sec-10"><span class="num">10</span><span>인물 카드 · 페르소나 / 다인 페르소나</span></a>
@@ -688,10 +689,10 @@ table code{ font-size:.82em; }
 <div class="doc-header">
 <div class="eyebrow">LUMI INK · USER MANUAL</div>
 <h1>루미잉크 전체 기능 상세 매뉴얼</h1>
-<p class="lede">창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱, 루미잉크의 <strong>배포 버전 v1.5</strong> 실사용 설명서입니다. 리치 문서·원본 HTML·AI 롤플레이 자료·페르소나·캐릭터 카드·아이디어 보드를 한 흐름으로 관리합니다.</p>
+<p class="lede">창작 자료를 프로젝트 단위로 정리하는 로컬 우선 메모 웹앱, 루미잉크의 <strong>배포 버전 v1.5</strong> 실사용 설명서입니다. 리치 문서·원본 코드·SillyTavern 정규식·AI 롤플레이 자료·인물 카드·아이디어 보드를 한 흐름으로 관리합니다.</p>
 <div class="meta-row">
 <span class="meta-chip">배포 버전 Lumi Ink v1.5</span>
-<span class="meta-chip">개발 기준 v66.18 · 2026-06-28</span>
+<span class="meta-chip">개발 기준 v66.29 · 2026-06-29</span>
 <span class="meta-chip">실제 사용 흐름 기준 · 홍보문 아님</span>
 </div>
 </div>
@@ -731,6 +732,7 @@ table code{ font-size:.82em; }
 <tr><td><strong>프로젝트</strong></td><td>작품·세션·세계관별 자료 묶기</td><td>태그, 색상, 썸네일, 프레임, 고정, 복제</td><td>전체 백업·프로젝트 패키지</td></tr>
 <tr><td><strong>자유 메모</strong></td><td>문서·레퍼런스 작성</td><td>리치 서식, 사진·동영상, 링크, 코드 블록, 첨부, 미디어 픽셀 리사이즈</td><td>일반 HTML · 안전 정화 후 재가져오기</td></tr>
 <tr><td><strong>코드 작업실</strong></td><td>상태창·배너·홍보글·HTML·JSON·Markdown 원문 편집</td><td>원본 문자열 보존, 소스/미리보기/분할 보기, HTML 격리 미리보기·Markdown 렌더링</td><td>원문 <code>.html</code> / <code>.json</code> / <code>.md</code> 선택 저장</td></tr>
+<tr><td><strong>정규식 작업실</strong></td><td>SillyTavern Regex 스크립트 작성·검증</td><td>IN/OUT/sample, 실시간 검증, 캡처 확인, placement·깊이·trimStrings 옵션</td><td>SillyTavern Regex <code>.json</code></td></tr>
 <tr><td><strong>로어북</strong></td><td>SillyTavern용 World Info 작성</td><td>키워드, constant, Depth, 토큰 계산, 경량 마크다운</td><td>World Info JSON</td></tr>
 <tr><td><strong>로그 저장</strong></td><td>대화 로그 보관·게시</td><td>정규식 디자인, 이름 가림 5종, 100종 템플릿, 사용자 템플릿</td><td>인라인 HTML · 재가져오기 가능한 HTML</td></tr>
 <tr><td><strong>인물 카드</strong></td><td>페르소나·캐릭터의 단일/다인 자료 관리</td><td>국·영문 설정, 포트레이트, 갤러리, 크리에이터 노트, 단일/다인 전환, 타입 전환</td><td>재가져오기 가능한 HTML</td></tr>
@@ -922,7 +924,7 @@ table code{ font-size:.82em; }
 <ol class="steps">
 <li>홈이나 사이드바에서 <code>새 메모</code>를 누릅니다.</li>
 <li>상단에는 <strong>생성할 메모 타입을 골라주세요</strong> 안내와 <strong>자유 메모</strong> 빠른 생성 카드가 표시됩니다. 빠른 생성 카드를 누르면 자유 메모 생성 흐름으로 바로 들어갑니다. 이 카드는 기존의 블루 그라데이션과 흰색 아이콘·텍스트 구성을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
-<li>유형을 고를 때는 <strong>캐릭터 · 작업실 · 아뜰리에</strong> 탭을 사용합니다. 캐릭터 탭에는 <strong>페르소나 · 다인 페르소나 · 캐릭터 · 다인 캐릭터</strong>, 작업실 탭에는 <strong>로어북 · 코드 작업실</strong>, 아뜰리에 탭에는 <strong>자유 메모 · 로그 저장 · 아이디어 보드</strong>가 있습니다.</li>
+<li>유형을 고를 때는 <strong>캐릭터 · 작업실 · 아뜰리에</strong> 탭을 사용합니다. 캐릭터 탭에는 <strong>페르소나 · 다인 페르소나 · 캐릭터 · 다인 캐릭터</strong>, 작업실 탭에는 <strong>로어북 · 정규식 작업실 · 코드 작업실</strong>, 아뜰리에 탭에는 <strong>자유 메모 · 로그 저장 · 아이디어 보드</strong>가 있습니다.</li>
 <li>저장할 프로젝트를 선택합니다.</li>
 <li>각 타입의 제목·내용을 작성하면 자동 저장됩니다.</li></ol>
 <h3>6.2 자동 제목과 수동 제목</h3>
@@ -1066,6 +1068,47 @@ table code{ font-size:.82em; }
 <p>HTML은 <code>iframe sandbox</code> 안에서 렌더링한 사본을 미리보기로 표시합니다. 스크립트, 이벤트 속성, 프레임, 폼, 자동 새로고침과 위험한 URL은 미리보기 사본에서 제거됩니다. JSON은 실행하지 않는 원문 보기로 표시하고, Markdown은 제목·목록·인용문·체크리스트·표·코드 블록·링크·이미지를 렌더링한 문서 보기로 표시합니다. Markdown 안의 HTML은 실행하지 않고 텍스트로 처리합니다. HTML 전용 <code>웹페이지로 열기</code> 버튼은 JSON·Markdown에서 비활성화됩니다.</p>
 <h3>저장·내보내기·제한</h3>
 <p>원본은 최대 <strong>5MiB</strong>까지 저장할 수 있습니다. 작업 막대의 <code>파일 저장</code> 또는 더보기 메뉴에서 파일 이름과 <code>.html</code>/<code>.json</code>/<code>.md</code> 확장자를 선택할 수 있습니다. <code>.json</code>은 저장 전 문법을 검사하며, 문법 오류가 있으면 파일을 만들지 않습니다. 내보내기는 앱 래퍼를 덧붙이지 않고 저장 문자열을 그대로 파일로 만듭니다.</p>
+</section>
+<!-- ============================================================ -->
+<!-- 7R. 정규식 작업실 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-regex">
+<div class="section-head"><div class="nib-num">07R</div><h2>정규식 작업실</h2></div>
+<p>정규식 작업실은 SillyTavern의 Regex 스크립트를 앱 안에서 작성하고, 샘플 입력으로 먼저 검증한 뒤 <strong>바로 가져갈 수 있는 JSON</strong>으로 저장하는 전용 작업대입니다. 코드 작업실처럼 원문을 보관하는 공간이 아니라, <code>findRegex</code>·<code>replaceString</code>와 SillyTavern 옵션을 구조화해 다룹니다.</p>
+<div class="callout note"><span class="icon">✦</span><p><strong>호환 범위:</strong> 이 작업실은 <code>findRegex</code>와 <code>replaceString</code>을 가진 SillyTavern Regex JSON을 인식합니다. 기존 JSON을 사이드바 <code>열기</code>로 선택한 뒤 <code>정규식 작업실로 가져오기</code>를 고르면 같은 옵션을 편집할 수 있습니다.</p></div>
+<h3>작성 흐름</h3>
+<ol class="steps">
+<li><code>scriptName</code>에 스크립트 이름을 적습니다. 제목을 따로 고정하지 않았다면 이 이름이 메모 제목에도 반영됩니다.</li>
+<li><strong>IN · findRegex</strong>에 찾을 정규식을 입력합니다. <code>/패턴/플래그</code> 리터럴과 일반 패턴 모두 입력할 수 있습니다.</li>
+<li><strong>OUT · replaceString</strong>에 치환 결과를 넣습니다. 캡처 그룹은 <code>$1</code>, <code>$2</code>처럼 참조합니다.</li>
+<li><strong>sample</strong>에 실제 대화에서 들어올 예시를 넣고, 유동 값은 <code>[[값]]</code>으로 감싸면 <code>샘플→IN</code>이 해당 부분을 캡처 그룹으로 만드는 패턴 초안을 생성합니다.</li>
+<li><code>PREVIEW</code> 또는 <code>SPLIT</code>에서 매치 수, 첫 매치의 캡처 값, OUT HTML 렌더링 결과를 확인한 뒤 JSON으로 저장합니다.</li>
+</ol>
+<h3>EDIT · PREVIEW · SPLIT</h3>
+<div class="kv-list">
+<div class="kv-row"><div class="k">EDIT</div><div class="v">IN, OUT, sample과 내보내기 옵션을 편집합니다. IN 문법 상태가 즉시 표시됩니다.</div></div>
+<div class="kv-row"><div class="k">PREVIEW</div><div class="v">sample을 기준으로 매치 수와 캡처 그룹, OUT 결과를 샌드박스에서 확인합니다.</div></div>
+<div class="kv-row"><div class="k">SPLIT</div><div class="v">넓은 화면에서는 편집과 미리보기를 좌우로, 좁은 화면에서는 위아래로 함께 표시합니다.</div></div>
+</div>
+<p><code>정상</code>, <code>검증 실패</code>, <code>미리보기 대기</code>, <code>n개 매치</code> 같은 상태 문구는 작업 흐름을 방해하지 않도록 보조 정보 크기로 표시됩니다. 오류가 나면 IN의 JavaScript 정규식 문법 오류 메시지가 함께 표시됩니다.</p>
+<h3>샘플 도구와 글로벌 플래그</h3>
+<ul>
+<li><strong>글로벌 /g</strong>: 켜면 IN을 <code>/.../g</code> 형태로 맞춥니다. 이미 리터럴로 입력한 경우 플래그만 조정하고, 일반 패턴은 리터럴 형태로 감쌉니다.</li>
+<li><strong>샘플→IN</strong>: <code>[[값]]</code> 표식을 캡처 그룹으로 바꾸고, 공백·쉼표·구분기호에는 느슨한 공백 허용을 적용한 초안 패턴을 만듭니다.</li>
+<li><strong>샘플 자동</strong>: IN이 문법상 유효하면 OUT이 비어 있어도 캡처 구조를 바탕으로 sample 초안을 생성합니다. OUT에 <code>$n</code>이 있으면 그 참조 범위도 함께 고려합니다.</li>
+</ul>
+<h3>내보내기 설정</h3>
+<p>핵심 편집 영역 아래의 <code>export options</code> 서랍에는 아래 순서로 옵션이 있습니다.</p>
+<div class="table-wrap"><table><thead><tr><th>영역</th><th>용도</th></tr></thead><tbody>
+<tr><td><strong>트림아웃</strong></td><td>치환 결과에서 다듬을 문자열을 한 줄에 하나씩 입력합니다. 최대 80개를 저장합니다.</td></tr>
+<tr><td><strong>플레이스먼트</strong></td><td>사용자 입력(1), AI 출력(2), 슬래시 명령(3), 월드 인포(5), Reasoning(6) 중 적용 위치를 복수 선택합니다.</td></tr>
+<tr><td><strong>최소 깊이 / 최대 깊이</strong></td><td>각각 0~999 범위의 선택 입력입니다. 비워 두면 JSON에는 <code>null</code>로 저장됩니다.</td></tr>
+<tr><td><strong>다른 옵션</strong></td><td><code>비활성화됨</code>, <code>편집 실행</code>, <code>형식 표시만</code>, <code>형식 프롬프트만</code>을 한 묶음에서 설정합니다.</td></tr>
+<tr><td><strong>Macros in Find Regex</strong></td><td>매크로를 치환하지 않음, raw 치환, escaped 치환 중 하나를 선택합니다.</td></tr>
+</tbody></table></div>
+<h3>JSON 저장과 데이터 보존</h3>
+<p>작업 막대의 다운로드 버튼 또는 더보기 메뉴의 <code>SillyTavern JSON 내보내기</code>를 누르면, 현재 <code>id</code>, <code>scriptName</code>, <code>findRegex</code>, <code>replaceString</code>, <code>trimStrings</code>, <code>placement</code>, 실행·표시 옵션과 깊이 값을 포함한 JSON 파일을 저장합니다. IN 문법 오류가 남아 있으면 다운로드하지 않고 오류를 알립니다.</p>
+<p>상단 저장 버튼과 <code>Ctrl/⌘+S</code>는 앱 내부 메모 저장입니다. 입력은 자동 저장되며, 정규식의 IN·OUT·sample은 각각 코드 작업실과 같은 <strong>5MiB 이하</strong> 원문 한도를 공유합니다.</p>
 </section>
 <section class="section" id="sec-8">
 <div class="section-head">
@@ -1785,6 +1828,7 @@ table code{ font-size:.82em; }
 <tr><td>캐릭터 HTML</td><td><code>.html</code></td><td>인물 카드(캐릭터 / 다인 캐릭터)로 재가져오기 가능</td><td>모두 포함</td><td>해당 없음</td><td>단일·다인 카드 공유·이전</td></tr>
 <tr><td>프로젝트 HTML</td><td><code>.html</code></td><td>새 프로젝트 사본으로 재가져오기 가능</td><td>모두 포함</td><td>포함</td><td>프로젝트 단위 공유·이전</td></tr>
 <tr><td>전체 백업</td><td><code>.html</code></td><td>전체 구조 복원</td><td>모두 포함</td><td>포함</td><td>기기 이전·재해 복구</td></tr>
+<tr><td>정규식 작업실</td><td><code>.json</code></td><td>정규식 작업실로 다시 가져오기 가능</td><td>해당 없음</td><td>해당 없음</td><td>SillyTavern Regex 스크립트 제작·배포</td></tr>
 <tr><td>코드 작업실 원본</td><td><code>.html</code> / <code>.json</code> / <code>.md</code></td><td>원본 문자열로 다시 열기 가능</td><td>HTML 격리 미리보기 · Markdown 렌더링 미리보기</td><td>해당 없음</td><td>상태창·배너·디자인 HTML·JSON·Markdown 원본 보관</td></tr><tr><td>아이디어 보드</td><td>전체 백업 / 프로젝트 패키지</td><td>편집 가능</td><td>조각·캔버스 배경 포함</td><td>보드 첨부 포함</td><td>콜라주형 자료 보관·기기 이전</td></tr></tbody>
 </table>
 </div>
@@ -1802,7 +1846,7 @@ table code{ font-size:.82em; }
 <li>작품 또는 세션 이름으로 프로젝트를 만듭니다.</li>
 <li>프로젝트 태그, 색상, 썸네일을 지정합니다.</li>
 <li>세계관은 로어북, 플레이어·단일 인물은 페르소나 또는 캐릭터, 여러 NPC·집단은 다인 페르소나 또는 다인 캐릭터에 기록합니다.</li>
-<li>자유 메모에는 플롯·긴 문서·참고를, 원본 HTML은 코드 작업실에, 흩어진 이미지·음악·링크·러프 아이디어는 아이디어 보드에 보관합니다.</li>
+<li>자유 메모에는 플롯·긴 문서·참고를, 원본 HTML·JSON·Markdown은 코드 작업실에, SillyTavern 치환 규칙은 정규식 작업실에, 흩어진 이미지·음악·링크·러프 아이디어는 아이디어 보드에 보관합니다.</li>
 <li>대화 결과는 로그 저장에 원문 그대로 넣고 템플릿과 이름 가림을 적용합니다.</li>
 <li>프로젝트와 메모를 고정해 자주 쓰는 항목을 위에 둡니다.</li>
 <li>작업 중에는 자동 저장을 사용하되 큰 수정 뒤에는 <code>Ctrl/⌘+S</code>로 즉시 저장합니다.</li>
@@ -1834,7 +1878,7 @@ table code{ font-size:.82em; }
 <tr><td>자유 메모 일반 첨부</td><td>파일당 15MB 이하</td></tr><tr><td>자유 메모 본문 동영상</td><td>파일당 30MB 이하 · MP4/WebM/Ogg/MOV</td></tr>
 <tr><td>임시 초안</td><td>JSON 문자열 약 700,000자 이하, 최대 14일</td></tr>
 <tr><td>자동 백업</td><td>설정한 보관 수만큼 (1~15개, 기본 10개)</td></tr>
-<tr><td>코드 작업실 원본</td><td>5MiB 이하</td></tr><tr><td>아이디어 보드 이미지·GIF·음악·영상·첨부</td><td>파일당 30MB 이하</td></tr><tr><td>아이디어 보드 캔버스 배경 이미지</td><td>30MB 이하 · 이미지 파일만</td></tr></tbody>
+<tr><td>코드 작업실 원본</td><td>5MiB 이하</td></tr><tr><td>정규식 작업실 IN · OUT · sample</td><td>각 5MiB 이하 · trimStrings 최대 80개 · 깊이 0~999</td></tr><tr><td>아이디어 보드 이미지·GIF·음악·영상·첨부</td><td>파일당 30MB 이하</td></tr><tr><td>아이디어 보드 캔버스 배경 이미지</td><td>30MB 이하 · 이미지 파일만</td></tr></tbody>
 </table>
 </div>
 <p>표에 없는 본문·갤러리·캐릭터 페이지의 실질적인 최대치는 브라우저가 해당 사이트에 허용한 저장공간의 영향을 받습니다. 대량 이미지를 넣기 전에는 설정의 저장공간 표시를 확인하고 전체 백업을 만들어 두는 것이 안전합니다.</p>
@@ -1879,15 +1923,22 @@ table code{ font-size:.82em; }
 <!-- v1.5 current baseline -->
 <!-- ============================================================ -->
 <section class="section" id="sec-v15">
-<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.13</h2></div>
-<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.13</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
+<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.29</h2></div>
+<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.29</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
 <h3>새 메모 생성기</h3>
 <ul>
 <li>상단 설명은 <strong>생성할 메모 타입을 골라주세요</strong>이며, <strong>자유 메모</strong> 빠른 생성 카드는 즉시 자유 메모 생성 흐름으로 들어갑니다. 기존 블루 그라데이션·흰색 아이콘/텍스트 디자인을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
-<li>유형 선택은 <strong>캐릭터 / 작업실 / 아뜰리에</strong> 3탭입니다. 캐릭터에는 페르소나·다인 페르소나·캐릭터·다인 캐릭터, 작업실에는 로어북·코드 작업실, 아뜰리에에는 자유 메모·로그 저장·아이디어 보드가 있습니다.</li>
+<li>유형 선택은 <strong>캐릭터 / 작업실 / 아뜰리에</strong> 3탭입니다. 캐릭터에는 페르소나·다인 페르소나·캐릭터·다인 캐릭터, 작업실에는 로어북·정규식 작업실·코드 작업실, 아뜰리에에는 자유 메모·로그 저장·아이디어 보드가 있습니다.</li>
 <li><strong>페르소나</strong>의 보조 설명은 <code>단일 페르소나 카드 · 국문/영문 · 이미지</code>로 표시합니다.</li>
 <li>탭 안의 타입 카드는 동일한 전체 폭으로 정렬되며, 카드 표면과 카드 안 아이콘 칩은 기존의 테마 배경색을 유지합니다.</li>
 <li>탭 안의 타입 카드는 기존의 카드 표면과 아이콘 칩 색상을 유지합니다. 각 카드는 내용 길이와 무관하게 팝업 폭을 끝까지 채우며, 제목은 기본 잉크색으로 표시됩니다.</li>
+</ul>
+<h3>정규식 작업실</h3>
+<ul>
+<li>새 메모와 퀵메뉴의 메모 바로 만들기에서 <strong>정규식 작업실</strong>을 만들 수 있습니다. 기존 SillyTavern Regex JSON은 사이드바 <code>열기</code>에서 구조를 인식해 바로 작업실로 가져올 수 있습니다.</li>
+<li><code>샘플 자동</code>은 OUT을 먼저 작성하지 않아도, 유효한 IN 정규식의 캡처 구조를 기준으로 sample 초안을 만듭니다.</li>
+<li>상태 문구는 편집과 미리보기의 제목 줄을 밀어내지 않는 작은 보조 정보로 표시되며, 보기 전환 탭 뒤의 불필요한 어두운 바탕은 제거했습니다.</li>
+<li>내보내기 옵션은 <strong>트림아웃 → 플레이스먼트 → 최소 깊이/최대 깊이 → 다른 옵션/Macros in Find Regex</strong> 순서로 정리되어 있습니다.</li>
 </ul>
 <h3>자동 백업</h3>
 <ul>
