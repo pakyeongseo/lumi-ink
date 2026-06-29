@@ -2658,6 +2658,264 @@
 .idea-divider[data-divider-style="flourishEnds"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="flourishEnds"] .idea-divider-body::before { display:block; content:"❧"; left:9px; transform:translate(-50%,-50%); color:var(--c); font-size:16px; line-height:1; }
 .idea-divider[data-divider-style="flourishEnds"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="flourishEnds"] .idea-divider-body::after { display:block; content:"❧"; left:auto; right:9px; transform:translate(50%,-50%) scaleX(-1); color:var(--c); font-size:16px; line-height:1; }
 
+/* ============================================================
+ * 구분선 화려 30종 (v66.37) — 다층 레이어 / conic / mask / 발광
+ * 선: .idea-divider-body span / 장식: ::before·::after
+ * 색: --c(=--idea-color-b), 굵기: --w(=--idea-divider-weight)
+ * ── A.레이스·세공 6 · B.보석·광택 6 · C.발광 5 · D.꽃·식물 6
+ *    E.엠블럼·리본 4 · F.기하 화려 3
+ * ============================================================ */
+
+/* ── A. 레이스·세공 6종 ── */
+
+/* lace — 레이스: 윗선 + 작은 점 + 아래 반원 스캘럽 3겹 */
+.idea-divider[data-divider-style="lace"] .idea-divider-body span, .idea-preview-divider[data-divider-style="lace"] .idea-divider-body span {
+  height:calc(var(--w)*4.6); border-radius:0;
+  background:
+    linear-gradient(var(--c) 0 2px, transparent 2px) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle, var(--c) 0 1.4px, transparent 1.8px) 0 38% / 9px 6px repeat-x,
+    radial-gradient(circle at 50% 0, var(--c) 0 40%, transparent 44%) 0 100% / 10px 7px repeat-x;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.12));
+}
+/* arabesque — 아라베스크: S자 당초 곡선 (SVG 마스크) */
+.idea-divider[data-divider-style="arabesque"] .idea-divider-body span, .idea-preview-divider[data-divider-style="arabesque"] .idea-divider-body span {
+  height:calc(var(--w)*4.4); background:var(--c); border-radius:0;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='18' viewBox='0 0 32 18'%3E%3Cpath d='M0 9 C4 1 12 1 16 9 C20 17 28 17 32 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='9' r='2.2' fill='black'/%3E%3C/svg%3E") repeat-x center / 32px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='18' viewBox='0 0 32 18'%3E%3Cpath d='M0 9 C4 1 12 1 16 9 C20 17 28 17 32 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='9' r='2.2' fill='black'/%3E%3C/svg%3E") repeat-x center / 32px 100%;
+}
+/* greekKey — 뇌문(미앤더): 직각 미로 패턴 (SVG 마스크) */
+.idea-divider[data-divider-style="greekKey"] .idea-divider-body span, .idea-preview-divider[data-divider-style="greekKey"] .idea-divider-body span {
+  height:calc(var(--w)*4.6); background:var(--c); border-radius:0;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='16' viewBox='0 0 26 16'%3E%3Cpath d='M0 14 H18 V2 H6 V10 H12' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x center / 26px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='16' viewBox='0 0 26 16'%3E%3Cpath d='M0 14 H18 V2 H6 V10 H12' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='miter'/%3E%3C/svg%3E") repeat-x center / 26px 100%;
+}
+/* vine — 덩굴: 곡선 줄기 + 잎 (SVG 마스크) */
+.idea-divider[data-divider-style="vine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="vine"] .idea-divider-body span {
+  height:calc(var(--w)*4.8); background:var(--c); border-radius:0;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M0 11 Q8 3 15 11 Q22 19 30 11' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M15 11 q-4 -6 2 -8 q3 5 -2 8 Z' fill='black'/%3E%3Cpath d='M7 7 q4 -5 7 -2 q-3 4 -7 2 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 30px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M0 11 Q8 3 15 11 Q22 19 30 11' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M15 11 q-4 -6 2 -8 q3 5 -2 8 Z' fill='black'/%3E%3Cpath d='M7 7 q4 -5 7 -2 q-3 4 -7 2 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 30px 100%;
+}
+/* celtic — 켈틱 매듭: 겹친 고리 (SVG 마스크) */
+.idea-divider[data-divider-style="celtic"] .idea-divider-body span, .idea-preview-divider[data-divider-style="celtic"] .idea-divider-body span {
+  height:calc(var(--w)*5); background:var(--c); border-radius:0;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='20' viewBox='0 0 26 20'%3E%3Ccircle cx='8' cy='10' r='6.5' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle cx='18' cy='10' r='6.5' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") repeat-x center / 18px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='20' viewBox='0 0 26 20'%3E%3Ccircle cx='8' cy='10' r='6.5' fill='none' stroke='black' stroke-width='2'/%3E%3Ccircle cx='18' cy='10' r='6.5' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") repeat-x center / 18px 100%;
+}
+/* filigree — 필리그리: 이중 가는선 + 중앙 소용돌이 + 좌우 잔구슬 */
+.idea-divider[data-divider-style="filigree"] .idea-divider-body span, .idea-preview-divider[data-divider-style="filigree"] .idea-divider-body span {
+  height:calc(var(--w)*2.6);
+  background:
+    linear-gradient(180deg, var(--c) 0 22%, transparent 22% 78%, var(--c) 78% 100%) 0 0 / calc(50% - 16px) 100% no-repeat,
+    linear-gradient(180deg, var(--c) 0 22%, transparent 22% 78%, var(--c) 78% 100%) 100% 0 / calc(50% - 16px) 100% no-repeat;
+  border-radius:999px;
+}
+.idea-divider[data-divider-style="filigree"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="filigree"] .idea-divider-body::before { display:block; content:"❦"; color:var(--c); font-size:18px; line-height:1; }
+.idea-divider[data-divider-style="filigree"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="filigree"] .idea-divider-body::after { display:block; width:4px; height:4px; border-radius:50%; background:var(--c); box-shadow:-22px 0 0 -0.5px var(--c), 22px 0 0 -0.5px var(--c), -30px 0 0 -1.5px color-mix(in srgb,var(--c) 60%,transparent), 30px 0 0 -1.5px color-mix(in srgb,var(--c) 60%,transparent); }
+
+/* ── B. 보석·광택 6종 ── */
+
+/* jewelBand — 보석 띠: conic 패싯 타일 반복 */
+.idea-divider[data-divider-style="jewelBand"] .idea-divider-body span, .idea-preview-divider[data-divider-style="jewelBand"] .idea-divider-body span {
+  height:calc(var(--w)*3.6); border-radius:2px;
+  background:conic-gradient(from 90deg at 50% 50%, color-mix(in srgb,var(--c) 55%,#fff), var(--c) 25%, color-mix(in srgb,var(--c) 55%,#000) 50%, var(--c) 75%, color-mix(in srgb,var(--c) 55%,#fff));
+  background-size:calc(var(--w)*4) 100%; background-repeat:repeat-x;
+  clip-path:polygon(0 50%, 5% 12%, 95% 12%, 100% 50%, 95% 88%, 5% 88%);
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.2));
+}
+/* prism — 프리즘: 광택 사선 줄무늬 */
+.idea-divider[data-divider-style="prism"] .idea-divider-body span, .idea-preview-divider[data-divider-style="prism"] .idea-divider-body span {
+  height:calc(var(--w)*2.6); border-radius:999px;
+  background:repeating-linear-gradient(118deg, color-mix(in srgb,var(--c) 35%,#fff) 0 3px, var(--c) 3px 7px, color-mix(in srgb,var(--c) 45%,#000) 7px 10px, var(--c) 10px 13px);
+}
+/* crystalLine — 크리스탈: 깎인 보석 바 + 상하 명암 */
+.idea-divider[data-divider-style="crystalLine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="crystalLine"] .idea-divider-body span {
+  height:calc(var(--w)*3.8);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 32%,#fff) 0 28%, var(--c) 28% 56%, color-mix(in srgb,var(--c) 50%,#000) 56% 100%);
+  clip-path:polygon(0 50%, 3% 0, 97% 0, 100% 50%, 97% 100%, 3% 100%);
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.22));
+}
+/* metallicGold — 메탈 광택: 금속 가로 하이라이트 띠 */
+.idea-divider[data-divider-style="metallicGold"] .idea-divider-body span, .idea-preview-divider[data-divider-style="metallicGold"] .idea-divider-body span {
+  height:calc(var(--w)*3.2); border-radius:999px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 55%,#000) 0 10%, color-mix(in srgb,var(--c) 25%,#fff) 24%, var(--c) 42% 56%, color-mix(in srgb,var(--c) 18%,#fff) 72%, color-mix(in srgb,var(--c) 60%,#000) 100%);
+  box-shadow:0 0 4px color-mix(in srgb,var(--c) 35%,transparent);
+  filter:none;
+}
+/* opal — 오팔: 영롱한 다색 펄 번짐 */
+.idea-divider[data-divider-style="opal"] .idea-divider-body span, .idea-preview-divider[data-divider-style="opal"] .idea-divider-body span {
+  height:calc(var(--w)*3.4); border-radius:999px;
+  background:
+    radial-gradient(circle at 18% 50%, color-mix(in srgb,var(--c) 45%,#7ff) 0 18%, transparent 40%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb,var(--c) 40%,#fff) 0 16%, transparent 36%),
+    radial-gradient(circle at 82% 50%, color-mix(in srgb,var(--c) 45%,#f9f) 0 18%, transparent 40%),
+    var(--c);
+  box-shadow:0 0 5px color-mix(in srgb,var(--c) 30%,transparent);
+  filter:none;
+}
+/* gemChain — 보석 사슬: 마름모 마스크 + conic 패싯 */
+.idea-divider[data-divider-style="gemChain"] .idea-divider-body span, .idea-preview-divider[data-divider-style="gemChain"] .idea-divider-body span {
+  height:calc(var(--w)*4); border-radius:0;
+  background:conic-gradient(from 45deg at 50% 50%, color-mix(in srgb,var(--c) 55%,#fff), var(--c) 25%, color-mix(in srgb,var(--c) 55%,#000) 50%, var(--c) 75%, color-mix(in srgb,var(--c) 55%,#fff));
+  background-size:calc(var(--w)*3.4) 100%; background-repeat:repeat-x;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 1 L15 8 L8 15 L1 8 Z' fill='black'/%3E%3Crect x='0' y='7' width='16' height='2' fill='black'/%3E%3C/svg%3E") repeat-x center / 16px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 1 L15 8 L8 15 L1 8 Z' fill='black'/%3E%3Crect x='0' y='7' width='16' height='2' fill='black'/%3E%3C/svg%3E") repeat-x center / 16px 100%;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.2));
+}
+
+/* ── C. 발광 5종 ── */
+
+/* aurora — 오로라: 흐르는 다색 발광 띠 */
+.idea-divider[data-divider-style="aurora"] .idea-divider-body span, .idea-preview-divider[data-divider-style="aurora"] .idea-divider-body span {
+  height:calc(var(--w)*2.8); border-radius:999px;
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 55%,#0ff) 0%, var(--c) 28%, color-mix(in srgb,var(--c) 45%,#f0f) 52%, color-mix(in srgb,var(--c) 55%,#0f8) 78%, var(--c) 100%);
+  box-shadow:0 0 8px color-mix(in srgb,var(--c) 45%,transparent), 0 0 15px color-mix(in srgb,#0ff 30%,transparent);
+  filter:none;
+}
+/* neonTube — 네온관: 강한 글로우 + 화이트 코어 */
+.idea-divider[data-divider-style="neonTube"] .idea-divider-body span, .idea-preview-divider[data-divider-style="neonTube"] .idea-divider-body span {
+  height:calc(var(--w)*1.8); border-radius:999px; background:var(--c);
+  box-shadow:0 0 5px var(--c), 0 0 11px var(--c), 0 0 18px color-mix(in srgb,var(--c) 55%,transparent);
+  filter:none;
+}
+.idea-divider[data-divider-style="neonTube"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="neonTube"] .idea-divider-body::before { display:block; width:94%; height:calc(var(--w)*0.55); min-height:1px; border-radius:999px; background:color-mix(in srgb,#fff 75%,var(--c)); }
+/* starlight — 별빛: 중앙 큰 별 + 좌우 잔별 + 발광 */
+.idea-divider[data-divider-style="starlight"] .idea-divider-body span, .idea-preview-divider[data-divider-style="starlight"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 75%,transparent) 0 calc(50% - 16px), transparent calc(50% - 16px) calc(50% + 16px), color-mix(in srgb,var(--c) 75%,transparent) calc(50% + 16px) 100%);
+  box-shadow:0 0 5px color-mix(in srgb,var(--c) 45%,transparent); filter:none;
+}
+.idea-divider[data-divider-style="starlight"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="starlight"] .idea-divider-body::before { display:block; content:"✦"; color:var(--c); font-size:18px; line-height:1; text-shadow:0 0 6px color-mix(in srgb,var(--c) 60%,transparent); }
+.idea-divider[data-divider-style="starlight"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="starlight"] .idea-divider-body::after { display:block; width:3px; height:3px; border-radius:50%; background:var(--c); box-shadow:-20px 0 0 var(--c), 20px 0 0 var(--c), -32px 0 0 -1px var(--c), 32px 0 0 -1px var(--c); filter:drop-shadow(0 0 3px var(--c)); }
+/* emberGlow — 잉걸불: 발광 점이 가운데서 양끝으로 사그라듦 */
+.idea-divider[data-divider-style="emberGlow"] .idea-divider-body span, .idea-preview-divider[data-divider-style="emberGlow"] .idea-divider-body span { background:none; height:10px; }
+.idea-divider[data-divider-style="emberGlow"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="emberGlow"] .idea-divider-body::before {
+  display:block; width:8px; height:8px; border-radius:50%; background:var(--c);
+  box-shadow:-15px 0 0 -1.5px var(--c), 15px 0 0 -1.5px var(--c), -27px 0 0 -3px color-mix(in srgb,var(--c) 75%,transparent), 27px 0 0 -3px color-mix(in srgb,var(--c) 75%,transparent), -37px 0 0 -4px color-mix(in srgb,var(--c) 45%,transparent), 37px 0 0 -4px color-mix(in srgb,var(--c) 45%,transparent);
+  filter:drop-shadow(0 0 4px var(--c));
+}
+/* fairyLights — 꼬마전구: 가는 줄 + 색색 발광 구슬 */
+.idea-divider[data-divider-style="fairyLights"] .idea-divider-body span, .idea-preview-divider[data-divider-style="fairyLights"] .idea-divider-body span { height:2px; background:color-mix(in srgb,var(--c) 70%,transparent); border-radius:999px; filter:none; }
+.idea-divider[data-divider-style="fairyLights"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="fairyLights"] .idea-divider-body::after {
+  display:block; width:7px; height:7px; border-radius:50%; background:color-mix(in srgb,var(--c) 55%,#ff5);
+  box-shadow:-19px 0 0 color-mix(in srgb,var(--c) 60%,#5cf), 19px 0 0 color-mix(in srgb,var(--c) 60%,#f8c), -38px 0 0 var(--c), 38px 0 0 var(--c);
+  filter:drop-shadow(0 0 4px color-mix(in srgb,var(--c) 60%,transparent));
+}
+
+/* ── D. 꽃·식물 6종 ── */
+
+/* floralWreath — 꽃 화환: 이중선 + 중앙 꽃 + 좌우 잔잎 */
+.idea-divider[data-divider-style="floralWreath"] .idea-divider-body span, .idea-preview-divider[data-divider-style="floralWreath"] .idea-divider-body span {
+  height:calc(var(--w)*2.4);
+  background:
+    linear-gradient(180deg, var(--c) 0 26%, transparent 26% 74%, var(--c) 74% 100%) 0 0 / calc(50% - 16px) 100% no-repeat,
+    linear-gradient(180deg, var(--c) 0 26%, transparent 26% 74%, var(--c) 74% 100%) 100% 0 / calc(50% - 16px) 100% no-repeat;
+  border-radius:999px;
+}
+.idea-divider[data-divider-style="floralWreath"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="floralWreath"] .idea-divider-body::before { display:block; content:"❀"; color:var(--c); font-size:18px; line-height:1; }
+.idea-divider[data-divider-style="floralWreath"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="floralWreath"] .idea-divider-body::after { display:block; width:5px; height:7px; border-radius:50% 50% 50% 50%/60% 60% 40% 40%; background:color-mix(in srgb,var(--c) 80%,#5c5); box-shadow:-20px 0 0 color-mix(in srgb,var(--c) 80%,#5c5), 20px 0 0 color-mix(in srgb,var(--c) 80%,#5c5); }
+/* roseLine — 장미: 중앙 큰 장미꽃 + 좌우 잎점 */
+.idea-divider[data-divider-style="roseLine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="roseLine"] .idea-divider-body span {
+  background:linear-gradient(90deg, var(--c) 0 calc(50% - 14px), transparent calc(50% - 14px) calc(50% + 14px), var(--c) calc(50% + 14px) 100%);
+}
+.idea-divider[data-divider-style="roseLine"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="roseLine"] .idea-divider-body::before { display:block; content:"❁"; color:var(--c); font-size:18px; line-height:1; }
+.idea-divider[data-divider-style="roseLine"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="roseLine"] .idea-divider-body::after { display:block; width:5px; height:5px; border-radius:50%; background:var(--c); box-shadow:-16px 0 0 -0.5px var(--c), 16px 0 0 -0.5px var(--c); }
+/* cherryBlossom — 벚꽃: 중앙 꽃 + 흩날리는 꽃잎점 */
+.idea-divider[data-divider-style="cherryBlossom"] .idea-divider-body span, .idea-preview-divider[data-divider-style="cherryBlossom"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 80%,#f9c) 0 calc(50% - 13px), transparent calc(50% - 13px) calc(50% + 13px), color-mix(in srgb,var(--c) 80%,#f9c) calc(50% + 13px) 100%);
+}
+.idea-divider[data-divider-style="cherryBlossom"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="cherryBlossom"] .idea-divider-body::before { display:block; content:"❀"; color:color-mix(in srgb,var(--c) 70%,#f7b); font-size:17px; line-height:1; }
+.idea-divider[data-divider-style="cherryBlossom"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="cherryBlossom"] .idea-divider-body::after { display:block; width:4px; height:4px; border-radius:50% 0 50% 50%; background:color-mix(in srgb,var(--c) 60%,#f9c); box-shadow:-22px 3px 0 color-mix(in srgb,var(--c) 55%,#fbd), 24px -2px 0 color-mix(in srgb,var(--c) 55%,#fbd), -34px -3px 0 -1px color-mix(in srgb,var(--c) 50%,#fce), 36px 4px 0 -1px color-mix(in srgb,var(--c) 50%,#fce); }
+/* laurel — 월계: 중앙 작은 보석 + 좌우 대칭 잎 장식 */
+.idea-divider[data-divider-style="laurel"] .idea-divider-body span, .idea-preview-divider[data-divider-style="laurel"] .idea-divider-body span {
+  background:
+    radial-gradient(circle, var(--c) 0 2.6px, transparent 3.2px) 50% 50% / 100% 100% no-repeat,
+    linear-gradient(90deg, var(--c) 0 calc(50% - 20px), transparent calc(50% - 20px) calc(50% + 20px), var(--c) calc(50% + 20px) 100%);
+}
+.idea-divider[data-divider-style="laurel"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="laurel"] .idea-divider-body::before { display:block; content:"❧"; left:calc(50% - 11px); transform:translate(-50%,-50%); color:var(--c); font-size:15px; line-height:1; }
+.idea-divider[data-divider-style="laurel"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="laurel"] .idea-divider-body::after { display:block; content:"❧"; left:auto; right:calc(50% - 11px); transform:translate(50%,-50%) scaleX(-1); color:var(--c); font-size:15px; line-height:1; }
+/* botanical — 식물 줄기: 줄기선 + 위아래 엇갈려 반복되는 잎 */
+.idea-divider[data-divider-style="botanical"] .idea-divider-body span, .idea-preview-divider[data-divider-style="botanical"] .idea-divider-body span {
+  height:calc(var(--w)*3.6); border-radius:0;
+  background:
+    linear-gradient(var(--c),var(--c)) 50% 50% / 100% 1.6px no-repeat,
+    radial-gradient(ellipse 3px 5px at 50% 50%, var(--c) 58%, transparent 62%) 0 18% / 18px 50% repeat-x,
+    radial-gradient(ellipse 3px 5px at 50% 50%, color-mix(in srgb,var(--c) 78%,#000) 58%, transparent 62%) 9px 82% / 18px 50% repeat-x;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.1));
+}
+
+/* ── E. 엠블럼·리본 4종 ── */
+
+/* royalCrest — 문장: 이중선 + 중앙 보석 + 좌우 깃 */
+.idea-divider[data-divider-style="royalCrest"] .idea-divider-body span, .idea-preview-divider[data-divider-style="royalCrest"] .idea-divider-body span {
+  height:calc(var(--w)*2.6);
+  background:
+    linear-gradient(180deg, var(--c) 0 24%, transparent 24% 76%, var(--c) 76% 100%) 0 0 / calc(50% - 15px) 100% no-repeat,
+    linear-gradient(180deg, var(--c) 0 24%, transparent 24% 76%, var(--c) 76% 100%) 100% 0 / calc(50% - 15px) 100% no-repeat;
+  border-radius:999px;
+}
+.idea-divider[data-divider-style="royalCrest"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="royalCrest"] .idea-divider-body::before { display:block; width:11px; height:11px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); box-shadow:0 0 5px color-mix(in srgb,var(--c) 45%,transparent); }
+.idea-divider[data-divider-style="royalCrest"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="royalCrest"] .idea-divider-body::after { display:block; width:4px; height:4px; border-radius:50%; background:var(--c); box-shadow:-13px 0 0 var(--c), 13px 0 0 var(--c); }
+/* scrollEnds — 두루마리 끝: 이중선 + 양끝 소용돌이 + 중앙 마름모 */
+.idea-divider[data-divider-style="scrollEnds"] .idea-divider-body span, .idea-preview-divider[data-divider-style="scrollEnds"] .idea-divider-body span {
+  height:calc(var(--w)*2.2);
+  background:
+    radial-gradient(circle, var(--c) 0 2px, transparent 2.6px) 50% 50% / 100% 100% no-repeat,
+    linear-gradient(180deg, var(--c) 0 30%, transparent 30% 70%, var(--c) 70% 100%) 50% 50% / calc(100% - 40px) 100% no-repeat;
+  border-radius:999px;
+}
+.idea-divider[data-divider-style="scrollEnds"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="scrollEnds"] .idea-divider-body::before { display:block; content:"❧"; left:11px; transform:translate(-50%,-50%); color:var(--c); font-size:17px; line-height:1; }
+.idea-divider[data-divider-style="scrollEnds"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="scrollEnds"] .idea-divider-body::after { display:block; content:"❧"; left:auto; right:11px; transform:translate(50%,-50%) scaleX(-1); color:var(--c); font-size:17px; line-height:1; }
+/* gemDrop — 펜던트: 본선 + 중앙에서 늘어진 보석 */
+.idea-divider[data-divider-style="gemDrop"] .idea-divider-body span, .idea-preview-divider[data-divider-style="gemDrop"] .idea-divider-body span { background:var(--c); border-radius:999px; }
+.idea-divider[data-divider-style="gemDrop"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="gemDrop"] .idea-divider-body::before { display:block; top:40%; width:5px; height:5px; border-radius:50%; border:2px solid var(--c); background:var(--surface,#fff); }
+.idea-divider[data-divider-style="gemDrop"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="gemDrop"] .idea-divider-body::after { display:block; top:74%; width:9px; height:9px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); box-shadow:0 0 5px color-mix(in srgb,var(--c) 45%,transparent), inset 0 0 0 1px color-mix(in srgb,var(--c) 40%,#fff); }
+/* doubleRibbon — 더블 리본: 광택 두 줄 + 중앙 매듭 */
+.idea-divider[data-divider-style="doubleRibbon"] .idea-divider-body span, .idea-preview-divider[data-divider-style="doubleRibbon"] .idea-divider-body span {
+  height:calc(var(--w)*3.8); border-radius:2px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--c) 30%,#fff) 0 30%, var(--c) 30% 100%) 0 0 / 100% 28% no-repeat,
+    linear-gradient(180deg, var(--c) 0 70%, color-mix(in srgb,var(--c) 40%,#000) 70% 100%) 0 100% / 100% 28% no-repeat;
+}
+.idea-divider[data-divider-style="doubleRibbon"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="doubleRibbon"] .idea-divider-body::before { display:block; width:10px; height:10px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); box-shadow:0 0 4px color-mix(in srgb,var(--c) 40%,transparent); }
+
+/* damask — 다마스크: 마름모 격자 + 중앙 점 장식 */
+.idea-divider[data-divider-style="damask"] .idea-divider-body span, .idea-preview-divider[data-divider-style="damask"] .idea-divider-body span {
+  height:calc(var(--w)*3.6); border-radius:1px;
+  background:
+    repeating-linear-gradient(45deg, color-mix(in srgb,var(--c) 80%,transparent) 0 1.6px, transparent 1.6px 9px),
+    repeating-linear-gradient(-45deg, color-mix(in srgb,var(--c) 80%,transparent) 0 1.6px, transparent 1.6px 9px),
+    linear-gradient(180deg, color-mix(in srgb,var(--c) 16%,transparent), color-mix(in srgb,var(--c) 26%,transparent));
+}
+.idea-divider[data-divider-style="damask"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="damask"] .idea-divider-body::before { display:block; width:8px; height:8px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); box-shadow:-30px 0 0 -1px var(--c), 30px 0 0 -1px var(--c); }
+
+/* ── F. 기하 화려 3종 ── */
+
+/* mosaic — 모자이크: 다색 타일 + 그라우트 격자 */
+.idea-divider[data-divider-style="mosaic"] .idea-divider-body span, .idea-preview-divider[data-divider-style="mosaic"] .idea-divider-body span {
+  height:calc(var(--w)*2.8); border-radius:1px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb,#000 28%,transparent) 7px 8px),
+    repeating-linear-gradient(90deg, var(--c) 0 8px, color-mix(in srgb,var(--c) 55%,#fff) 8px 16px, color-mix(in srgb,var(--c) 55%,#000) 16px 24px, color-mix(in srgb,var(--c) 50%,#0cf) 24px 32px);
+}
+/* chevronLux — 럭스 쉐브론: 굵은 V 반복(마스크) + 상하 명암 광택 */
+.idea-divider[data-divider-style="chevronLux"] .idea-divider-body span, .idea-preview-divider[data-divider-style="chevronLux"] .idea-divider-body span {
+  height:calc(var(--w)*3.6);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 28%,#fff) 0 35%, var(--c) 35% 70%, color-mix(in srgb,var(--c) 45%,#000) 70% 100%);
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 12 L8 4 L16 12 L16 9 L8 1 L0 9 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 16px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 12 L8 4 L16 12 L16 9 L8 1 L0 9 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 16px 100%;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.18));
+}
+/* sunburst — 햇살: 중앙 방사 빛살 디스크 + 양분선 */
+.idea-divider[data-divider-style="sunburst"] .idea-divider-body span, .idea-preview-divider[data-divider-style="sunburst"] .idea-divider-body span {
+  background:linear-gradient(90deg, var(--c) 0 calc(50% - 16px), transparent calc(50% - 16px) calc(50% + 16px), var(--c) calc(50% + 16px) 100%);
+}
+.idea-divider[data-divider-style="sunburst"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="sunburst"] .idea-divider-body::before {
+  display:block; width:22px; height:22px; border-radius:50%;
+  background:conic-gradient(from 0deg, var(--c) 0 9deg, transparent 9deg 22.5deg, var(--c) 22.5deg 31.5deg, transparent 31.5deg 45deg, var(--c) 45deg 54deg, transparent 54deg 67.5deg, var(--c) 67.5deg 76.5deg, transparent 76.5deg 90deg, var(--c) 90deg 99deg, transparent 99deg 112.5deg, var(--c) 112.5deg 121.5deg, transparent 121.5deg 135deg, var(--c) 135deg 144deg, transparent 144deg 157.5deg, var(--c) 157.5deg 166.5deg, transparent 166.5deg 180deg, var(--c) 180deg 189deg, transparent 189deg 202.5deg, var(--c) 202.5deg 211.5deg, transparent 211.5deg 225deg, var(--c) 225deg 234deg, transparent 234deg 247.5deg, var(--c) 247.5deg 256.5deg, transparent 256.5deg 270deg, var(--c) 270deg 279deg, transparent 279deg 292.5deg, var(--c) 292.5deg 301.5deg, transparent 301.5deg 315deg, var(--c) 315deg 324deg, transparent 324deg 337.5deg, var(--c) 337.5deg 346.5deg, transparent 346.5deg 360deg);
+  -webkit-mask:radial-gradient(circle, #000 0 10px, transparent 10.5px), radial-gradient(circle, transparent 0 4px, #000 4.5px);
+  -webkit-mask-composite:source-in; mask:radial-gradient(circle, #000 0 10px, transparent 10.5px), radial-gradient(circle, transparent 0 4px, #000 4.5px); mask-composite:intersect;
+}
+.idea-divider[data-divider-style="sunburst"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="sunburst"] .idea-divider-body::after { display:block; width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 5px color-mix(in srgb,var(--c) 50%,transparent); }
+
 /* ── 구분선 디자인 선택 그리드 ── */
 .idea-divider-weight-range { margin-bottom:6px; }
 .idea-divider-choice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:6px; max-height:46vh; overflow-y:auto; padding:2px 2px 4px; }

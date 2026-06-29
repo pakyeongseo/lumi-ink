@@ -8721,7 +8721,37 @@ ${gallery}
     dotEnds: { label:"점 끝", desc:"양끝에 큰 점이 달린 선" },
     ringEnds: { label:"고리 끝", desc:"양끝에 빈 고리가 달린 선" },
     featherEnds: { label:"깃 끝", desc:"양끝에 깃 장식이 대칭으로 달린 선" },
-    flourishEnds: { label:"잎 끝", desc:"양끝에 잎 장식이 대칭으로 달린 선" }
+    flourishEnds: { label:"잎 끝", desc:"양끝에 잎 장식이 대칭으로 달린 선" },
+    lace: { label:"레이스", desc:"윗선·잔점·스캘럽이 겹친 레이스 구분선" },
+    arabesque: { label:"아라베스크", desc:"S자 당초무늬가 흐르는 구분선" },
+    greekKey: { label:"뇌문", desc:"직각 미로가 반복되는 그리스풍 구분선" },
+    vine: { label:"덩굴", desc:"잎이 달린 곡선 덩굴 구분선" },
+    celtic: { label:"켈틱 매듭", desc:"고리가 엮인 켈틱풍 구분선" },
+    filigree: { label:"필리그리", desc:"이중선·소용돌이·잔구슬의 세공 구분선" },
+    jewelBand: { label:"보석 띠", desc:"패싯이 빛나는 보석 띠 구분선" },
+    prism: { label:"프리즘", desc:"광택 사선이 반짝이는 구분선" },
+    crystalLine: { label:"크리스탈", desc:"깎인 보석 바 형태의 구분선" },
+    metallicGold: { label:"메탈 광택", desc:"금속 하이라이트가 흐르는 구분선" },
+    opal: { label:"오팔", desc:"영롱한 다색 펄이 번지는 구분선" },
+    gemChain: { label:"보석 사슬", desc:"패싯 마름모가 이어진 보석 사슬 구분선" },
+    aurora: { label:"오로라", desc:"다색 빛이 흐르며 발광하는 구분선" },
+    neonTube: { label:"네온관", desc:"강한 글로우에 화이트 코어가 든 구분선" },
+    starlight: { label:"별빛", desc:"중앙 큰 별과 잔별이 빛나는 구분선" },
+    emberGlow: { label:"잉걸불", desc:"발광 점이 가운데서 사그라드는 구분선" },
+    fairyLights: { label:"꼬마전구", desc:"줄에 색색 전구가 매달린 구분선" },
+    floralWreath: { label:"꽃 화환", desc:"이중선에 꽃과 잎을 두른 구분선" },
+    roseLine: { label:"장미", desc:"중앙 장미와 좌우 잎의 구분선" },
+    cherryBlossom: { label:"벚꽃", desc:"꽃잎이 흩날리는 벚꽃 구분선" },
+    laurel: { label:"월계", desc:"중앙 보석에 좌우 잎을 두른 구분선" },
+    royalCrest: { label:"문장", desc:"이중선·중앙 보석·좌우 깃의 엠블럼 구분선" },
+    scrollEnds: { label:"두루마리 끝", desc:"양끝 소용돌이와 중앙 마름모 구분선" },
+    gemDrop: { label:"펜던트", desc:"본선에서 보석이 늘어진 구분선" },
+    doubleRibbon: { label:"더블 리본", desc:"광택 두 줄과 중앙 매듭 구분선" },
+    mosaic: { label:"모자이크", desc:"다색 타일이 박힌 모자이크 구분선" },
+    chevronLux: { label:"쉐브론", desc:"굵은 V가 반복되는 광택 구분선" },
+    sunburst: { label:"햇살", desc:"중앙 방사 빛살이 퍼지는 구분선" },
+    damask: { label:"다마스크", desc:"마름모 격자가 짜인 다마스크 구분선" },
+    botanical: { label:"식물 줄기", desc:"줄기에 잎이 엇갈려 달린 구분선" }
   });
   const IDEA_DIVIDER_TEMPLATE_GUIDE = `# Lumi Ink 아이디어 보드 구분선 템플릿 가이드
 
@@ -10103,7 +10133,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const noteLockMode=ideaLockMode(item);
     const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
-    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 57종에서 선택</small></span></button></div>`:"";
+    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 87종에서 선택</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
     const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
