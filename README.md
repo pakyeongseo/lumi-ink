@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.36**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.36-regex-marked-sample-slots`
+- 개발 기준 빌드: **v66.38**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.38-regex-status-link-width`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.36_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.38_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`, `Lumi_Ink_v66.24_Release_Notes.md`~`Lumi_Ink_v66.36_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`, `Lumi_Ink_v66.24_Release_Notes.md`~`Lumi_Ink_v66.38_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.38
+
+- 정규식 PREVIEW의 설명 문장은 기본 크기로 복원하고, IN 검증 상태와 PREVIEW 가변 매치 상태 배지만 작게 유지했습니다.
+- 정규식 옵션 소제목 칩의 실제 글자·여백·높이를 더 작게 압축했습니다.
+- 자유 메모의 아이디어 보드형 내 글 바로가기 카드는 최대 520px 폭으로 제한해 본문 전체를 덮지 않도록 조정했습니다.
 
 ## v66.36
 

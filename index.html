@@ -3606,6 +3606,27 @@
   .quick-menu-slot > .quick-slot-media.has-library-icon .quick-menu-library-icon,
   .quick-menu-slot > .quick-slot-media.has-code-icon .quick-menu-custom-icon { filter:none !important; }
 
+  /* ===== v66.39 · 퀵메뉴/썸네일 아이콘 가독성 보정 =====
+     (1) 배지 배경 그라데이션(...bg)은 본체와 같은 accent 농도라, 컬러를 진하게 적용하면
+         아이콘 본체가 배경에 묻혔습니다. 배경에만 fill-opacity를 줘 살짝 옅고 투명하게 만들어
+         밝은 표면색과 섞이게 하고, 본체(불투명)가 위로 떠 보이도록 합니다.
+         색 변수(base/deep 등)는 건드리지 않으므로 종이 그림자 등 다른 디테일에는 영향이 없습니다. */
+  .li-vector-icon svg [fill$='bg)'] { fill-opacity:0.55; }
+
+  /* (2) 슬롯에 등록하면 보이던 '정체불명의 라인'은 각 아이콘 SVG의 외곽 광택선
+         (fill=none · stroke=gloss/gold · stroke-opacity 보유 도형)이 슬롯 전용 scale(1.072)로
+         배지 가장자리에 바짝 붙어 프레임처럼 읽힌 것이었습니다.
+         내부 하이라이트는 stroke-opacity가 아닌 opacity를 쓰므로, 아래 셀렉터는 외곽선만 정확히 제거합니다.
+         라이브러리 선택 그리드(더 큰 미리보기)에는 적용하지 않아 기존 디테일을 보존합니다. */
+  :is(
+    .quick-menu-slot > .quick-slot-media.has-library-icon,
+    .qm-manager-slot .quick-slot-media.has-library-icon,
+    .qm-entry-preview .quick-slot-media.has-library-icon,
+    .qm-choice .quick-slot-media.has-library-icon,
+    .qm-function-row .quick-slot-media.has-library-icon,
+    .thumb-media.has-library-icon
+  ) .li-vector-icon svg [fill='none'][stroke-opacity]:is([stroke$='-gloss)'],[stroke$='-gold)']) { display:none; }
+
   /* 사용자 지정 테마에서만 별도 롤을 적용해 프리셋의 기존 배치를 보존합니다. */
   html[data-custom-theme] .sb-fbtn { background:var(--sidebar-foot-bg); }
   html[data-custom-theme] .set-gtitle { color:var(--settings-group-title-color); }
@@ -3887,6 +3908,64 @@
     .log-set-design-chip > span { font-size:11px; }
     .log-image-export-option { grid-template-columns:30px minmax(0,1fr) auto; gap:8px; padding:10px; }
     .log-image-export-symbol { width:30px; height:30px; border-radius:9px; font-size:15px; }
+  }
+
+
+
+  /* ============================================================
+     v66.39 · QUICKMENU ICON BADGE READABILITY + OUTLINE LINE FIX
+     Keep the preview explanation readable; only the live state badges
+     are intentionally compact. Option labels are reduced as micro labels.
+     ============================================================ */
+  #screen-regex #regexValidation,
+  #screen-regex #regexPreviewBadge {
+    font-size: 6px !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+  }
+  #screen-regex #regexValidation::before,
+  #screen-regex #regexPreviewBadge::before {
+    width: 3px;
+    height: 3px;
+  }
+  #screen-regex #regexMeta,
+  #screen-regex #regexPreviewStatus,
+  #screen-regex .regex-head-status .html-pane-note {
+    font-size: 10.5px !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0 !important;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  #screen-regex .rx-option-title {
+    min-height: 0;
+    margin: 0 0 1px;
+    padding: 1px 3px;
+    font-size: 6px !important;
+    line-height: 1 !important;
+    letter-spacing: .01em;
+    transform: scale(.60);
+    transform-origin: left center;
+  }
+  #screen-regex .rx-option-group {
+    margin-bottom: 8px;
+  }
+
+  /* The free-memo link keeps the Idea Board card language, but reads as
+     a deliberate inline object instead of a full-width section banner. */
+  .editor .free-note-link-block,
+  .read-body .free-note-link-block {
+    width: min(100%, 520px);
+    max-width: 520px;
+  }
+  .editor a.lumi-note-link.idea-quote-body,
+  .read-body a.lumi-note-link.idea-quote-body {
+    width: 100%;
+    max-width: 520px;
+  }
+  .free-note-link-preview .lumi-note-link.idea-quote-body {
+    width: min(100%, 520px);
+    max-width: 520px;
   }
 
 </style>
