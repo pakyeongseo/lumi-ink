@@ -2051,6 +2051,28 @@
       maxDepth: regexNullableNumber(src.maxDepth)
     };
   }
+  // The sample textarea remains the single source of truth. This overlay only paints complete
+  // [[…]] segments as capture-like slots so users can scan flexible values at a glance.
+  function regexSampleHighlightMarkup(value) {
+    const raw = String(value || "");
+    if (!raw) return "";
+    let html = esc(raw).replace(/\[\[[\s\S]*?\]\]/g, (token) => `<span class="rx-sample-token">${token}</span>`);
+    // A final line break is otherwise visually collapsed by <pre> at the bottom edge.
+    if (raw.endsWith("\n")) html += " ";
+    return html;
+  }
+  function syncRegexSampleHighlight() {
+    const area = $("regexSample"), highlight = $("regexSampleHighlight");
+    if (!area || !highlight) return;
+    highlight.style.transform = `translate(${-area.scrollLeft}px, ${-area.scrollTop}px)`;
+  }
+  function updateRegexSampleHighlight() {
+    const area = $("regexSample"), highlight = $("regexSampleHighlight");
+    if (!area || !highlight) return;
+    highlight.innerHTML = regexSampleHighlightMarkup(area.value);
+    syncRegexSampleHighlight();
+  }
+
   function regexDataFromEditor() {
     const current = getNote(st.curNoteId);
     const placement = Array.from(document.querySelectorAll("[data-regex-placement]:checked"))
@@ -2080,6 +2102,7 @@
     $("regexFind").value = d.findRegex;
     $("regexReplace").value = d.replaceString;
     $("regexSample").value = d.sampleText;
+    updateRegexSampleHighlight();
     $("regexGlobal").checked = d.global;
     $("regexMarkdownOnly").checked = d.markdownOnly;
     $("regexPromptOnly").checked = d.promptOnly;
@@ -2471,6 +2494,7 @@
     const data = regexDataFromEditor(), parsed = regexParseFind(data.findRegex);
     if (!parsed.ok) { toast("올바른 IN 정규식을 먼저 입력해 주세요"); return; }
     $("regexSample").value = regexSampleFromPattern(parsed.source, data.replaceString);
+    updateRegexSampleHighlight();
     scheduleRegexSave();
     toast("샘플을 자동 작성했어요");
   }
@@ -8130,10 +8154,13 @@ ${gallery}
     $on("htmlModeSplit", "click", () => setHtmlView("split"));
 
     // regex workshop
-    ["regexScriptName", "regexFind", "regexReplace", "regexSample", "regexTrimStrings", "regexMinDepth", "regexMaxDepth"].forEach((id) => {
+    ["regexScriptName", "regexFind", "regexReplace", "regexTrimStrings", "regexMinDepth", "regexMaxDepth"].forEach((id) => {
       $on(id, "input", scheduleRegexSave);
       $on(id, "blur", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
     });
+    $on("regexSample", "input", () => { updateRegexSampleHighlight(); scheduleRegexSave(); });
+    $on("regexSample", "scroll", syncRegexSampleHighlight, { passive: true });
+    $on("regexSample", "blur", () => { const s = regexWorkshopSession; if (s && s.active) void flushRegexSave(false, s.noteId); });
     ["regexMarkdownOnly", "regexPromptOnly", "regexRunOnEdit", "regexDisabled", "regexSubstituteRegex"].forEach((id) => {
       $on(id, "change", scheduleRegexSave);
     });

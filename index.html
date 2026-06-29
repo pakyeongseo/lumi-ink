@@ -1713,7 +1713,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.28 IN-only sample — "ink press line"
+     REGEX WORKSHOP · v66.36 marked sample slots — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -1873,6 +1873,40 @@
   .rx-area.rx-in { min-height: 61px; height: 61px; resize: vertical; }
   .rx-area.rx-out { min-height: 146px; }
   .rx-area.rx-sample { min-height: 119px; }
+
+  /* ----- marked sample visualizer: [[…]] stays as raw sample text, but reads like a capture slot ----- */
+  .rx-sample-editor {
+    position: relative; min-width: 0; overflow: hidden;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--accent) 32%, var(--rx-ink-plate)) 0 2px, transparent 2px),
+      radial-gradient(120% 80% at 100% 0%, #131c29, var(--rx-ink-plate) 62%);
+    box-shadow: inset 0 8px 16px -12px rgba(0,0,0,.7);
+  }
+  .rx-sample-highlight {
+    position: absolute; inset: 0 14px 0 0; z-index: 0; margin: 0;
+    padding: 13px 14px 13px 18px; overflow: hidden; pointer-events: none; user-select: none;
+    color: #dbeaff; background: transparent;
+    font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px; line-height: 1.72; tab-size: 2; white-space: pre-wrap; overflow-wrap: anywhere;
+    transform: translate(0,0); will-change: transform;
+  }
+  .rx-sample-token {
+    display: inline; padding: 1px 4px 1px; border-radius: 5px;
+    color: color-mix(in srgb, #fff 87%, var(--accent));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent-2) 22%, transparent));
+    border: 1px solid color-mix(in srgb, var(--accent) 64%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 1px 5px color-mix(in srgb, var(--accent) 18%, transparent);
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  .rx-sample-editor .rx-sample {
+    position: relative; z-index: 1; background: transparent; color: transparent;
+    -webkit-text-fill-color: transparent; text-shadow: none; caret-color: var(--accent);
+    scrollbar-gutter: stable;
+  }
+  .rx-sample-editor .rx-sample::placeholder { color: #7e8da6; -webkit-text-fill-color: #7e8da6; }
+  .rx-sample-editor .rx-sample:focus {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 8px 16px -12px rgba(0,0,0,.7);
+  }
   .rx-area::selection { background: color-mix(in srgb, var(--accent) 38%, transparent); }
   .rx-area::placeholder { color: #7e8da6; }
   .rx-area:focus { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 8px 16px -12px rgba(0,0,0,.7); }
@@ -4098,7 +4132,10 @@
                   <div class="rx-card-cap">
                     <div class="rx-card-nm"><label for="regexSample">Sample</label></div>
                   </div>
-                  <textarea class="rx-area short wrap rx-sample" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
+                  <div class="rx-sample-editor" id="regexSampleShell">
+                    <pre class="rx-sample-highlight" id="regexSampleHighlight" aria-hidden="true"></pre>
+                    <textarea class="rx-area short wrap rx-sample" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
+                  </div>
                 </div>
               </div>
 
