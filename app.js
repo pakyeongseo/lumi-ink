@@ -2108,7 +2108,8 @@
   function syncRegexSampleHighlight() {
     const area = $("regexSample"), highlight = $("regexSampleHighlight");
     if (!area || !highlight) return;
-    highlight.style.transform = `translate(${-area.scrollLeft}px, ${-area.scrollTop}px)`;
+    highlight.scrollTop = area.scrollTop;
+    highlight.scrollLeft = area.scrollLeft;
   }
   function updateRegexSampleHighlight() {
     const area = $("regexSample"), highlight = $("regexSampleHighlight");

@@ -1713,7 +1713,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.41 status text / quick menu icon line fix — "ink press line"
+     REGEX WORKSHOP · v66.42 sample scroll sync fix — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -1888,7 +1888,7 @@
     color: #dbeaff; background: transparent;
     font-family: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     font-size: 12.5px; line-height: 1.72; tab-size: 2; white-space: pre-wrap; overflow-wrap: anywhere;
-    transform: translate(0,0); will-change: transform;
+    transform: none; will-change: scroll-position;
   }
   .rx-sample-token {
     display: inline; padding: 0; border-radius: 5px;
