@@ -1862,6 +1862,10 @@
   .rx-area.wrap { white-space: pre-wrap; overflow-x: hidden; overflow-wrap: anywhere; }
   .rx-area.tall { min-height: 122px; resize: vertical; }
   .rx-area.short { min-height: 66px; resize: vertical; }
+  /* v66.32 — three stages have deliberately different working depths. */
+  .rx-area.rx-in { min-height: 61px; height: 61px; resize: vertical; }
+  .rx-area.rx-out { min-height: 146px; }
+  .rx-area.rx-sample { min-height: 119px; }
   .rx-area::selection { background: color-mix(in srgb, var(--accent) 38%, transparent); }
   .rx-area::placeholder { color: #7e8da6; }
   .rx-area:focus { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 8px 16px -12px rgba(0,0,0,.7); }
@@ -1922,12 +1926,12 @@
   .rx-option-group { margin-bottom: 11px; min-width: 0; }
   .rx-two > .rx-option-group { margin-bottom: 0; }
   .rx-option-title {
-    display: inline-flex; align-items: center; min-height: 19px; margin: 0 0 6px; padding: 0 7px;
+    display: inline-flex; align-items: center; min-height: 14px; margin: 0 0 4px; padding: 0 5px;
     border-radius: 999px; color: color-mix(in srgb, var(--accent) 78%, var(--ink));
     background: color-mix(in srgb, var(--accent) 9%, var(--surface-2));
     border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
     box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
-    font: 800 8.5px/1.15 inherit; letter-spacing: .045em; text-transform: none;
+    font: 800 5.1px/1.1 inherit; letter-spacing: .04em; text-transform: none;
     max-width: 100%; white-space: normal; overflow-wrap: anywhere;
   }
   .rx-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
@@ -2306,11 +2310,15 @@
   }
   .editor a.lumi-note-link { cursor: text; }
   .read-body a.lumi-note-link { cursor: pointer; }
+  /* 자유 메모 구분선은 아이디어 보드와 같은 디자인 엔진을 공유합니다. */
   .lumi-note-divider {
-    display: block; width: min(100%, 640px); height: 0; margin: 22px auto;
-    border: 0; border-top: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
-    box-shadow: 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
+    display: block; width: min(100%, 640px); min-height: 42px; height: auto; margin: 22px auto;
+    border: 0; background: transparent; box-shadow: none; user-select: none;
   }
+  .editor .lumi-note-divider { caret-color: transparent; }
+  .lumi-note-divider .idea-divider-body { position: relative; height: 42px; margin: 0; inset: auto; }
+  .lumi-note-divider .idea-divider-body::before,
+  .lumi-note-divider .idea-divider-body::after { pointer-events: none; }
   .lumi-note-divider::after { content: ""; }
 
   /* ===== font-size list ===== */
@@ -4004,7 +4012,7 @@
                       <button class="rx-copy" id="regexCopyIn" type="button" aria-label="IN 복사" title="IN 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
                     </div>
                   </div>
-                  <textarea class="rx-area tall" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
+                  <textarea class="rx-area tall rx-in" id="regexFind" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="/&lt;RLST&gt;\s*...\s*&lt;\/RLST&gt;/g"></textarea>
                   <div class="rx-foot">
                     <label class="rx-switch"><input type="checkbox" id="regexGlobal"><span class="rx-tr"></span>글로벌 /g</label>
                     <span class="rx-spring"></span>
@@ -4023,7 +4031,7 @@
                       <button class="rx-copy" id="regexCopyOut" type="button" aria-label="OUT 복사" title="OUT 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button>
                     </div>
                   </div>
-                  <textarea class="rx-area tall wrap" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
+                  <textarea class="rx-area tall wrap rx-out" id="regexReplace" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="&lt;div class=&quot;status&quot;&gt;$1&lt;/div&gt;"></textarea>
                 </div>
               </div>
 
@@ -4033,7 +4041,7 @@
                   <div class="rx-card-cap">
                     <div class="rx-card-nm"><label for="regexSample">Sample</label></div>
                   </div>
-                  <textarea class="rx-area short wrap" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
+                  <textarea class="rx-area short wrap rx-sample" id="regexSample" spellcheck="false" placeholder="유동적으로 바뀌는 수치만 [[12]]처럼 감싸세요"></textarea>
                 </div>
               </div>
 
@@ -4042,7 +4050,7 @@
             <details class="rx-drawer" open>
               <summary class="rx-drawer-head">
                 <span class="rx-drawer-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-                <span class="rx-drawer-tt">export options</span>
+                <span class="rx-drawer-tt">Export options</span>
                 <span class="rx-drawer-chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
               </summary>
               <div class="rx-drawer-body">
@@ -4051,7 +4059,7 @@
                   <textarea class="rx-trim" id="regexTrimStrings" spellcheck="false" placeholder="한 줄에 하나"></textarea>
                 </div>
                 <div class="rx-option-group">
-                  <div class="rx-option-title">플레이스먼트</div>
+                  <div class="rx-option-title">영향을 미침</div>
                   <div class="rx-chips rx-placement-chips">
                     <label class="rx-chip"><input type="checkbox" data-regex-placement="1"><span class="rx-bx"></span>사용자 입력</label>
                     <label class="rx-chip"><input type="checkbox" data-regex-placement="2"><span class="rx-bx"></span>AI 출력</label>
@@ -4072,7 +4080,7 @@
                 </div>
                 <div class="rx-two">
                   <div class="rx-option-group">
-                    <div class="rx-option-title">다른 옵션</div>
+                    <div class="rx-option-title">Ephemerality</div>
                     <div class="rx-chips">
                       <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
                       <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>

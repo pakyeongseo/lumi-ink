@@ -5323,38 +5323,134 @@
     const id = esc(note.id);
     return `<a class="lumi-link lumi-note-link" href="#lumi-note-${id}" data-lumi-note-id="${id}" title="${esc(hint)}">${esc(title)}</a>&nbsp;`;
   }
-  function openFreeMemoNoteLinkPicker(savedRange) {
-    const current = getNote(st.curNoteId); let query = "";
-    const draw = () => {
-      const host = $("freeNoteLinkList"); if (!host) return;
-      const q = query.trim().toLocaleLowerCase("ko");
-      const notes = st.notes
-        .filter((note) => note.id !== (current && current.id))
-        .filter((note) => !q || `${note.title || ""} ${getProject(note.projectId)?.name || ""} ${noteTypeLabel(note)}`.toLocaleLowerCase("ko").includes(q))
-        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-      host.innerHTML = notes.length
-        ? notes.map((note) => { const project = getProject(note.projectId); return `<button type="button" class="qm-picker-row" data-free-note-link="${esc(note.id)}"><b>${esc(note.title || "제목 없는 메모")}</b><small>${esc(`${project ? project.name : "프로젝트 없음"} · ${noteTypeShortLabel(note)}`)}</small></button>`; }).join("")
-        : '<div class="qm-picker-empty">연결할 다른 메모가 없어요.</div>';
-      host.querySelectorAll("[data-free-note-link]").forEach((button) => button.addEventListener("click", () => {
-        const target = getNote(button.dataset.freeNoteLink); if (!target) { toast("연결할 메모를 찾지 못했어요"); return; }
-        closeModal();
-        if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(target), savedRange)) toast("내 글 바로가기를 넣었어요");
-      }));
+  function normalizeFreeDividerConfig(input) {
+    const src = input && typeof input === "object" ? input : {};
+    const style = Object.prototype.hasOwnProperty.call(IDEA_DIVIDER_STYLES, String(src.style || "")) ? String(src.style) : "solid";
+    const weight = Math.max(1, Math.min(12, Math.round(Number(src.weight) || 3)));
+    const color = normalizeIdeaColorValue(src.color, ideaPreferredColor());
+    return { style, weight, color };
+  }
+  function freeDividerPreviewMarkup(config, id) {
+    const data = normalizeFreeDividerConfig(config);
+    const attrs = id ? ` id="${esc(id)}"` : "";
+    return `<div${attrs} class="idea-preview-divider lumi-note-divider" data-divider-style="${esc(data.style)}" style="${ideaColorStyleAttr(data.color, "")};--idea-divider-weight:${data.weight}px"><div class="idea-divider-body" aria-hidden="true"><span></span></div></div>`;
+  }
+  function freeMemoDividerMarkup(config) {
+    const data = normalizeFreeDividerConfig(config);
+    return `<div class="idea-preview-divider lumi-note-divider" contenteditable="false" data-lumi-note-divider="1" data-divider-style="${esc(data.style)}" data-divider-color="${esc(data.color)}" style="${ideaColorStyleAttr(data.color, "")};--idea-divider-weight:${data.weight}px"><div class="idea-divider-body" aria-hidden="true"><span></span></div></div><p><br></p>`;
+  }
+  function openFreeMemoDividerStylePicker(savedRange, initialConfig) {
+    const config = normalizeFreeDividerConfig(initialConfig);
+    const tiles = Object.entries(IDEA_DIVIDER_STYLES).map(([key, meta]) =>
+      `<button type="button" class="idea-divider-choice${config.style === key ? " active" : ""}" data-free-divider-style="${esc(key)}" title="${esc(meta.desc)}">`
+      + freeDividerPreviewMarkup({ ...config, style: key })
+      + `<small>${esc(meta.label)}</small></button>`).join("");
+    openModal(`<h3>구분선 디자인</h3><p class="m-sub">아이디어 보드와 같은 구분선 도구입니다. 굵기와 디자인을 고른 뒤 컬러를 정합니다.</p>`
+      + `<label class="idea-overlay-range idea-divider-weight-range"><span>선 굵기 <b id="freeDivWeightValue">${config.weight}px</b></span><input id="freeDivWeight" type="range" min="1" max="12" step="1" value="${config.weight}" aria-label="구분선 굵기"></label>`
+      + `<div class="idea-divider-choice-grid">${tiles}</div>`
+      + `<div class="m-row"><button class="m-btn" id="freeDividerStyleClose">닫기</button></div>`);
+    const updateWeight = (value) => {
+      config.weight = Math.max(1, Math.min(12, Math.round(Number(value) || 3)));
+      const label = $("freeDivWeightValue"); if (label) label.textContent = config.weight + "px";
+      $("modalBox").querySelectorAll(".idea-preview-divider").forEach((preview) => preview.style.setProperty("--idea-divider-weight", config.weight + "px"));
     };
-    openModal(`<h3>내 글 바로가기</h3><p class="m-sub">메모가 프로젝트 사이를 이동해도 같은 글을 따라갑니다.</p><input class="m-input" id="freeNoteLinkSearch" type="search" autocomplete="off" placeholder="제목 또는 프로젝트 검색"><div class="qm-picker-list" id="freeNoteLinkList"></div><div class="m-row"><button class="m-btn" id="freeNoteLinkBack">뒤로</button></div>`);
-    $on("freeNoteLinkSearch", "input", (event) => { query = event.target.value || ""; draw(); });
-    $on("freeNoteLinkBack", "click", () => openFreeInsertMenu(savedRange));
+    const weightInput = $("freeDivWeight");
+    if (weightInput) weightInput.addEventListener("input", () => updateWeight(weightInput.value));
+    $("modalBox").querySelectorAll("[data-free-divider-style]").forEach((button) => button.addEventListener("click", () => {
+      config.style = button.dataset.freeDividerStyle || "solid";
+      openFreeMemoDividerColorPicker(savedRange, config);
+    }));
+    $on("freeDividerStyleClose", "click", closeModal);
+  }
+  function openFreeMemoDividerColorPicker(savedRange, initialConfig) {
+    const config = normalizeFreeDividerConfig(initialConfig);
+    const preview = () => freeDividerPreviewMarkup(config, "freeDividerColorPreview");
+    openModal(`<h3>구분선 컬러</h3><p class="m-sub">${esc((IDEA_DIVIDER_STYLES[config.style] || IDEA_DIVIDER_STYLES.solid).label)} 디자인에 적용할 색을 고릅니다.</p>`
+      + preview()
+      + `<div class="idea-options-label">구분선 컬러</div><div class="idea-color-grid palette-grid">${ideaColorChoicesMarkup(config.color, "data-free-divider-color", true)}</div>`
+      + `<div class="m-row"><button class="m-btn" id="freeDividerColorBack">뒤로가기</button><button class="m-btn primary" id="freeDividerColorDone">삽입</button></div>`);
+    const update = () => {
+      const target = $("freeDividerColorPreview");
+      if (!target) return;
+      target.dataset.dividerStyle = config.style;
+      target.setAttribute("style", `${ideaColorStyleAttr(config.color, "")};--idea-divider-weight:${config.weight}px`);
+    };
+    $("modalBox").querySelectorAll("[data-free-divider-color]").forEach((button) => button.addEventListener("click", () => {
+      config.color = button.dataset.freeDividerColor || config.color;
+      $("modalBox").querySelectorAll("[data-free-divider-color]").forEach((item) => item.classList.toggle("active", item === button));
+      update();
+    }));
+    $("modalBox").querySelectorAll('[data-idea-custom-color="data-free-divider-color"]').forEach((button) => button.addEventListener("click", () => {
+      openIdeaCustomColorPicker("구분선 컬러 직접 선택", config.color, (value) => {
+        config.color = value;
+        openFreeMemoDividerColorPicker(savedRange, config);
+      });
+    }));
+    $on("freeDividerColorBack", "click", () => openFreeMemoDividerStylePicker(savedRange, config));
+    $on("freeDividerColorDone", "click", () => {
+      closeModal();
+      if (insertFreeEditorMarkup(freeMemoDividerMarkup(config), savedRange)) toast("구분선을 넣었어요");
+    });
+    update();
+  }
+  function openFreeMemoNoteLinkPicker(savedRange) {
+    const current = getNote(st.curNoteId);
+    const candidates = st.notes.filter((note) => note.id !== (current && current.id));
+    const bodyText = (note) => { try { return [preview(noteHtml(note)), JSON.stringify(note.data || {}).slice(0, 3000)].join(" "); } catch (e) { return preview(noteHtml(note)); } };
+    const searchText = (note) => [note.title || "", noteTypeShortLabel(note), noteTypeLabel(note), TYPE_TAG[visualMemoType(note)] || "", note.type === "idea" ? ideaBoardSummary(note) : bodyText(note)].join(" ").toLocaleLowerCase("ko");
+    let tab = "all", selectedProjectId = null, query = "";
+    const projectName = (projectId) => { const project = getProject(projectId); return project ? project.name : "프로젝트 없음"; };
+    const pick = (id) => {
+      const target = getNote(id); closeModal();
+      if (!target) { toast("연결할 메모를 찾지 못했어요"); return; }
+      if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(target), savedRange)) toast("내 글 바로가기를 넣었어요");
+    };
+    const noteRows = (list) => list.length ? list.map((note) => `<div class="log-template-item idea-quote-item"><button class="log-template-main" type="button" data-free-note-link="${esc(note.id)}"><span class="log-template-title"><span class="memo-tag t-${visualMemoType(note)}">${TYPE_TAG[visualMemoType(note)] || "?"}</span><b>${esc(note.title || "제목 없는 메모")}</b></span><small>${esc(projectName(note.projectId))} · ${esc(noteTypeShortLabel(note))} · ${esc(note.type === "idea" ? ideaBoardSummary(note) : preview(noteHtml(note)) || "내용 없음")}</small></button></div>`).join("") : '<div class="log-template-empty">검색 결과가 없어요.</div>';
+    const projectRows = (list) => list.length ? list.map((project) => {
+      const count = candidates.filter((note) => note.projectId === project.id).length;
+      const framed = frameById(project.frame);
+      const thumb = `<span class="idea-quote-project-thumb${framed ? " has-frame" : ""}">${projectThumbMedia(project)}${framed ? `<span class="frame">${frameInner(project)}</span>` : ""}</span>`;
+      return `<div class="log-template-item idea-quote-project-item"><button class="log-template-main" type="button" data-free-note-project="${esc(project.id)}">${thumb}<span class="idea-quote-project-copy"><span class="log-template-title"><b>${esc(project.name || "이름 없는 프로젝트")}</b></span><small>연결 가능한 메모 ${count}개</small></span></button></div>`;
+    }).join("") : '<div class="log-template-empty">표시할 프로젝트가 없어요.</div>';
+    openModal(`<div class="log-template-manager idea-quote-manager free-note-link-manager"><h3>내 글 바로가기</h3><p class="m-sub">아이디어 보드와 같은 방식으로, 연결할 메모를 전체 또는 프로젝트별로 골라요.</p><div class="log-template-tabs" role="tablist" aria-label="내 글 바로가기 구분"><button data-free-note-tab="all" role="tab">전체보기 <small></small></button><button data-free-note-tab="project" role="tab">프로젝트별 <small></small></button></div><div class="log-template-tools"><input class="m-input" id="freeNoteLinkSearch" type="search" autocomplete="off" placeholder="제목·내용·종류 검색"></div><div class="log-template-list idea-quote-results" id="freeNoteLinkList"></div><div class="m-row"><button class="m-btn" id="freeNoteProjectBack" type="button" hidden>← 뒤로가기</button><button class="m-btn" id="freeNoteLinkCancel">닫기</button></div></div>`);
+    $("modalBox").classList.add("log-template-modal", "idea-quote-modal");
+    $("modalScrim").classList.add("log-template-open");
+    const draw = () => {
+      $("modalBox").querySelectorAll("[data-free-note-tab]").forEach((button) => {
+        const active = button.dataset.freeNoteTab === tab;
+        button.classList.toggle("active", active); button.setAttribute("aria-selected", active ? "true" : "false");
+        const small = button.querySelector("small"); if (small) small.textContent = button.dataset.freeNoteTab === "all" ? String(candidates.length) : String(st.projects.length);
+      });
+      const input = $("freeNoteLinkSearch"), back = $("freeNoteProjectBack"), box = $("freeNoteLinkList");
+      if (!box) return;
+      if (input && document.activeElement !== input) input.value = query;
+      const q = query.trim().toLocaleLowerCase("ko");
+      if (back) back.hidden = !(tab === "project" && selectedProjectId);
+      if (tab === "project" && selectedProjectId == null) {
+        if (input) input.placeholder = "프로젝트 이름 검색";
+        const projects = st.projects.filter((project) => !q || String(project.name || "").toLocaleLowerCase("ko").includes(q)).sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ko"));
+        box.innerHTML = projectRows(projects);
+        box.querySelectorAll("[data-free-note-project]").forEach((button) => button.addEventListener("click", () => { selectedProjectId = button.dataset.freeNoteProject; query = ""; draw(); }));
+        return;
+      }
+      if (input) input.placeholder = tab === "project" ? `${projectName(selectedProjectId)} 안에서 검색` : "제목·내용·종류 검색";
+      const source = (tab === "project" && selectedProjectId) ? candidates.filter((note) => note.projectId === selectedProjectId) : candidates;
+      const list = (q ? source.filter((note) => searchText(note).includes(q)) : source).sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "ko"));
+      box.innerHTML = source.length ? noteRows(list) : '<div class="log-template-empty">연결할 메모가 없어요.</div>';
+      box.querySelectorAll("[data-free-note-link]").forEach((button) => button.addEventListener("click", () => pick(button.dataset.freeNoteLink)));
+    };
+    $("modalBox").querySelectorAll("[data-free-note-tab]").forEach((button) => button.addEventListener("click", () => { tab = button.dataset.freeNoteTab; selectedProjectId = null; query = ""; draw(); }));
+    $("freeNoteLinkSearch").addEventListener("input", (event) => { query = event.target.value; draw(); });
+    $on("freeNoteProjectBack", "click", () => { selectedProjectId = null; query = ""; draw(); });
+    $on("freeNoteLinkCancel", "click", closeModal);
     draw();
   }
   function openFreeInsertMenu(savedRange) {
     if (st.codeMode) { toast("코드 보기에서는 본문 삽입을 사용할 수 없어요"); return; }
     const range = savedRange || captureFreeEditorRange();
-    openModal(`<h3>본문에 삽입</h3><p class="m-sub">현재 커서 위치에 내 글 바로가기 또는 구분선을 넣습니다.</p><div class="idea-add-menu free-insert-menu"><button type="button" class="idea-add-choice" id="freeInsertNoteLink"><span class="iac-ico">↗</span><span><b>내 글 바로가기</b><small>작성한 다른 메모를 여는 연결 칩</small></span></button><button type="button" class="idea-add-choice" id="freeInsertDivider"><span class="iac-ico">—</span><span><b>구분선</b><small>본문의 장면이나 단락을 나누는 선</small></span></button></div><div class="m-row"><button class="m-btn" id="freeInsertCancel">취소</button></div>`);
+    openModal(`<h3>본문에 삽입</h3><p class="m-sub">현재 커서 위치에 내 글 바로가기 또는 구분선을 넣습니다.</p><div class="idea-add-menu free-insert-menu"><button type="button" class="idea-add-choice" id="freeInsertNoteLink"><span class="iac-ico">↗</span><span><b>내 글 바로가기</b><small>작성한 다른 메모를 여는 연결 칩</small></span></button><button type="button" class="idea-add-choice" id="freeInsertDivider"><span class="iac-ico">—</span><span><b>구분선</b><small>굵기·디자인·컬러를 골라 삽입</small></span></button></div><div class="m-row"><button class="m-btn" id="freeInsertCancel">취소</button></div>`);
     $on("freeInsertNoteLink", "click", () => openFreeMemoNoteLinkPicker(range));
-    $on("freeInsertDivider", "click", () => {
-      closeModal();
-      if (insertFreeEditorMarkup('<hr class="lumi-note-divider" data-lumi-note-divider="1"><p><br></p>', range)) toast("구분선을 넣었어요");
-    });
+    $on("freeInsertDivider", "click", () => openFreeMemoDividerStylePicker(range));
     $on("freeInsertCancel", "click", closeModal);
   }
   function insertLinkPrompt() {
@@ -8502,7 +8598,32 @@ ${gallery}
     arrowEnds: { label:"화살 끝", desc:"양끝이 화살표인 선" },
     bracketEnds: { label:"괄호 끝", desc:"양끝에 괄호 장식 선" },
     taperDots: { label:"점 페이드", desc:"가운데 마름모에 점이 번지는 선" },
-    ornateScroll: { label:"스크롤", desc:"중앙 소용돌이 장식 선" }
+    ornateScroll: { label:"스크롤", desc:"중앙 소용돌이 장식 선" },
+    wave: { label:"물결", desc:"부드러운 곡선이 출렁이는 구분선" },
+    zigzag: { label:"지그재그", desc:"꺾인 선이 반복되는 구분선" },
+    rope: { label:"꼬임", desc:"두 가닥이 꼬인 밧줄 구분선" },
+    chainLink: { label:"사슬", desc:"고리가 이어진 사슬 구분선" },
+    groove: { label:"음각", desc:"홈이 파인 듯한 입체 구분선" },
+    ribbon: { label:"리본", desc:"굵은 띠에 가는 테두리가 더해진 선" },
+    barcode: { label:"바코드", desc:"굵기가 다른 세로 막대 구분선" },
+    scallop: { label:"스캘럽", desc:"반원이 이어지는 부채꼴 구분선" },
+    pearlRow: { label:"진주", desc:"큰 진주와 잔점이 교차하는 구분선" },
+    gradedDots: { label:"점강", desc:"가운데가 굵고 양끝으로 작아지는 점선" },
+    lattice: { label:"그물", desc:"교차 사선이 짜인 그물 구분선" },
+    brick: { label:"벽돌", desc:"위아래 두 줄이 엇갈린 벽돌 구분선" },
+    sparkleCenter: { label:"가운데 반짝", desc:"중앙 반짝이 장식 선" },
+    snowCenter: { label:"가운데 눈", desc:"중앙 눈송이 장식 선" },
+    sunCenter: { label:"가운데 해", desc:"중앙 태양 장식 선" },
+    quatrefoilCenter: { label:"가운데 네잎", desc:"중앙 네잎 장식 선" },
+    crossCenter: { label:"가운데 십자가", desc:"중앙 장식 십자가 선" },
+    asteriskCenter: { label:"가운데 별표", desc:"중앙 별표꽃 장식 선" },
+    floretCenter: { label:"가운데 꽃송이", desc:"중앙 꽃송이 장식 선" },
+    lozengeCenter: { label:"가운데 빈 마름모", desc:"중앙 빈 마름모 윤곽 선" },
+    diamondEnds: { label:"마름모 끝", desc:"양끝에 마름모가 달린 선" },
+    dotEnds: { label:"점 끝", desc:"양끝에 큰 점이 달린 선" },
+    ringEnds: { label:"고리 끝", desc:"양끝에 빈 고리가 달린 선" },
+    featherEnds: { label:"깃 끝", desc:"양끝에 깃 장식이 대칭으로 달린 선" },
+    flourishEnds: { label:"잎 끝", desc:"양끝에 잎 장식이 대칭으로 달린 선" }
   });
   const IDEA_DIVIDER_TEMPLATE_GUIDE = `# Lumi Ink 아이디어 보드 구분선 템플릿 가이드
 
@@ -9884,7 +10005,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const noteLockMode=ideaLockMode(item);
     const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
-    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 32종에서 선택</small></span></button></div>`:"";
+    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 57종에서 선택</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
     const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";
