@@ -5,11 +5,11 @@
 ## 현재 배포 기준
 
 - 사용자 배포 버전: **v1.5**
-- 개발 기준 빌드: **v66.29**
-- 서비스 워커 캐시: `ink-memo-v1.5-v66.29-regex-layout-manual-refresh`
+- 개발 기준 빌드: **v66.30**
+- 서비스 워커 캐시: `ink-memo-v1.5-v66.30-regex-preview-theme-free-insert`
 - 상세 매뉴얼: `Lumi_Ink_Manual_1.html`
 - 사용자 릴리스 노트: `Lumi_Ink_v1.5_Release_Notes.md`
-- 현재 개발 변경 이력: `Lumi_Ink_v66.29_Release_Notes.md`
+- 현재 개발 변경 이력: `Lumi_Ink_v66.30_Release_Notes.md`
 
 ## 핵심 기능
 
@@ -43,7 +43,7 @@
 
 - `Lumi_Ink_Manual_1.html`
 - `Lumi_Ink_v1.5_Release_Notes.md`
-- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`, `Lumi_Ink_v66.24_Release_Notes.md`~`Lumi_Ink_v66.29_Release_Notes.md`
+- `Lumi_Ink_v66.9_Release_Notes.md`, `Lumi_Ink_v66.12_Release_Notes.md`, `Lumi_Ink_v66.13_Release_Notes.md`, `Lumi_Ink_v66.15_Release_Notes.md`, `Lumi_Ink_v66.16_Release_Notes.md`, `Lumi_Ink_v66.17_Release_Notes.md`, `Lumi_Ink_v66.18_Release_Notes.md`, `Lumi_Ink_v66.19_Release_Notes.md`, `Lumi_Ink_v66.20_Release_Notes.md`, `Lumi_Ink_v66.21_Release_Notes.md`, `Lumi_Ink_v66.24_Release_Notes.md`~`Lumi_Ink_v66.30_Release_Notes.md`
 - `lumink-log-template-guide.md`, `lumink-log-templates-100.html`
 - `idea-board-design-guide.md`, `idea-board-template-registry-guide.md`, `idea-divider-template-guide.md`
 - `THIRD_PARTY_NOTICES.md`
@@ -51,6 +51,12 @@
 ## Third-party
 
 - `html2canvas 1.4.1` (MIT) is bundled locally as `html2canvas.min.js` for Idea Board PNG capture.
+
+## v66.30
+
+- 정규식 PREVIEW의 샌드박스가 앱의 뒤로가기·사이드바·퀵메뉴 제스처를 가로막지 않도록 확인 전용 입력 처리로 분리했습니다. 단일 정상 결과 표기는 **매치**로 간결하게 바꿨고, 옵션 제목은 작은 칩 형태로 정리했습니다.
+- 사용자 지정 테마의 **옅은 강조·선택 배경**이 퀵메뉴 기본 아이콘 첫 그라데이션과 패널 하단 그라데이션까지 제어합니다.
+- 자유 메모 툴바의 첨부파일 오른쪽 `＋`에서 **내 글 바로가기**와 **구분선**을 삽입합니다. 내 글 바로가기는 다른 메모를 검색해 연결하고, 읽기 화면에서 연결 대상을 바로 엽니다.
 
 ## v66.29
 

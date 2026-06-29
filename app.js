@@ -1272,6 +1272,7 @@
     // 메모 디자인은 유지하면서 앱 전체 UI를 덮어쓰지 않게 해요.
     $("readBody").innerHTML = `<div class="lumink-user-html">${noteHtml(n)}</div>`;
     normalizeLinks($("readBody"));
+    bindInternalNoteLinks($("readBody"));
     addCodeCopyButtons($("readBody"));
     renderAttachments("readAttach", n, false);
   }
@@ -2268,10 +2269,11 @@
       frame.srcdoc = regexPreviewFallback(msg);
       return;
     }
+    const matchLabel = matchCount === 1 ? "매치" : `${matchCount}개 매치`;
     badge.className = matchCount ? "regex-status ok" : "regex-status bad";
-    badge.textContent = matchCount ? `${matchCount}개 매치` : "매치 없음";
+    badge.textContent = matchCount ? matchLabel : "매치 없음";
     status.textContent = matchCount
-      ? `${matchCount}개 매치 · OUT HTML을 샌드박스에서 렌더링했습니다.`
+      ? `${matchLabel} · OUT HTML을 샌드박스에서 렌더링했습니다.`
       : "샘플에서 일치하는 범위를 찾지 못했습니다.";
     if (first && first.length > 1) {
       captures.innerHTML = first.slice(1).map((value, index) => `<div class="regex-capture-row"><b>$${index + 1}</b><span>${esc(value == null ? "" : String(value))}</span></div>`).join("");
@@ -5263,7 +5265,97 @@
   /* ---------- smart hyperlinks ---------- */
   const URL_RE = /^https?:\/\/[^\s]+$/i;
   function normalizeLinks(root) {
-    root.querySelectorAll("a").forEach((a) => { a.classList.add("lumi-link"); a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener noreferrer"); });
+    if (!root) return;
+    root.querySelectorAll("a").forEach((a) => {
+      a.classList.add("lumi-link");
+      const noteId = String(a.dataset.lumiNoteId || "").trim();
+      if (noteId) {
+        a.classList.add("lumi-note-link");
+        a.setAttribute("href", `#lumi-note-${noteId}`);
+        a.removeAttribute("target"); a.removeAttribute("rel");
+        return;
+      }
+      a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener noreferrer");
+    });
+  }
+  function bindInternalNoteLinks(root) {
+    if (!root) return;
+    root.querySelectorAll("a[data-lumi-note-id]").forEach((link) => {
+      if (link.dataset.lumiBound === "1") return;
+      link.dataset.lumiBound = "1";
+      link.addEventListener("click", (event) => {
+        event.preventDefault(); event.stopPropagation();
+        const targetId = String(link.dataset.lumiNoteId || "").trim();
+        if (!targetId || !getNote(targetId)) { toast("연결된 메모를 찾을 수 없어요"); return; }
+        void openNote(targetId);
+      });
+    });
+  }
+  function captureFreeEditorRange() {
+    const editor = $("editor"), selection = window.getSelection();
+    if (!editor || !selection || !selection.rangeCount) return null;
+    const range = selection.getRangeAt(0);
+    return editor.contains(range.commonAncestorContainer) ? range.cloneRange() : null;
+  }
+  function restoreFreeEditorRange(savedRange) {
+    const editor = $("editor"); if (!editor) return false;
+    editor.focus();
+    const selection = window.getSelection(); if (!selection) return false;
+    let range = savedRange;
+    if (!range || !editor.contains(range.commonAncestorContainer)) {
+      range = document.createRange(); range.selectNodeContents(editor); range.collapse(false);
+    }
+    selection.removeAllRanges(); selection.addRange(range); return true;
+  }
+  function insertFreeEditorMarkup(markup, savedRange) {
+    if (st.codeMode) { toast("코드 보기에서는 본문 삽입을 사용할 수 없어요"); return false; }
+    if (!activeFreeSession()) { toast("열린 자유 메모를 찾지 못했어요"); return false; }
+    if (!restoreFreeEditorRange(savedRange)) return false;
+    document.execCommand("insertHTML", false, markup);
+    normalizeLinks($("editor")); scheduleSave();
+    return true;
+  }
+  function freeMemoInternalLinkMarkup(note) {
+    const title = String(note && note.title || "제목 없는 메모");
+    const type = noteTypeShortLabel(note);
+    const project = note && getProject(note.projectId);
+    const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
+    const id = esc(note.id);
+    return `<a class="lumi-link lumi-note-link" href="#lumi-note-${id}" data-lumi-note-id="${id}" title="${esc(hint)}">${esc(title)}</a>&nbsp;`;
+  }
+  function openFreeMemoNoteLinkPicker(savedRange) {
+    const current = getNote(st.curNoteId); let query = "";
+    const draw = () => {
+      const host = $("freeNoteLinkList"); if (!host) return;
+      const q = query.trim().toLocaleLowerCase("ko");
+      const notes = st.notes
+        .filter((note) => note.id !== (current && current.id))
+        .filter((note) => !q || `${note.title || ""} ${getProject(note.projectId)?.name || ""} ${noteTypeLabel(note)}`.toLocaleLowerCase("ko").includes(q))
+        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      host.innerHTML = notes.length
+        ? notes.map((note) => { const project = getProject(note.projectId); return `<button type="button" class="qm-picker-row" data-free-note-link="${esc(note.id)}"><b>${esc(note.title || "제목 없는 메모")}</b><small>${esc(`${project ? project.name : "프로젝트 없음"} · ${noteTypeShortLabel(note)}`)}</small></button>`; }).join("")
+        : '<div class="qm-picker-empty">연결할 다른 메모가 없어요.</div>';
+      host.querySelectorAll("[data-free-note-link]").forEach((button) => button.addEventListener("click", () => {
+        const target = getNote(button.dataset.freeNoteLink); if (!target) { toast("연결할 메모를 찾지 못했어요"); return; }
+        closeModal();
+        if (insertFreeEditorMarkup(freeMemoInternalLinkMarkup(target), savedRange)) toast("내 글 바로가기를 넣었어요");
+      }));
+    };
+    openModal(`<h3>내 글 바로가기</h3><p class="m-sub">메모가 프로젝트 사이를 이동해도 같은 글을 따라갑니다.</p><input class="m-input" id="freeNoteLinkSearch" type="search" autocomplete="off" placeholder="제목 또는 프로젝트 검색"><div class="qm-picker-list" id="freeNoteLinkList"></div><div class="m-row"><button class="m-btn" id="freeNoteLinkBack">뒤로</button></div>`);
+    $on("freeNoteLinkSearch", "input", (event) => { query = event.target.value || ""; draw(); });
+    $on("freeNoteLinkBack", "click", () => openFreeInsertMenu(savedRange));
+    draw();
+  }
+  function openFreeInsertMenu(savedRange) {
+    if (st.codeMode) { toast("코드 보기에서는 본문 삽입을 사용할 수 없어요"); return; }
+    const range = savedRange || captureFreeEditorRange();
+    openModal(`<h3>본문에 삽입</h3><p class="m-sub">현재 커서 위치에 내 글 바로가기 또는 구분선을 넣습니다.</p><div class="idea-add-menu free-insert-menu"><button type="button" class="idea-add-choice" id="freeInsertNoteLink"><span class="iac-ico">↗</span><span><b>내 글 바로가기</b><small>작성한 다른 메모를 여는 연결 칩</small></span></button><button type="button" class="idea-add-choice" id="freeInsertDivider"><span class="iac-ico">—</span><span><b>구분선</b><small>본문의 장면이나 단락을 나누는 선</small></span></button></div><div class="m-row"><button class="m-btn" id="freeInsertCancel">취소</button></div>`);
+    $on("freeInsertNoteLink", "click", () => openFreeMemoNoteLinkPicker(range));
+    $on("freeInsertDivider", "click", () => {
+      closeModal();
+      if (insertFreeEditorMarkup('<hr class="lumi-note-divider" data-lumi-note-divider="1"><p><br></p>', range)) toast("구분선을 넣었어요");
+    });
+    $on("freeInsertCancel", "click", closeModal);
   }
   function insertLinkPrompt() {
     $("editor").focus();
@@ -7327,7 +7419,7 @@ ${gallery}
     ...CUSTOM_THEME_COLOR_META.map((item) => item.variable),
     "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--logo-ink",
     "--custom-main-a", "--custom-main-b", "--custom-logo-body", "--custom-logo-tip", "--custom-logo-ink", "--custom-logo-glow",
-    "--quickmenu-default-icon-bg-a", "--quickmenu-default-icon-bg-b",
+    "--quickmenu-default-icon-bg-a", "--quickmenu-default-icon-bg-b", "--quickmenu-panel-bg-b",
     "--custom-note-type-free", "--custom-note-type-html", "--custom-note-type-lorebook", "--custom-note-type-log", "--custom-note-type-persona", "--custom-note-type-character", "--custom-note-type-idea",
     "--custom-note-type-free-ink", "--custom-note-type-html-ink", "--custom-note-type-lorebook-ink", "--custom-note-type-log-ink", "--custom-note-type-persona-ink", "--custom-note-type-character-ink", "--custom-note-type-idea-ink",
     "--custom-note-divider-text", "--custom-note-divider-count"
@@ -7436,14 +7528,13 @@ ${gallery}
     const suggestedSoft=dark?hslToHex(mid.h,Math.max(.18,mid.s*.28),.18):hslToHex(mid.h,Math.max(.14,mid.s*.24),.91);
     const soft=normalizeThemeHex(c.softAccentBg,suggestedSoft);
     const logoBody=a,logoTip=b,logoInk=normalizeThemeHex(c.logoCore,contrastInk(a,dark)),word=dark?hslToHex(mid.h,Math.max(.15,mid.s*.22),.88):hslToHex(mid.h,Math.max(.24,mid.s*.42),.27);
-    const quickA=dark?hslToHex(hexToHsl(a).h,Math.max(.24,hexToHsl(a).s*.54),.25):hslToHex(hexToHsl(a).h,Math.max(.16,hexToHsl(a).s*.32),.91);
     const quickB=dark?hslToHex(hexToHsl(b).h,Math.max(.22,hexToHsl(b).s*.48),.18):hslToHex(hexToHsl(b).h,Math.max(.14,hexToHsl(b).s*.28),.965);
     return {
       "--accent":a,"--accent-2":b,"--accent-deep":deep,"--accent-soft":soft,"--accent-ink":c.ink,
       "--grad-blue":`linear-gradient(135deg, ${a} 0%, ${b} 100%)`,"--glow":`0 0 ${dark?24:18}px ${themeHexAlpha(a,dark?.30:.18)}`,"--logo-ink":word,
       "--custom-main-a":a,"--custom-main-b":b,"--custom-logo-body":logoBody,"--custom-logo-tip":logoTip,"--custom-logo-ink":logoInk,
       "--custom-logo-glow":`drop-shadow(0 0 ${dark?13:6}px ${themeHexAlpha(a,dark?.46:.28)})`,
-      "--quickmenu-default-icon-bg-a":quickA,"--quickmenu-default-icon-bg-b":quickB,
+      "--quickmenu-default-icon-bg-a":soft,"--quickmenu-default-icon-bg-b":quickB,"--quickmenu-panel-bg-b":soft,
       ...customThemeAutoTypeVars(a,b,dark)
     };
   }
@@ -7490,13 +7581,13 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:11,baseAccent,
+    return {version:12,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:11,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:12,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){
     const colors=palette.colors||{};
     const soft=normalizeThemeHex(colors.softAccentBg,"#EAF0FF");
@@ -7509,7 +7600,7 @@ ${gallery}
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<10;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<12;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
   function appearanceSnapshot(){return {version:10,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
@@ -7532,7 +7623,7 @@ ${gallery}
     const restore=()=>{st.customTheme=cloneThemeObject(before);applyAccent(beforeAccent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(beforeAccent));applyCustomTheme(before,{persist:false});};customThemePreviewRestore=restore;
     const palette=draft[mode],fields=CUSTOM_THEME_GROUPS.map(([key,label])=>{const groupItems=CUSTOM_THEME_COLOR_META.filter((item)=>item.group===key&&!item.derived);if(!groupItems.length)return "";const items=groupItems.map((item)=>`<button type="button" class="custom-theme-field custom-theme-field-button${key==="main"?" is-main":""}" data-custom-editor-key="${item.key}"><span><b>${esc(item.label)}</b><small>${palette.colors[item.key]}</small></span><i style="background:${palette.colors[item.key]}"></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.8 4.2 5 5L9 20H4v-5Z"/><path d="m12.2 6.8 5 5"/></svg></button>`).join("");return `<section class="custom-theme-group custom-theme-group-${key}"><h4>${label}</h4>${items}</section>`;}).join("");
     const title=mode==="dark"?"다크 모드 독립 테마":"라이트 모드 독립 테마";
-    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 옅은 강조·선택 배경 하나를 바꾸면 코드 보기 아이콘, 글자 크기 선택, 새 메모 아이콘, 카운트·태그·섹션 제목 배경까지 함께 정리됩니다. 메인 화면 섹션 제목 색은 홈·프로젝트 내부의 정렬 글자와 아이콘에도 함께 적용됩니다.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
+    openModal(`<h3>사용자 지정 테마</h3><p class="m-sub">사용자 지정은 프리셋의 변형이 아니라, <b>두 메인 색상의 그라데이션</b>에서 시작하는 독립 테마입니다. 로고·버튼·아이콘까지 같은 두 색을 함께 사용합니다.</p><div class="custom-theme-tabs"><button class="custom-theme-tab ${mode==="light"?"is-active":""}" data-custom-tab="light">라이트 모드</button><button class="custom-theme-tab ${mode==="dark"?"is-active":""}" data-custom-tab="dark">다크 모드</button></div><div class="custom-theme-studio"><div class="custom-theme-preview" id="customThemePreview"><span class="custom-theme-preview-mark"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span><span class="custom-theme-preview-copy"><b>${title}</b><small id="customThemePreviewText">두 메인 색상으로 로고와 추천 팔레트를 함께 구성합니다</small></span><span class="custom-theme-swatches"><i></i><i></i></span></div><div class="custom-theme-fields">${fields}</div><div class="custom-theme-tools custom-theme-tools-stacked"><small>메인 색상 1·2를 고른 뒤 추천 팔레트를 만들면 두 색의 결을 살린 배경·카드·글자·경계선이 한 번에 채워집니다. 옅은 강조·선택 배경 하나를 바꾸면 코드 보기 아이콘, 글자 크기 선택, 새 메모 아이콘, 카운트·태그·섹션 제목 배경, 퀵메뉴 기본 아이콘의 첫 색과 패널 하단 색조까지 함께 정리됩니다. 메인 화면 섹션 제목 색은 홈·프로젝트 내부의 정렬 글자와 아이콘에도 함께 적용됩니다.</small><div><button type="button" class="custom-theme-auto primary" id="customThemeRecommend">두 메인 색상으로 추천 팔레트 만들기</button><button type="button" class="custom-theme-auto" id="customThemeReset">현재 프리셋 색상 불러오기</button></div></div><div class="custom-theme-file-actions"><button type="button" class="custom-theme-auto" id="customThemeExport">현재 세팅 JSON 저장</button><button type="button" class="custom-theme-auto" id="customThemeImport">JSON 불러오기</button></div><p class="custom-theme-note">현재 편집 중인 라이트·다크 팔레트는 JSON으로 따로 보관하거나 다시 불러올 수 있습니다.</p></div><div class="m-row"><button class="m-btn" id="customThemeCancel">취소</button><button class="m-btn primary" id="customThemeApply">적용</button></div>`);
     const preview=()=>{customThemePreviewPaint($("customThemePreview"),draft[mode]); if(st.theme===mode){ st.customTheme=normalizeCustomTheme(draft); applyAccent(LEGACY_CUSTOM_ACCENT); }};
     document.querySelectorAll("[data-custom-tab]").forEach((b)=>b.addEventListener("click",()=>openCustomThemeStudio(draft,b.dataset.customTab)));
     document.querySelectorAll("[data-custom-editor-key]").forEach((b)=>b.addEventListener("click",()=>{const key=b.dataset.customEditorKey,item=CUSTOM_THEME_COLOR_META.find((x)=>x.key===key);openAdvancedColorPicker(`${item.label} 색상`,draft[mode].colors[key],(value)=>{draft[mode].colors[key]=value;openCustomThemeStudio(draft,mode);},{prefix:"customThemeRole",saved:true,save:true,intro:"정사각형 색상판·HEX·RGB·스포이드로 정확하게 조절할 수 있어요."});}));
@@ -8018,6 +8109,7 @@ ${gallery}
       else if (id === "eraseBtn") eraseFormatting();
       else if (id === "codeToggle") setCodeMode(!st.codeMode);
       else if (id === "attachBtn") $("attachInput").click();
+      else if (id === "freeInsertBtn") openFreeInsertMenu();
       else if (id === "colorBtn") openColorEditor();
     };
     fb.addEventListener("mousedown", fbHandler);
