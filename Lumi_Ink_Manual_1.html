@@ -1104,7 +1104,8 @@ table code{ font-size:.82em; }
 <tr><td><strong>트림아웃</strong></td><td>치환 결과에서 다듬을 문자열을 한 줄에 하나씩 입력합니다. 최대 80개를 저장합니다.</td></tr>
 <tr><td><strong>영향을 미침</strong></td><td>사용자 입력(1), AI 출력(2), 슬래시 명령(3), 월드 인포(5), Reasoning(6) 중 적용 위치를 복수 선택합니다.</td></tr>
 <tr><td><strong>최소 깊이 / 최대 깊이</strong></td><td>각각 0~999 범위의 선택 입력입니다. 비워 두면 JSON에는 <code>null</code>로 저장됩니다.</td></tr>
-<tr><td><strong>Ephemerality</strong></td><td><code>비활성화됨</code>, <code>편집 실행</code>, <code>형식 표시만</code>, <code>형식 프롬프트만</code>을 한 묶음에서 설정합니다.</td></tr>
+<tr><td><strong>그 외 옵션</strong></td><td><code>비활성화됨</code>과 <code>편집 실행</code>을 나란히 설정합니다.</td></tr>
+<tr><td><strong>Ephemerality</strong></td><td><code>형식 표시만</code>과 <code>형식 프롬프트만</code>을 나란히 설정합니다.</td></tr>
 <tr><td><strong>Macros in Find Regex</strong></td><td>매크로를 치환하지 않음, raw 치환, escaped 치환 중 하나를 선택합니다.</td></tr>
 </tbody></table></div>
 <h3>JSON 저장과 데이터 보존</h3>
@@ -1925,7 +1926,16 @@ table code{ font-size:.82em; }
 <!-- ============================================================ -->
 <section class="section" id="sec-v6632">
 <section class="section" id="sec-v66-34">
-      <div class="section-head"><div class="nib-num">66.34</div><h2>v66.34 · 자유 메모 링크 버튼·유동 구분선</h2></div>
+      <section class="section" id="sec-v6635">
+      <div class="section-head"><div class="nib-num">66.35</div><h2>v66.35 · 정규식 옵션 위계·아이디어 보드형 메모 링크</h2></div>
+      <h3>정규식 작업실</h3>
+      <p>내보내기 옵션의 소제목과 <code>정상 · N캡처</code>, <code>매치</code> 같은 상태 표기를 작업 코드보다 뒤로 물러나는 초소형 위계로 정리했습니다. 하단 옵션은 <strong>그 외 옵션</strong>과 <strong>Ephemerality</strong>로 분리되어 각각 두 개의 토글을 나란히 표시합니다.</p>
+      <p><code>Macros in Find Regex</code>는 기존 SillyTavern JSON 호환을 위해 별도의 선택 항목으로 유지됩니다.</p>
+      <h3>자유 메모</h3>
+      <p><strong>내 글 바로가기</strong>는 아이디어 보드의 메모 인용 링크와 같은 카드형 버튼으로 표시됩니다. 메모 ID를 기준으로 이동하므로 대상 메모가 프로젝트를 옮겨도 연결이 유지되며, 기존에 삽입한 링크도 열거나 저장할 때 새 카드형 구조로 정리됩니다.</p>
+    </section>
+
+    <div class="section-head"><div class="nib-num">66.34</div><h2>v66.34 · 자유 메모 링크 버튼·유동 구분선</h2></div>
       <ul>
         <li>자유 메모 구분선은 본문 폭을 따라 100% 유동 폭으로 표시되어, 화면 크기마다 적당히 꽉 찬 길이를 유지합니다.</li>
         <li>내 글 바로가기는 버튼형 디자인으로 삽입되며, 메모를 고른 뒤 테마 팔레트 또는 직접 색상으로 컬러를 지정할 수 있습니다.</li>
@@ -1950,8 +1960,8 @@ table code{ font-size:.82em; }
 </ul>
 </section>
 <section class="section" id="sec-v15">
-<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.32</h2></div>
-<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.32</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
+<div class="section-head"><div class="nib-num">1.5</div><h2>v1.5 현재 기준 · 개발 빌드 v66.35</h2></div>
+<p>이 매뉴얼의 사용자 배포 표기는 <strong>v1.5</strong>이며, 기능 대조에 사용한 개발 빌드는 <strong>v66.35</strong>입니다. 아래 항목은 이전 변경 이력보다 우선하는 현재 사용 기준입니다.</p>
 <h3>새 메모 생성기</h3>
 <ul>
 <li>상단 설명은 <strong>생성할 메모 타입을 골라주세요</strong>이며, <strong>자유 메모</strong> 빠른 생성 카드는 즉시 자유 메모 생성 흐름으로 들어갑니다. 기존 블루 그라데이션·흰색 아이콘/텍스트 디자인을 유지하며, 카드 아래 그림자는 짧고 더 흐리게만 표시됩니다.</li>
@@ -1966,7 +1976,7 @@ table code{ font-size:.82em; }
 <li><code>샘플 자동</code>은 OUT을 먼저 작성하지 않아도, 유효한 IN 정규식의 캡처 구조를 기준으로 sample 초안을 만듭니다.</li>
 <li>상태 문구는 편집과 미리보기의 제목 줄을 밀어내지 않는 작은 보조 정보로 표시됩니다. 단일 정상 결과는 <strong>매치</strong>로, 여러 결과는 <strong>N개 매치</strong>로 표시합니다.</li>
 <li>보기 전환 탭 아래의 별도 어두운 그라데이션 바탕을 제거했습니다. PREVIEW는 확인 전용 샌드박스 캔버스로 취급하므로, 미리보기 안쪽을 터치한 뒤에도 앱의 뒤로가기·사이드바·오른쪽 퀵메뉴 제스처를 계속 사용할 수 있습니다.</li>
-<li>내보내기 옵션은 <strong>트림아웃 → 영향을 미침 → 최소 깊이/최대 깊이 → Ephemerality/Macros in Find Regex</strong> 순서로 정리되어 있으며, 각 제목은 작은 칩으로 표시됩니다.</li>
+<li>내보내기 옵션은 <strong>트림아웃 → 영향을 미침 → 최소 깊이/최대 깊이 → 그 외 옵션 → Ephemerality → Macros in Find Regex</strong> 순서로 정리됩니다. 그 외 옵션에는 비활성화됨·편집 실행, Ephemerality에는 형식 표시만·형식 프롬프트만이 들어갑니다.</li>
 </ul>
 <h3>자동 백업</h3>
 <ul>

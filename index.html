@@ -1831,14 +1831,21 @@
   .rx-copy svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* ----- compact status text : validation / preview badge (#regexValidation, #regexPreviewBadge) ----- */
+  /* v66.35 — validation / preview state is intentionally whisper-small, so source code stays primary. */
   #screen-regex .regex-status {
-    flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 3px;
-    padding: 0; border: 0; border-radius: 0; font: 800 4.75px/1.2 inherit; letter-spacing: 0;
+    flex: 0 1 auto; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; gap: 2px;
+    padding: 0; border: 0; border-radius: 0; font: 800 2.35px/1.15 inherit; letter-spacing: 0;
     color: var(--muted); background: transparent; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
     -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   }
   #screen-regex .regex-status::before {
-    content: ""; width: 2.5px; height: 2.5px; border-radius: 50%; background: currentColor; opacity: .72; flex: 0 0 auto;
+    content: ""; width: 1.25px; height: 1.25px; border-radius: 50%; background: currentColor; opacity: .72; flex: 0 0 auto;
+  }
+  #screen-regex #regexMeta,
+  #screen-regex #regexPreviewStatus,
+  #screen-regex .regex-head-status .html-pane-note {
+    font-size: 3px !important; line-height: 1.15; letter-spacing: 0;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   }
   #screen-regex .regex-status.ok {
     color: color-mix(in srgb, #55d990 72%, var(--ink));
@@ -1925,15 +1932,21 @@
   .rx-drawer-body { padding: 2px 14px 14px; }
   .rx-option-group { margin-bottom: 11px; min-width: 0; }
   .rx-two > .rx-option-group { margin-bottom: 0; }
+  /* v66.35 — option labels are micro-labels, not competing section headers. */
   .rx-option-title {
-    display: inline-flex; align-items: center; min-height: 14px; margin: 0 0 4px; padding: 0 5px;
+    display: inline-flex; align-items: center; min-height: 8px; margin: 0 0 3px; padding: 0 3px;
     border-radius: 999px; color: color-mix(in srgb, var(--accent) 78%, var(--ink));
-    background: color-mix(in srgb, var(--accent) 9%, var(--surface-2));
-    border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
     box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
-    font: 800 5.1px/1.1 inherit; letter-spacing: .04em; text-transform: none;
+    font: 800 2.55px/1.08 inherit; letter-spacing: .035em; text-transform: none;
     max-width: 100%; white-space: normal; overflow-wrap: anywhere;
   }
+  .rx-option-group.rx-option-other,
+  .rx-option-group.rx-option-ephemerality,
+  .rx-option-group.rx-option-macros { margin-bottom: 10px; }
+  .rx-option-group.rx-option-other .rx-chips,
+  .rx-option-group.rx-option-ephemerality .rx-chips { grid-template-columns: 1fr 1fr; }
   .rx-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 9px; }
   .rx-option-group .rx-chips { margin-bottom: 0; }
   .rx-placement-chips { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
@@ -1973,7 +1986,7 @@
   }
   .regex-head-status .html-pane-note {
     min-width: 0; max-width: min(460px, 56vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font-size: 6px; line-height: 1.2; letter-spacing: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    font-size: 3px; line-height: 1.15; letter-spacing: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
   }
   .regex-preview-status {
     display: none;
@@ -2300,35 +2313,58 @@
   html[data-theme="light"] .editor a.lumi-link, html[data-theme="light"] .read-body a.lumi-link {
     background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); box-shadow: none;
   }
-  /* 자유 메모의 내 글 바로가기는 선택 컬러를 받는 본문 버튼입니다. */
-  .editor a.lumi-note-link, .read-body a.lumi-note-link {
+  /* v66.35 — 자유 메모의 내 글 바로가기는 아이디어 보드의 quote 버튼 구조를 그대로 공유합니다. */
+  .editor .free-note-link-block, .read-body .free-note-link-block {
+    display: block; width: 100%; margin: 15px 0; max-width: 100%;
+  }
+  .editor a.lumi-note-link.idea-quote-body, .read-body a.lumi-note-link.idea-quote-body {
     --lumi-note-a: var(--idea-color-a, var(--accent));
     --lumi-note-b: var(--idea-color-b, var(--accent));
-    display: inline-flex; align-items: center; gap: 6px; max-width: min(100%, 360px);
-    min-height: 30px; border-radius: 10px; padding: 5px 11px 5px 9px;
-    font-size: .88em; line-height: 1.25; font-weight: 760;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    color: var(--idea-chip-ink, color-mix(in srgb, var(--lumi-note-b) 72%, var(--ink)));
-    background: linear-gradient(135deg,
-      color-mix(in srgb, var(--lumi-note-a) 24%, var(--paper) 76%),
-      var(--idea-chip-fill, color-mix(in srgb, var(--lumi-note-a) 13%, var(--paper) 87%)));
-    border: 1px solid var(--idea-chip-edge, color-mix(in srgb, var(--lumi-note-b) 38%, var(--line)));
-    box-shadow: 0 5px 12px color-mix(in srgb, var(--lumi-note-b) 18%, transparent), inset 0 1px 0 rgba(255,255,255,.56);
+    appearance: none; box-sizing: border-box; width: 100%; min-height: 70px;
+    display: flex; align-items: center; gap: 12px; padding: 16px;
+    border: 0; border-left: 4px solid var(--idea-color-b, #82a7ff); border-radius: 5px 13px 13px 5px;
+    background: var(--idea-chip-fill, rgba(250,252,255,.94));
+    color: var(--idea-chip-ink, #25304a); box-shadow: 0 6px 12px color-mix(in srgb, var(--idea-color-b, #82a7ff) 16%, transparent);
+    text-align: left; text-decoration: none; cursor: pointer; overflow: hidden;
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
   }
-  .editor a.lumi-note-link::before, .read-body a.lumi-note-link::before {
-    content: "↗"; flex: 0 0 auto; width: 17px; height: 17px; display: grid; place-items: center;
-    border-radius: 6px; font-weight: 900; font-size: .9em; line-height: 1;
-    color: var(--idea-chip-ink, var(--accent));
-    background: color-mix(in srgb, var(--lumi-note-a) 30%, rgba(255,255,255,.72));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-mark,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-mark {
+    flex: 0 0 auto; font: 800 31px/1 Georgia, serif; color: var(--idea-color-b, #7399ee);
   }
-  .editor a.lumi-note-link { cursor: text; }
-  .read-body a.lumi-note-link { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-  .read-body a.lumi-note-link:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--lumi-note-b) 60%, var(--line)); box-shadow: 0 8px 16px color-mix(in srgb, var(--lumi-note-b) 24%, transparent), inset 0 1px 0 rgba(255,255,255,.62); }
-  .read-body a.lumi-note-link:active { transform: translateY(0); }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-copy,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-copy {
+    display: grid; gap: 4px; min-width: 0; flex: 1 1 auto;
+  }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-eyebrow,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-eyebrow {
+    font-size: 9px; font-weight: 900; letter-spacing: .13em; color: var(--idea-color-b, #7192dc);
+  }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-title,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-title {
+    font-size: 15px; line-height: 1.18; letter-spacing: -.015em; font-weight: 850;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-preview,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-preview {
+    font-size: 11px; line-height: 1.45; color: #677087; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .editor a.lumi-note-link.idea-quote-body .idea-quote-go,
+  .read-body a.lumi-note-link.idea-quote-body .idea-quote-go {
+    margin-left: auto; flex: 0 0 auto; color: var(--idea-chip-ink, #20242d); opacity: .68; font-size: 11px;
+  }
+  .editor a.lumi-note-link.idea-quote-body { cursor: text; }
+  .read-body a.lumi-note-link.idea-quote-body { transition: transform .15s ease, box-shadow .15s ease; }
+  .read-body a.lumi-note-link.idea-quote-body:hover { transform: translateY(-1px); box-shadow: 0 9px 17px color-mix(in srgb, var(--idea-color-b, #82a7ff) 24%, transparent); }
+  .read-body a.lumi-note-link.idea-quote-body:active { transform: translateY(0); }
   .free-note-link-preview { display: flex; justify-content: flex-start; margin: 13px 0 15px; padding: 14px; border: 1px dashed var(--line); border-radius: 13px; background: var(--surface-2); overflow: hidden; }
-  .free-note-link-preview .lumi-note-link { max-width: 100%; pointer-events: none; }
+  .free-note-link-preview .lumi-note-link.idea-quote-body { width: 100%; max-width: 100%; pointer-events: none; }
+  @media (max-width: 480px) {
+    .editor a.lumi-note-link.idea-quote-body, .read-body a.lumi-note-link.idea-quote-body { min-height: 62px; padding: 13px; gap: 10px; }
+    .editor a.lumi-note-link.idea-quote-body .idea-quote-mark, .read-body a.lumi-note-link.idea-quote-body .idea-quote-mark { font-size: 27px; }
+    .editor a.lumi-note-link.idea-quote-body .idea-quote-go, .read-body a.lumi-note-link.idea-quote-body .idea-quote-go { display: none; }
+  }
   /* 자유 메모 구분선은 편집기·읽기 화면의 실제 본문 폭에 맞춰 유동적으로 늘어납니다. */
   .lumi-note-divider {
     display: block; inline-size: 100%; width: 100%; max-inline-size: 100%; box-sizing: border-box;
@@ -4099,24 +4135,27 @@
                     <input class="rx-num" id="regexMaxDepth" type="number" min="0" max="999" placeholder="maxDepth">
                   </div>
                 </div>
-                <div class="rx-two">
-                  <div class="rx-option-group">
-                    <div class="rx-option-title">Ephemerality</div>
-                    <div class="rx-chips">
-                      <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
-                      <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>
-                      <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>형식 표시만</label>
-                      <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>형식 프롬프트만</label>
-                    </div>
+                <div class="rx-option-group rx-option-other">
+                  <div class="rx-option-title">그 외 옵션</div>
+                  <div class="rx-chips">
+                    <label class="rx-chip"><input type="checkbox" id="regexDisabled"><span class="rx-bx"></span>비활성화됨</label>
+                    <label class="rx-chip"><input type="checkbox" id="regexRunOnEdit"><span class="rx-bx"></span>편집 실행</label>
                   </div>
-                  <div class="rx-option-group">
-                    <div class="rx-option-title">Macros in Find Regex</div>
-                    <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
-                      <option value="0">Don't substitute</option>
-                      <option value="1">substitute (raw)</option>
-                      <option value="2">substitute (escaped)</option>
-                    </select>
+                </div>
+                <div class="rx-option-group rx-option-ephemerality">
+                  <div class="rx-option-title">Ephemerality</div>
+                  <div class="rx-chips">
+                    <label class="rx-chip"><input type="checkbox" id="regexMarkdownOnly"><span class="rx-bx"></span>형식 표시만</label>
+                    <label class="rx-chip"><input type="checkbox" id="regexPromptOnly"><span class="rx-bx"></span>형식 프롬프트만</label>
                   </div>
+                </div>
+                <div class="rx-option-group rx-option-macros">
+                  <div class="rx-option-title">Macros in Find Regex</div>
+                  <select class="rx-sel" id="regexSubstituteRegex" aria-label="substituteRegex">
+                    <option value="0">Don't substitute</option>
+                    <option value="1">substitute (raw)</option>
+                    <option value="2">substitute (escaped)</option>
+                  </select>
                 </div>
               </div>
             </details>

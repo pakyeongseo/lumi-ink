@@ -5271,17 +5271,37 @@
     Object.entries(ideaColorVars(value, "")).forEach(([name, cssValue]) => link.style.setProperty(name, cssValue));
     return value;
   }
+  function freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle) {
+    const title = String((note && note.title) || fallbackTitle || "제목 없는 메모");
+    const typeLabel = note ? noteTypeShortLabel(note) : "메모 없음";
+    return `<span class="idea-quote-mark" aria-hidden="true">↗</span><span class="idea-quote-copy"><span class="idea-quote-eyebrow">내 메모</span><span class="idea-quote-title">${esc(title)}</span><span class="idea-quote-preview">${esc(typeLabel)}</span></span><span class="idea-quote-go" aria-hidden="true">연결 메모</span>`;
+  }
+  function ensureFreeMemoNoteLinkCard(link) {
+    if (!link) return;
+    const noteId = String(link.dataset.lumiNoteId || "").trim();
+    const note = noteId ? getNote(noteId) : null;
+    const fallbackTitle = String(link.dataset.lumiNoteTitle || link.textContent || "").trim();
+    if (!link.querySelector(".idea-quote-copy")) link.innerHTML = freeMemoNoteLinkCardInnerMarkup(note, fallbackTitle);
+    if (!link.dataset.lumiNoteTitle) link.dataset.lumiNoteTitle = String((note && note.title) || fallbackTitle || "제목 없는 메모");
+    if (!link.closest(".free-note-link-block") && link.parentNode) {
+      const block = document.createElement("div");
+      block.className = "free-note-link-block";
+      link.parentNode.insertBefore(block, link);
+      block.appendChild(link);
+    }
+  }
   function normalizeLinks(root) {
     if (!root) return;
     root.querySelectorAll("a").forEach((a) => {
       a.classList.add("lumi-link");
       const noteId = String(a.dataset.lumiNoteId || "").trim();
       if (noteId) {
-        a.classList.add("lumi-note-link");
+        a.classList.add("lumi-note-link", "idea-quote-body");
         a.setAttribute("href", `#lumi-note-${noteId}`);
         a.removeAttribute("target"); a.removeAttribute("rel");
         const storedColor = String(a.dataset.lumiNoteColor || "").trim();
         if (storedColor) applyFreeMemoNoteLinkColor(a, storedColor);
+        ensureFreeMemoNoteLinkCard(a);
         return;
       }
       a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener noreferrer");
@@ -5331,7 +5351,7 @@
     const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
     const id = esc(note.id);
     const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
-    return `<a class="lumi-link lumi-note-link" href="#lumi-note-${id}" data-lumi-note-id="${id}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${esc(title)}</a>&nbsp;`;
+    return `<div class="free-note-link-block"><a class="lumi-link lumi-note-link idea-quote-body" href="#lumi-note-${id}" data-lumi-note-id="${id}" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a></div><p><br></p>`;
   }
   function freeMemoNoteLinkPreviewMarkup(note, color, id) {
     const title = String(note && note.title || "제목 없는 메모");
@@ -5340,7 +5360,7 @@
     const hint = `${project ? project.name : "프로젝트 없음"} · ${type}`;
     const linkColor = normalizeIdeaColorValue(color, ideaPreferredColor());
     const attrs = id ? ` id="${esc(id)}"` : "";
-    return `<a${attrs} class="lumi-link lumi-note-link" href="#" data-lumi-note-id="preview" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${esc(title)}</a>`;
+    return `<a${attrs} class="lumi-link lumi-note-link idea-quote-body" href="#" data-lumi-note-id="preview" data-lumi-note-title="${esc(title)}" data-lumi-note-color="${esc(linkColor)}" title="${esc(hint)}" style="${ideaColorStyleAttr(linkColor, "")}">${freeMemoNoteLinkCardInnerMarkup(note, title)}</a>`;
   }
   function normalizeFreeDividerConfig(input) {
     const src = input && typeof input === "object" ? input : {};
