@@ -1713,7 +1713,7 @@
   }
 
   /* ============================================================
-     REGEX WORKSHOP · v66.36 marked sample slots — "ink press line"
+     REGEX WORKSHOP · v66.40 sample slots fixed — "ink press line"
      All selectors scoped to #screen-regex / .regex-workshop so the
      shared HTML-workshop chrome is untouched. Colour comes from the
      live theme tokens; a single brand-gold seal anchors the identity.
@@ -1891,13 +1891,14 @@
     transform: translate(0,0); will-change: transform;
   }
   .rx-sample-token {
-    display: inline; padding: 1px 4px 1px; border-radius: 5px;
+    display: inline; padding: 0; border-radius: 5px;
     color: color-mix(in srgb, #fff 87%, var(--accent));
     background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent-2) 22%, transparent));
-    border: 1px solid color-mix(in srgb, var(--accent) 64%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--accent) 64%, transparent);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 1px 5px color-mix(in srgb, var(--accent) 18%, transparent);
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
   }
+  .rx-sample-bracket { opacity: 0; }
   .rx-sample-editor .rx-sample {
     position: relative; z-index: 1; background: transparent; color: transparent;
     -webkit-text-fill-color: transparent; text-shadow: none; caret-color: var(--accent);
@@ -3333,6 +3334,10 @@
   .qm-display-schematic.full i:nth-child(3) { width:42%; opacity:.42; }
   .qm-display-schematic.mini { justify-content:center; gap:5px; }
   .qm-display-schematic.mini i { width:14px; height:14px; border-radius:5px; }
+  .qm-slot-count-setting { display:flex; align-items:center; gap:10px; padding:10px 11px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); }
+  .qm-slot-count-setting input[type="range"] { flex:1 1 auto; min-width:0; accent-color:var(--accent); }
+  .qm-slot-count-setting label { flex:0 0 auto; display:inline-flex; align-items:center; gap:5px; color:var(--muted); font-size:11px; font-weight:780; }
+  .qm-slot-count-setting input[type="number"] { width:48px; height:32px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); text-align:center; font:inherit; font-size:13px; font-weight:850; }
   .qm-settings-manage { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 12px; border:1px dashed color-mix(in srgb,var(--accent) 24%,var(--line)); border-radius:14px; background:color-mix(in srgb,var(--surface-2) 76%,transparent); }
   .qm-settings-manage span { min-width:0; }
   .qm-settings-manage b { display:block; font-size:12.3px; font-weight:800; }
@@ -3938,14 +3943,21 @@
     text-size-adjust: 100%;
   }
   #screen-regex .rx-option-title {
+    display: inline-flex;
+    align-items: center;
     min-height: 0;
-    margin: 0 0 1px;
-    padding: 1px 3px;
-    font-size: 6px !important;
+    margin: 0 0 7px;
+    padding: 5px 10px;
+    border: 1px solid color-mix(in srgb, var(--rx-seal) 42%, transparent);
+    border-radius: 999px;
+    color: var(--rx-seal);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--rx-seal) 16%, transparent), transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--rx-seal) 28%, transparent);
+    font-size: 10px !important;
+    font-weight: 900;
     line-height: 1 !important;
-    letter-spacing: .01em;
-    transform: scale(.60);
-    transform-origin: left center;
+    letter-spacing: .16em;
+    text-transform: uppercase;
   }
   #screen-regex .rx-option-group {
     margin-bottom: 8px;
@@ -4742,11 +4754,11 @@
     <div class="quick-menu-panel" id="quickMenuPanel">
       <div class="quick-menu-head">
         <span class="quick-menu-headmark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="m5 5 14 14M19 5 5 19" opacity=".45"/></svg></span>
-        <span class="quick-menu-headcopy"><b>퀵 메뉴</b><small>SWIPE · 7 SLOTS</small></span>
+        <span class="quick-menu-headcopy"><b>퀵 메뉴</b><small id="quickMenuSlotMeta">SWIPE · 5 SLOTS</small></span>
         <button type="button" class="quick-menu-edit" id="quickMenuEdit" aria-label="퀵 메뉴 편집" title="퀵 메뉴 편집"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4z"/></svg></button>
       </div>
       <div class="quick-menu-slots" id="quickMenuSlots"></div>
-      <div class="quick-menu-foot"><span id="quickMenuCount">0 / 7 등록</span><button type="button" id="quickMenuManage">편집하기</button></div>
+      <div class="quick-menu-foot"><span id="quickMenuCount">0 / 5 등록</span><button type="button" id="quickMenuManage">편집하기</button></div>
     </div>
   </aside>
 

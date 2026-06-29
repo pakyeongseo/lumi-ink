@@ -86,7 +86,9 @@
 
   /* ---------- right-edge quick menu · v65.2 code icon slots ---------- */
   const QUICK_MENU_SETTING_ID = "quickMenu";
-  const QUICK_MENU_MAX = 7;
+  const QUICK_MENU_MIN = 1;
+  const QUICK_MENU_DEFAULT = 5;
+  const QUICK_MENU_MAX = 10;
   const QUICK_MENU_ALLOWED_TYPES = new Set(["free", "html", "regex", "lorebook", "log", "persona", "character", "idea"]);
   const QUICK_MENU_ICON_LIBRARY = Array.isArray(window.__luminkQuickMenuIcons) ? window.__luminkQuickMenuIcons.filter((item) => item && typeof item.id === "string" && typeof item.svg === "string") : [];
   const QUICK_MENU_ICON_BY_ID = new Map(QUICK_MENU_ICON_LIBRARY.map((item) => [item.id, item]));
@@ -171,11 +173,16 @@
   function emptyQuickMenuSlot(index) {
     return { slotId: index + 1, kind: null, label: "", thumbnail: null, iconCode: null, libraryIconId: null, functionId: null, targetId: null, createType: null, createMode: "single", createProjectId: null };
   }
+  function quickMenuSlotCount(value) {
+    const n = Math.round(Number(value));
+    return Number.isFinite(n) ? Math.max(QUICK_MENU_MIN, Math.min(QUICK_MENU_MAX, n)) : QUICK_MENU_DEFAULT;
+  }
   function normalizeQuickMenu(raw) {
     const src = raw && typeof raw === "object" ? (raw.value && typeof raw.value === "object" ? raw.value : raw) : {};
     const list = Array.isArray(src.slots) ? src.slots : [];
+    const slotCount = quickMenuSlotCount(src.slotCount);
     const slots = [];
-    for (let i = 0; i < QUICK_MENU_MAX; i++) {
+    for (let i = 0; i < slotCount; i++) {
       const base = emptyQuickMenuSlot(i), item = list[i] && typeof list[i] === "object" ? list[i] : {};
       // v65.8: 기존 홈 바로가기는 기능 바로가기 안의 home 항목으로 안전하게 승격합니다.
       const kind = ["function", "project", "note", "create"].includes(item.kind) ? item.kind : (item.kind === "home" ? "function" : null);
@@ -203,6 +210,7 @@
       // v64.9: 기존 퀵 메뉴는 모두 기본형·사용 상태로 자연스럽게 승격합니다.
       enabled: src.enabled !== false,
       displayMode: src.displayMode === "mini" ? "mini" : "full",
+      slotCount,
       slots
     };
   }
@@ -210,6 +218,7 @@
     if (!st.quickMenu || !Array.isArray(st.quickMenu.slots)) st.quickMenu = normalizeQuickMenu(st.quickMenu);
     return st.quickMenu;
   }
+  function quickMenuSlotLimit(cfg) { return quickMenuSlotCount((cfg || quickMenuConfig()).slotCount); }
   function quickMenuIsEnabled() { return quickMenuConfig().enabled !== false; }
   function quickMenuDisplayModeName(cfg) { return (cfg && cfg.displayMode) === "mini" ? "미니형" : "기본형"; }
   function quickMenuFilledCount() { return quickMenuConfig().slots.filter((slot) => !!slot.kind).length; }
@@ -343,8 +352,9 @@
     const tab = $("quickMenuTab"); if (tab) { tab.setAttribute("aria-expanded", String(on)); tab.setAttribute("aria-label", on ? "퀵 메뉴 접기" : "퀵 메뉴 펼치기"); }
   }
   function renderQuickMenu() {
-    const box = $("quickMenuSlots"), count = $("quickMenuCount"), settingSub = $("setQuickMenuSub"), settingVal = $("setQuickMenuVal"), root = $("quickMenu");
+    const box = $("quickMenuSlots"), count = $("quickMenuCount"), meta = $("quickMenuSlotMeta"), settingSub = $("setQuickMenuSub"), settingVal = $("setQuickMenuVal"), root = $("quickMenu");
     const cfg = quickMenuConfig(), enabled = cfg.enabled !== false, mini = cfg.displayMode === "mini";
+    const limit = quickMenuSlotLimit(cfg);
     if (root) {
       root.hidden = !enabled;
       root.classList.toggle("is-mini", mini);
@@ -364,8 +374,9 @@
       }
     }
     const filled = quickMenuFilledCount();
-    if (count) count.textContent = `${filled} / ${QUICK_MENU_MAX} 등록`;
-    if (settingSub) settingSub.textContent = enabled ? `오른쪽 가장자리 · ${quickMenuDisplayModeName(cfg)} · ${filled}/${QUICK_MENU_MAX} 등록` : "사용 안 함 · 퀵 메뉴 탭 숨김";
+    if (count) count.textContent = `${filled} / ${limit} 등록`;
+    if (meta) meta.textContent = `SWIPE · ${limit} SLOTS`;
+    if (settingSub) settingSub.textContent = enabled ? `오른쪽 가장자리 · ${quickMenuDisplayModeName(cfg)} · ${filled}/${limit} 등록` : "사용 안 함 · 퀵 메뉴 탭 숨김";
     if (settingVal) settingVal.textContent = enabled ? `${quickMenuDisplayModeName(cfg)} ›` : "꺼짐 ›";
   }
   async function persistQuickMenu(options) {
@@ -375,6 +386,15 @@
     if (opt.backup !== false) triggerAutoBackup();
     renderQuickMenu();
     if (typeof curView === "function" && curView().s === "settings") renderSettings();
+  }
+  async function setQuickMenuSlotCount(value) {
+    const cfg = quickMenuConfig(), next = quickMenuSlotCount(value);
+    if (quickMenuSlotLimit(cfg) === next) return;
+    const current = cfg.slots.slice(0, next);
+    while (current.length < next) current.push(emptyQuickMenuSlot(current.length));
+    cfg.slotCount = next;
+    cfg.slots = current.map((slot, index) => Object.assign(emptyQuickMenuSlot(index), slot || {}, { slotId: index + 1 }));
+    await persistQuickMenu();
   }
   async function loadQuickMenuSetting() {
     try {
@@ -413,7 +433,7 @@
     return cfg.slots[index];
   }
   async function setQuickMenuSlot(index, next, options) {
-    if (!Number.isInteger(index) || index < 0 || index >= QUICK_MENU_MAX) return;
+    if (!Number.isInteger(index) || index < 0 || index >= quickMenuSlotLimit()) return;
     replaceQuickMenuSlot(index, next);
     await persistQuickMenu(options);
   }
@@ -489,6 +509,7 @@
   }
   function openQuickMenuSettings() {
     const cfg = quickMenuConfig(), enabled = cfg.enabled !== false, mode = cfg.displayMode === "mini" ? "mini" : "full";
+    const slotCount = quickMenuSlotLimit(cfg);
     const modePreview = (kind) => kind === "mini"
       ? `<span class="qm-display-schematic mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>`
       : `<span class="qm-display-schematic full" aria-hidden="true"><i></i><i></i><i></i></span>`;
@@ -503,7 +524,13 @@
         <button type="button" class="qm-display-option ${mode === "full" ? "is-active" : ""}" data-qm-display-mode="full">${modePreview("full")}<span><b>기본형</b><small>아이콘 · 제목 · 설명을 함께 표시</small></span></button>
         <button type="button" class="qm-display-option ${mode === "mini" ? "is-active" : ""}" data-qm-display-mode="mini">${modePreview("mini")}<span><b>미니형</b><small>설명 없이 아이콘만 간결하게 표시</small></span></button>
       </div></div>
-      <div class="qm-settings-manage"><span><b>등록한 바로가기</b><small>${quickMenuFilledCount()} / ${QUICK_MENU_MAX} 슬롯 사용 중</small></span><button type="button" class="m-btn primary" id="qmOpenManager">슬롯 편집</button></div>
+      <div class="qm-settings-section"><div class="qm-settings-section-title">슬롯 개수</div>
+        <div class="qm-slot-count-setting">
+          <input id="qmSlotCountRange" type="range" min="${QUICK_MENU_MIN}" max="${QUICK_MENU_MAX}" step="1" value="${slotCount}" aria-label="퀵 메뉴 슬롯 개수">
+          <label><input id="qmSlotCountInput" type="number" min="${QUICK_MENU_MIN}" max="${QUICK_MENU_MAX}" step="1" value="${slotCount}" inputmode="numeric" aria-label="퀵 메뉴 슬롯 개수 직접 입력"><span>개</span></label>
+        </div>
+      </div>
+      <div class="qm-settings-manage"><span><b>등록한 바로가기</b><small>${quickMenuFilledCount()} / ${slotCount} 슬롯 사용 중</small></span><button type="button" class="m-btn primary" id="qmOpenManager">슬롯 편집</button></div>
       <div class="m-row"><button class="m-btn" id="qmSettingsClose">닫기</button></div>`);
     $on("qmToggleEnabled", "click", async () => {
       quickMenuConfig().enabled = !quickMenuIsEnabled();
@@ -517,13 +544,23 @@
       await persistQuickMenu();
       openQuickMenuSettings();
     }));
+    const syncSlotCount = (value) => {
+      const next = quickMenuSlotCount(value);
+      const range = $("qmSlotCountRange"), input = $("qmSlotCountInput");
+      if (range) range.value = String(next);
+      if (input) input.value = String(next);
+      return next;
+    };
+    $on("qmSlotCountRange", "input", (event) => syncSlotCount(event.target.value));
+    $on("qmSlotCountRange", "change", async (event) => { await setQuickMenuSlotCount(syncSlotCount(event.target.value)); openQuickMenuSettings(); });
+    $on("qmSlotCountInput", "change", async (event) => { await setQuickMenuSlotCount(syncSlotCount(event.target.value)); openQuickMenuSettings(); });
     $on("qmOpenManager", "click", openQuickMenuManager);
     $on("qmSettingsClose", "click", closeModal);
   }
 
   function openQuickMenuManager() {
-    const cfg = quickMenuConfig();
-    openModal(`<h3>퀵 메뉴 편집</h3><p class="m-sub">화면 오른쪽의 숨김 탭을 밀어 펼치면 사용할 최대 7개의 바로가기를 정해요. 등록 대상이 삭제되면 해당 슬롯은 자동으로 비워집니다.</p><div class="qm-manager-grid">${cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, true)).join("")}</div><div class="m-row"><button class="m-btn" id="qmManagerClose">닫기</button></div>`);
+    const cfg = quickMenuConfig(), limit = quickMenuSlotLimit(cfg);
+    openModal(`<h3>퀵 메뉴 편집</h3><p class="m-sub">화면 오른쪽의 숨김 탭을 밀어 펼치면 사용할 최대 ${limit}개의 바로가기를 정해요. 등록 대상이 삭제되면 해당 슬롯은 자동으로 비워집니다.</p><div class="qm-manager-grid">${cfg.slots.map((slot, index) => quickMenuSlotMarkup(slot, index, true)).join("")}</div><div class="m-row"><button class="m-btn" id="qmManagerClose">닫기</button></div>`);
     $("modalBox").querySelectorAll("[data-qm-manage-slot]").forEach((button) => button.addEventListener("click", () => {
       const index = Number(button.dataset.qmManageSlot), slot = quickMenuConfig().slots[index];
       if (slot && slot.kind) openQuickMenuSlotEditor(index); else openQuickMenuSlotTypePicker(index);
@@ -2056,7 +2093,14 @@
   function regexSampleHighlightMarkup(value) {
     const raw = String(value || "");
     if (!raw) return "";
-    let html = esc(raw).replace(/\[\[[\s\S]*?\]\]/g, (token) => `<span class="rx-sample-token">${token}</span>`);
+    let html = "", index = 0, match;
+    const token = /\[\[([\s\S]*?)\]\]/g;
+    while ((match = token.exec(raw))) {
+      html += esc(raw.slice(index, match.index));
+      html += `<span class="rx-sample-token"><span class="rx-sample-bracket">[[</span>${esc(match[1])}<span class="rx-sample-bracket">]]</span></span>`;
+      index = match.index + match[0].length;
+    }
+    html += esc(raw.slice(index));
     // A final line break is otherwise visually collapsed by <pre> at the bottom edge.
     if (raw.endsWith("\n")) html += " ";
     return html;
@@ -2487,6 +2531,7 @@
     if (!sample.trim()) { toast("샘플을 먼저 입력해 주세요"); return; }
     const built = regexPatternFromMarkedSample(sample);
     $("regexFind").value = regexSetGlobalInFind(built.pattern, $("regexGlobal").checked);
+    updateRegexSampleHighlight();
     scheduleRegexSave();
     toast(`IN 정규식을 만들었어요 · ${built.captures}캡처`);
   }
