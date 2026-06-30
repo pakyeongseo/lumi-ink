@@ -786,7 +786,7 @@
       n.data = normalizeRegexData(d.data || {});
       await saveNote(n);
     } else if (d.type === "lorebook") {
-      n.data = Object.assign({}, n.data || {}, jsonCopy(d.data) || {});
+      n.data = normalizeLoreData(Object.assign({}, n.data || {}, jsonCopy(d.data) || {}));
       await saveLore(n, true);
     } else if (d.type === "log") {
       n.data = normalizeLogData(Object.assign({}, n.data || {}, jsonCopy(d.data) || {}));
@@ -1568,7 +1568,7 @@
       data: type === "free" ? { html: "" }
           : type === "html" ? { source: "", previewPolicy: "sandbox-web", exportFormat: "html" }
           : type === "regex" ? makeRegexData()
-          : type === "lorebook" ? { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 }
+          : type === "lorebook" ? makeLoreData()
           : type === "log" ? { content: "", templateId: "system-ink-frame", personaName: "", personaAlias: "", templateSnapshot: null }
           : (type === "persona" || type === "character") ? { mode: characterModeOption, activeId: null, pages: [makeCharacterPage()], cardTypeVersion: 2 }
           : type === "idea" ? makeIdeaBoardData()
@@ -3400,6 +3400,139 @@
     return tokReady;
   }
 
+  const LORE_ST_TRIGGERS = Object.freeze([
+    ["normal", "평범함"], ["continue", "계속 생성"], ["impersonate", "사칭"], ["swipe", "Swipe"], ["regenerate", "재생성"], ["quiet", "Quiet"]
+  ]);
+  const LORE_ST_FIELDS = Object.freeze([
+    "keysecondary", "constant", "vectorized", "selective", "selectiveLogic", "addMemo", "order", "position", "disable",
+    "ignoreBudget", "excludeRecursion", "preventRecursion", "matchPersonaDescription", "matchCharacterDescription",
+    "matchCharacterPersonality", "matchCharacterDepthPrompt", "matchScenario", "matchCreatorNotes", "delayUntilRecursion",
+    "probability", "useProbability", "depth", "outletName", "group", "groupOverride", "groupWeight", "scanDepth",
+    "caseSensitive", "matchWholeWords", "useGroupScoring", "automationId", "role", "sticky", "cooldown", "delay",
+    "triggers", "displayIndex", "characterFilter"
+  ]);
+  const LORE_ST_FIELD_SET = new Set(LORE_ST_FIELDS.concat(["uid", "key", "keys", "comment", "content", "extra"]));
+  const LORE_ST_DEFAULTS = Object.freeze({
+    keysecondary: [], constant: false, vectorized: false, selective: true, selectiveLogic: 0, addMemo: true,
+    order: 100, position: 0, disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
+    matchPersonaDescription: false, matchCharacterDescription: false, matchCharacterPersonality: false,
+    matchCharacterDepthPrompt: false, matchScenario: false, matchCreatorNotes: false, delayUntilRecursion: false,
+    probability: 100, useProbability: true, depth: 4, outletName: "", group: "", groupOverride: false, groupWeight: 100,
+    scanDepth: null, caseSensitive: null, matchWholeWords: null, useGroupScoring: null, automationId: "", role: null,
+    sticky: 0, cooldown: 0, delay: 0, triggers: [], displayIndex: null,
+    characterFilter: { isExclude: false, names: [], tags: [] }
+  });
+  function loreNum(value, fallback, min, max) {
+    const n = Number(value);
+    const v = Number.isFinite(n) ? Math.round(n) : fallback;
+    return Math.min(max, Math.max(min, v));
+  }
+  function loreNullableNum(value, min, max) {
+    if (value == null || value === "") return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : null;
+  }
+  function loreBoolOrNull(value) {
+    return value === true ? true : value === false ? false : null;
+  }
+  function loreStringList(value, limit, itemLimit) {
+    const list = Array.isArray(value) ? value : String(value || "").split(/[,\n]+/);
+    return [...new Set(list.map((item) => cleanImportedText(String(item || ""), itemLimit || 180).trim()).filter(Boolean))].slice(0, limit || 300);
+  }
+  function normalizeLoreCharacterFilter(value) {
+    const src = value && typeof value === "object" ? value : {};
+    return {
+      isExclude: !!src.isExclude,
+      names: loreStringList(src.names, 200, 180),
+      tags: loreStringList(src.tags, 200, 180)
+    };
+  }
+  function normalizeLoreSt(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const out = {
+      keysecondary: loreStringList(src.keysecondary || src.secondaryKeywords, 300, 180),
+      constant: !!src.constant,
+      vectorized: !!src.vectorized,
+      selective: src.selective !== false,
+      selectiveLogic: loreNum(src.selectiveLogic, 0, 0, 3),
+      addMemo: src.addMemo !== false,
+      order: loreNum(src.order, 100, -999999, 999999),
+      position: loreNum(src.position, 0, 0, 6),
+      disable: !!src.disable,
+      ignoreBudget: !!src.ignoreBudget,
+      excludeRecursion: !!src.excludeRecursion,
+      preventRecursion: !!src.preventRecursion,
+      matchPersonaDescription: !!src.matchPersonaDescription,
+      matchCharacterDescription: !!src.matchCharacterDescription,
+      matchCharacterPersonality: !!src.matchCharacterPersonality,
+      matchCharacterDepthPrompt: !!src.matchCharacterDepthPrompt,
+      matchScenario: !!src.matchScenario,
+      matchCreatorNotes: !!src.matchCreatorNotes,
+      delayUntilRecursion: !!src.delayUntilRecursion,
+      probability: loreNum(src.probability, 100, 0, 100),
+      useProbability: src.useProbability !== false,
+      depth: loreNum(src.depth, 4, 0, 999),
+      outletName: cleanImportedText(src.outletName, 120),
+      group: cleanImportedText(src.group, 180),
+      groupOverride: !!src.groupOverride,
+      groupWeight: loreNum(src.groupWeight, 100, 1, 999999),
+      scanDepth: loreNullableNum(src.scanDepth, 0, 999),
+      caseSensitive: loreBoolOrNull(src.caseSensitive),
+      matchWholeWords: loreBoolOrNull(src.matchWholeWords),
+      useGroupScoring: loreBoolOrNull(src.useGroupScoring),
+      automationId: cleanImportedText(src.automationId, 120),
+      role: loreNullableNum(src.role, 0, 999),
+      sticky: loreNum(src.sticky, 0, 0, 999999),
+      cooldown: loreNum(src.cooldown, 0, 0, 999999),
+      delay: loreNum(src.delay, 0, 0, 999999),
+      triggers: loreStringList(src.triggers, 20, 80).filter((value) => LORE_ST_TRIGGERS.some(([key]) => key === value)),
+      displayIndex: loreNullableNum(src.displayIndex, 0, 999999),
+      characterFilter: normalizeLoreCharacterFilter(src.characterFilter)
+    };
+    const extra = (src.extra && typeof src.extra === "object") ? (jsonCopy(src.extra) || {}) : {};
+    Object.keys(src).forEach((key) => {
+      if (!LORE_ST_FIELD_SET.has(key)) extra[key] = jsonCopy(src[key]) ?? src[key];
+    });
+    if (Object.keys(extra).length) out.extra = extra;
+    return out;
+  }
+  function normalizeLoreData(raw) {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const hasSt = src.st && typeof src.st === "object";
+    const stData = normalizeLoreSt(hasSt ? src.st : src);
+    if (!hasSt) {
+      if ("alwaysActive" in src) stData.constant = !!src.alwaysActive;
+      if ("depthOn" in src && src.depthOn) stData.position = 4;
+      if (src.depth != null) stData.depth = loreNum(src.depth, 4, 0, 999);
+    }
+    const d = {
+      content: cleanImportedText(src.content, 500000),
+      keywords: loreStringList(src.keywords || src.key || src.keys, 300, 180),
+      secondaryKeywords: stData.keysecondary.slice(),
+      alwaysActive: !!stData.constant,
+      depthOn: stData.position === 4,
+      depth: stData.depth,
+      st: stData
+    };
+    return d;
+  }
+  function makeLoreData(overrides) {
+    return normalizeLoreData(Object.assign({ content: "", keywords: [], st: LORE_ST_DEFAULTS }, overrides || {}));
+  }
+  function ensureLoreData(n) {
+    if (!n) return makeLoreData();
+    n.data = normalizeLoreData(n.data);
+    return n.data;
+  }
+  function applyLoreStToLegacy(d) {
+    d.st = normalizeLoreSt(d.st);
+    d.secondaryKeywords = d.st.keysecondary.slice();
+    d.alwaysActive = !!d.st.constant;
+    d.depthOn = d.st.position === 4;
+    d.depth = d.st.depth;
+    return d;
+  }
+
   let loreTimer = null;
   function setLoreSaver(mode) {
     const s = $("loreSaver"); s.className = "saver " + mode;
@@ -3409,9 +3542,7 @@
   function renderLore() {
     const n = getNote(st.curNoteId);
     if (!n || n.type !== "lorebook") { back(); return; }
-    const d = n.data = n.data || { content: "", keywords: [], alwaysActive: false, depthOn: false, depth: 4 };
-    if (d.depth == null) d.depth = 4;
-    if (d.depthOn == null) d.depthOn = false;
+    const d = ensureLoreData(n);
     $("loreTitle").textContent = n.title || "로어북";
     if ($("loreEdit").value !== (d.content || "")) $("loreEdit").value = d.content || "";
     if ($("loreDepth")) $("loreDepth").value = d.depth;
@@ -3426,13 +3557,24 @@
     queueDraftRecovery(n, "lorebook");
   }
   function renderKeywords(n) {
-    const wrap = $("loreKeywords"), input = $("loreKwInput");
+    renderLoreKeywordList(n, "keywords", "loreKeywords", "loreKwInput");
+    renderLoreKeywordList(n, "secondaryKeywords", "loreSecondaryKeywords", "loreSecondaryKwInput");
+  }
+  function renderLoreKeywordList(n, key, wrapId, inputId) {
+    const wrap = $(wrapId), input = $(inputId);
+    if (!wrap || !input) return;
+    const d = ensureLoreData(n);
     wrap.querySelectorAll(".kw-chip").forEach((c) => c.remove());
-    const kws = (n.data && n.data.keywords) || [];
+    const kws = d[key] || [];
     kws.forEach((kw, idx) => {
       const chip = document.createElement("span"); chip.className = "kw-chip";
       chip.innerHTML = `<span>${esc(kw)}</span><button aria-label="삭제">×</button>`;
-      chip.querySelector("button").addEventListener("click", () => { n.data.keywords.splice(idx, 1); saveLore(n, true); renderKeywords(n); });
+      chip.querySelector("button").addEventListener("click", () => {
+        d[key].splice(idx, 1);
+        if (key === "secondaryKeywords") d.st.keysecondary = d.secondaryKeywords.slice();
+        saveLore(n, true);
+        renderKeywords(n);
+      });
       wrap.insertBefore(chip, input);
     });
   }
@@ -3457,7 +3599,7 @@
     updateLoreTokens(n);
   }
   function updateLoreTokens(n) {
-    const content = (n.data && n.data.content) || "";
+    const content = (ensureLoreData(n).content) || "";
     $("loreTokens").textContent = "토큰 계산 중…";
     ensureTokenizer().then((ok) => {
       if (getNote(st.curNoteId) !== n) return;
@@ -3467,18 +3609,28 @@
       } else $("loreTokens").textContent = "토큰 계산 불가";
     });
   }
-  function addKeywordFromInput() {
-    const input = $("loreKwInput"), raw = input.value.trim();
+  function addLoreKeywordFromInput(key, inputId) {
+    const input = $(inputId), raw = input && input.value.trim();
     if (!raw) return;
     const n = getNote(st.curNoteId); if (!n) return;
-    n.data.keywords = n.data.keywords || [];
-    raw.split(",").map((s) => s.trim()).filter(Boolean).forEach((k) => { if (!n.data.keywords.includes(k)) n.data.keywords.push(k); });
+    const d = ensureLoreData(n);
+    d[key] = d[key] || [];
+    raw.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean).forEach((k) => { if (!d[key].includes(k)) d[key].push(k); });
+    if (key === "secondaryKeywords") d.st.keysecondary = d.secondaryKeywords.slice();
     input.value = ""; saveLore(n, true); renderKeywords(n);
+  }
+  function addKeywordFromInput() {
+    addLoreKeywordFromInput("keywords", "loreKwInput");
+  }
+  function addSecondaryKeywordFromInput() {
+    addLoreKeywordFromInput("secondaryKeywords", "loreSecondaryKwInput");
   }
   function toggleLoreActive() {
     const n = getNote(st.curNoteId); if (!n) return;
-    n.data.alwaysActive = !n.data.alwaysActive;
-    $("loreActive").classList.toggle("on", n.data.alwaysActive);
+    const d = ensureLoreData(n);
+    d.st.constant = !d.st.constant;
+    applyLoreStToLegacy(d);
+    $("loreActive").classList.toggle("on", d.alwaysActive);
     saveLore(n, true);
   }
   function toggleLorePreview() {
@@ -3487,23 +3639,182 @@
     if (on) $("lorePreview").innerHTML = mdToHtml($("loreEdit").value);
     document.body.classList.toggle("lore-preview-on", on);
   }
+  function lorePositionValue(stv) {
+    return `${stv.position}:${stv.role == null ? "" : stv.role}`;
+  }
+  function loreSwitchHtml(id, label, checked, hint) {
+    return `<label class="lore-st-check"><input type="checkbox" id="${id}" ${checked ? "checked" : ""}><span><b>${esc(label)}</b>${hint ? `<small>${esc(hint)}</small>` : ""}</span></label>`;
+  }
+  function loreFieldHtml(label, html, hint) {
+    return `<label class="lore-st-field"><span>${esc(label)}</span>${html}${hint ? `<small>${esc(hint)}</small>` : ""}</label>`;
+  }
+  function loreTriSelect(id, value) {
+    const v = value === true ? "true" : value === false ? "false" : "";
+    return `<select id="${id}"><option value="" ${v === "" ? "selected" : ""}>앱 기본값</option><option value="true" ${v === "true" ? "selected" : ""}>켜기</option><option value="false" ${v === "false" ? "selected" : ""}>끄기</option></select>`;
+  }
+  function loreTriFromSelect(id) {
+    const v = $(id).value;
+    return v === "true" ? true : v === "false" ? false : null;
+  }
+  function loreInputListValue(id) {
+    const el = $(id);
+    return loreStringList(el ? el.value : "", 200, 180);
+  }
+  function openLoreSettingsModal() {
+    const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return;
+    const d = ensureLoreData(n), stv = d.st;
+    const triggerChoices = LORE_ST_TRIGGERS.map(([key, label]) => loreSwitchHtml(`loreStTrigger_${key}`, label, stv.triggers.includes(key), key)).join("");
+    const positionValue = lorePositionValue(stv);
+    openModal(`<div class="lore-st-modal"><h3>SillyTavern 설정</h3><p class="m-sub">${esc(n.title || "로어북")} · World Info로 내보낼 세부 필드를 편집합니다.</p>
+      <section class="lore-st-section"><h4>기본</h4><div class="lore-st-grid">
+        ${loreSwitchHtml("loreStDisable", "비활성화", stv.disable, "disable")}
+        ${loreSwitchHtml("loreStConstant", "상시 활성화", stv.constant, "constant")}
+        ${loreSwitchHtml("loreStVectorized", "벡터화됨", stv.vectorized, "vectorized")}
+        ${loreSwitchHtml("loreStSelective", "선택 필터 사용", stv.selective, "selective")}
+        ${loreSwitchHtml("loreStAddMemo", "제목/메모 추가", stv.addMemo, "addMemo")}
+        ${loreFieldHtml("선택 필터 모드", `<select id="loreStSelectiveLogic"><option value="0" ${stv.selectiveLogic === 0 ? "selected" : ""}>0 · 기본</option><option value="1" ${stv.selectiveLogic === 1 ? "selected" : ""}>1</option><option value="2" ${stv.selectiveLogic === 2 ? "selected" : ""}>2</option><option value="3" ${stv.selectiveLogic === 3 ? "selected" : ""}>3</option></select>`, "selectiveLogic")}
+        ${loreFieldHtml("순서", `<input id="loreStOrder" type="number" value="${stv.order}" inputmode="numeric">`, "order")}
+        ${loreFieldHtml("위치", `<select id="loreStPositionRole"><option value="0:" ${positionValue === "0:" ? "selected" : ""}>캐릭터 정의 전</option><option value="1:" ${positionValue === "1:" ? "selected" : ""}>캐릭터 정의 후</option><option value="5:" ${positionValue === "5:" ? "selected" : ""}>↑EM</option><option value="6:" ${positionValue === "6:" ? "selected" : ""}>↓EM</option><option value="2:" ${positionValue === "2:" ? "selected" : ""}>작가 노트 전</option><option value="3:" ${positionValue === "3:" ? "selected" : ""}>작가 노트 후</option><option value="4:" ${positionValue === "4:" ? "selected" : ""}>@D · 기본</option><option value="4:0" ${positionValue === "4:0" ? "selected" : ""}>@D · 시스템</option><option value="4:1" ${positionValue === "4:1" ? "selected" : ""}>@D · 유저</option></select>`, "position / role")}
+        ${loreFieldHtml("깊이", `<input id="loreStDepth" type="number" min="0" max="999" value="${stv.depth}" inputmode="numeric">`, "depth")}
+      </div></section>
+      <section class="lore-st-section"><h4>발동 조건</h4><div class="lore-st-grid">
+        ${loreSwitchHtml("loreStUseProbability", "확률 사용", stv.useProbability, "useProbability")}
+        ${loreFieldHtml("확률", `<input id="loreStProbability" type="number" min="0" max="100" value="${stv.probability}" inputmode="numeric">`, "probability")}
+        ${loreFieldHtml("스캔 깊이", `<input id="loreStScanDepth" type="number" min="0" max="999" value="${stv.scanDepth == null ? "" : stv.scanDepth}" placeholder="기본값" inputmode="numeric">`, "scanDepth")}
+        ${loreFieldHtml("대소문자", loreTriSelect("loreStCaseSensitive", stv.caseSensitive), "caseSensitive")}
+        ${loreFieldHtml("단어 전체 일치", loreTriSelect("loreStMatchWholeWords", stv.matchWholeWords), "matchWholeWords")}
+      </div><div class="lore-st-trigger-grid">${triggerChoices}</div></section>
+      <section class="lore-st-section"><h4>재귀·예산</h4><div class="lore-st-grid">
+        ${loreSwitchHtml("loreStIgnoreBudget", "예산 무시", stv.ignoreBudget, "ignoreBudget")}
+        ${loreSwitchHtml("loreStExcludeRecursion", "재귀에서 제외", stv.excludeRecursion, "excludeRecursion")}
+        ${loreSwitchHtml("loreStPreventRecursion", "재귀 방지", stv.preventRecursion, "preventRecursion")}
+        ${loreSwitchHtml("loreStDelayUntilRecursion", "재귀까지 지연", stv.delayUntilRecursion, "delayUntilRecursion")}
+        ${loreFieldHtml("Sticky", `<input id="loreStSticky" type="number" min="0" value="${stv.sticky}" inputmode="numeric">`, "sticky")}
+        ${loreFieldHtml("Cooldown", `<input id="loreStCooldown" type="number" min="0" value="${stv.cooldown}" inputmode="numeric">`, "cooldown")}
+        ${loreFieldHtml("Delay", `<input id="loreStDelay" type="number" min="0" value="${stv.delay}" inputmode="numeric">`, "delay")}
+      </div></section>
+      <section class="lore-st-section"><h4>매칭 소스</h4><div class="lore-st-grid">
+        ${loreSwitchHtml("loreStMatchPersonaDescription", "페르소나 설명", stv.matchPersonaDescription)}
+        ${loreSwitchHtml("loreStMatchCharacterDescription", "캐릭터 설명", stv.matchCharacterDescription)}
+        ${loreSwitchHtml("loreStMatchCharacterPersonality", "캐릭터 성격", stv.matchCharacterPersonality)}
+        ${loreSwitchHtml("loreStMatchCharacterDepthPrompt", "캐릭터 노트", stv.matchCharacterDepthPrompt)}
+        ${loreSwitchHtml("loreStMatchScenario", "시나리오", stv.matchScenario)}
+        ${loreSwitchHtml("loreStMatchCreatorNotes", "제작자 메모", stv.matchCreatorNotes)}
+      </div></section>
+      <section class="lore-st-section"><h4>그룹·고급</h4><div class="lore-st-grid">
+        ${loreFieldHtml("그룹", `<input id="loreStGroup" value="${esc(stv.group || "")}" placeholder="동일 라벨 그룹">`, "group")}
+        ${loreSwitchHtml("loreStGroupOverride", "그룹 우선", stv.groupOverride, "groupOverride")}
+        ${loreFieldHtml("그룹 가중치", `<input id="loreStGroupWeight" type="number" min="1" value="${stv.groupWeight}" inputmode="numeric">`, "groupWeight")}
+        ${loreFieldHtml("그룹 스코어링", loreTriSelect("loreStUseGroupScoring", stv.useGroupScoring), "useGroupScoring")}
+        ${loreFieldHtml("Automation ID", `<input id="loreStAutomationId" value="${esc(stv.automationId || "")}">`, "automationId")}
+        ${loreFieldHtml("Outlet", `<input id="loreStOutletName" value="${esc(stv.outletName || "")}">`, "outletName")}
+        ${loreFieldHtml("표시 순서", `<input id="loreStDisplayIndex" type="number" min="0" value="${stv.displayIndex == null ? "" : stv.displayIndex}" inputmode="numeric">`, "displayIndex")}
+      </div></section>
+      <section class="lore-st-section"><h4>캐릭터 필터</h4><div class="lore-st-grid">
+        ${loreSwitchHtml("loreStCharacterFilterExclude", "제외 필터", stv.characterFilter && stv.characterFilter.isExclude, "isExclude")}
+        ${loreFieldHtml("이름", `<textarea id="loreStCharacterFilterNames" rows="2" placeholder="쉼표 또는 줄바꿈">${esc(((stv.characterFilter && stv.characterFilter.names) || []).join(", "))}</textarea>`, "names")}
+        ${loreFieldHtml("태그", `<textarea id="loreStCharacterFilterTags" rows="2" placeholder="쉼표 또는 줄바꿈">${esc(((stv.characterFilter && stv.characterFilter.tags) || []).join(", "))}</textarea>`, "tags")}
+      </div></section>
+      <div class="m-row"><button class="m-btn" id="loreStCancel">취소</button><button class="m-btn primary" id="loreStSave">저장</button></div></div>`);
+    $on("loreStCancel", "click", closeModal);
+    $on("loreStSave", "click", () => {
+      const current = getNote(st.curNoteId); if (!current || current.type !== "lorebook") { closeModal(); return; }
+      const data = ensureLoreData(current), next = data.st;
+      const [pos, role] = String($("loreStPositionRole").value || "0:").split(":");
+      next.disable = $("loreStDisable").checked;
+      next.constant = $("loreStConstant").checked;
+      next.vectorized = $("loreStVectorized").checked;
+      next.selective = $("loreStSelective").checked;
+      next.selectiveLogic = loreNum($("loreStSelectiveLogic").value, 0, 0, 3);
+      next.addMemo = $("loreStAddMemo").checked;
+      next.order = loreNum($("loreStOrder").value, 100, -999999, 999999);
+      next.position = loreNum(pos, 0, 0, 6);
+      next.role = role === "" ? null : loreNullableNum(role, 0, 999);
+      next.depth = loreNum($("loreStDepth").value, 4, 0, 999);
+      next.useProbability = $("loreStUseProbability").checked;
+      next.probability = loreNum($("loreStProbability").value, 100, 0, 100);
+      next.scanDepth = loreNullableNum($("loreStScanDepth").value, 0, 999);
+      next.caseSensitive = loreTriFromSelect("loreStCaseSensitive");
+      next.matchWholeWords = loreTriFromSelect("loreStMatchWholeWords");
+      next.triggers = LORE_ST_TRIGGERS.map(([key]) => key).filter((key) => $("loreStTrigger_" + key).checked);
+      next.ignoreBudget = $("loreStIgnoreBudget").checked;
+      next.excludeRecursion = $("loreStExcludeRecursion").checked;
+      next.preventRecursion = $("loreStPreventRecursion").checked;
+      next.delayUntilRecursion = $("loreStDelayUntilRecursion").checked;
+      next.sticky = loreNum($("loreStSticky").value, 0, 0, 999999);
+      next.cooldown = loreNum($("loreStCooldown").value, 0, 0, 999999);
+      next.delay = loreNum($("loreStDelay").value, 0, 0, 999999);
+      next.matchPersonaDescription = $("loreStMatchPersonaDescription").checked;
+      next.matchCharacterDescription = $("loreStMatchCharacterDescription").checked;
+      next.matchCharacterPersonality = $("loreStMatchCharacterPersonality").checked;
+      next.matchCharacterDepthPrompt = $("loreStMatchCharacterDepthPrompt").checked;
+      next.matchScenario = $("loreStMatchScenario").checked;
+      next.matchCreatorNotes = $("loreStMatchCreatorNotes").checked;
+      next.group = cleanImportedText($("loreStGroup").value, 180);
+      next.groupOverride = $("loreStGroupOverride").checked;
+      next.groupWeight = loreNum($("loreStGroupWeight").value, 100, 1, 999999);
+      next.useGroupScoring = loreTriFromSelect("loreStUseGroupScoring");
+      next.automationId = cleanImportedText($("loreStAutomationId").value, 120);
+      next.outletName = cleanImportedText($("loreStOutletName").value, 120);
+      next.displayIndex = loreNullableNum($("loreStDisplayIndex").value, 0, 999999);
+      next.characterFilter = { isExclude: $("loreStCharacterFilterExclude").checked, names: loreInputListValue("loreStCharacterFilterNames"), tags: loreInputListValue("loreStCharacterFilterTags") };
+      applyLoreStToLegacy(data);
+      saveLore(current, true);
+      renderLore();
+      closeModal();
+      toast("ST 설정을 저장했어요");
+    });
+  }
 
   // ST World Info export
   function buildWorldInfo(notes) {
     const entries = {};
     notes.forEach((n, i) => {
-      const d = n.data || {};
-      entries[String(i)] = {
-        uid: i, key: (d.keywords || []).slice(), keysecondary: [], comment: n.title || "", content: d.content || "",
-        constant: !!d.alwaysActive, vectorized: false, selective: true, selectiveLogic: 0, addMemo: true,
-        order: 100, position: (d.depthOn ? 4 : 0), disable: false, ignoreBudget: false, excludeRecursion: false, preventRecursion: false,
-        matchPersonaDescription: false, matchCharacterDescription: false, matchCharacterPersonality: false,
-        matchCharacterDepthPrompt: false, matchScenario: false, matchCreatorNotes: false, delayUntilRecursion: false,
-        probability: 100, useProbability: true, depth: (d.depthOn ? (d.depth == null ? 4 : d.depth) : 4), outletName: "", group: "", groupOverride: false, groupWeight: 100,
-        scanDepth: null, caseSensitive: null, matchWholeWords: null, useGroupScoring: null, automationId: "",
-        role: null, sticky: 0, cooldown: 0, delay: 0, triggers: [], displayIndex: i,
-        characterFilter: { isExclude: false, names: [], tags: [] }
-      };
+      const d = ensureLoreData(n), stv = applyLoreStToLegacy(d).st;
+      entries[String(i)] = Object.assign({}, jsonCopy(stv.extra) || {}, {
+        uid: i,
+        key: d.keywords.slice(),
+        keysecondary: stv.keysecondary.slice(),
+        comment: n.title || "",
+        content: d.content || "",
+        constant: !!stv.constant,
+        vectorized: !!stv.vectorized,
+        selective: !!stv.selective,
+        selectiveLogic: stv.selectiveLogic,
+        addMemo: !!stv.addMemo,
+        order: stv.order,
+        position: stv.position,
+        disable: !!stv.disable,
+        ignoreBudget: !!stv.ignoreBudget,
+        excludeRecursion: !!stv.excludeRecursion,
+        preventRecursion: !!stv.preventRecursion,
+        matchPersonaDescription: !!stv.matchPersonaDescription,
+        matchCharacterDescription: !!stv.matchCharacterDescription,
+        matchCharacterPersonality: !!stv.matchCharacterPersonality,
+        matchCharacterDepthPrompt: !!stv.matchCharacterDepthPrompt,
+        matchScenario: !!stv.matchScenario,
+        matchCreatorNotes: !!stv.matchCreatorNotes,
+        delayUntilRecursion: !!stv.delayUntilRecursion,
+        probability: stv.probability,
+        useProbability: !!stv.useProbability,
+        depth: stv.depth,
+        outletName: stv.outletName || "",
+        group: stv.group || "",
+        groupOverride: !!stv.groupOverride,
+        groupWeight: stv.groupWeight,
+        scanDepth: stv.scanDepth,
+        caseSensitive: stv.caseSensitive,
+        matchWholeWords: stv.matchWholeWords,
+        useGroupScoring: stv.useGroupScoring,
+        automationId: stv.automationId || "",
+        role: stv.role,
+        sticky: stv.sticky,
+        cooldown: stv.cooldown,
+        delay: stv.delay,
+        triggers: stv.triggers.slice(),
+        displayIndex: stv.displayIndex == null ? i : stv.displayIndex,
+        characterFilter: normalizeLoreCharacterFilter(stv.characterFilter)
+      });
     });
     return { entries };
   }
@@ -5793,20 +6104,82 @@
     $on("pickOk", "click", () => { if (!selPid) return; createNote(type, selPid, options).then(() => openCreatedNote(type)); });
   }
 
+  function projectTagListFromText(value) {
+    return String(value || "").split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
+  }
+  function bindProjectTagEditor(initialValue) {
+    const editor = $("pfTagEditor"), list = $("pfTagList"), input = $("pfTagInput"), source = $("pfDesc");
+    if (!editor || !list || !input || !source) return;
+    let tags = [];
+    const maxLength = Number(source.getAttribute("maxlength")) || 500;
+    const syncSource = () => { source.value = tags.join(", "); };
+    const draw = () => {
+      list.innerHTML = tags.map((tag, idx) => `<span class="project-tag-chip"><span>${esc(tag)}</span><button type="button" aria-label="삭제" data-project-tag-remove="${idx}">×</button></span>`).join("");
+      list.querySelectorAll("[data-project-tag-remove]").forEach((button) => button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        tags.splice(Number(button.dataset.projectTagRemove) || 0, 1);
+        syncSource();
+        draw();
+        input.focus();
+      }));
+      editor.classList.toggle("is-empty", !tags.length);
+    };
+    const add = (raw) => {
+      const next = projectTagListFromText(raw).map((tag) => tag.slice(0, 40));
+      if (!next.length) return false;
+      next.forEach((tag) => {
+        if (tags.includes(tag) || tags.length >= 30) return;
+        const candidate = tags.concat(tag);
+        if (candidate.join(", ").length <= maxLength) tags.push(tag);
+      });
+      syncSource();
+      draw();
+      return true;
+    };
+    tags = projectTagListFromText(initialValue).map((tag) => tag.slice(0, 40)).filter((tag, idx, arr) => arr.indexOf(tag) === idx).slice(0, 30);
+    syncSource();
+    draw();
+    editor.addEventListener("click", () => input.focus());
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        if (add(input.value)) input.value = "";
+      } else if (e.key === "Backspace" && !input.value && tags.length) {
+        tags.pop();
+        syncSource();
+        draw();
+      }
+    });
+    input.addEventListener("input", () => {
+      if (!input.value.includes(",")) return;
+      const parts = input.value.split(",");
+      input.value = parts.pop().trimStart();
+      add(parts.join(","));
+    });
+    input.addEventListener("blur", () => { if (add(input.value)) input.value = ""; });
+  }
+
   // project create/edit form. onDone(project) optional
   function showProjectForm(editId, onDone) {
     const p = editId ? getProject(editId) : null;
+    const desc = p ? (p.description || "") : "";
     openModal(`
       <h3>${p ? "프로젝트 편집" : "새 프로젝트"}</h3>
       <div class="m-field-label">이름</div>
       <input class="m-input" id="pfName" maxlength="60" placeholder="프로젝트 이름" value="${p ? esc(p.name) : ""}">
-      <div class="m-field-label">태그 (쉼표로 구분 · 선택)</div>
-      <textarea class="m-textarea" id="pfDesc" maxlength="500" placeholder="예: 판타지, 로맨스, 진행중">${p ? esc(p.description || "") : ""}</textarea>
+      <div class="m-field-label">태그</div>
+      <textarea class="project-tag-source" id="pfDesc" maxlength="500" hidden>${esc(desc)}</textarea>
+      <div class="project-tag-editor" id="pfTagEditor">
+        <div class="project-tag-list" id="pfTagList"></div>
+        <input class="project-tag-input" id="pfTagInput" maxlength="80" placeholder="예: 판타지, 로맨스, 진행중" autocomplete="off" autocapitalize="off">
+      </div>
       <div class="m-row"><button class="m-btn" id="pfCancel">취소</button><button class="m-btn primary" id="pfOk">${p ? "저장" : "만들기"}</button></div>
     `);
+    bindProjectTagEditor(desc);
     setTimeout(() => $("pfName").focus(), 120);
     $on("pfCancel", "click", closeModal);
     $on("pfOk", "click", async () => {
+      if ($("pfTagInput") && $("pfTagInput").value.trim()) $("pfTagInput").dispatchEvent(new Event("blur"));
       const name = $("pfName").value.trim(), desc = $("pfDesc").value.trim();
       if (!name) { $("pfName").focus(); return; }
       let result;
@@ -6388,13 +6761,7 @@
     } else if (type === "regex") {
       note.data = normalizeRegexData(data);
     } else if (type === "lorebook") {
-      note.data = {
-        content: cleanImportedText(data.content, 500000),
-        keywords: (Array.isArray(data.keywords) ? data.keywords : []).map((key) => cleanImportedText(String(key), 180).trim()).filter(Boolean).slice(0, 300),
-        alwaysActive: !!data.alwaysActive,
-        depthOn: !!data.depthOn,
-        depth: Math.min(999, Math.max(0, Number(data.depth) || 4))
-      };
+      note.data = normalizeLoreData(data);
     } else if (type === "log") {
       note.data = normalizeLogData(data);
     } else if (type === "idea") {
@@ -6677,7 +7044,7 @@
     if (type === "lorebook") {
       const merged = notes.map((n) => (n.data && n.data.content) || "").filter((s) => s.trim()).join("\n\n");
       const nn = await createNote("lorebook", pid);
-      nn.title = "합친 로어북"; nn.data = { content: merged, keywords: [], alwaysActive: false, depthOn: false, depth: 4 };
+      nn.title = "합친 로어북"; nn.data = makeLoreData({ content: merged });
       await saveLore(nn, true);
       exitSelMode(); st.curNoteId = nn.id; toast(`${notes.length}개를 합쳤어요`); go({ s: "lore" });
       return;
@@ -7379,7 +7746,7 @@ ${gallery}
         const n = await createNote("lorebook", pid);
         n.title = ((e.comment || "") + "").trim() || (Array.isArray(keys) && keys[0]) || ("로어북 " + (cnt + 1));
         n.titleLocked = true;
-        n.data = { content: e.content || "", keywords: Array.isArray(keys) ? keys.slice() : [], alwaysActive: !!e.constant, depthOn: (e.position === 4), depth: (e.depth == null ? 4 : e.depth) };
+        n.data = normalizeLoreData(Object.assign({}, e, { keywords: Array.isArray(keys) ? keys.slice() : [] }));
         await saveLore(n, true);
         cnt++;
       }
@@ -7644,6 +8011,7 @@ ${gallery}
     { key:"softAccentBg",   label:"옅은 강조·선택 배경", variable:"--accent-soft",                    fallback:"#EAF0FF", group:"highlight" },
     { key:"logoCore",       label:"로고 중심부",         variable:"--custom-logo-ink",                fallback:"#FFFFFF", group:"brand" },
     { key:"sectionTitleBg", label:"작은 섹션 제목 배경", variable:"--section-title-bg",                fallback:"#EAF0FF", group:"section", derived:true },
+    { key:"tagBorder",      label:"태그 칩 테두리",       variable:"--tag-border-color",               fallback:"#6AD0FF", group:"section" },
     { key:"sidebarFootBg",  label:"사이드바 하단 버튼 배경", variable:"--sidebar-foot-bg",              fallback:"#E8EEF9", group:"sidebar", derived:true },
     { key:"sidebarSectionGradientStart", label:"사이드바 섹션 제목 그라데이션 1", variable:"--sidebar-section-grad-a", fallback:"#EAF0FF", group:"sidebar", derived:true },
     { key:"sidebarCountBg", label:"사이드바 메모 개수 배경", variable:"--sidebar-count-bg",             fallback:"#EAF0FF", group:"sidebar", derived:true },
@@ -7658,6 +8026,7 @@ ${gallery}
     { key:"barLine",        label:"상단바 경계",         variable:"--bar-line",                       fallback:"#E1E3EC", group:"bar" },
     { key:"topbarShadow",   label:"상단 제목바 아래 그림자", variable:"--topbar-shadow-color",          fallback:"#7690C2", group:"bar" },
     { key:"memoShadow",     label:"메모 그림자",             variable:"--memo-shadow-color",            fallback:"#7690C2", group:"memo" },
+    { key:"glowColor",      label:"글로우",                 variable:"--glow-color",                   fallback:"#6AD0FF", group:"main" },
     { key:"memoCodeBg",     label:"자유 메모 코드 보기 배경", variable:"--memo-code-bg",                  fallback:"#FCFCFD", group:"memo" },
     { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo", derived:true },
     { key:"memoTitle",      label:"메모 제목",           variable:"--memo-title-color",               fallback:"#283A63", group:"type" },
@@ -7665,6 +8034,7 @@ ${gallery}
     { key:"homeSectionTitleBg", label:"메인 화면 섹션 제목 배경", variable:"--home-section-title-bg",   fallback:"#EAF0FF", group:"home", derived:true },
     { key:"homeShadow",     label:"메인 화면 그림자",     variable:"--home-shadow-color",              fallback:"#7690C2", group:"home", derived:true },
     { key:"projectCountBg", label:"프로젝트 메모 개수 배경", variable:"--project-count-bg",              fallback:"#EAF0FF", group:"home", derived:true },
+    { key:"projectCountText", label:"프로젝트 메모 개수 글자", variable:"--project-count-color",          fallback:"#2F6FD0", group:"home" },
     { key:"homeSortBg",     label:"메인 화면 정렬 배경", variable:"--home-sort-bg",                     fallback:"#EAF0FF", group:"home", derived:true },
     { key:"modalTitle",     label:"팝업 제목",           variable:"--modal-title-color",              fallback:"#283A63", group:"popup", derived:true },
     { key:"newNoteIconBg",  label:"새 메모 팝업 아이콘 배경", variable:"--new-note-icon-bg",              fallback:"#EAF0FF", group:"popup", derived:true },
@@ -7684,7 +8054,7 @@ ${gallery}
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
     ...CUSTOM_THEME_COLOR_META.map((item) => item.variable),
-    "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--shadow", "--logo-ink",
+    "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--shadow", "--logo-ink", "--custom-glow-color",
     "--custom-main-a", "--custom-main-b", "--custom-logo-body", "--custom-logo-tip", "--custom-logo-ink", "--custom-logo-glow",
     "--quickmenu-default-icon-bg-a", "--quickmenu-default-icon-bg-b", "--quickmenu-panel-bg-b",
     "--custom-note-type-free", "--custom-note-type-html", "--custom-note-type-lorebook", "--custom-note-type-log", "--custom-note-type-persona", "--custom-note-type-character", "--custom-note-type-idea",
@@ -7728,7 +8098,7 @@ ${gallery}
     const H=mid.h;
     const S=Math.max(.30,Math.min(.90,mid.s)); // 채도: 하한으로 칙칙함 방지, 상한으로 과채도 방지
     const L=(sat,light)=>hslToHex(H,Math.max(0,Math.min(1,sat)),Math.max(0,Math.min(1,light)));
-    const out={mainA:start,mainB:end,logoCore:contrastInk(start,dark)};
+    const out={mainA:start,mainB:end,logoCore:contrastInk(start,dark),glowColor:start,tagBorder:start,projectCountText:start};
     if(!dark){
       const tint=L(S*.40,.930), tintHi=L(S*.30,.955);       // 통합 틴트 배경
       const shadow=L(Math.max(.30,S*.42),.52);              // 통합 그림자
@@ -7743,7 +8113,7 @@ ${gallery}
         barBg:L(S*.07,.998), barBg2:L(S*.12,.983), barLine:lineC,
         topbarShadow:shadow, memoShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
         softAccentBg:tint, memoCodeBg:L(S*.08,.986), memoCodeIconBg:tint,
-        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
+        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint, tagBorder:start, projectCountText:start,
         sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
         memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
         homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
@@ -7763,7 +8133,7 @@ ${gallery}
         barBg:L(S*.30,.145), barBg2:L(S*.32,.188), barLine:lineC,
         topbarShadow:shadow, memoShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
         softAccentBg:tint, memoCodeBg:L(S*.20,.105), memoCodeIconBg:tint,
-        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
+        sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint, tagBorder:start, projectCountText:start,
         sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
         memoTitle:titleInk, modalTitle:titleInk, settingsRowTitle:inkC,
         homeSectionTitle:mutedC, settingsGroupTitle:mutedC,
@@ -7794,13 +8164,13 @@ ${gallery}
     const mid=blendHsl(a,b,.5),dark=mode==="dark", deep=dark?hslToHex(mid.h,Math.max(.28,mid.s*.55),.23):hslToHex(mid.h,Math.max(.34,mid.s*.58),.30);
     const suggestedSoft=dark?hslToHex(mid.h,Math.max(.18,mid.s*.28),.18):hslToHex(mid.h,Math.max(.14,mid.s*.24),.91);
     const soft=normalizeThemeHex(c.softAccentBg,suggestedSoft);
-    const logoBody=a,logoTip=b,logoInk=normalizeThemeHex(c.logoCore,contrastInk(a,dark)),word=dark?hslToHex(mid.h,Math.max(.15,mid.s*.22),.88):hslToHex(mid.h,Math.max(.24,mid.s*.42),.27);
+    const glowColor=normalizeThemeHex(c.glowColor||a,a),logoBody=a,logoTip=b,logoInk=normalizeThemeHex(c.logoCore,contrastInk(a,dark)),word=dark?hslToHex(mid.h,Math.max(.15,mid.s*.22),.88):hslToHex(mid.h,Math.max(.24,mid.s*.42),.27);
     const quickB=dark?hslToHex(hexToHsl(b).h,Math.max(.22,hexToHsl(b).s*.48),.18):hslToHex(hexToHsl(b).h,Math.max(.14,hexToHsl(b).s*.28),.965);
     return {
       "--accent":a,"--accent-2":b,"--accent-deep":deep,"--accent-soft":soft,"--accent-ink":c.ink,
-      "--grad-blue":`linear-gradient(135deg, ${a} 0%, ${b} 100%)`,"--glow":`0 0 ${dark?24:18}px ${themeHexAlpha(a,dark?.30:.18)}`,"--logo-ink":word,
-      "--custom-main-a":a,"--custom-main-b":b,"--custom-logo-body":logoBody,"--custom-logo-tip":logoTip,"--custom-logo-ink":logoInk,
-      "--custom-logo-glow":`drop-shadow(0 0 ${dark?13:6}px ${themeHexAlpha(a,dark?.46:.28)})`,
+      "--grad-blue":`linear-gradient(135deg, ${a} 0%, ${b} 100%)`,"--glow":`0 0 ${dark?24:18}px ${themeHexAlpha(glowColor,dark?.30:.18)}`,"--logo-ink":word,
+      "--custom-main-a":a,"--custom-main-b":b,"--custom-glow-color":glowColor,"--custom-logo-body":logoBody,"--custom-logo-tip":logoTip,"--custom-logo-ink":logoInk,
+      "--custom-logo-glow":`drop-shadow(0 0 ${dark?13:6}px ${themeHexAlpha(glowColor,dark?.46:.28)})`,
       "--quickmenu-default-icon-bg-a":soft,"--quickmenu-default-icon-bg-b":quickB,"--quickmenu-panel-bg-b":soft,
       ...customThemeAutoTypeVars(a,b,dark)
     };
@@ -7813,7 +8183,7 @@ ${gallery}
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
   function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
-    const sourceVar=({ softAccentBg:"--accent-soft", logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
+    const sourceVar=({ softAccentBg:"--accent-soft", logoCore:"--accent-ink", glowColor:"--accent", tagBorder:"--accent", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", projectCountText:"--accent", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
     return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
   }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
   function normalizePalette(raw,fallback,mode){
@@ -7835,7 +8205,7 @@ ${gallery}
         return;
       }
       if(item.derived){ out[item.key]=normalizeThemeHex(recommended[item.key],item.fallback); return; }
-      const missingRole=["logoCore","topbarShadow","memoShadow","memoCodeBg","memoTitle","homeSectionTitle","homeShadow","modalTitle","settingsGroupTitle","settingsRowTitle","settingsShadow"].includes(item.key);
+      const missingRole=["logoCore","glowColor","tagBorder","topbarShadow","memoShadow","memoCodeBg","memoTitle","homeSectionTitle","homeShadow","projectCountText","modalTitle","settingsGroupTitle","settingsRowTitle","settingsShadow"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
     return out;
@@ -7848,13 +8218,13 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:13,baseAccent,
+    return {version:15,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:13,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:15,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){
     const colors=palette.colors||{};
     const soft=normalizeThemeHex(colors.softAccentBg,"#EAF0FF");
@@ -7871,7 +8241,7 @@ ${gallery}
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<13;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<15;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
   function appearanceSnapshot(){return {version:10,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
@@ -8393,12 +8763,15 @@ ${gallery}
 
     // lorebook
     $on("loreEdit", "input", scheduleLoreSave);
-    $on("loreDepthSwitch", "click", () => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; n.data.depthOn = !n.data.depthOn; $("loreDepthSwitch").classList.toggle("on", n.data.depthOn); $("loreDepthWrap").classList.toggle("on", n.data.depthOn); saveLore(n, true); });
-    $on("loreDepth", "change", (e) => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; let v = parseInt(e.target.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > 999) v = 999; e.target.value = v; n.data.depth = v; saveLore(n, true); });
+    $on("loreDepthSwitch", "click", () => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; const d = ensureLoreData(n); d.st.position = d.st.position === 4 ? 0 : 4; d.st.role = d.st.position === 4 ? d.st.role : null; applyLoreStToLegacy(d); $("loreDepthSwitch").classList.toggle("on", d.depthOn); $("loreDepthWrap").classList.toggle("on", d.depthOn); saveLore(n, true); });
+    $on("loreDepth", "change", (e) => { const n = getNote(st.curNoteId); if (!n || n.type !== "lorebook") return; const d = ensureLoreData(n); let v = parseInt(e.target.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > 999) v = 999; e.target.value = v; d.st.depth = v; applyLoreStToLegacy(d); saveLore(n, true); });
     $on("loreEdit", "blur", () => flushLore());
     $on("loreKwInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeywordFromInput(); } });
     $on("loreKwInput", "blur", addKeywordFromInput);
+    $on("loreSecondaryKwInput", "keydown", (e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addSecondaryKeywordFromInput(); } });
+    $on("loreSecondaryKwInput", "blur", addSecondaryKeywordFromInput);
     $on("loreActiveWrap", "click", toggleLoreActive);
+    $on("loreSettingsBtn", "click", openLoreSettingsModal);
     $on("lorePreviewBtn", "click", toggleLorePreview);
     $on("loreMore", "click", () => openNoteSheet(st.curNoteId));
 
@@ -8831,7 +9204,20 @@ ${gallery}
     chevronLux: { label:"쉐브론", desc:"굵은 V가 반복되는 광택 구분선" },
     sunburst: { label:"햇살", desc:"중앙 방사 빛살이 퍼지는 구분선" },
     damask: { label:"다마스크", desc:"마름모 격자가 짜인 다마스크 구분선" },
-    botanical: { label:"식물 줄기", desc:"줄기에 잎이 엇갈려 달린 구분선" }
+    botanical: { label:"식물 줄기", desc:"줄기에 잎이 엇갈려 달린 구분선" },
+    thorns: { label:"가시덩굴", desc:"가시가 돋은 덩굴의 고딕 구분선" },
+    bats: { label:"박쥐떼", desc:"날개 편 박쥐가 늘어선 구분선" },
+    bloodDrip: { label:"핏방울", desc:"핏빛 선에서 방울이 흘러내리는 구분선" },
+    cobweb: { label:"거미줄", desc:"늘어진 거미줄 커튼 구분선" },
+    gothicCross: { label:"고딕 십자가", desc:"어두운 선에 십자가를 두른 구분선" },
+    stardust: { label:"별가루", desc:"별가루가 흩날리며 빛나는 구분선" },
+    heartChain: { label:"하트 체인", desc:"하트가 이어진 파스텔 구분선" },
+    magicWand: { label:"마법봉", desc:"빛나는 별에 별가루 트레일 구분선" },
+    sparkleTrail: { label:"반짝이", desc:"발광 다이아가 점강하는 구분선" },
+    ribbonBow: { label:"리본", desc:"중앙 리본 매듭의 파스텔 구분선" },
+    moonPhases: { label:"달의 위상", desc:"초승달에서 보름달로 차는 구분선" },
+    runicLine: { label:"룬", desc:"직선 룬 문자가 새겨진 구분선" },
+    pentacle: { label:"펜타클", desc:"원 안에 오망성을 둔 오컬트 구분선" }
   });
   const IDEA_DIVIDER_TEMPLATE_GUIDE = `# Lumi Ink 아이디어 보드 구분선 템플릿 가이드
 
@@ -10213,7 +10599,7 @@ ornamentLine: { label: "장식 실선", desc: "중앙 장식이 있는 구분선
     const noteLockMode=ideaLockMode(item);
     const lockAction=item.kind==="note" ? `<button class="idea-options-action" id="ideaOptLock"><b>${noteLockMode==="transform"?"요소 잠금":""}${noteLockMode==="full"?"전체 보호 잠금":""}${!noteLockMode?"잠금":""}</b><small>${noteLockMode==="transform"?"본문 편집은 가능 · 요소 조작 보호":noteLockMode==="full"?"본문까지 모든 편집 보호":"요소만 / 전체 보호 잠금 중 선택"}</small></button>` : `<button class="idea-options-action" id="ideaOptLock"><b>${ideaIsLocked(item)?"잠금 해제":"잠금"}</b><small>${ideaIsLocked(item)?"이 조각을 다시 편집 가능하게 합니다":"이동·크기·회전·삭제를 막습니다"}</small></button>`;
     const noteOptions=item.kind==="note"?`<div class="idea-options-section"><div class="idea-options-label">메모지 디자인</div><button class="idea-options-row" id="ideaOptDesign"><span>✦</span><span><b>${esc(IDEA_NOTE_TEMPLATES[item.noteStyle].label)}</b><small>디자인 선택 후 색상·글자색을 고르기</small></span></button><button class="idea-options-row" id="ideaOptVAlign"><span>↕</span><span><b>${item.vAlign==="center"?"세로 중앙맞춤":"세로 위맞춤"}</b><small>메모지 안쪽 내용을 세로 기준으로 맞춥니다</small></span></button></div>`:"";
-    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 87종에서 선택</small></span></button></div>`:"";
+    const dividerOptions=item.kind==="divider"?`<div class="idea-options-section"><div class="idea-options-label">구분선 디자인</div><button class="idea-options-row" id="ideaOptDividerStyle"><span>—</span><span><b>${esc((IDEA_DIVIDER_STYLES[item.dividerStyle] || IDEA_DIVIDER_STYLES.solid).label)}</b><small>굵기 · 디자인 100종에서 선택</small></span></button></div>`:"";
     const colorOption=isColorable&&item.kind!=="note"?`<div class="idea-options-section"><div class="idea-options-label">테마 컬러</div><button class="idea-options-row" id="ideaOptColor"><span style="color:${esc(ideaColorMeta(item.color).ig[0])}">●</span><span><b>${esc(ideaColorMeta(item.color).name)}</b><small>테마 · 크림 · 먹색 · 직접 선택</small></span></button></div>`:"";
     const emptyFrameOptions=item.kind==="frame"?`<div class="idea-options-section idea-empty-frame-options"><div class="idea-options-label">테마</div><p class="idea-options-help">장식용 빈 프레임입니다. 프레임 종류와 컬러를 이곳에서 고릅니다.</p><button class="idea-options-row" id="ideaOptFrameType"><span>□</span><span><b>${esc(ideaMediaFrameLabel(item))}</b><small>프레임 종류 변경</small></span></button><button class="idea-options-row" id="ideaOptFrameColor"><span style="color:${esc(resolveFrameColor(item.frameColor||"#d4af37"))}">●</span><span><b>프레임 컬러</b><small>${esc((item.frameColor===FRAME_THEME_TOKEN?"테마":(frameById(item.frame)?String(item.frameColor||"#d4af37"):"프레임을 먼저 고르세요")))}</small></span></button></div>`:"";
     const renameAction=["quote","file","audio"].includes(item.kind)?`<button class="idea-options-action" id="ideaOptRename"><b>${item.kind==="audio"?"제목 바꾸기":"표시 제목"}</b><small>${item.kind==="audio"?"원본은 유지하고 보드에서만 바꾸기":"보드에서만 이름 바꾸기"}</small></button>`:"";

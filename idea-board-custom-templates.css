@@ -2916,6 +2916,123 @@
 }
 .idea-divider[data-divider-style="sunburst"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="sunburst"] .idea-divider-body::after { display:block; width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 5px color-mix(in srgb,var(--c) 50%,transparent); }
 
+/* ============================================================
+ * 구분선 장르 테마 13종 (v66.47)
+ * 고딕 호러 5 · 마법소녀 5 · 오컬트·판타지 3
+ * 색: --c(=--idea-color-b) 연동 + color-mix로 장르 무드 가미
+ * ============================================================ */
+
+/* ── 고딕 호러 5종 ── */
+
+/* thorns — 가시덩굴: 곡선 줄기 + 위아래 가시 (SVG 마스크) */
+.idea-divider[data-divider-style="thorns"] .idea-divider-body span, .idea-preview-divider[data-divider-style="thorns"] .idea-divider-body span {
+  height:calc(var(--w)*4.6); border-radius:0;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 78%,#000), color-mix(in srgb,var(--c) 92%,#000));
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M0 10 Q7 5 15 10 Q23 15 30 10' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M6 7 L8 1 L10 7 Z' fill='black'/%3E%3Cpath d='M20 13 L22 19 L24 13 Z' fill='black'/%3E%3Cpath d='M14 11 L15 16 L16 11 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 30px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M0 10 Q7 5 15 10 Q23 15 30 10' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M6 7 L8 1 L10 7 Z' fill='black'/%3E%3Cpath d='M20 13 L22 19 L24 13 Z' fill='black'/%3E%3Cpath d='M14 11 L15 16 L16 11 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 30px 100%;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));
+}
+/* bats — 박쥐떼: 날개 편 박쥐 실루엣 반복 (SVG 마스크) */
+.idea-divider[data-divider-style="bats"] .idea-divider-body span, .idea-preview-divider[data-divider-style="bats"] .idea-divider-body span {
+  height:calc(var(--w)*4); border-radius:0;
+  background:color-mix(in srgb,var(--c) 80%,#000);
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='14' viewBox='0 0 26 14'%3E%3Cpath d='M13 4 C13.6 6 14.4 6 15.6 5.2 C17 4.2 18.6 5 18 6.6 C19.6 5.6 21.2 6.4 20.6 8 C19 7.2 17.4 8 16.6 7 C15.2 8.8 13.8 8.8 13 7 C12.2 8.8 10.8 8.8 9.4 7 C8.6 8 7 7.2 5.4 8 C4.8 6.4 6.4 5.6 8 6.6 C7.4 5 9 4.2 10.4 5.2 C11.6 6 12.4 6 13 4 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 22px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='14' viewBox='0 0 26 14'%3E%3Cpath d='M13 4 C13.6 6 14.4 6 15.6 5.2 C17 4.2 18.6 5 18 6.6 C19.6 5.6 21.2 6.4 20.6 8 C19 7.2 17.4 8 16.6 7 C15.2 8.8 13.8 8.8 13 7 C12.2 8.8 10.8 8.8 9.4 7 C8.6 8 7 7.2 5.4 8 C4.8 6.4 6.4 5.6 8 6.6 C7.4 5 9 4.2 10.4 5.2 C11.6 6 12.4 6 13 4 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 22px 100%;
+}
+/* bloodDrip — 핏방울: 핏빛 윗선 + 길이가 다른 방울이 흘러내림 */
+.idea-divider[data-divider-style="bloodDrip"] .idea-divider-body span, .idea-preview-divider[data-divider-style="bloodDrip"] .idea-divider-body span {
+  height:calc(var(--w)*5); border-radius:0;
+  background:
+    linear-gradient(color-mix(in srgb,var(--c) 62%,#900), color-mix(in srgb,var(--c) 62%,#900)) 0 0 / 100% 3px no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 4px 2px / 17px 70% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 30px 2px / 15px 95% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 60px 2px / 16px 55% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 88px 2px / 15px 80% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 120px 2px / 17px 48% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 150px 2px / 15px 88% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 182px 2px / 16px 62% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 214px 2px / 15px 92% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 246px 2px / 16px 54% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 280px 2px / 15px 78% no-repeat,
+    radial-gradient(circle at 50% 100%, color-mix(in srgb,var(--c) 62%,#900) 0 42%, transparent 48%) 312px 2px / 16px 50% no-repeat;
+  filter:drop-shadow(0 1px 1px rgba(60,0,0,.3));
+}
+/* cobweb — 거미줄: 늘어진 거미줄 커튼 (SVG 마스크) */
+.idea-divider[data-divider-style="cobweb"] .idea-divider-body span, .idea-preview-divider[data-divider-style="cobweb"] .idea-divider-body span {
+  height:calc(var(--w)*4.8); border-radius:0;
+  background:color-mix(in srgb,var(--c) 88%,#000);
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='20' viewBox='0 0 24 20'%3E%3Cg fill='none' stroke='black' stroke-width='1'%3E%3Cpath d='M0 2 H24'/%3E%3Cpath d='M4 2 V15 M12 2 V18 M20 2 V15'/%3E%3Cpath d='M4 8 Q12 13 20 8 M4 12 Q12 17 20 12'/%3E%3C/g%3E%3C/svg%3E") repeat-x center / 24px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='20' viewBox='0 0 24 20'%3E%3Cg fill='none' stroke='black' stroke-width='1'%3E%3Cpath d='M0 2 H24'/%3E%3Cpath d='M4 2 V15 M12 2 V18 M20 2 V15'/%3E%3Cpath d='M4 8 Q12 13 20 8 M4 12 Q12 17 20 12'/%3E%3C/g%3E%3C/svg%3E") repeat-x center / 24px 100%;
+}
+/* gothicCross — 고딕 십자가: 어두운 양분선 + 중앙 십자가 + 좌우 링크 */
+.idea-divider[data-divider-style="gothicCross"] .idea-divider-body span, .idea-preview-divider[data-divider-style="gothicCross"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 82%,#000) 0 calc(50% - 14px), transparent calc(50% - 14px) calc(50% + 14px), color-mix(in srgb,var(--c) 82%,#000) calc(50% + 14px) 100%);
+}
+.idea-divider[data-divider-style="gothicCross"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="gothicCross"] .idea-divider-body::before { display:block; content:"✟"; color:color-mix(in srgb,var(--c) 85%,#000); font-size:19px; line-height:1; }
+.idea-divider[data-divider-style="gothicCross"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="gothicCross"] .idea-divider-body::after { display:block; width:5px; height:5px; background:color-mix(in srgb,var(--c) 82%,#000); transform:translate(-50%,-50%) rotate(45deg); box-shadow:-16px 0 0 -0.5px color-mix(in srgb,var(--c) 82%,#000), 16px 0 0 -0.5px color-mix(in srgb,var(--c) 82%,#000); }
+
+/* ── 마법소녀 5종 ── */
+
+/* stardust — 별가루: 중앙 큰 별 + 크고 작은 별가루 산포 + 발광 */
+.idea-divider[data-divider-style="stardust"] .idea-divider-body span, .idea-preview-divider[data-divider-style="stardust"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 65%,transparent) 0 calc(50% - 15px), transparent calc(50% - 15px) calc(50% + 15px), color-mix(in srgb,var(--c) 65%,transparent) calc(50% + 15px) 100%);
+  box-shadow:0 0 5px color-mix(in srgb,var(--c) 40%,transparent); filter:none;
+}
+.idea-divider[data-divider-style="stardust"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="stardust"] .idea-divider-body::before { display:block; content:"✦"; color:var(--c); font-size:18px; line-height:1; text-shadow:0 0 7px color-mix(in srgb,var(--c) 60%,#fff); }
+.idea-divider[data-divider-style="stardust"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="stardust"] .idea-divider-body::after { display:block; width:4px; height:4px; border-radius:50%; background:color-mix(in srgb,var(--c) 55%,#fff); box-shadow:-18px -5px 0 color-mix(in srgb,var(--c) 65%,#ff8), 20px 4px 0 color-mix(in srgb,var(--c) 65%,#ff8), -29px 5px 0 -0.5px color-mix(in srgb,var(--c) 55%,#fff), 31px -6px 0 -0.5px color-mix(in srgb,var(--c) 55%,#fff), -40px -3px 0 -1px color-mix(in srgb,var(--c) 60%,#fbf), 42px 3px 0 -1px color-mix(in srgb,var(--c) 60%,#fbf), -10px 6px 0 -1.5px color-mix(in srgb,var(--c) 60%,#fff), 12px -6px 0 -1.5px color-mix(in srgb,var(--c) 60%,#fff); filter:drop-shadow(0 0 3px color-mix(in srgb,var(--c) 60%,transparent)); }
+/* heartChain — 하트 체인: 하트가 이어진 띠 (SVG 마스크, 파스텔) */
+.idea-divider[data-divider-style="heartChain"] .idea-divider-body span, .idea-preview-divider[data-divider-style="heartChain"] .idea-divider-body span {
+  height:calc(var(--w)*4); border-radius:0;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 70%,#fff), color-mix(in srgb,var(--c) 80%,#f9c));
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='16' viewBox='0 0 20 16'%3E%3Cpath d='M10 14 C10 14 2 9.5 2 5.5 C2 2.8 4.6 1.8 6.4 3.4 C7.6 4.4 10 6.5 10 6.5 C10 6.5 12.4 4.4 13.6 3.4 C15.4 1.8 18 2.8 18 5.5 C18 9.5 10 14 10 14 Z' fill='black'/%3E%3Crect x='0' y='7' width='20' height='1.4' fill='black'/%3E%3C/svg%3E") repeat-x center / 20px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='16' viewBox='0 0 20 16'%3E%3Cpath d='M10 14 C10 14 2 9.5 2 5.5 C2 2.8 4.6 1.8 6.4 3.4 C7.6 4.4 10 6.5 10 6.5 C10 6.5 12.4 4.4 13.6 3.4 C15.4 1.8 18 2.8 18 5.5 C18 9.5 10 14 10 14 Z' fill='black'/%3E%3Crect x='0' y='7' width='20' height='1.4' fill='black'/%3E%3C/svg%3E") repeat-x center / 20px 100%;
+  filter:drop-shadow(0 1px 1.5px color-mix(in srgb,var(--c) 30%,transparent));
+}
+/* magicWand — 마법봉: 중앙 빛나는 별 + 양옆 트레일 별가루 */
+.idea-divider[data-divider-style="magicWand"] .idea-divider-body span, .idea-preview-divider[data-divider-style="magicWand"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 60%,#fff) 0 calc(50% - 14px), transparent calc(50% - 14px) calc(50% + 14px), color-mix(in srgb,var(--c) 60%,#fff) calc(50% + 14px) 100%);
+  box-shadow:0 0 6px color-mix(in srgb,var(--c) 45%,#fff); filter:none;
+}
+.idea-divider[data-divider-style="magicWand"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="magicWand"] .idea-divider-body::before { display:block; content:"✪"; color:var(--c); font-size:19px; line-height:1; text-shadow:0 0 8px color-mix(in srgb,var(--c) 70%,#fff), 0 0 4px #fff; }
+.idea-divider[data-divider-style="magicWand"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="magicWand"] .idea-divider-body::after { display:block; width:4px; height:4px; border-radius:50%; background:color-mix(in srgb,var(--c) 55%,#fff); box-shadow:-17px 2px 0 -0.5px color-mix(in srgb,var(--c) 70%,#ff8), 17px -2px 0 -0.5px color-mix(in srgb,var(--c) 70%,#ff8), -28px -3px 0 -1.5px color-mix(in srgb,var(--c) 60%,#fff), 28px 3px 0 -1.5px color-mix(in srgb,var(--c) 60%,#fff); filter:drop-shadow(0 0 3px color-mix(in srgb,var(--c) 60%,#fff)); }
+/* sparkleTrail — 반짝이: 중앙 발광 다이아 + 양끝으로 작아지는 트레일 */
+.idea-divider[data-divider-style="sparkleTrail"] .idea-divider-body span, .idea-preview-divider[data-divider-style="sparkleTrail"] .idea-divider-body span { background:none; height:12px; }
+.idea-divider[data-divider-style="sparkleTrail"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="sparkleTrail"] .idea-divider-body::before { display:block; width:9px; height:9px; background:var(--c); transform:translate(-50%,-50%) rotate(45deg); box-shadow:0 0 7px color-mix(in srgb,var(--c) 60%,#fff); }
+.idea-divider[data-divider-style="sparkleTrail"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="sparkleTrail"] .idea-divider-body::after { display:block; width:5px; height:5px; border-radius:50%; background:color-mix(in srgb,var(--c) 60%,#fff); box-shadow:-15px 0 0 -0.5px color-mix(in srgb,var(--c) 70%,#fbf), 15px 0 0 -0.5px color-mix(in srgb,var(--c) 70%,#fbf), -26px 0 0 -2px color-mix(in srgb,var(--c) 60%,#fff), 26px 0 0 -2px color-mix(in srgb,var(--c) 60%,#fff), -35px 0 0 -3px color-mix(in srgb,var(--c) 50%,#ff8), 35px 0 0 -3px color-mix(in srgb,var(--c) 50%,#ff8); filter:drop-shadow(0 0 3px color-mix(in srgb,var(--c) 55%,#fff)); }
+/* ribbonBow — 리본: 양옆 띠 + 중앙 리본 매듭 (파스텔) */
+.idea-divider[data-divider-style="ribbonBow"] .idea-divider-body span, .idea-preview-divider[data-divider-style="ribbonBow"] .idea-divider-body span {
+  height:calc(var(--w)*2.2); border-radius:999px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--c) 70%,#fff) 0 30%, var(--c) 30% 70%, color-mix(in srgb,var(--c) 60%,#f9c) 70% 100%) 0 0 / calc(50% - 12px) 100% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb,var(--c) 70%,#fff) 0 30%, var(--c) 30% 70%, color-mix(in srgb,var(--c) 60%,#f9c) 70% 100%) 100% 0 / calc(50% - 12px) 100% no-repeat;
+}
+.idea-divider[data-divider-style="ribbonBow"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="ribbonBow"] .idea-divider-body::before { display:block; width:18px; height:11px; background:var(--c); clip-path:polygon(0 0, 50% 38%, 100% 0, 100% 100%, 50% 62%, 0 100%); }
+.idea-divider[data-divider-style="ribbonBow"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="ribbonBow"] .idea-divider-body::after { display:block; width:5px; height:7px; border-radius:2px; background:color-mix(in srgb,var(--c) 75%,#fff); }
+
+/* ── 오컬트·판타지 3종 ── */
+
+/* moonPhases — 달의 위상: 초승→반→보름이 반복 (SVG 마스크) */
+.idea-divider[data-divider-style="moonPhases"] .idea-divider-body span, .idea-preview-divider[data-divider-style="moonPhases"] .idea-divider-body span {
+  height:calc(var(--w)*5); border-radius:0;
+  background:linear-gradient(180deg, var(--c), color-mix(in srgb,var(--c) 80%,#306));
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='66' height='18' viewBox='0 0 66 18'%3E%3Cpath d='M9 2 A7 7 0 1 0 9 16 A5 7 0 1 1 9 2 Z' fill='black'/%3E%3Cpath d='M24 2 A7 7 0 1 0 24 16 A9 7 0 1 1 24 2 Z' fill='black'/%3E%3Ccircle cx='40' cy='9' r='7' fill='black'/%3E%3Cpath d='M55 16 A7 7 0 1 0 55 2 A9 7 0 1 1 55 16 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 66px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='66' height='18' viewBox='0 0 66 18'%3E%3Cpath d='M9 2 A7 7 0 1 0 9 16 A5 7 0 1 1 9 2 Z' fill='black'/%3E%3Cpath d='M24 2 A7 7 0 1 0 24 16 A9 7 0 1 1 24 2 Z' fill='black'/%3E%3Ccircle cx='40' cy='9' r='7' fill='black'/%3E%3Cpath d='M55 16 A7 7 0 1 0 55 2 A9 7 0 1 1 55 16 Z' fill='black'/%3E%3C/svg%3E") repeat-x center / 66px 100%;
+  filter:drop-shadow(0 0 4px color-mix(in srgb,var(--c) 40%,transparent));
+}
+/* runicLine — 룬: 직선 룬 문자가 반복 (SVG 마스크) */
+.idea-divider[data-divider-style="runicLine"] .idea-divider-body span, .idea-preview-divider[data-divider-style="runicLine"] .idea-divider-body span {
+  height:calc(var(--w)*4.8); border-radius:0;
+  background:color-mix(in srgb,var(--c) 88%,#024);
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='18' viewBox='0 0 44 18'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M6 2 V16 M6 5 L10 2 M6 5 L2 2'/%3E%3Cpath d='M18 2 V16 M18 2 Q24 4 18 8 M18 8 L24 16'/%3E%3Cpath d='M32 2 L32 16 M32 2 L38 9 L32 16 M38 9 L32 9'/%3E%3C/g%3E%3C/svg%3E") repeat-x center / 44px 100%;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='18' viewBox='0 0 44 18'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M6 2 V16 M6 5 L10 2 M6 5 L2 2'/%3E%3Cpath d='M18 2 V16 M18 2 Q24 4 18 8 M18 8 L24 16'/%3E%3Cpath d='M32 2 L32 16 M32 2 L38 9 L32 16 M38 9 L32 9'/%3E%3C/g%3E%3C/svg%3E") repeat-x center / 44px 100%;
+}
+/* pentacle — 펜타클: 양분선 + 중앙 원에 든 오망성 */
+.idea-divider[data-divider-style="pentacle"] .idea-divider-body span, .idea-preview-divider[data-divider-style="pentacle"] .idea-divider-body span {
+  background:linear-gradient(90deg, color-mix(in srgb,var(--c) 88%,#103) 0 calc(50% - 13px), transparent calc(50% - 13px) calc(50% + 13px), color-mix(in srgb,var(--c) 88%,#103) calc(50% + 13px) 100%);
+}
+.idea-divider[data-divider-style="pentacle"] .idea-divider-body::before, .idea-preview-divider[data-divider-style="pentacle"] .idea-divider-body::before { display:block; width:20px; height:20px; border-radius:50%; border:1.5px solid color-mix(in srgb,var(--c) 88%,#103); }
+.idea-divider[data-divider-style="pentacle"] .idea-divider-body::after, .idea-preview-divider[data-divider-style="pentacle"] .idea-divider-body::after { display:block; content:"⛤"; color:color-mix(in srgb,var(--c) 88%,#103); font-size:17px; line-height:1; }
+
 /* ── 구분선 디자인 선택 그리드 ── */
 .idea-divider-weight-range { margin-bottom:6px; }
 .idea-divider-choice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:6px; max-height:46vh; overflow-y:auto; padding:2px 2px 4px; }
