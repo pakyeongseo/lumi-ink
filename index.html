@@ -2068,9 +2068,8 @@
   }
 
   .saver {
-    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 0; height: 22px;
-    font-size: 10.5px; line-height: 1; font-weight: 750; color: var(--faint); padding: 0 2px; white-space: nowrap; user-select: none;
-    border-radius: 999px; transition: color .2s, background .2s, padding .2s, box-shadow .2s;
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 0; height: auto;
+    font-size: 10.5px; line-height: 1; font-weight: 650; color: var(--faint); padding: 0 2px; white-space: nowrap; user-select: none;
   }
   .saver::before { display: none; }
   .saver .dot {
@@ -2079,18 +2078,9 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface) 70%, transparent);
     transition: background .3s, box-shadow .3s, opacity .3s;
   }
-  .saver.dirty, .saver.saved {
-    padding: 0 8px 0 7px;
-    color: var(--muted);
-    background: color-mix(in srgb, var(--surface-2) 80%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent), 0 4px 12px -10px color-mix(in srgb, var(--accent) 60%, transparent);
-  }
+  .saver.dirty, .saver.saved { color: var(--muted); }
   .saver.dirty .dot, .saver.saved .dot { display: block; opacity: 1; }
   .saver.dirty .dot { background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 74%, transparent); }
-  .saver.saved {
-    color: color-mix(in srgb, #59d98b 58%, var(--muted));
-    background: color-mix(in srgb, #59d98b 11%, var(--surface-2));
-  }
   .saver.saved .dot { background: #59d98b; box-shadow: 0 0 7px color-mix(in srgb, #59d98b 64%, transparent); }
 
   /* ===== FAB ===== */
