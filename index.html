@@ -2068,20 +2068,22 @@
   }
 
   .saver {
-    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 0; height: auto;
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: max-content; height: 16px;
     font-size: 9.5px; line-height: 1; font-weight: 650; color: var(--faint); padding: 0 2px; white-space: nowrap; user-select: none;
   }
-  .saver::before { display: none; }
-  .saver .dot {
-    display: none; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%;
+  .saver::before {
+    content: ""; display: none; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%;
     background: var(--faint); opacity: .55;
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface) 70%, transparent);
-    transition: background .3s, box-shadow .3s, opacity .3s;
+    transform: translateY(1px);
+    transition: background .3s, box-shadow .3s, opacity .3s, transform .3s;
   }
+  .saver .dot { display: none !important; }
+  .saver > span:not(.dot) { display: block; line-height: 1; }
   .saver.dirty, .saver.saved { color: var(--muted); }
-  .saver.dirty .dot, .saver.saved .dot { display: block; opacity: 1; }
-  .saver.dirty .dot { background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 74%, transparent); }
-  .saver.saved .dot { background: #59d98b; box-shadow: 0 0 7px color-mix(in srgb, #59d98b 64%, transparent); }
+  .saver.dirty::before, .saver.saved::before { display: block; opacity: 1; }
+  .saver.dirty::before { background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 74%, transparent); }
+  .saver.saved::before { background: #59d98b; box-shadow: 0 0 7px color-mix(in srgb, #59d98b 64%, transparent); }
 
   /* ===== FAB ===== */
   .fab {
