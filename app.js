@@ -7657,6 +7657,7 @@ ${gallery}
     { key:"barBg2",         label:"상단바 보조",         variable:"--bar-bg-2",                       fallback:"#F6F7FB", group:"bar" },
     { key:"barLine",        label:"상단바 경계",         variable:"--bar-line",                       fallback:"#E1E3EC", group:"bar" },
     { key:"topbarShadow",   label:"상단 제목바 아래 그림자", variable:"--topbar-shadow-color",          fallback:"#7690C2", group:"bar" },
+    { key:"memoShadow",     label:"메모 그림자",             variable:"--memo-shadow-color",            fallback:"#7690C2", group:"memo" },
     { key:"memoCodeBg",     label:"자유 메모 코드 보기 배경", variable:"--memo-code-bg",                  fallback:"#FCFCFD", group:"memo" },
     { key:"memoCodeIconBg", label:"자유 메모 코드 보기 아이콘 배경", variable:"--memo-code-icon-bg",       fallback:"#EAF0FF", group:"memo", derived:true },
     { key:"memoTitle",      label:"메모 제목",           variable:"--memo-title-color",               fallback:"#283A63", group:"type" },
@@ -7683,7 +7684,7 @@ ${gallery}
   ]);
   const CUSTOM_THEME_STYLE_VARS = Object.freeze([
     ...CUSTOM_THEME_COLOR_META.map((item) => item.variable),
-    "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--logo-ink",
+    "--accent-deep", "--accent-soft", "--accent-ink", "--grad-blue", "--glow", "--shadow", "--logo-ink",
     "--custom-main-a", "--custom-main-b", "--custom-logo-body", "--custom-logo-tip", "--custom-logo-ink", "--custom-logo-glow",
     "--quickmenu-default-icon-bg-a", "--quickmenu-default-icon-bg-b", "--quickmenu-panel-bg-b",
     "--custom-note-type-free", "--custom-note-type-html", "--custom-note-type-lorebook", "--custom-note-type-log", "--custom-note-type-persona", "--custom-note-type-character", "--custom-note-type-idea",
@@ -7740,7 +7741,7 @@ ${gallery}
         bg:L(S*.14,.978), bg2:L(S*.18,.953), paper:L(S*.07,.994),
         surface:L(S*.08,.999), surface2:L(S*.14,.968), surface3:L(S*.20,.936),
         barBg:L(S*.07,.998), barBg2:L(S*.12,.983), barLine:lineC,
-        topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
+        topbarShadow:shadow, memoShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
         softAccentBg:tint, memoCodeBg:L(S*.08,.986), memoCodeIconBg:tint,
         sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
         sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
@@ -7760,7 +7761,7 @@ ${gallery}
         bg:L(S*.26,.075), bg2:L(S*.28,.105), paper:L(S*.20,.092),
         surface:L(S*.24,.135), surface2:L(S*.26,.178), surface3:L(S*.27,.225),
         barBg:L(S*.30,.145), barBg2:L(S*.32,.188), barLine:lineC,
-        topbarShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
+        topbarShadow:shadow, memoShadow:shadow, homeShadow:shadow, settingsShadow:shadow,
         softAccentBg:tint, memoCodeBg:L(S*.20,.105), memoCodeIconBg:tint,
         sectionTitleBg:tint, homeSectionTitleBg:tint, homeSortBg:tint, projectCountBg:tint,
         sidebarCountBg:tint, sidebarSectionGradientStart:tint, sidebarFootBg:tint, newNoteIconBg:tint, settingsPressedBg:tint,
@@ -7812,7 +7813,7 @@ ${gallery}
     finally { setOrRemoveAttr(root,"data-theme",oldTheme); setOrRemoveAttr(root,"data-accent",oldAccent); setOrRemoveAttr(root,"data-custom-theme",oldCustom); inline.forEach((value,name)=>{if(value)root.style.setProperty(name,value);else root.style.removeProperty(name);}); }
   }
   function capturePresetPalette(accentName,mode){ return withPresetComputed(accentName,mode,(css)=>Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>{
-    const sourceVar=({ softAccentBg:"--accent-soft", logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
+    const sourceVar=({ softAccentBg:"--accent-soft", logoCore:"--accent-ink", sectionTitleBg:"--accent-soft", sidebarFootBg:"--accent-soft", sidebarSectionGradientStart:"--accent-soft", sidebarCountBg:"--accent-soft", topbarShadow:"--accent", memoShadow:"--accent", memoCodeBg:"--paper", memoCodeIconBg:"--accent-soft", memoTitle:"--logo-ink", homeSectionTitle:"--muted", homeSectionTitleBg:"--accent-soft", homeShadow:"--accent", projectCountBg:"--accent-soft", homeSortBg:"--accent-soft", modalTitle:"--logo-ink", newNoteIconBg:"--accent-soft", settingsGroupTitle:"--muted", settingsRowTitle:"--ink", settingsShadow:"--accent", settingsPressedBg:"--surface-2" })[item.key] || item.variable;
     return [item.key,normalizeThemeHex((css.getPropertyValue(sourceVar)||"").trim(),item.fallback)];
   }))) || cloneThemeObject(CUSTOM_THEME_FALLBACK_COLORS); }
   function normalizePalette(raw,fallback,mode){
@@ -7834,7 +7835,7 @@ ${gallery}
         return;
       }
       if(item.derived){ out[item.key]=normalizeThemeHex(recommended[item.key],item.fallback); return; }
-      const missingRole=["logoCore","topbarShadow","memoCodeBg","memoTitle","homeSectionTitle","homeShadow","modalTitle","settingsGroupTitle","settingsRowTitle","settingsShadow"].includes(item.key);
+      const missingRole=["logoCore","topbarShadow","memoShadow","memoCodeBg","memoTitle","homeSectionTitle","homeShadow","modalTitle","settingsGroupTitle","settingsRowTitle","settingsShadow"].includes(item.key);
       out[item.key]=normalizeThemeHex(src[item.key],missingRole?(recommended[item.key]||item.fallback):(ref[item.key]||item.fallback));
     });
     return out;
@@ -7847,26 +7848,30 @@ ${gallery}
     const oldLight=src.light&&typeof src.light==="object"?src.light:{enabled:legacyV1?true:src.enabled===true,colors:src.colors};
     const oldDark=src.dark&&typeof src.dark==="object"?src.dark:{enabled:false,colors:null};
     const hasStoredPalette=!!(src.light||src.dark||src.colors||src.main||src.mainA||src.mainB||src.primary||src.secondary);
-    return {version:12,baseAccent,
+    return {version:13,baseAccent,
       light:{enabled:hasStoredPalette ? oldLight.enabled!==false : false,colors:normalizePalette(oldLight.colors,presetLight,"light")},
       dark:{enabled:hasStoredPalette ? oldDark.enabled!==false : false,colors:normalizePalette(oldDark.colors,presetDark,"dark")},
       updatedAt:Number(src.updatedAt)||0};
   }
   function currentCustomTheme(){ if(!st.customTheme||typeof st.customTheme!=="object")st.customTheme=normalizeCustomTheme(null); return normalizeCustomTheme(st.customTheme); }
-  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:12,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
+  function customThemeSeedFromActiveAccent(){ const activeAccent=st.accent===LEGACY_CUSTOM_ACCENT?currentCustomTheme().baseAccent:validAccentName(st.accent); const baseAccent=validAccentName(activeAccent); const lightPreset=capturePresetPalette(baseAccent,"light"),darkPreset=capturePresetPalette(baseAccent,"dark"); return {version:13,baseAccent,light:{enabled:true,colors:recommendCustomPalette(lightPreset.mainA,lightPreset.mainB,"light")},dark:{enabled:true,colors:recommendCustomPalette(darkPreset.mainA,darkPreset.mainB,"dark")},updatedAt:now()}; }
   function customThemeStyleVars(palette,mode){
     const colors=palette.colors||{};
     const soft=normalizeThemeHex(colors.softAccentBg,"#EAF0FF");
+    const memoShadow=normalizeThemeHex(colors.memoShadow||colors.homeShadow||colors.settingsShadow,mode==="dark"?"#0E1630":"#7690C2");
+    const shadow=mode==="dark"
+      ? `0 1px 4px ${themeHexAlpha(memoShadow,.30)}, 0 6px 16px ${themeHexAlpha(memoShadow,.24)}`
+      : `0 1px 3px ${themeHexAlpha(memoShadow,.13)}, 0 5px 14px ${themeHexAlpha(memoShadow,.15)}`;
     const direct=Object.fromEntries(CUSTOM_THEME_COLOR_META.map((item)=>[item.variable,colors[item.key]]));
     const aliases=Object.fromEntries(Object.keys(CUSTOM_THEME_SHARED_SOFT_VARS).map((variable)=>[variable,soft]));
-    return Object.assign(direct,customThemeAccentVars(palette,mode),aliases);
+    return Object.assign({"--shadow":shadow},direct,customThemeAccentVars(palette,mode),aliases);
   }
   function clearCustomThemeStyles(){ const root=document.documentElement; CUSTOM_THEME_STYLE_VARS.forEach((name)=>root.style.removeProperty(name)); root.removeAttribute("data-custom-theme"); root.style.removeProperty("--custom-preview-a"); root.style.removeProperty("--custom-preview-b"); }
   function updateThemeMetaColor(){ const meta=document.querySelector('meta[name=theme-color]');if(!meta)return;const value=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim();meta.setAttribute("content",/^#[0-9a-f]{6}$/i.test(value)?value:(st.theme==="light"?"#f3f4f8":"#0d0f17")); }
   function syncAccentGradientAndLabel(){ const css=getComputedStyle(document.documentElement),first=(css.getPropertyValue("--accent")||"#7B9BFF").trim(),second=(css.getPropertyValue("--accent-2")||"#B58BFF").trim();const a=$("igA"),bb=$("igB");if(a)a.setAttribute("stop-color",first);if(bb)bb.setAttribute("stop-color",second);const value=$("setAccentVal");if(value)value.innerHTML=`<span class="accent-dot"></span>${themeDisplayName()}`; }
   function applyCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(config),root=document.documentElement;st.customTheme=cfg;clearCustomThemeStyles();const active=st.theme==="dark"?"dark":"light",palette=cfg[active];if(st.accent===LEGACY_CUSTOM_ACCENT){root.setAttribute("data-custom-theme",active);Object.entries(customThemeStyleVars(palette,active)).forEach(([key,value])=>root.style.setProperty(key,value));}root.style.setProperty("--custom-preview-a",cfg.light.colors.mainA);root.style.setProperty("--custom-preview-b",cfg.light.colors.mainB);if(opt.persist!==false){try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}}syncAccentGradientAndLabel();updateThemeMetaColor(); }
   async function persistCustomTheme(config,options){ const opt=options||{},cfg=normalizeCustomTheme(Object.assign({},config,{updatedAt:now()}));cfg.light.enabled=true;cfg.dark.enabled=true;st.customTheme=cfg;try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt});}catch(e){if(!opt.silent)toast("직접 지정 색상을 저장하지 못했어요");throw e;}if(opt.backup!==false)triggerAutoBackup();return cfg; }
-  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<12;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
+  async function loadCustomThemeSetting(){let stored=null;try{const row=await getOne("settings",CUSTOM_THEME_SETTING_ID);stored=row&&row.value;}catch(e){}if(!stored){try{const raw=localStorage.getItem("luminkCustomTheme");if(raw)stored=JSON.parse(raw);}catch(e){}}const cfg=normalizeCustomTheme(stored||st.customTheme||null);st.customTheme=cfg;const needsMigration=stored&&Number((stored.value||stored).version||1)<13;if(needsMigration){try{await persistCustomTheme(cfg,{backup:false,silent:true});}catch(e){}}applyCustomTheme(cfg,{persist:false});}
   function appearanceSnapshot(){return {version:10,accent:st.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(st.accent),customTheme:normalizeCustomTheme(st.customTheme||null),updatedAt:now()};}
   async function restoreAppearanceConfig(value){if(!value||typeof value!=="object")return;const cfg=normalizeCustomTheme(value.customTheme||st.customTheme||null),accent=value.accent===LEGACY_CUSTOM_ACCENT?LEGACY_CUSTOM_ACCENT:validAccentName(value.accent||cfg.baseAccent);st.customTheme=cfg;try{await put("settings",{id:CUSTOM_THEME_SETTING_ID,value:cfg,updatedAt:cfg.updatedAt||now()});}catch(e){}try{localStorage.setItem("luminkCustomTheme",JSON.stringify(cfg));}catch(e){}applyAccent(accent);applyCustomTheme(cfg,{persist:false});}
   function themeDisplayName(){ if(st.accent===LEGACY_CUSTOM_ACCENT)return "사용자 지정"; return (ACCENTS[validAccentName(st.accent)]||ACCENTS.blue).name; }
